@@ -1,0 +1,159 @@
+{
+    "layers_json": {
+        "Admin Boundaries": {
+            "api_url": "${config.layer_api_url_v1}/generate_block_layer/",
+            "show_Dates": false,
+            "workspace":"panchayat_boundaries",
+            "end":""
+        },
+        "NREGA Works": {
+            "api_url":"${config.layer_api_url_v1}/generate_nrega_layer/",
+            "show_Dates": false,
+            "workspace":"nrega_assets",
+            "end":""
+
+        },
+        "Drainage": {
+            "api_url": "${config.layer_api_url_v1}/generate_drainage_layer/",
+            "show_Dates": false,
+            "workspace":"drainage",
+            "end":""
+
+        },
+        "MWS Fortnight": {
+            "api_url": "${config.layer_api_url_v1}/generate_mws_layer/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"mws_layers",
+            "end":"deltaG_fortnight_distname_blockname"
+
+        },
+        "MWS Annual":{
+            "api_url": "${config.layer_api_url_v1}/generate_well_depth/",
+            "show_Dates":true,
+            "workspace":"mws_layers",
+            "date_range":[2017,2023],
+            "end":"deltaG_well_depth_distname_blockname"
+
+        },
+        "LULC": {
+            "api_url": "${config.layer_api_url_v1}/lulc_v3_river_basin/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"LULC_level_1"
+
+        },
+        "LULCXSlope": {
+            "api_url": "${config.layer_api_url_v1}/terrain_lulc_slope_cluster/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"terrain_lulc"
+
+        },
+        "LULCXPlain": {
+            "api_url": "${config.layer_api_url_v1}/terrain_lulc_plain_cluster/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"terrain_lulc"
+
+        },
+        "Crop Intensity": {
+            "api_url": "${config.layer_api_url_v1}/generate_ci_layer/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"cropping_intensity",
+            "end":"distname_blockname_intensity"
+
+
+        },
+        "Surface Water bodies": {
+            "api_url": "${config.layer_api_url_v1}/generate_swb/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"water_bodies",
+            "end":"surface_waterbodies_distname_blockname"
+        },
+        "Cropping Drought": {
+            "api_url": "${config.layer_api_url_v1}/generate_drought_layer/",
+            "show_Dates": true,
+            "date_range":[2017,2022],
+            "workspace":"cropping_drought",
+            "end":"distname_blockname_drought"
+
+        },
+        "Terrain Vector": {
+            "api_url": "${config.layer_api_url_v1}/generate_terrain_descriptor/",
+            "show_Dates": false,
+            "workspace":"terrain",
+            "end":"_cluster"
+
+        },
+        "Terrain Raster": {
+            "api_url": "${config.layer_api_url_v1}/generate_terrain_raster/",
+            "show_Dates": false,
+            "workspace":"terrain",
+            "end":"_raster"
+
+        },
+        "Crop Grid_layer": {
+            "api_url": "${config.layer_api_url_v1}/crop_grid/",
+            "show_Dates": false,
+            "workspace":"crop_grid_layers",
+            "end":"_grid"
+
+        },
+        "CLART": {
+            "api_url": "${config.layer_api_url_v1}/generate_clart/",
+            "show_Dates": false,
+            "workspace":"clart",
+            "end":"distname_blockname_clart"
+
+        },
+        "Change Detection Raster": {
+            "api_url": "${config.layer_api_url_v1}/change_detection/",
+            "show_Dates": true,
+            "date_range":[2017,2023],
+            "workspace":"change_detection"
+
+        }, 
+        "Change Detection Vector": {
+            "api_url": "${config.layer_api_url_v1}/change_detection_vector/",
+            "show_Dates": false,
+            "workspace":""
+
+        }, 
+        "Drought Causality": {
+            "api_url": "${config.layer_api_url_v1}/mws_drought_causality/",
+            "show_Dates": true,
+            "workspace":"" 
+
+        },
+     "Tree Health Raster": {
+            "api_url": "${config.layer_api_url_v1}/tree_health_raster/",
+            "show_Dates": false,
+            "workspace":""
+
+        },
+     "Tree Health Vector": {
+            "api_url": "${config.layer_api_url_v1}/tree_health_vector/",
+            "show_Dates": true,
+            "workspace":""
+
+        },
+       "Stream Order Vector": {
+            "api_url": "${config.layer_api_url_v1}/stream_order_vector/",
+            "show_Dates": false,
+            "workspace":""
+
+        },
+        "LULC Vector": {
+            "api_url": "${config.layer_api_url_v1}/lulc_vector/",
+            "show_Dates": true,
+            "workspace":""
+
+        }
+     
+        
+    }
+}
+

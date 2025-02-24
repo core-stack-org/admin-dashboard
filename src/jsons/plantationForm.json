@@ -1,0 +1,54 @@
+{
+    "name": "admin",
+    "email": "manvi@oniondev.com",
+    "Which AEZ does the plantation site fall in": "North-East",
+    "What is the crop/tree species being planted": "abc",
+    "climate": {
+      "Annual Precipitation": "400-600",
+      "Mean Annual Temperature ": "10-15",
+      "Aridity Index": "0.50-0.65",
+      "Reference Evapotranspiration": "6-8",
+      "Climate Weightage": "35%"
+    },
+    "soil": {
+      "Topsoil pH": "4.5-5.5",
+      "Subsoil pH": "6-6.5",
+      "Topsoil Organic Carbon (%weight)": "0.7-1",
+      "Subsoil Organic Carbon (%weight)": "0.2-0.4",
+      "Topsoil Cation Exchange Capacity (cmol/kg)": "10-15",
+      "Subsoil Cation Exchange Capacity (cmol/kg)": "5-10",
+      "Topsoil Texture": "Medium",
+      "Subsoil Texture": "Clay loam",
+      "Topsoil Bulk Density (kg/dm3)": "1.3-1.35",
+      "Subsoil Bulk Density (kg/dm3)": "1.35-1.4",
+      "Soil Drainage": "Well drained",
+      "Available Water Capacity (mm/m)": "100",
+      "Soil Weightage": "20%"
+    },
+    "topography": {
+      "Elevation": "100-200",
+      "Slope": "5-10",
+      "Aspect": "North-East",
+      "Topography Weightage": "25%"
+    },
+    "ecology": {
+      "NDVI based on current land-use": "0-0-2",
+      "Current Land-Use": "Forest",
+      "Ecology Weightage": "10%"
+    },
+    "socioeconomic": {
+      "Distance to Drainage Lines": "100-250",
+      "Distance to Settlements": "100-200",
+      "Distance to Roads": "200-500",
+      "Socioeconomic Weightage": "10%"
+    }
+  }
+
+
+
+
+
+
+
+
+ 
