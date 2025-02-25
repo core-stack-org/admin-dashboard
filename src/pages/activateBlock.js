@@ -137,7 +137,7 @@ const ActivateBlock = () => {
         }
       );
 
-      console.log("Response status:", response.status);
+      console.warn("Response status:", response.status);
 
       if (response.ok) {
         if (response.status === 200) {
