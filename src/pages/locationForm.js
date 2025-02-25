@@ -6,7 +6,7 @@ import { useLocation } from "react-router-dom";
 
 const LocationFormComponent = ({ addTask }) => {
   const location = useLocation();
-  const { layerName, apiUrl, showDates } = location.state || {};
+  const { layerName, showDates } = location.state || {};
 
   const [statesList, setStatesList] = useState([]);
   const [districtsList, setDistrictsList] = useState([]);
@@ -20,14 +20,10 @@ const LocationFormComponent = ({ addTask }) => {
   const [error, setError] = useState(null);
   const [isStatusBoxOpen, setIsStatusBoxOpen] = useState(false);
 
-  const updatedApiUrl = process.env.REACT_APP_LAYER_API_URL_V1;
-
-  console.log(updatedApiUrl);
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
     new Date().getFullYear() - 2,
   ];
-  console.log(dateRange, layerName);
 
   const layers = Object.keys(layersData.layers_json).map((key) => {
     const label = key
@@ -60,7 +56,6 @@ const LocationFormComponent = ({ addTask }) => {
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
-      console.log(sortedStates);
       setStatesList(sortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -83,7 +78,6 @@ const LocationFormComponent = ({ addTask }) => {
       const sortedDistricts = data.districts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-      console.log(sortedDistricts);
       setDistrictsList(sortedDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -106,7 +100,6 @@ const LocationFormComponent = ({ addTask }) => {
       const sortedBlocks = data.blocks.sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
-      console.log(sortedBlocks);
       setBlocksList(sortedBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -184,7 +177,7 @@ const LocationFormComponent = ({ addTask }) => {
 
     try {
       const response = await fetch(
-        { updatedApiUrl },
+        `${process.env.REACT_APP_LAYER_API_URL_V1}`,
         {
           method: "POST",
           headers: {
@@ -194,14 +187,12 @@ const LocationFormComponent = ({ addTask }) => {
           body: JSON.stringify(payload),
         }
       );
-      console.log(updatedApiUrl);
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Error: ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log("Layer generated successfully:", data);
 
       toast.success("Layer generated successfully!");
 

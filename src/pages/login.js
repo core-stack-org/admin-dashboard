@@ -60,7 +60,6 @@ const LoginPage = ({ setCurrentUser }) => {
       const data = await response.json();
       // localStorage.setItem("token", data.access);
       sessionStorage.setItem("accessToken", data.access);
-      console.log(data.access);
       setCurrentUser(data);
       navigate("/activateBlock");
     } catch (err) {

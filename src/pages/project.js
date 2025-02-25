@@ -14,7 +14,6 @@ const Project = () => {
   const navigate = useNavigate();
 
   const loadOrganization = async () => {
-    console.log("Fetching organizations...");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/org/get_org`,
@@ -27,7 +26,6 @@ const Project = () => {
         }
       );
       const data = await response.json();
-      console.log("Data received:", data);
       return data.map((org) => ({
         value: org.id,
         label: org.name,
@@ -54,7 +52,6 @@ const Project = () => {
         }
       );
       const data = await response.json();
-      console.log("app:", data);
       return data.map((app) => ({
         value: app.app_type_id,
         label: app.app_name,
@@ -67,17 +64,14 @@ const Project = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("posting project data");
     const formData = {
       project_name: projectName,
       is_public: isPublic ? 1 : 0,
       app_type: appType.value,
       organization: organization.value,
     };
-    console.log(formData);
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/proj/create_project`,
         {
@@ -95,9 +89,7 @@ const Project = () => {
       }
 
       const data = await response.json();
-      console.log("Project created successfully:", data);
 
-      // Navigate to project dashboard after successful submission
       setShowDashboard(true);
       navigate("/projectDashboard");
     } catch (error) {

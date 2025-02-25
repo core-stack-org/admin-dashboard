@@ -28,7 +28,6 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
 
   const loadOrganization = async () => {
-    console.log("Fetching organizations...");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/org/get_org`,
@@ -41,7 +40,6 @@ const RegistrationForm = () => {
         }
       );
       const data = await response.json();
-      console.log("Data received:", data);
       return data.map((org) => ({
         value: org.id,
         label: org.name,
@@ -116,7 +114,6 @@ const RegistrationForm = () => {
         organization: selectedOption.value,
         entity_permission: selectedPermission ? selectedPermission.value : null,
       };
-      console.log(registrationData);
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
@@ -132,8 +129,6 @@ const RegistrationForm = () => {
         );
 
         if (response.ok) {
-          console.log("Registration successful");
-          // Reset form
           setFormData({
             userName: "",
             email: "",
@@ -145,7 +140,6 @@ const RegistrationForm = () => {
           setErrors({});
         } else {
           console.error("Registration failed");
-          // Handle server-side validation errors here
         }
       } catch (error) {
         console.error("Error during registration:", error);

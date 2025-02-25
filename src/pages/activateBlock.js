@@ -10,7 +10,6 @@ const ActivateBlock = () => {
   const [block, setBlock] = useState({ id: "", name: "" });
 
   useEffect(() => {
-    console.log("fetch states use effect");
     fetchStates();
   }, []);
 
@@ -30,7 +29,6 @@ const ActivateBlock = () => {
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
-      console.log(sortedStates);
       setStatesList(sortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -53,7 +51,6 @@ const ActivateBlock = () => {
       const sortedDistricts = data.districts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-      console.log(sortedDistricts);
       setDistrictsList(sortedDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -76,7 +73,6 @@ const ActivateBlock = () => {
       const sortedBlocks = data.blocks.sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
-      console.log(sortedBlocks);
       setBlocksList(sortedBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -129,9 +125,6 @@ const ActivateBlock = () => {
       district_id: district.id,
       block_id: block.id,
     };
-
-    console.log("Request Body:", requestBody);
-
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/api/v1/activate_entities/`,
@@ -158,7 +151,6 @@ const ActivateBlock = () => {
               pauseOnHover: true,
               draggable: true,
             });
-            console.log("Block is already activated.");
           } else {
             toast.success("Block activated successfully!", {
               position: "top-right",
@@ -168,7 +160,6 @@ const ActivateBlock = () => {
               pauseOnHover: true,
               draggable: true,
             });
-            console.log("Block Activation Success!");
           }
         } else if (response.status === 204) {
           toast.warning("Block deactivated! Please reactivate...", {
@@ -179,7 +170,6 @@ const ActivateBlock = () => {
             pauseOnHover: true,
             draggable: true,
           });
-          console.log("Block Deactivation Success!");
         } else {
           throw new Error(`Unexpected HTTP status: ${response.status}`);
         }
