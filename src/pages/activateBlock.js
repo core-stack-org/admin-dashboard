@@ -1,6 +1,4 @@
-// src/ActivateBlock.js
 import React, { useState, useEffect } from "react";
-import config from "../../src/services&apis/config.js";
 import { ToastContainer, toast } from "react-toastify";
 
 const ActivateBlock = () => {
@@ -10,7 +8,6 @@ const ActivateBlock = () => {
   const [state, setState] = useState({ id: "", name: "" });
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [block, setBlock] = useState({ id: "", name: "" });
-  const api_url = config.api_url;
 
   useEffect(() => {
     console.log("fetch states use effect");
@@ -19,13 +16,16 @@ const ActivateBlock = () => {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch(`${api_url}/api/v1/get_states/`, {
-        method: "GET",
-        headers: {
-          "content-type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
       const data = await response.json();
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
@@ -40,7 +40,7 @@ const ActivateBlock = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -63,7 +63,7 @@ const ActivateBlock = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -133,13 +133,16 @@ const ActivateBlock = () => {
     console.log("Request Body:", requestBody);
 
     try {
-      const response = await fetch(`${api_url}/api/v1/activate_entities/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/activate_entities/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       console.log("Response status:", response.status);
 

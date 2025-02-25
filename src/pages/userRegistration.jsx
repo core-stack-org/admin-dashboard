@@ -2,12 +2,8 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
-import config from "../services&apis/config";
 
 const RegistrationForm = () => {
-  useEffect(() => {
-    loadPermission();
-  }, []);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -35,7 +31,7 @@ const RegistrationForm = () => {
     console.log("Fetching organizations...");
     try {
       const response = await fetch(
-        "https://dbaf-2001-df4-e000-3fc3-b9f4-158d-b3d5-82e5.ngrok-free.app/api/v1/org/get_org",
+        `${process.env.REACT_APP_BASEURL}/api/v1/org/get_org`,
         {
           method: "GET",
           headers: {
@@ -59,7 +55,7 @@ const RegistrationForm = () => {
   const loadPermission = async (inputValue) => {
     try {
       const response = await fetch(
-        "https://dbaf-2001-df4-e000-3fc3-b9f4-158d-b3d5-82e5.ngrok-free.app/api/v1/user/permissions",
+        `${process.env.REACT_APP_BASEURL}/api/v1/user/permissions`,
         {
           method: "GET",
           headers: {
@@ -70,7 +66,6 @@ const RegistrationForm = () => {
       );
       const data = await response.json();
       const planPermissions = data.plan || [];
-      // Map the permissions to the format required by react-select
       return planPermissions.map((permission) => ({
         value: permission.id,
         label: permission.name,
@@ -115,20 +110,22 @@ const RegistrationForm = () => {
       setErrors(validationErrors);
     } else {
       const registrationData = {
-        userName: formData.userName,
+        username: formData.userName,
         email: formData.email,
         password: formData.password,
-        organizationId: selectedOption.value,
-        permissionId: selectedPermission ? selectedPermission.value : null,
+        organization: selectedOption.value,
+        entity_permission: selectedPermission ? selectedPermission.value : null,
       };
-
+      console.log(registrationData);
       try {
+        const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
-          " https://dbaf-2001-df4-e000-3fc3-b9f4-158d-b3d5-82e5.ngrok-free.app/api/v1/user/register",
+          `${process.env.REACT_APP_BASEURL}/api/v1/user/register`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(registrationData),
           }

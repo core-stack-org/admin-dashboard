@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import layersData from "../jsons/layers.json";
-import config from "../services&apis/config.js";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation } from "react-router-dom";
@@ -20,14 +19,8 @@ const LocationFormComponent = ({ addTask }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isStatusBoxOpen, setIsStatusBoxOpen] = useState(false);
-  const api_url = config.api_url;
-  console.log(apiUrl);
-  const layer_api_url_v1 = config.layer_api_url_v1;
-  console.log(layer_api_url_v1);
-  const updatedApiUrl = api_url.replace(
-    "${config.layer_api_url_v1}",
-    layer_api_url_v1
-  );
+
+  const updatedApiUrl = process.env.REACT_APP_LAYER_API_URL_V1;
 
   console.log(updatedApiUrl);
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
@@ -53,13 +46,16 @@ const LocationFormComponent = ({ addTask }) => {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch(`${api_url}/api/v1/get_states/`, {
-        method: "GET",
-        headers: {
-          "content-type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
       const data = await response.json();
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
@@ -74,7 +70,7 @@ const LocationFormComponent = ({ addTask }) => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -97,7 +93,7 @@ const LocationFormComponent = ({ addTask }) => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -187,14 +183,17 @@ const LocationFormComponent = ({ addTask }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(updatedApiUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        { updatedApiUrl },
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
       console.log(updatedApiUrl);
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);

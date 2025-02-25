@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import Select from "react-select";
-import config from "../services&apis/config.js";
 
 const SetupUser = () => {
   const [page, setPage] = useState(0);
@@ -26,7 +25,6 @@ const SetupUser = () => {
   const [state, setState] = useState({ id: "", name: "" });
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [block, setBlock] = useState({ id: "", name: "" });
-  const api_url = config.api_url;
 
   const passwordRequirements = [
     "At least 8 characters long",
@@ -77,13 +75,16 @@ const SetupUser = () => {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch(`${api_url}/api/v1/get_states/`, {
-        method: "GET",
-        headers: {
-          "content-type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
       const data = await response.json();
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
@@ -98,7 +99,7 @@ const SetupUser = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -121,7 +122,7 @@ const SetupUser = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
