@@ -16,7 +16,6 @@ import { useNavigate } from "react-router-dom";
 import layersData from "../jsons/layers.json";
 
 const Sidebar = ({ setCurrentUser }) => {
-  console.log("sidenavbar innnnnn");
   const navigate = useNavigate();
   const [isLayerOpen, setIsLayerOpen] = useState(false);
   const [selectedLayer, setSelectedLayer] = useState(null);
@@ -31,19 +30,15 @@ const Sidebar = ({ setCurrentUser }) => {
       key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
     );
     setLayerNames(layers);
-    console.log("Layer Names:", layers);
   }, []);
   useEffect(() => {
     localStorage.setItem("activeItem", activeItem);
-    console.log(activeItem);
   }, [activeItem]);
 
   const handleLogout = () => {
-    // Clear user session (if using localStorage or sessionStorage)
-    localStorage.removeItem("userToken"); // Change this if needed
+    localStorage.removeItem("userToken");
     sessionStorage.removeItem("userToken");
     setCurrentUser(null);
-    // Redirect to login page
     navigate("/");
   };
 
@@ -111,8 +106,6 @@ const Sidebar = ({ setCurrentUser }) => {
       },
     });
   };
-
-  console.log("Layer Names State:", layerNames);
 
   return (
     <div className="relative min-h-screen flex">

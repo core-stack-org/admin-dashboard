@@ -1,6 +1,4 @@
-// src/ActivateBlock.js
 import React, { useState, useEffect } from "react";
-import config from "../../src/services&apis/config.js";
 import { ToastContainer, toast } from "react-toastify";
 
 const ActivateBlock = () => {
@@ -10,27 +8,27 @@ const ActivateBlock = () => {
   const [state, setState] = useState({ id: "", name: "" });
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [block, setBlock] = useState({ id: "", name: "" });
-  const api_url = config.api_url;
 
   useEffect(() => {
-    console.log("fetch states use effect");
     fetchStates();
   }, []);
 
   const fetchStates = async () => {
     try {
-      const response = await fetch(`${api_url}/api/v1/get_states/`, {
-        method: "GET",
-        headers: {
-          "content-type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
       const data = await response.json();
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
-      console.log(sortedStates);
       setStatesList(sortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -40,7 +38,7 @@ const ActivateBlock = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -53,7 +51,6 @@ const ActivateBlock = () => {
       const sortedDistricts = data.districts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-      console.log(sortedDistricts);
       setDistrictsList(sortedDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -63,7 +60,7 @@ const ActivateBlock = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -76,7 +73,6 @@ const ActivateBlock = () => {
       const sortedBlocks = data.blocks.sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
-      console.log(sortedBlocks);
       setBlocksList(sortedBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -129,19 +125,19 @@ const ActivateBlock = () => {
       district_id: district.id,
       block_id: block.id,
     };
-
-    console.log("Request Body:", requestBody);
-
     try {
-      const response = await fetch(`${api_url}/api/v1/activate_entities/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/activate_entities/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
 
-      console.log("Response status:", response.status);
+      console.warn("Response status:", response.status);
 
       if (response.ok) {
         if (response.status === 200) {
@@ -155,7 +151,6 @@ const ActivateBlock = () => {
               pauseOnHover: true,
               draggable: true,
             });
-            console.log("Block is already activated.");
           } else {
             toast.success("Block activated successfully!", {
               position: "top-right",
@@ -165,7 +160,6 @@ const ActivateBlock = () => {
               pauseOnHover: true,
               draggable: true,
             });
-            console.log("Block Activation Success!");
           }
         } else if (response.status === 204) {
           toast.warning("Block deactivated! Please reactivate...", {
@@ -176,7 +170,6 @@ const ActivateBlock = () => {
             pauseOnHover: true,
             draggable: true,
           });
-          console.log("Block Deactivation Success!");
         } else {
           throw new Error(`Unexpected HTTP status: ${response.status}`);
         }

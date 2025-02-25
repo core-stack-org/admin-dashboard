@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import plantationForm from "../jsons/plantationForm.json";
 
 const sections = [
   "Registration",
@@ -11,7 +10,6 @@ const sections = [
 ];
 
 export default function PlantationAssessment({ isEmbedded }) {
-  console.log(plantationForm);
   const [activeSection, setActiveSection] = useState(0);
   const [formData, setFormData] = useState({
     registration: { institution: "", email: "", aezZone: "", cropSpecies: "" },

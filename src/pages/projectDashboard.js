@@ -52,22 +52,14 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
   };
 
   const handleUploadKml = async () => {
-    console.log("Uploading KML files function");
-
     if (!selectedFiles || selectedFiles.length === 0) {
       console.error("No files selected.");
       return;
     }
-
-    console.log("Selected files:", selectedFiles);
-
     const formData = new FormData();
     selectedFiles.forEach((file) => {
       formData.append("files", file);
     });
-
-    console.log("Files are uploading...");
-
     try {
       const response = await fetch("http://localhost:5000/upload", {
         method: "POST",
@@ -75,19 +67,14 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
       });
 
       const result = await response.json();
-      console.log("Upload successful:", result);
     } catch (error) {
       console.error("Error uploading files:", error);
     }
   };
 
-  const handleViewGeoJSON = () => {
-    console.log("Viewing GeoJSON data...");
-  };
+  const handleViewGeoJSON = () => {};
 
-  const handleDownloadGeoJSON = () => {
-    console.log("Downloading GeoJSON file...");
-  };
+  const handleDownloadGeoJSON = () => {};
 
   const projects = [
     //TODO: Fetch the projects name from the api

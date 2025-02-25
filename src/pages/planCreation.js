@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import config from "../services&apis/config";
 import { ToastContainer, toast } from "react-toastify";
 
 const PlanCreation = () => {
@@ -13,27 +12,27 @@ const PlanCreation = () => {
   const [plan, setPlan] = useState("");
   const [villageName, setVillageName] = useState("");
   const [gramPanchayat, setGramPanchayat] = useState("");
-  const api_url = config.api_url;
 
   useEffect(() => {
-    console.log("fetch state use effect");
     fetchStates();
   }, []);
 
   const fetchStates = async () => {
     try {
-      const response = await fetch(`${api_url}/api/v1/get_states/`, {
-        method: "GET",
-        headers: {
-          "content-type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
       const data = await response.json();
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
-      console.log(sortedStates);
       setStatesList(sortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -43,7 +42,7 @@ const PlanCreation = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -56,7 +55,6 @@ const PlanCreation = () => {
       const sortedDistricts = data.districts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-      console.log(sortedDistricts);
       setDistrictsList(sortedDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -66,7 +64,7 @@ const PlanCreation = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -79,7 +77,6 @@ const PlanCreation = () => {
       const sortedBlocks = data.blocks.sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
-      console.log(sortedBlocks);
       setBlocksList(sortedBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -130,21 +127,11 @@ const PlanCreation = () => {
       state.name &&
       district.name &&
       block.name &&
-      facilitatorName && // Correctly access the facilitatorName state
-      plan && // Correctly access the plan state
-      villageName && // Correctly access the villageName state
-      gramPanchayat // Correctly access the gramPanchayat state
+      facilitatorName &&
+      plan &&
+      villageName &&
+      gramPanchayat
     ) {
-      console.log("Submitting plan:", {
-        state_name: state.name,
-        district_name: district.name,
-        block_name: block.name,
-        facilitatorName,
-        plan,
-        villageName,
-        gramPanchayat,
-      });
-
       const requestOptions = {
         method: "POST",
         headers: {
@@ -161,9 +148,8 @@ const PlanCreation = () => {
         }),
       };
 
-      fetch(`${api_url}/api/v1/add_plan/`, requestOptions)
+      fetch(`${process.env.REACT_APP_API_URL}/api/v1/add_plan/`, requestOptions)
         .then((response) => {
-          console.log(response);
           if (!response.ok) {
             toast.error("Failed to create the plan.");
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -172,7 +158,6 @@ const PlanCreation = () => {
         })
         .then((data) => {
           toast.success("Plan created successfully!");
-          console.log("Response:", data);
         })
         .catch((error) => {
           console.error("Error:", error);

@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import layersData from "../jsons/layers.json";
-import config from "../services&apis/config";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
 
 const PreviewLayerComponent = () => {
-  console.log("preview layers");
   const [layerNames, setLayerNames] = useState([]);
   const [selectedLayer, setSelectedLayer] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
 
-  const api_url = config.api_url;
   const [state, setState] = useState({ id: "", name: "" });
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [block, setBlock] = useState({ id: "", name: "" });
@@ -24,7 +21,6 @@ const PreviewLayerComponent = () => {
       key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
     );
     setLayerNames(layers);
-    console.log("Layer Names:", layers);
   }, []);
 
   useEffect(() => {
@@ -33,18 +29,20 @@ const PreviewLayerComponent = () => {
 
   const fetchStates = async () => {
     try {
-      const response = await fetch(`${api_url}/api/v1/get_states/`, {
-        method: "GET",
-        headers: {
-          "content-type": "application/json",
-          "ngrok-skip-browser-warning": "420",
-        },
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
       const data = await response.json();
       const sortedStates = data.states.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
-      console.log(sortedStates);
       setStatesList(sortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -54,7 +52,7 @@ const PreviewLayerComponent = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -67,7 +65,6 @@ const PreviewLayerComponent = () => {
       const sortedDistricts = data.districts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-      console.log(sortedDistricts);
       setDistrictsList(sortedDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
@@ -77,7 +74,7 @@ const PreviewLayerComponent = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${api_url}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -90,7 +87,6 @@ const PreviewLayerComponent = () => {
       const sortedBlocks = data.blocks.sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
-      console.log(sortedBlocks);
       setBlocksList(sortedBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -164,9 +160,8 @@ const PreviewLayerComponent = () => {
           .replace(/blockname/g, formattedBlock)
       : `${formattedDistrict}_${formattedBlock}`;
 
-    const wfsurl = `https://geoserver.core-stack.org:8443/geoserver/panchayat_boundaries/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=panchayat_boundaries%3A${formattedDistrict}_${formattedBlock}&outputFormat=application%2Fjson`;
+    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}/panchayat_boundaries/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=panchayat_boundaries%3A${formattedDistrict}_${formattedBlock}&outputFormat=application%2Fjson`;
 
-    console.log(wfsurl);
     let dynamicBbox = "";
     try {
       const response = await fetch(wfsurl);
@@ -175,37 +170,20 @@ const PreviewLayerComponent = () => {
       }
 
       const adminLayer = await response.json();
-      console.log("Admin Layer Data:", adminLayer);
 
       const vectorSource = new VectorSource({
         features: new GeoJSON().readFeatures(adminLayer),
       });
 
       const extent = vectorSource.getExtent();
-      console.log("Calculated BBox (OpenLayers):", extent);
-      console.log("Extent element 0:", extent[0]);
-      console.log("Extent element 1:", extent[1]);
-      console.log("Extent element 2:", extent[2]);
-      console.log("Extent element 3:", extent[3]);
+
       dynamicBbox =
         extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
-      console.log("Dynamic BBox:", dynamicBbox);
 
       setBBox(extent); // Optionally store the bbox in the state
-    } catch (error) {
-      console.error("Error fetching WFS data:", error);
-    }
-    const url = `https://geoserver.core-stack.org:8443/geoserver/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+    } catch (error) {}
+    const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
 
-    // [86.934374, 24.023475, 87.34125, 24.25222];
-
-    console.log("District Name:", district.name);
-    console.log("Block Name:", block.name);
-    console.log("Dynamic 'end':", dynamicEnd);
-    console.log("dynamic url with dynamic bbox", url);
-
-    // setPreviewUrl(url);
-    // Open the dynamically generated URL in a new tab
     window.open(url, "_blank");
   };
 

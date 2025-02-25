@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Mail, Lock } from "lucide-react";
 import logo from "../assets/core-stack logo.png";
 import { useNavigate } from "react-router-dom";
-import config from "../services&apis/config";
 
 const LoginPage = ({ setCurrentUser }) => {
   const navigate = useNavigate();
@@ -40,24 +39,27 @@ const LoginPage = ({ setCurrentUser }) => {
     }
 
     try {
-      const response = await fetch(`${config.baseURL}/api/v1/user/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/user/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Authentication failed");
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.access);
-      console.log(data.access);
+      // localStorage.setItem("token", data.access);
+      sessionStorage.setItem("accessToken", data.access);
       setCurrentUser(data);
       navigate("/activateBlock");
     } catch (err) {

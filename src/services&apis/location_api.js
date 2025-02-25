@@ -21,7 +21,6 @@ export const fetchStates = async () => {
 export const fetchDistricts = async (apiUrl, stateId) => {
   try {
     const url = `${apiUrl}/api/v1/get_districts/${stateId}/`;
-    console.log("Districts API URL:", url);
 
     const response = await fetch(url, {
       method: "GET",
@@ -38,7 +37,6 @@ export const fetchDistricts = async (apiUrl, stateId) => {
     }
 
     const data = await response.json();
-    console.log("Districts Response Data:", data);
     return data.districts;
   } catch (error) {
     console.error("Error fetching districts:", error);

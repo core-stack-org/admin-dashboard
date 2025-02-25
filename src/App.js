@@ -8,7 +8,6 @@ import SideNavBar from "./pages/sidenavbar";
 import Dashboard from "./pages/dashboard";
 import ProjectDashboard from "./pages/projectDashboard";
 import Project from "./pages/project";
-import RandomPage from "./pages/testPage";
 import PlanCreation from "./pages/planCreation";
 import PreviewLayers from "./pages/previewLayer";
 import SetupUser from "./pages/setupUser";
@@ -42,7 +41,6 @@ function App() {
                 path="/"
                 element={<Login setCurrentUser={setCurrentUser} />}
               />
-              <Route path="/random" element={<RandomPage />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/activateBlock" element={<ActivateBlock />} />
               <Route path="/project" element={<Project />} />
