@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardHeader,
@@ -23,25 +23,79 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [projects, setProjects] = useState([]);
+  const [appTypes, setAppTypes] = useState([]);
+
+  useEffect(() => {
+    console.log("fetching projects");
+    const fetchProjects = async () => {
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        console.log(token);
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        console.log(data);
+        setProjects(data);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+    fetchProjects();
+  }, []);
+
+  const fetchAppType = async (projectId) => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId}/apps/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      console.log("App Types:", data);
+      setAppTypes(data);
+      return data;
+    } catch (error) {
+      console.error("Error fetching app types:", error);
+    }
+  };
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     setIsDialogOpen(true);
+    fetchAppType(project.id);
   };
+
   const handleClose = () => {
     setSelectedProject(null);
     setTabIndex(0);
     setIsDialogOpen(false);
   };
 
-  const [selectedFiles, setSelectedFiles] = useState([]); // Store multiple files
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   const handlefileSelect = (event) => {
-    const files = Array.from(event.target.files); // Convert FileList to array
+    const files = Array.from(event.target.files);
     const validFiles = files.filter((file) => file.name.endsWith(".kml"));
 
     if (validFiles.length > 0) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]); // Append new files
+      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
     } else {
       alert("Please upload valid KML files.");
     }
@@ -58,15 +112,30 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
     }
     const formData = new FormData();
     selectedFiles.forEach((file) => {
-      formData.append("files", file);
+      formData.append("file", file);
     });
+
     try {
-      const response = await fetch("http://localhost:5000/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject.id}/plantation/kml/`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420", // Add any necessary headers here
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
 
       const result = await response.json();
+      console.log("Upload successful:", result);
+      setSelectedFiles([]); // Clear selected files after upload
     } catch (error) {
       console.error("Error uploading files:", error);
     }
@@ -75,87 +144,6 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
   const handleViewGeoJSON = () => {};
 
   const handleDownloadGeoJSON = () => {};
-
-  const projects = [
-    //TODO: Fetch the projects name from the api
-    {
-      id: 1,
-      name: "Project Alpha",
-      type: "Plantation",
-      organization: "Org 1",
-      lastUpdated: "2 hours ago",
-    },
-    {
-      id: 2,
-      name: "Project Beta",
-      type: "Plantation",
-      organization: "Org 2",
-      lastUpdated: "5 hours ago",
-    },
-    {
-      id: 3,
-      name: "Project Gamma",
-      type: "Plantation",
-      organization: "Org 3",
-      lastUpdated: "1 day ago",
-    },
-    {
-      id: 4,
-      name: "Project Delta",
-      type: "Plantation",
-      organization: "Org 4",
-      lastUpdated: "3 days ago",
-    },
-    {
-      id: 5,
-      name: "Project Epsilon",
-      type: "Water Restoration",
-      organization: "Org 1",
-      lastUpdated: "4 hours ago",
-    },
-    {
-      id: 6,
-      name: "Project Zeta",
-      type: "Water Restoration",
-      organization: "Org 2",
-      lastUpdated: "1 day ago",
-    },
-    {
-      id: 7,
-      name: "Project Eta",
-      type: "Water Restoration",
-      organization: "Org 3",
-      lastUpdated: "2 days ago",
-    },
-    {
-      id: 8,
-      name: "Project Theta",
-      type: "Water Restoration",
-      organization: "Org 4",
-      lastUpdated: "5 days ago",
-    },
-    {
-      id: 9,
-      name: "Project Iota",
-      type: "MWS",
-      organization: "Org 1",
-      lastUpdated: "3 hours ago",
-    },
-    {
-      id: 10,
-      name: "Project Kappa",
-      type: "MWS",
-      organization: "Org 2",
-      lastUpdated: "8 hours ago",
-    },
-    {
-      id: 11,
-      name: "Project Lambda",
-      type: "Plantation",
-      organization: "Org 3",
-      lastUpdated: "1 day ago",
-    },
-  ];
 
   const groupedProjects = projects.reduce((acc, project) => {
     if (!acc[project.type]) acc[project.type] = [];
@@ -185,11 +173,11 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-500">Organization</span>
                       <span className="font-medium">
-                        {project.organization}
+                        {project.organization_name}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Last Updated</span>
+                      <span className="text-gray-500">App Type</span>
                       <span className="font-medium">{project.lastUpdated}</span>
                     </div>
                   </div>
