@@ -7,7 +7,7 @@ const LoginPage = ({ setCurrentUser }) => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
   const [errors, setErrors] = useState({});
@@ -16,10 +16,8 @@ const LoginPage = ({ setCurrentUser }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
+    if (!formData.username) {
+      newErrors.username = "Username is required";
     }
 
     if (!formData.password) {
@@ -40,14 +38,14 @@ const LoginPage = ({ setCurrentUser }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/user/login`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/auth/login/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            email: formData.email,
+            username: formData.username,
             password: formData.password,
           }),
         }
@@ -59,7 +57,11 @@ const LoginPage = ({ setCurrentUser }) => {
 
       const data = await response.json();
       // localStorage.setItem("token", data.access);
+      console.log(data);
       sessionStorage.setItem("accessToken", data.access);
+      sessionStorage.setItem("refreshToken", data.refresh);
+      localStorage.setItem("currentUser", JSON.stringify(data)); // Store in local storage
+      console.log(data.user);
       setCurrentUser(data);
       navigate("/activateBlock");
     } catch (err) {
@@ -98,12 +100,12 @@ const LoginPage = ({ setCurrentUser }) => {
                   size={20}
                 />
                 <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
+                  type="username"
+                  name="username"
+                  value={formData.username}
                   onChange={handleChange}
                   className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Email address"
+                  placeholder="User Name"
                 />
               </div>
               {errors.email && (

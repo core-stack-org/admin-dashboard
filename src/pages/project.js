@@ -1,79 +1,50 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProjectDashboard from "./projectDashboard";
 import AsyncSelect from "react-select/async";
 
-const Project = () => {
+const Project = ({ currentuser }) => {
   const [projectName, setProjectName] = useState("");
-  const [appType, setAppType] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
+  const [projectDescription, setProjectDescription] = useState("");
   const [organization, setOrganization] = useState(null);
+  const [userId, setUserId] = useState(null);
+  const [projectAppType, setProjectAppType] = useState("");
 
+  console.log(currentuser.user);
   const navigate = useNavigate();
 
-  const loadOrganization = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/org/get_org`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-          },
-        }
-      );
-      const data = await response.json();
-      return data.map((org) => ({
-        value: org.id,
-        label: org.name,
-      }));
-    } catch (error) {
-      console.error("Error fetching organizations:", error);
-      return [];
+  useEffect(() => {
+    if (currentuser?.user?.organization) {
+      setOrganization(currentuser.user.organization);
+      setUserId(currentuser.user.id);
     }
-  };
-
-  const loadAppType = async (inputValue) => {
-    try {
-      const token = sessionStorage.getItem("accessToken"); // Retrieve the token
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/proj/get_app_type`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      return data.map((app) => ({
-        value: app.app_type_id,
-        label: app.app_name,
-      }));
-    } catch (error) {
-      console.error("Error fetching app types:", error);
-      return [];
-    }
-  };
+  }, [currentuser]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    console.log("Selected App Type:", projectAppType); // Debugging
+
+    if (!projectAppType) {
+      console.error("Project App Type is required");
+      return;
+    }
+
     const formData = {
-      project_name: projectName,
-      is_public: isPublic ? 1 : 0,
-      app_type: appType.value,
-      organization: organization.value,
+      name: projectName,
+      description: projectDescription,
+      organization: organization,
+      created_by: userId,
+      updated_by: userId,
     };
+
     try {
+      console.log(formData);
       const token = sessionStorage.getItem("accessToken");
+      console.log(token);
+      // 1st API Call - Create Project
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/proj/create_project`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
         {
           method: "POST",
           headers: {
@@ -89,8 +60,26 @@ const Project = () => {
       }
 
       const data = await response.json();
+      const projectId = data.id;
+      console.log("Project Created with ID:", projectId, projectAppType);
 
-      setShowDashboard(true);
+      // 2nd API Call - Enable App Type
+      const enableAppResponse = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId}/enable_app/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ app_type: projectAppType }),
+        }
+      );
+
+      if (!enableAppResponse.ok) {
+        throw new Error("Failed to enable app");
+      }
+
       navigate("/projectDashboard");
     } catch (error) {
       console.error("Error submitting project:", error);
@@ -98,69 +87,60 @@ const Project = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto mt-32 p-8 bg-white shadow-md rounded-md">
-      <h1 className="text-2xl font-bold mb-8 text-center">Create Project</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-5xl mx-auto mt-32 p-12 bg-white shadow-md rounded-md">
+      <h1 className="text-3xl font-bold mb-10 text-center">Create Project</h1>
+      <form onSubmit={handleSubmit} className="space-y-8">
         {/* Project Name */}
         <div>
-          <label className="block text-sm font-medium mb-2">Project Name</label>
+          <label className="block text-lg font-medium mb-3">Project Name</label>
           <input
             type="text"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
             placeholder="Enter project name"
             required
           />
         </div>
 
-        {/* App Type */}
+        {/* Project Description */}
         <div>
-          <label className="block text-sm font-medium mb-2">App Type</label>
-          <AsyncSelect
-            cacheOptions
-            loadOptions={loadAppType}
-            defaultOptions
-            onChange={(selected) => setAppType(selected)}
-            placeholder="Select or search for an App type"
-            classNamePrefix="react-select"
+          <label className="block text-lg font-medium mb-3">
+            Project Description
+          </label>
+          <textarea
+            value={projectDescription}
+            onChange={(e) => setProjectDescription(e.target.value)}
+            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            placeholder="Enter project description"
+            required
           />
         </div>
 
-        {/* isPublic */}
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Is Public</label>
-          <div
-            onClick={() => setIsPublic(!isPublic)}
-            className={`w-12 h-6 flex items-center rounded-full cursor-pointer ${
-              isPublic ? "bg-green-500" : "bg-gray-300"
-            }`}
+        {/* Project App Type (Inside Form) */}
+        <div>
+          <label className="block text-lg font-medium mb-3">
+            Select Project App Type
+          </label>
+          <select
+            value={projectAppType}
+            onChange={(e) => setProjectAppType(e.target.value)}
+            className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+            required
           >
-            <div
-              className={`w-6 h-6 bg-white rounded-full shadow-md transform ${
-                isPublic ? "translate-x-6" : ""
-              } transition-transform`}
-            ></div>
-          </div>
-        </div>
-
-        {/* Organization */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Organization</label>
-          <AsyncSelect
-            loadOptions={loadOrganization}
-            defaultOptions
-            onChange={(selected) => setOrganization(selected)}
-            placeholder="Select or search for an Organisation"
-            classNamePrefix="react-select"
-          />
+            <option value="" disabled>
+              Select app type
+            </option>
+            <option value="plantation">plantation</option>
+            <option value="watershed">watershed</option>
+          </select>
         </div>
 
         {/* Submit Button */}
         <div className="text-center">
           <button
             type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            className="px-8 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition text-lg"
           >
             Submit
           </button>
