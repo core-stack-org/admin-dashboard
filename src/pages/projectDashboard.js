@@ -43,13 +43,25 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
             },
           }
         );
+
         const data = await response.json();
-        console.log(data);
-        setProjects(data);
+        console.log("Projects:", data);
+
+        // Fetch app types for each project simultaneously
+        const projectsWithAppTypes = await Promise.all(
+          data.map(async (project) => {
+            const appTypes = await fetchAppType(project.id);
+            return { ...project, appTypes };
+          })
+        );
+
+        console.log("Projects with App Types:", projectsWithAppTypes);
+        setProjects(projectsWithAppTypes);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
+
     fetchProjects();
   }, []);
 
@@ -68,11 +80,10 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
         }
       );
       const data = await response.json();
-      console.log("App Types:", data);
-      setAppTypes(data);
-      return data;
+      return data; // Just return the data, no state setting here
     } catch (error) {
       console.error("Error fetching app types:", error);
+      return []; // Return an empty array in case of error
     }
   };
 
@@ -145,48 +156,43 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
 
   const handleDownloadGeoJSON = () => {};
 
-  const groupedProjects = projects.reduce((acc, project) => {
-    if (!acc[project.type]) acc[project.type] = [];
-    acc[project.type].push(project);
-    return acc;
-  }, {});
-
   return (
     <div className="p-8 max-w-7xl mx-auto mt-16">
       <h1 className="text-3xl font-bold mb-8">Project Dashboard</h1>
-      {Object.keys(groupedProjects).map((category) => (
-        <div key={category} className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">{category}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groupedProjects[category].map((project) => (
-              <Card
-                key={project.id}
-                className="cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white"
-                onClick={() => handleProjectSelect(project)}
-              >
-                <CardContent>
-                  <div className="flex flex-col space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Project name</span>
-                      <span className="font-medium">{project.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">Organization</span>
-                      <span className="font-medium">
-                        {project.organization_name}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-500">App Type</span>
-                      <span className="font-medium">{project.lastUpdated}</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {projects.map((project) => (
+          <Card
+            key={project.id}
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white"
+            onClick={() => handleProjectSelect(project)}
+          >
+            <CardContent>
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Project name</span>
+                  <span className="font-medium">{project.name}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Organization</span>
+                  <span className="font-medium">
+                    {project.organization_name}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">App</span>
+                  <span className="font-medium">
+                    {project.appTypes && project.appTypes.length > 0
+                      ? project.appTypes
+                          .map((app) => app.app_type_display)
+                          .join(", ")
+                      : "No App Type"}
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
       <Dialog open={isDialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle
           sx={{

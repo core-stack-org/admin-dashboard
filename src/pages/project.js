@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProjectDashboard from "./projectDashboard";
 import AsyncSelect from "react-select/async";
+import { ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Project = ({ currentuser }) => {
   const [projectName, setProjectName] = useState("");
@@ -23,10 +26,10 @@ const Project = ({ currentuser }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Selected App Type:", projectAppType); // Debugging
-
     if (!projectAppType) {
       console.error("Project App Type is required");
+      toast.error("Project App Type is required");
+
       return;
     }
 
@@ -79,15 +82,17 @@ const Project = ({ currentuser }) => {
       if (!enableAppResponse.ok) {
         throw new Error("Failed to enable app");
       }
-
+      toast.success("Project created successfully");
       navigate("/projectDashboard");
     } catch (error) {
       console.error("Error submitting project:", error);
+      toast.error("Failed to submit project");
     }
   };
 
   return (
     <div className="max-w-5xl mx-auto mt-32 p-12 bg-white shadow-md rounded-md">
+      <ToastContainer />
       <h1 className="text-3xl font-bold mb-10 text-center">Create Project</h1>
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Project Name */}

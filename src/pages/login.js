@@ -83,6 +83,10 @@ const LoginPage = ({ setCurrentUser }) => {
     }
   };
 
+  const handleRegisterRedirect = () => {
+    navigate("/register"); // Redirect to registration page
+  };
+
   return (
     <div className="min-h-screen bg-[#1e2532] flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6 rounded-lg bg-[#1e2532] p-8">
@@ -143,6 +147,17 @@ const LoginPage = ({ setCurrentUser }) => {
           {loginErr && (
             <p className="mt-4 text-sm text-red-400 text-center">{loginErr}</p>
           )}
+          <div className="text-center">
+            <p className="text-gray-400">
+              Don't have an account?{" "}
+              <span
+                onClick={handleRegisterRedirect}
+                className="text-blue-500 cursor-pointer hover:underline"
+              >
+                Register here
+              </span>
+            </p>
+          </div>
         </form>
       </div>
     </div>

@@ -2,8 +2,14 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import logo from "../assets/core-stack logo.png";
 
 const RegistrationForm = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -121,13 +127,14 @@ const RegistrationForm = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              // Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(registrationData),
           }
         );
 
         if (response.ok) {
+          toast.success("User registered successfully!");
           setFormData({
             username: "",
             email: "",
@@ -142,31 +149,45 @@ const RegistrationForm = () => {
           setSelectedPermission([]);
           setErrors({});
         } else {
-          console.error("Registration failed");
+          const errorData = await response.json(); // Parse the JSON response
+          console.log("API Error:", errorData); // Debug to see the error message structure
+          const errorMessages = Object.values(errorData).flat().join(", ");
+          toast.error(
+            errorMessages || "Registration failed. Please try again."
+          );
         }
       } catch (error) {
         console.error("Error during registration:", error);
+        toast.error("An error occurred. Please try again later.");
       }
     }
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white rounded-lg shadow-md mt-32">
-      <div className="p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen bg-[#1e2532] flex items-center justify-center p-4">
+      <ToastContainer position="top-right" autoClose={3000} />
+      <button
+        className="absolute top-10 right-40 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+        onClick={() => navigate("/login")}
+      >
+        Login from here
+      </button>
+      <div className="p-24">
+        <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
+        <h2 className="text-2xl font-bold mb-6 text-center text-white">
           User Registration
         </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">
+              {/* <label className="block text-sm font-medium mb-1  text-white placeholder-gray-400 ">
                 First Name
-              </label>
+              </label> */}
               <input
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleChange}
-                className="w-full p-2 border rounded-lg"
+                className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter First Name"
               />
               {errors.first_name && (
@@ -174,14 +195,14 @@ const RegistrationForm = () => {
               )}
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">
+              {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
                 Last Name
-              </label>
+              </label> */}
               <input
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleChange}
-                className="w-full p-2 border rounded-lg"
+                className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Enter Last Name"
               />
               {errors.last_name && (
@@ -191,12 +212,14 @@ const RegistrationForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">User Name</label>
+            {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
+              User Name
+            </label> */}
             <input
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+              className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter User Name"
             />
             {errors.username && (
@@ -205,13 +228,15 @@ const RegistrationForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
+              Email
+            </label> */}
             <input
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full p-2 border rounded-lg"
+              className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoComplete="off"
               placeholder="Enter valid email"
             />
@@ -221,9 +246,9 @@ const RegistrationForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
+            {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
               Contact Number
-            </label>
+            </label> */}
             <input
               name="contact_number"
               value={formData.contact_number || ""} // Ensure it's never undefined
@@ -234,8 +259,8 @@ const RegistrationForm = () => {
                   setFormData({ ...formData, contact_number: value });
                 }
               }}
-              className="w-full p-2 border rounded-lg"
-              placeholder="Enter 10-digit number"
+              className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter 10-digit contact number"
             />
             {formData.contact_number?.length > 0 &&
               formData.contact_number.length !== 10 && (
@@ -247,9 +272,9 @@ const RegistrationForm = () => {
 
           {/* Organization */}
           <div>
-            <label className="block text-sm font-medium mb-2">
+            {/* <label className="block text-sm font-medium mb-2 text-white placeholder-gray-400">
               Organization
-            </label>
+            </label> */}
             <AsyncSelect
               loadOptions={loadOrganization}
               defaultOptions
@@ -262,13 +287,26 @@ const RegistrationForm = () => {
               }}
               placeholder="Select or search for an Organisation"
               classNamePrefix="react-select"
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary25: "lightblue",
+                  primary: "blue",
+                  neutral0: "#2a3441", // background color
+                  neutral20: "#2a3441", // border color
+                  neutral80: "white", // text color
+                },
+              })}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             {/* Password Field */}
             <div>
-              <label className="block text-sm font-medium mb-1">Password</label>
+              {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
+                Password
+              </label> */}
               <div className="relative">
                 <input
                   name="password"
@@ -280,7 +318,7 @@ const RegistrationForm = () => {
                   onBlur={() =>
                     setShowPasswordRules(formData.password.length > 0)
                   }
-                  className="w-full p-2 border rounded-lg pr-10"
+                  className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter password"
                 />
                 <button
@@ -310,16 +348,16 @@ const RegistrationForm = () => {
 
             {/* Confirm Password Field */}
             <div>
-              <label className="block text-sm font-medium mb-1">
+              {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
                 Confirm Password
-              </label>
+              </label> */}
               <div className="relative">
                 <input
                   name="password_confirm"
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.password_confirm}
                   onChange={handleChange}
-                  className="w-full p-2 border rounded-lg pr-10"
+                  className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Re-Enter password "
                 />
                 <button
@@ -345,7 +383,7 @@ const RegistrationForm = () => {
           <div className="flex justify-center mt-6">
             <button
               type="submit"
-              className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 flex items-center"
+              className="px-4 py-4 rounded-lg bg-blue-500 text-white hover:bg-blue-600 flex items-center"
             >
               <CheckCircle2 className="w-4 h-4 mr-2" /> Submit
             </button>

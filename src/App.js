@@ -21,6 +21,7 @@ import PlantationAssessment from "./pages/plantationAssessment";
 import UserRegistration from "./pages/userRegistration";
 import OrgDashboard from "./pages/orgDashboard";
 import SideNavbar from "./pages/sidenavbar";
+import { ToastContainer } from "react-toastify";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -29,6 +30,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
   return (
     <>
       <div className="flex h-screen">
+        <ToastContainer position="top-right" autoClose={3000} />
         {showSidebar && (
           <SideNavbar
             currentuser={currentUser}
@@ -43,6 +45,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
               path="/"
               element={<Login setCurrentUser={setCurrentUser} />}
             />
+            <Route path="/register" element={<UserRegistration />} />
             {currentUser ? (
               <>
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -58,7 +61,6 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route path="/planCreation" element={<PlanCreation />} />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
                 <Route path="/setupUser" element={<SetupUser />} />
-                <Route path="/register" element={<UserRegistration />} />
                 <Route path="/orgDashboard" element={<OrgDashboard />} />
                 <Route
                   path="/plantationAssessment"

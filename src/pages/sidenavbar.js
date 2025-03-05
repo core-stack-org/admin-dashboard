@@ -118,11 +118,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       label: "Preview Layers",
       href: "/previewLayers",
     },
-    {
-      icon: <FontAwesomeIcon icon={faUserCog} size="lg" />,
-      label: "Setup User",
-      href: "/setupUser",
-    },
+    // {
+    //   icon: <FontAwesomeIcon icon={faUserCog} size="lg" />,
+    //   label: "Setup User",
+    //   href: "/setupUser",
+    // },
     {
       icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
       label: "Project",
