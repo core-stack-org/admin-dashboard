@@ -48,7 +48,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
             <Route path="/register" element={<UserRegistration />} />
             {currentUser ? (
               <>
-                <Route path="/dashboard" element={<Dashboard />} />
+                <Route
+                  path="/dashboard"
+                  element={<Dashboard currentUser={currentUser} />}
+                />
                 <Route path="/activateBlock" element={<ActivateBlock />} />
                 <Route
                   path="/project"

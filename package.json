@@ -27,8 +27,14 @@
     ]
   },
   "devDependencies": {
+    "@babel/core": "^7.26.9",
     "@shadcn/ui": "^0.0.4",
-    "tailwindcss": "^3.4.1"
+    "babel-loader": "^10.0.0",
+    "html-webpack-plugin": "^5.6.3",
+    "tailwindcss": "^3.4.1",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -40,6 +46,7 @@
     "@mui/styled-engine-sc": "^6.4.3",
     "@mui/system": "^6.4.3",
     "amazon-cognito-identity-js": "^6.3.12",
+    "framer-motion": "^12.4.10",
     "lucide-react": "^0.475.0",
     "ol": "^10.4.0",
     "react": "^19.0.0",

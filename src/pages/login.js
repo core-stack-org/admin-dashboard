@@ -92,7 +92,9 @@ const LoginPage = ({ setCurrentUser }) => {
       <div className="w-full max-w-md space-y-6 rounded-lg bg-[#1e2532] p-8">
         <div className="text-center">
           <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
-          <h2 className="mt-4 text-2xl font-bold text-white">NRM Dashboard</h2>
+          <h2 className="mt-4 text-2xl font-bold text-white">
+            CoRE Stack Dashboard
+          </h2>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>

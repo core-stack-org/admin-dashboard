@@ -148,6 +148,7 @@ const RegistrationForm = () => {
           setSelectedOption(null);
           setSelectedPermission([]);
           setErrors({});
+          navigate("/login");
         } else {
           const errorData = await response.json(); // Parse the JSON response
           console.log("API Error:", errorData); // Debug to see the error message structure
@@ -166,12 +167,12 @@ const RegistrationForm = () => {
   return (
     <div className="min-h-screen bg-[#1e2532] flex items-center justify-center p-4">
       <ToastContainer position="top-right" autoClose={3000} />
-      <button
+      {/* <button
         className="absolute top-10 right-40 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
         onClick={() => navigate("/login")}
       >
         Login from here
-      </button>
+      </button> */}
       <div className="p-24">
         <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
         <h2 className="text-2xl font-bold mb-6 text-center text-white">
