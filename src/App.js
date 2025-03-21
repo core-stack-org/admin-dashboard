@@ -11,17 +11,16 @@ import {
 import Login from "./pages/login";
 import ActivateBlock from "./pages/activateBlock";
 import Dashboard from "./pages/dashboard";
-import ProjectDashboard from "./pages/projectDashboard";
-import Project from "./pages/project";
 import PlanCreation from "./pages/planCreation";
 import PreviewLayers from "./pages/previewLayer";
-import SetupUser from "./pages/setupUser";
 import LocationForm from "./pages/locationForm";
 import PlantationAssessment from "./pages/plantationAssessment";
 import UserRegistration from "./pages/userRegistration";
 import OrgDashboard from "./pages/orgDashboard";
 import SideNavbar from "./pages/sidenavbar";
 import { ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -53,17 +52,9 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   element={<Dashboard currentUser={currentUser} />}
                 />
                 <Route path="/activateBlock" element={<ActivateBlock />} />
-                <Route
-                  path="/project"
-                  element={<Project currentuser={currentUser} />}
-                />
-                <Route
-                  path="/projectDashboard"
-                  element={<ProjectDashboard />}
-                />
+
                 <Route path="/planCreation" element={<PlanCreation />} />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
-                <Route path="/setupUser" element={<SetupUser />} />
                 <Route path="/orgDashboard" element={<OrgDashboard />} />
                 <Route
                   path="/plantationAssessment"

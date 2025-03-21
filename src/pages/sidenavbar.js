@@ -7,14 +7,13 @@ import {
   faPlug,
   faCogs,
   faLayerGroup,
-  faUserCog,
-  faSignOutAlt,
-  faFolderOpen,
-  faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/core-stack logo.png";
 import { useNavigate } from "react-router-dom";
 import layersData from "../jsons/layers.json";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const navigate = useNavigate();
@@ -27,8 +26,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
-
-  console.log(currentuser.user);
 
   const [activeItem, setActiveItem] = useState(
     localStorage.getItem("activeItem") || "Dashboard"
@@ -44,20 +41,9 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     localStorage.setItem("activeItem", activeItem);
   }, [activeItem]);
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem("userToken");
-  //   sessionStorage.removeItem("userToken");
-  //   setCurrentUser(null);
-  //   navigate("/");
-  // };
-
   const handleLogout = async () => {
-    console.log("Logging out...");
     const token = sessionStorage.getItem("refreshToken");
     const accessToken = sessionStorage.getItem("accessToken");
-    console.log(token);
-    console.log(accessToken);
-
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/logout/`,
@@ -75,7 +61,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       );
 
       if (response.ok) {
-        console.log("Logout successful");
+        toast.success("Logged out successfully!");
+
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         localStorage.removeItem("currentUser");
@@ -123,21 +110,21 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     //   label: "Setup User",
     //   href: "/setupUser",
     // },
-    {
-      icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
-      label: "Project",
-      href: "/project",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
-      label: "Project Dashboard",
-      href: "/projectDashboard",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faUserPlus} size="lg" />,
-      label: "Create User",
-      href: "/register",
-    },
+    // {
+    //   icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
+    //   label: "Project",
+    //   href: "/project",
+    // },
+    // {
+    //   icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
+    //   label: "Project Dashboard",
+    //   href: "/projectDashboard",
+    // },
+    // {
+    //   icon: <FontAwesomeIcon icon={faUserPlus} size="lg" />,
+    //   label: "Create User",
+    //   href: "/register",
+    // },
   ];
 
   const handleLayerClick = (layerLabel) => {
@@ -157,6 +144,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
 
   return (
     <div className="relative min-h-screen flex">
+      <ToastContainer position="top-right" autoClose={3000} />
+
       {/* Sidebar */}
       <div className="fixed top-0 left-0 h-screen w-64 bg-gray-800 text-white overflow-y-auto scrollbar-hide">
         <div className="flex items-center justify-center h-16 bg-gray-800">
@@ -224,12 +213,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       {/* Top Navbar */}
       <nav className="fixed top-0 left-64 right-0 bg-gray-800 text-white h-16 z-20">
         <div className="flex items-center h-full px-4 relative">
-          <h1 className="text-xl font-bold mx-auto">NRM Dashboard</h1>
-          {/* <div className="absolute right-20">
-            <button className="flex items-center justify-center w-8 h-8 bg-gray-600 rounded-full hover:bg-gray-500">
-              <Bell size={20} className="text-white" />
-            </button>
-          </div> */}
+          <h1 className="text-xl font-bold mx-auto">CoreStack Dashboard</h1>
 
           <div className="relative mr-4">
             <button className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors">

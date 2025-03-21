@@ -4,7 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation } from "react-router-dom";
 
-const LocationFormComponent = ({ addTask }) => {
+const LocationFormComponent = ({}) => {
   const location = useLocation();
   const { layerName, showDates } = location.state || {};
 
@@ -35,6 +35,7 @@ const LocationFormComponent = ({ addTask }) => {
       showYear: layersData.layers_json[key].show_year,
     };
   });
+  console.log(layers);
 
   useEffect(() => {
     fetchStates();
@@ -146,24 +147,11 @@ const LocationFormComponent = ({ addTask }) => {
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
+    const selectedLayer = layersData.layers_json[layerName];
+    const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/"); // Gets "generate_ci_layer/"
 
+    console.log(selectedLayer);
     // toast.info("Layer generation started...");
-    const taskId = `TASK-${Math.floor(Math.random() * 10000)}`; // Replace with API-generated task ID
-    const newTask = { id: taskId, layerName, status: "Started" };
-
-    // Add task to the sidebar
-    addTask(newTask);
-
-    // Simulate status updates
-    setTimeout(() => {
-      addTask({ ...newTask, status: "In Progress" });
-      // toast.info("Layer generation in progress...");
-    }, 2000);
-
-    setTimeout(() => {
-      addTask({ ...newTask, status: "Completed" });
-      // toast.success("Layer generation completed!");
-    }, 5000);
 
     const payload = {
       state: state.name,
@@ -177,7 +165,7 @@ const LocationFormComponent = ({ addTask }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_LAYER_API_URL_V1}`,
+        `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
         {
           method: "POST",
           headers: {

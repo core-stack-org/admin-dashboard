@@ -135,6 +135,9 @@ const RegistrationForm = () => {
 
         if (response.ok) {
           toast.success("User registered successfully!");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
           setFormData({
             username: "",
             email: "",
@@ -148,7 +151,6 @@ const RegistrationForm = () => {
           setSelectedOption(null);
           setSelectedPermission([]);
           setErrors({});
-          navigate("/login");
         } else {
           const errorData = await response.json(); // Parse the JSON response
           console.log("API Error:", errorData); // Debug to see the error message structure
@@ -163,32 +165,27 @@ const RegistrationForm = () => {
       }
     }
   };
+  const handleloginRedirect = () => {
+    navigate("/login");
+  };
 
   return (
-    <div className="min-h-screen bg-[#1e2532] flex items-center justify-center p-4">
+    <div className="min-h-screen  flex items-center justify-center p-4">
       <ToastContainer position="top-right" autoClose={3000} />
-      {/* <button
-        className="absolute top-10 right-40 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-        onClick={() => navigate("/login")}
-      >
-        Login from here
-      </button> */}
-      <div className="p-24">
+
+      <div className="p-8 bg-white shadow-lg border border-gray-300 rounded-xl w-full max-w-4xl">
         <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
-        <h2 className="text-2xl font-bold mb-6 text-center text-white">
+        <h2 className="text-2xl font-bold mb-6 text-center t">
           User Registration
         </h2>
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              {/* <label className="block text-sm font-medium mb-1  text-white placeholder-gray-400 ">
-                First Name
-              </label> */}
               <input
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleChange}
-                className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Enter First Name"
               />
               {errors.first_name && (
@@ -196,14 +193,11 @@ const RegistrationForm = () => {
               )}
             </div>
             <div>
-              {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
-                Last Name
-              </label> */}
               <input
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleChange}
-                className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Enter Last Name"
               />
               {errors.last_name && (
@@ -213,14 +207,11 @@ const RegistrationForm = () => {
           </div>
 
           <div>
-            {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
-              User Name
-            </label> */}
             <input
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="Enter User Name"
             />
             {errors.username && (
@@ -229,15 +220,12 @@ const RegistrationForm = () => {
           </div>
 
           <div>
-            {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
-              Email
-            </label> */}
             <input
               name="email"
               type="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
               autoComplete="off"
               placeholder="Enter valid email"
             />
@@ -247,12 +235,9 @@ const RegistrationForm = () => {
           </div>
 
           <div>
-            {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
-              Contact Number
-            </label> */}
             <input
               name="contact_number"
-              value={formData.contact_number || ""} // Ensure it's never undefined
+              value={formData.contact_number || ""}
               onChange={(e) => {
                 const value = e.target.value;
                 // Allow only numbers (remove non-numeric characters)
@@ -260,8 +245,9 @@ const RegistrationForm = () => {
                   setFormData({ ...formData, contact_number: value });
                 }
               }}
-              className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="Enter 10-digit contact number"
+              a
             />
             {formData.contact_number?.length > 0 &&
               formData.contact_number.length !== 10 && (
@@ -273,9 +259,6 @@ const RegistrationForm = () => {
 
           {/* Organization */}
           <div>
-            {/* <label className="block text-sm font-medium mb-2 text-white placeholder-gray-400">
-              Organization
-            </label> */}
             <AsyncSelect
               loadOptions={loadOrganization}
               defaultOptions
@@ -288,15 +271,30 @@ const RegistrationForm = () => {
               }}
               placeholder="Select or search for an Organisation"
               classNamePrefix="react-select"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  padding: "8px", // Adds padding
+                  height: "50px", // Adjust height
+                  borderRadius: "6px",
+                  borderColor: "#D1D5DB", // Tailwind's border-gray-300
+                  boxShadow: "none",
+                }),
+                placeholder: (provided) => ({
+                  ...provided,
+                  color: "#9CA3AF", // Matches Tailwind's text-gray-400
+                }),
+                valueContainer: (provided) => ({
+                  ...provided,
+                  padding: "0 12px", // Adjusts padding inside the field
+                }),
+              }}
               theme={(theme) => ({
                 ...theme,
                 colors: {
                   ...theme.colors,
-                  primary25: "lightblue",
-                  primary: "blue",
-                  neutral0: "#2a3441", // background color
-                  neutral20: "#2a3441", // border color
-                  neutral80: "white", // text color
+                  primary25: "lightgray",
+                  primary: "gray",
                 },
               })}
             />
@@ -304,39 +302,30 @@ const RegistrationForm = () => {
 
           <div className="grid grid-cols-2 gap-4">
             {/* Password Field */}
-            <div>
-              {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
-                Password
-              </label> */}
-              <div className="relative">
-                <input
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={handleChange}
-                  autoComplete="off"
-                  onFocus={() => setShowPasswordRules(true)}
-                  onBlur={() =>
-                    setShowPasswordRules(formData.password.length > 0)
-                  }
-                  className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-red-500 text-sm">{errors.password}</p>
-              )}
 
-              {/* Password Rules (Show on Focus) */}
+            <div className="relative">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={handleChange}
+                autoComplete="off"
+                onFocus={() => setShowPasswordRules(true)}
+                onBlur={() => setShowPasswordRules(false)} // ✅ Hide rules when moving to another field
+                className="w-full rounded border border-gray-300 pl-10 pr-10 py-4 e placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="Enter password"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+
+              {/* Password Rules (Hide on blur) */}
               {showPasswordRules && (
-                <div className="mt-2 p-2 bg-gray-100 border rounded-lg text-sm text-gray-700">
+                <div className="absolute top-full left-0 w-full mt-2 p-2 bg-gray-100 border rounded-lg text-sm text-gray-700 shadow-lg">
                   <p className="font-medium">Password must include:</p>
                   <ul className="list-disc ml-5">
                     {passwordRequirements.map((rule, index) => (
@@ -349,16 +338,13 @@ const RegistrationForm = () => {
 
             {/* Confirm Password Field */}
             <div>
-              {/* <label className="block text-sm font-medium mb-1 text-white placeholder-gray-400">
-                Confirm Password
-              </label> */}
               <div className="relative">
                 <input
                   name="password_confirm"
                   type={showConfirmPassword ? "text" : "password"}
                   value={formData.password_confirm}
                   onChange={handleChange}
-                  className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="Re-Enter password "
                 />
                 <button
@@ -388,6 +374,17 @@ const RegistrationForm = () => {
             >
               <CheckCircle2 className="w-4 h-4 mr-2" /> Submit
             </button>
+          </div>
+          <div className="text-center">
+            <p className="text-gray-600">
+              Aready have an account?{" "}
+              <span
+                onClick={handleloginRedirect}
+                className="text-blue-500 cursor-pointer hover:underline"
+              >
+                Login here
+              </span>
+            </p>
           </div>
         </form>
       </div>

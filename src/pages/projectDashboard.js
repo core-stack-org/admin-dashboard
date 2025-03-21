@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import {
   Card,
   CardHeader,
   CardContent,
-  Dialog,
   DialogTitle,
   DialogContent,
   Tabs,
@@ -12,19 +11,46 @@ import {
   Paper,
   Typography,
   IconButton,
-  Button,
+  Snackbar,
+  Alert,
+  Dialog,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PlantationAssessment from "./plantationAssessment";
+import { Vector as VectorSource } from "ol/source";
+import GeoJSON from "ol/format/GeoJSON";
+import { Tooltip, Button } from "@mui/material";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import EditIcon from "@mui/icons-material/Edit";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import CalculateIcon from "@mui/icons-material/Calculate";
 
-const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
+const ProjectDashboard = ({ closeModal, currentUser }) => {
+  console.log(currentUser);
+  const organizationName = currentUser?.user?.organization_name;
+  const [isLayerAvailable, setIsLayerAvailable] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+
   const [tabIndex, setTabIndex] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [projects, setProjects] = useState([]);
   const [appTypes, setAppTypes] = useState([]);
+  const [bbox, setBBox] = useState(null);
+  const [openDialog, setOpenDialog] = useState({ projectId: null, type: null });
+
+  const openModal = (dialogType) => setOpenDialog(dialogType);
+  // const closeModal = () => setOpenDialog(null);
+
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   useEffect(() => {
     console.log("fetching projects");
@@ -87,10 +113,16 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
     }
   };
 
-  const handleProjectSelect = (project) => {
-    setSelectedProject(project);
+  const handleOpenDialog = (project) => {
+    setSelectedProject(project); // Store the whole project object
+    setSelectedFiles([]);
+    console.log("Selected Project:", project); // Log the entire project
     setIsDialogOpen(true);
-    fetchAppType(project.id);
+  };
+
+  const handleCloseDialog = () => {
+    setIsDialogOpen(false);
+    setSelectedFiles([]);
   };
 
   const handleClose = () => {
@@ -117,14 +149,25 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
   };
 
   const handleUploadKml = async () => {
+    console.log(selectedProject.id);
     if (!selectedFiles || selectedFiles.length === 0) {
-      console.error("No files selected.");
+      setToast({
+        open: true,
+        message: "No files selected!",
+        severity: "error",
+      });
       return;
     }
+
     const formData = new FormData();
-    selectedFiles.forEach((file) => {
-      formData.append("file", file);
-    });
+
+    if (selectedFiles.length > 1) {
+      selectedFiles.forEach((file) => {
+        formData.append("files[]", file);
+      });
+    } else {
+      formData.append("file", selectedFiles[0]);
+    }
 
     try {
       const token = sessionStorage.getItem("accessToken");
@@ -135,7 +178,7 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
           body: formData,
           headers: {
             Authorization: `Bearer ${token}`,
-            "ngrok-skip-browser-warning": "420", // Add any necessary headers here
+            "ngrok-skip-browser-warning": "420",
           },
         }
       );
@@ -146,221 +189,484 @@ const ProjectDashboard = ({ onProjectSelect = () => {} }) => {
 
       const result = await response.json();
       console.log("Upload successful:", result);
+
+      setToast({
+        open: true,
+        message:
+          "KML file uploaded successfully! It may take 5-10 minutes for processing before it becomes visible.",
+        severity: "success",
+      });
       setSelectedFiles([]); // Clear selected files after upload
+      setIsLayerAvailable(false); // Disable View button initially
     } catch (error) {
       console.error("Error uploading files:", error);
+      setToast({
+        open: true,
+        message: "Failed to upload KML file!",
+        severity: "error",
+      });
+    }
+  };
+  const handleViewEditProfile = (project) => {
+    setSelectedProject(project);
+    setIsProfileDialogOpen(true);
+  };
+  const handleOpenDownloadDialog = (project) => {
+    setSelectedProject(project);
+    setIsDownloadDialogOpen(true);
+  };
+
+  const handleCloseDownloadDialog = () => {
+    setIsDownloadDialogOpen(false);
+  };
+
+  const handleCompute = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/plantation_site_suitability/`,
+        {
+          method: "POST", // Use "GET" if needed
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // Add required request body parameters here
+            key1: "value1",
+            key2: "value2",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Compute API Response:", result);
+
+      // Optionally, show success message
+      alert("Compute successful!");
+    } catch (error) {
+      console.error("❌ Error calling compute API:", error);
+      alert("Failed to compute. Please try again.");
     }
   };
 
-  const handleViewGeoJSON = () => {};
+  // Function to close the toast
+  const handleCloseToast = () => {
+    setToast({ ...toast, open: false });
+  };
 
-  const handleDownloadGeoJSON = () => {};
+  const handleViewGeoJSON = async (project) => {
+    console.log(project);
+    const organizationName = project.organization_name;
+    const projectName = project.name;
+    const formattedOrganizationName = organizationName
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+    const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
+
+    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3Acfpt_infoplantation_suitability&outputFormat=application%2Fjson`;
+    let dynamicBbox = "";
+    try {
+      const response = await fetch(wfsurl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const adminLayer = await response.json();
+
+      const vectorSource = new VectorSource({
+        features: new GeoJSON().readFeatures(adminLayer),
+      });
+
+      const extent = vectorSource.getExtent();
+
+      dynamicBbox =
+        extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
+      console.log(dynamicBbox);
+
+      setBBox(extent);
+    } catch (error) {}
+    // const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+    const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+
+    https: window.open(geojsonViewUrl, "_blank");
+
+    console.log("Checking GeoJSON layer:", geojsonViewUrl);
+
+    try {
+      const response = await fetch(geojsonViewUrl, { method: "HEAD" }); // Only fetch headers
+
+      if (
+        response.ok &&
+        response.headers.get("Content-Type")?.includes("text/html")
+      ) {
+        window.open(geojsonViewUrl, "_blank");
+      } else {
+        alert("Layer is not available. Please wait for some time.");
+      }
+    } catch (error) {
+      console.error("Error checking GeoJSON layer:", error);
+      toast.error("An error occurred while fetching the layer.");
+    }
+  };
+
+  const handleDownloadGeoJSON = async (organization, project) => {
+    const formattedOrganizationName = organizationName
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+    const formattedProjectName = selectedProject?.name
+      ?.replace(/\s+/g, "_")
+      .toLowerCase();
+    console.log(formattedOrganizationName, formattedProjectName);
+
+    const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
+    console.log(geojsonUrl);
+
+    https: try {
+      const response = await fetch(geojsonUrl);
+      const contentType = response.headers.get("content-type");
+
+      if (!response.ok) throw new Error("Failed to fetch GeoJSON");
+
+      // Check for XML response, which usually indicates an error
+      if (contentType && contentType.includes("text/xml")) {
+        console.warn("Received XML response instead of JSON.");
+        alert("Data not available yet. Please check after some time.");
+        return;
+      }
+
+      const data = await response.json();
+      console.log("GeoJSON Data:", data);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-"); // Avoid invalid filename characters
+      const fileName = `${formattedOrganizationName}_${formattedProjectName}_${timestamp}.geojson`;
+
+      // Create a Blob and trigger download
+      const blob = new Blob([JSON.stringify(data)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading GeoJSON:", error);
+    }
+  };
 
   return (
-    <div className="p-8 max-w-7xl mx-auto mt-16">
-      <h1 className="text-3xl font-bold mb-8">Project Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <Card
-            key={project.id}
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 bg-white"
-            onClick={() => handleProjectSelect(project)}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-4 overflow-hidden max-h-[90vh]">
+        {/* Header */}
+        <div className="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
+          <h2 className="text-xl font-semibold">All Projects</h2>
+          <button
+            onClick={closeModal}
+            className="text-white hover:bg-blue-700 rounded-full p-2 focus:outline-none"
           >
-            <CardContent>
-              <div className="flex flex-col space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Project name</span>
-                  <span className="font-medium">{project.name}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Organization</span>
-                  <span className="font-medium">
-                    {project.organization_name}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">App</span>
-                  <span className="font-medium">
-                    {project.appTypes && project.appTypes.length > 0
-                      ? project.appTypes
-                          .map((app) => app.app_type_display)
-                          .join(", ")
-                      : "No App Type"}
-                  </span>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="flex flex-col">
+            <div className="bg-gray-50 p-6 rounded-4xl border border-gray-300 shadow-md">
+              <div className="mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {projects.map((project) => (
+                    <Card
+                      key={project.id}
+                      className="cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white rounded-4xl overflow-hidden border border-gray-200"
+                    >
+                      <CardContent>
+                        <div className="flex flex-col items-start space-y-4">
+                          {/* Project Info Section */}
+                          <div className="text-gray-700 text-sm flex items-center gap-4">
+                            <span className="font-medium">
+                              📌 Project Name:
+                            </span>
+                            <span className="font-semibold text-gray-900">
+                              {project.name}
+                            </span>
+                          </div>
+                          <div className="text-gray-700 text-sm flex items-center gap-4">
+                            <span className="font-medium">🔗 App Type:</span>
+                            <span className="font-semibold text-blue-600">
+                              {project.appTypes?.length > 0
+                                ? project.appTypes
+                                    .map((app) => app.app_type_display)
+                                    .join(", ")
+                                : "No App Type"}
+                            </span>
+                          </div>
+                          {/* Button Section */}
+                          <div className="flex items-center gap-3 mt-2 justify-start w-full">
+                            <Tooltip title="Upload KML" arrow>
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                className="rounded-md shadow p-3 text-sm"
+                                onClick={() => handleOpenDialog(project)}
+                              >
+                                <CloudUploadIcon />
+                              </Button>
+                            </Tooltip>
+
+                            <Tooltip title="View/Edit Profile" arrow>
+                              <Button
+                                variant="outlined"
+                                color="secondary"
+                                className="rounded-md shadow p-3 text-sm"
+                                onClick={() => handleViewEditProfile(project)}
+                              >
+                                <EditIcon />
+                              </Button>
+                            </Tooltip>
+
+                            <Tooltip title="Download GeoJSON" arrow>
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                className="rounded-md shadow p-3 text-sm"
+                                onClick={() =>
+                                  handleOpenDownloadDialog(project)
+                                }
+                              >
+                                <FileDownloadIcon />
+                              </Button>
+                            </Tooltip>
+
+                            <Tooltip title="Compute" arrow>
+                              <Button
+                                variant="outlined"
+                                color="secondary"
+                                className="rounded-md shadow p-3 text-sm"
+                                onClick={() => handleCompute(project)}
+                              >
+                                <CalculateIcon />
+                              </Button>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      <Dialog open={isDialogOpen} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle
-          sx={{
-            borderBottom: 1,
-            borderColor: "divider",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            p: 2,
-          }}
-        >
-          <Typography variant="h6" component="div">
-            {selectedProject?.name || "Project Settings"}
-          </Typography>
-          <IconButton
-            aria-label="close"
-            onClick={handleClose}
-            sx={{ color: "grey.500" }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
+            </div>
+          </div>
 
-        <DialogContent sx={{ p: 3 }}>
-          <Tabs
-            value={tabIndex}
-            onChange={(e, newValue) => setTabIndex(newValue)}
-            sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}
+          {/* Move Dialog Outside the Loop */}
+          <Dialog
+            open={isDialogOpen}
+            onClose={handleCloseDialog}
+            maxWidth="md"
+            fullWidth
+            sx={{
+              "& .MuiPaper-root": {
+                borderRadius: 4,
+                padding: "20px",
+                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
+              },
+            }}
           >
-            <Tab
-              icon={<UploadFileIcon sx={{ fontSize: 20 }} />}
-              iconPosition="start"
-              label="Upload KML"
-            />
-            <Tab label="Edit Profile" />
-            <Tab label="View GeoJSON" />
-          </Tabs>
-
-          <Box sx={{ mt: 2 }}>
-            {tabIndex === 0 && (
-              <Box>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 3,
-                    textAlign: "center",
-                    backgroundColor: "grey.50",
-                    cursor: "pointer",
-                    "&:hover": {
-                      backgroundColor: "grey.100",
-                    },
-                  }}
-                >
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold">
+                Upload KML for Project:{" "}
+                <span className="text-blue-600">{selectedProject?.name}</span>
+              </Typography>
+              <IconButton
+                onClick={handleCloseDialog}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent>
+              <div className="flex flex-col items-center space-y-4">
+                {/* Custom File Input */}
+                <label htmlFor="kml-upload" className="w-full">
                   <input
+                    id="kml-upload"
                     type="file"
                     accept=".kml"
                     multiple
+                    hidden
                     onChange={handlefileSelect}
-                    style={{ display: "none" }}
-                    id="kml-file-input"
                   />
-                  <label htmlFor="kml-file-input">
-                    <Box sx={{ mb: 2 }}>
-                      <UploadFileIcon
-                        sx={{ fontSize: 40, color: "grey.600" }}
-                      />
-                    </Box>
-                    <Typography
-                      variant="body1"
-                      color="textSecondary"
-                      gutterBottom
-                    >
-                      Click to upload or drag and drop
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      KML files only
-                    </Typography>
-                  </label>
-                </Paper>
-
-                {selectedFiles.length > 0 && (
-                  <Paper
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    component="span"
+                    fullWidth
                     sx={{
-                      mt: 2,
-                      p: 2,
-                      backgroundColor: "grey.100", // Light grey for a softer UI
-                      border: "1px solid",
-                      borderColor: "grey.300", // Subtle border for separation
+                      padding: "12px",
                       borderRadius: "8px",
+                      fontWeight: "bold",
+                      textTransform: "none",
                     }}
                   >
+                    <CloudUploadIcon sx={{ marginRight: "8px" }} />
+                    Choose KML Files
+                  </Button>
+                </label>
+
+                {/* Display Selected File Names */}
+                {selectedFiles.length > 0 && (
+                  <div className="w-full bg-gray-100 p-2 rounded-lg text-center">
                     {selectedFiles.map((file, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          p: 1,
-                          borderBottom:
-                            index !== selectedFiles.length - 1
-                              ? "1px solid #ddd"
-                              : "none",
-                        }}
-                      >
-                        <Typography variant="body1" color="primary.dark">
-                          {file.name} - {(file.size / 1024).toFixed(2)} KB
-                        </Typography>
-                        <IconButton
-                          onClick={() => handleRemoveFile(index)}
-                          size="small"
-                          sx={{ color: "primary.dark" }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Box>
+                      <Typography key={index} variant="body2">
+                        📂 {file.name}
+                      </Typography>
                     ))}
-                  </Paper>
+                  </div>
                 )}
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-                  <button
-                    onClick={handleUploadKml}
-                    disabled={selectedFiles.length === 0}
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor:
-                        selectedFiles.length > 0 ? "#1976d2" : "#b0bec5",
-                      color: "white",
-                      borderRadius: "8px",
-                      border: "none",
-                      cursor:
-                        selectedFiles.length > 0 ? "pointer" : "not-allowed",
-                    }}
-                  >
-                    Upload
-                  </button>
-                </Box>
-              </Box>
-            )}
-
-            {tabIndex === 1 && (
-              <Box sx={{ color: "text.secondary", py: 4 }}>
-                <PlantationAssessment isEmbedded={true} />
-              </Box>
-            )}
-
-            {tabIndex === 2 && (
-              <Box sx={{ textAlign: "center", color: "text.secondary", py: 4 }}>
+                {/* Upload Button */}
                 <Button
                   variant="contained"
                   color="primary"
-                  onClick={handleViewGeoJSON}
-                  sx={{ mr: 2 }}
+                  fullWidth
+                  sx={{
+                    padding: "12px",
+                    borderRadius: "8px",
+                    fontWeight: "bold",
+                    textTransform: "none",
+                  }}
+                  onClick={handleUploadKml}
                 >
-                  View
+                  <CloudUploadIcon sx={{ marginRight: "8px" }} />
+                  Upload
                 </Button>
-                <Button
-                  variant="outlined"
-                  color="primary"
-                  onClick={handleDownloadGeoJSON}
+              </div>
+              <Snackbar
+                open={toast.open}
+                autoHideDuration={6000}
+                onClose={handleCloseToast}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }} // Move to bottom-right
+                sx={{
+                  position: "absolute",
+                  bottom: 12,
+                  right: 10, // Position it on the right side
+                }}
+              >
+                <Alert
+                  onClose={handleCloseToast}
+                  severity={toast.severity}
+                  sx={{ width: "100%" }}
                 >
-                  Download
-                </Button>
-              </Box>
-            )}
-          </Box>
-        </DialogContent>
-      </Dialog>
+                  {toast.message}
+                </Alert>
+              </Snackbar>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog
+            open={isProfileDialogOpen}
+            onClose={() => setIsProfileDialogOpen(false)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold">
+                Edit Profile - {selectedProject?.name}
+              </Typography>
+              <IconButton
+                onClick={() => setIsProfileDialogOpen(false)}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent>
+              {selectedProject && (
+                <PlantationAssessment
+                  isEmbedded={true}
+                  project={selectedProject}
+                />
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Download GeoJSON Dialog */}
+          <Dialog
+            open={isDownloadDialogOpen}
+            onClose={handleCloseDownloadDialog}
+            maxWidth="xs"
+            fullWidth
+          >
+            <DialogTitle>
+              <Typography variant="h6" fontWeight="bold">
+                GeoJSON Options for{" "}
+                <span className="text-blue-600">{selectedProject?.name}</span>
+              </Typography>
+              <IconButton
+                onClick={handleCloseDownloadDialog}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="flex w-full gap-3">
+                  {/* View GeoJSON */}
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    fullWidth
+                    sx={{
+                      padding: "12px",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                    }}
+                    onClick={() => handleViewGeoJSON(selectedProject)}
+                  >
+                    <VisibilityIcon sx={{ marginRight: "8px" }} />
+                    View
+                  </Button>
+
+                  {/* Download GeoJSON */}
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    fullWidth
+                    sx={{
+                      padding: "12px",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                    }}
+                    onClick={() => handleDownloadGeoJSON(selectedProject)}
+                  >
+                    <FileDownloadIcon sx={{ marginRight: "8px" }} />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
     </div>
   );
 };
