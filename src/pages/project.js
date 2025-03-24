@@ -82,7 +82,7 @@ const Project = ({ currentUser, closeModal, onClose }) => {
       enabled: true, // Ensuring it's included
       created_by: userId,
       updated_by: userId,
-      // organization: "d558ece9-9385-4c5c-9679-c94c7a5b2c1c",
+      organization: currentUser?.user?.organization,
     };
 
     try {
