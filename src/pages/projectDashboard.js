@@ -15,6 +15,11 @@ import {
   Alert,
   Dialog,
 } from "@mui/material";
+// import { Server } from "lucide-react";
+import { CircuitBoard } from "lucide-react";
+import SyncIcon from "@mui/icons-material/Sync";
+import FunctionsIcon from "@mui/icons-material/Functions";
+
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -28,7 +33,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import CalculateIcon from "@mui/icons-material/Calculate";
 
-const ProjectDashboard = ({ closeModal, currentUser }) => {
+const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
   console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const [isLayerAvailable, setIsLayerAvailable] = useState(false);
@@ -51,13 +56,21 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
     message: "",
     severity: "success",
   });
+  const [formData, setFormData] = useState({
+    project_app_id: 1,
+    state: "telangana",
+    start_year: 2017,
+    end_year: 2023,
+  });
 
   useEffect(() => {
-    console.log("fetching projects");
+    console.log("Fetching projects...");
+
     const fetchProjects = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
-        console.log(token);
+        console.log("Token:", token);
+
         const response = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
           {
@@ -70,19 +83,14 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
           }
         );
 
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
         const data = await response.json();
         console.log("Projects:", data);
 
-        // Fetch app types for each project simultaneously
-        const projectsWithAppTypes = await Promise.all(
-          data.map(async (project) => {
-            const appTypes = await fetchAppType(project.id);
-            return { ...project, appTypes };
-          })
-        );
-
-        console.log("Projects with App Types:", projectsWithAppTypes);
-        setProjects(projectsWithAppTypes);
+        setProjects(data);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -90,28 +98,6 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
 
     fetchProjects();
   }, []);
-
-  const fetchAppType = async (projectId) => {
-    try {
-      const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId}/apps/`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      return data; // Just return the data, no state setting here
-    } catch (error) {
-      console.error("Error fetching app types:", error);
-      return []; // Return an empty array in case of error
-    }
-  };
 
   const handleOpenDialog = (project) => {
     setSelectedProject(project); // Store the whole project object
@@ -220,20 +206,42 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
     setIsDownloadDialogOpen(false);
   };
 
-  const handleCompute = async () => {
+  const handleCompute = async (project) => {
+    if (!project) {
+      console.error("❌ No project selected.");
+      alert("Please select a project first.");
+      return;
+    }
+
+    // Extract required fields from the project
+    const { state, appTypes, id } = project;
+    const appTypeId = appTypes?.length > 0 ? appTypes[0].id : null; // Assuming we need the first app type ID
+
+    if (!state || !appTypeId) {
+      console.error("❌ Missing required project details.");
+      alert("Project data is incomplete. Please check.");
+      return;
+    }
+
+    // Construct the formData object
+    const formData = {
+      project_app_id: id,
+      state: state,
+      start_year: 2017, // Modify as needed
+      end_year: 2023, // Modify as needed
+    };
+
+    console.log("📤 Sending formData:", formData); // Debugging output
+
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/plantation_site_suitability/`,
         {
-          method: "POST", // Use "GET" if needed
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            // Add required request body parameters here
-            key1: "value1",
-            key2: "value2",
-          }),
+          body: JSON.stringify(formData),
         }
       );
 
@@ -244,7 +252,6 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
       const result = await response.json();
       console.log("✅ Compute API Response:", result);
 
-      // Optionally, show success message
       alert("Compute successful!");
     } catch (error) {
       console.error("❌ Error calling compute API:", error);
@@ -366,7 +373,10 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
         <div className="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold">All Projects</h2>
           <button
-            onClick={closeModal}
+            onClick={() => {
+              if (closeModal) closeModal();
+              if (onClose) onClose();
+            }}
             className="text-white hover:bg-blue-700 rounded-full p-2 focus:outline-none"
           >
             <svg
@@ -461,7 +471,8 @@ const ProjectDashboard = ({ closeModal, currentUser }) => {
                                 className="rounded-md shadow p-3 text-sm"
                                 onClick={() => handleCompute(project)}
                               >
-                                <CalculateIcon />
+                                {/* <Server /> */}
+                                <FunctionsIcon />
                               </Button>
                             </Tooltip>
                           </div>

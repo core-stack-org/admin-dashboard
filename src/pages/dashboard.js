@@ -17,7 +17,11 @@ const Dashboard = ({ currentUser }) => {
 
     const userGroup = currentUser?.user?.groups?.[0]?.name;
 
-    if (userGroup === "Organization Admin") {
+    if (
+      userGroup === "Organization Admin" ||
+      userGroup === "Org Admin" ||
+      userGroup === "Administrator"
+    ) {
       return <OrgAdminDashboard currentUser={currentUser} />;
     } else if (userGroup === "Project Manager") {
       return <ProjectManagerDashboard currentUser={currentUser} />;

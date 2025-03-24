@@ -663,6 +663,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   <AddMember
                     closeModal={closeModal}
                     currentUser={currentUser}
+                    isSuperAdmin={false}
                   />
                 </div>
               )}

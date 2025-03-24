@@ -60,7 +60,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
         const token = sessionStorage.getItem("accessToken");
         console.log(token);
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
+          `${process.env.REACT_APP_BASEURL}/api/v1/users/my_projects/`,
           {
             method: "GET",
             headers: {
@@ -74,16 +74,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
         const data = await response.json();
         console.log("Projects:", data);
 
-        // Fetch app types for each project simultaneously
-        const projectsWithAppTypes = await Promise.all(
-          data.map(async (project) => {
-            const appTypes = await fetchAppType(project.id);
-            return { ...project, appTypes };
-          })
-        );
-
-        console.log("Projects with App Types:", projectsWithAppTypes);
-        setProjects(projectsWithAppTypes);
+        setProjects(data);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -114,28 +105,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
   //     fetchUsers();
   //   }
   // }, [projectId]);
-
-  const fetchAppType = async (projectId) => {
-    try {
-      const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId}/apps/`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      return data; // Just return the data, no state setting here
-    } catch (error) {
-      console.error("Error fetching app types:", error);
-      return []; // Return an empty array in case of error
-    }
-  };
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },

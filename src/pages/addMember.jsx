@@ -6,13 +6,14 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const AddMember = ({ closeModal, currentUser, onClose }) => {
+const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
   console.log(currentUser.user.organization_name);
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
   const [selectedPermission, setSelectedPermission] = useState(null);
+  const [organizations, setOrganizations] = useState([]); // Store fetched organizations
 
   const [showPasswordRules, setShowPasswordRules] = useState(false);
   useEffect(() => {
@@ -32,8 +33,41 @@ const AddMember = ({ closeModal, currentUser, onClose }) => {
     first_name: "",
     last_name: "",
     contact_number: "",
-    organization: currentUser?.user?.organization,
+    organization: currentUser?.user?.organization || "",
   });
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      loadOrganization();
+    }
+  }, [isSuperAdmin]);
+
+  const loadOrganization = async () => {
+    console.log("loading org");
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+      const data = await response.json();
+      console.log(data);
+      if (Array.isArray(data)) {
+        setOrganizations(data);
+      } else {
+        console.error("Unexpected API response format:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+      return [];
+    }
+  };
+
   const passwordRequirements = [
     "At least 8 characters long",
     "At least 1 number",
@@ -269,13 +303,33 @@ const AddMember = ({ closeModal, currentUser, onClose }) => {
                       )}
                   </div>
                   {/* Organization */}
-                  <input
-                    name="organization"
-                    value={currentUser?.user?.organization_name || ""}
-                    className="w-full rounded pl-10 pr-3 py-4 bg-gray-200 text-gray-700 focus:outline-none"
-                    placeholder="Organization"
-                    readOnly
-                  />
+                  {/* Organization Selection */}
+                  <div>
+                    {currentUser?.user?.is_superadmin ? (
+                      // Show dropdown for super admin
+                      <select
+                        name="organization"
+                        value={formData.organization}
+                        onChange={handleChange}
+                        className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Organization</option>
+                        {organizations.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      // Show prefilled and read-only organization name for org admin
+                      <input
+                        name="organization"
+                        value={currentUser?.user?.organization_name || ""}
+                        className="w-full rounded pl-10 pr-3 py-4 bg-gray-200 text-gray-700 focus:outline-none"
+                        readOnly
+                      />
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     {/* Password Field */}

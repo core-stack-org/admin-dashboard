@@ -16,7 +16,6 @@ import PreviewLayers from "./pages/previewLayer";
 import LocationForm from "./pages/locationForm";
 import PlantationAssessment from "./pages/plantationAssessment";
 import UserRegistration from "./pages/userRegistration";
-import OrgDashboard from "./pages/orgDashboard";
 import SideNavbar from "./pages/sidenavbar";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
@@ -55,7 +54,6 @@ function AppLayout({ currentUser, setCurrentUser }) {
 
                 <Route path="/planCreation" element={<PlanCreation />} />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
-                <Route path="/orgDashboard" element={<OrgDashboard />} />
                 <Route
                   path="/plantationAssessment"
                   element={<PlantationAssessment isEmbedded={false} />}

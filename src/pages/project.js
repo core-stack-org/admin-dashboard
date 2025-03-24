@@ -65,27 +65,31 @@ const Project = ({ currentUser, closeModal, onClose }) => {
     e.preventDefault();
 
     if (!projectAppType) {
-      console.error("Project App Type is required");
       toast.error("Project App Type is required");
+      return;
+    }
 
+    if (!state.id) {
+      toast.error("State selection is required");
       return;
     }
 
     const formData = {
       name: projectName,
       description: projectDescription,
-      organization: organization,
+      state: parseInt(state.id), // Only state ID
+      app_type: projectAppType,
+      enabled: true, // Ensuring it's included
       created_by: userId,
       updated_by: userId,
+      // organization: "d558ece9-9385-4c5c-9679-c94c7a5b2c1c",
     };
 
     try {
-      console.log(formData);
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
-      // 1st API Call16 - Create Project
+
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/`,
         {
           method: "POST",
           headers: {
@@ -100,29 +104,10 @@ const Project = ({ currentUser, closeModal, onClose }) => {
         throw new Error("Failed to create project");
       }
 
-      const data = await response.json();
-      const projectId = data.id;
-      console.log("Project Created with ID:", projectId, projectAppType);
-
-      // 2nd API Call - Enable App Type
-      const enableAppResponse = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId}/enable_app/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ app_type: projectAppType }),
-        }
-      );
-
-      if (!enableAppResponse.ok) {
-        throw new Error("Failed to enable app");
-      }
       toast.success("Project created successfully");
       setTimeout(() => {
-        if (closeModal) closeModal(); // Close modal
+        if (closeModal) closeModal();
+        if (onClose) onClose();
       }, 2000);
     } catch (error) {
       console.error("Error submitting project:", error);
