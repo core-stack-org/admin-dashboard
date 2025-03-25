@@ -20,6 +20,12 @@ import {
   DialogContent,
   DialogTitle,
   Button,
+  FormControl,
+  Checkbox,
+  FormControlLabel,
+  MenuItem,
+  Select,
+  InputLabel,
 } from "@mui/material";
 import { Badge } from "@mui/material";
 import Project from "./project.js";
@@ -35,7 +41,6 @@ function SuperAdminDashboard({ currentUser }) {
   const [openDialog, setOpenDialog] = useState(null);
   const [users, setUsers] = useState([]);
   const [organizations, setOrganizations] = useState([]);
-  console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const organizationId = currentUser?.user?.organization;
   const userName = currentUser?.user?.username;
@@ -45,6 +50,8 @@ function SuperAdminDashboard({ currentUser }) {
   const [projects, setProjects] = useState([]);
   const [projectCount, setProjectCount] = useState(0);
   const isActive = currentUser?.user?.is_active ? "Active" : "Inactive";
+  const [selectedUser, setSelectedUser] = useState("");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const handleOpenDialog = (dialogName) => {
     setOpenDialog(dialogName);
@@ -61,7 +68,6 @@ function SuperAdminDashboard({ currentUser }) {
   }, []);
 
   const loadOrganization = async () => {
-    console.log("loading org");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
@@ -74,7 +80,6 @@ function SuperAdminDashboard({ currentUser }) {
         }
       );
       const data = await response.json();
-      console.log(data);
       if (Array.isArray(data)) {
         setOrganizations(data);
       } else {
@@ -87,10 +92,8 @@ function SuperAdminDashboard({ currentUser }) {
   };
 
   const loadUsers = async () => {
-    console.log("Loading users...");
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
         {
@@ -108,14 +111,12 @@ function SuperAdminDashboard({ currentUser }) {
       }
 
       const data = await response.json();
-      console.log("Users loaded:", data);
 
       if (!Array.isArray(data)) {
         console.error("Unexpected API response format:", data);
         return;
       }
       const count = data.length; // Get the number of users
-      console.log("Total Users:", count);
       setUserCount(count); // Update state
 
       setUsers(data);
@@ -130,7 +131,6 @@ function SuperAdminDashboard({ currentUser }) {
   const fetchProjects = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log("Token:", token);
 
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
@@ -149,9 +149,7 @@ function SuperAdminDashboard({ currentUser }) {
       }
 
       const data = await response.json();
-      console.log("Projects:", data);
       const count = data.length; // Get the number of users
-      console.log("Total Projects:", count);
       setProjectCount(count); // Update state
 
       setProjects(data);
@@ -211,12 +209,57 @@ function SuperAdminDashboard({ currentUser }) {
   const handleViewOrganizations = () => {
     handleOpenDialog("viewOrganizations");
   };
-  const handleExtraAction = () => {};
+  const handleExtraAction = () => {
+    handleOpenDialog("extraActions");
+  };
   const handleViewProjects = () => {
     handleOpenDialog("viewProjects");
   };
   const handleViewUsers = () => {
     handleOpenDialog("viewUsers");
+  };
+  const handleUserChange = (event) => {
+    setSelectedUser(event.target.value);
+  };
+
+  const handleToggleSuperAdmin = () => {
+    setIsSuperAdmin((prev) => !prev);
+  };
+
+  const handleMakeSuperAdmin = async () => {
+    console.log("Making user Super Admin:", selectedUser, isSuperAdmin);
+
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      console.log("Token:", token);
+
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/users/${selectedUser}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            is_superadmin: isSuperAdmin ? "True" : "False",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Updated User Data:", data);
+
+      alert("User updated successfully!");
+    } catch (error) {
+      console.error("Error updating user:", error);
+      alert("Failed to update user. Please try again.");
+    }
   };
 
   return (
@@ -478,7 +521,7 @@ function SuperAdminDashboard({ currentUser }) {
                 >
                   <div className="font-medium text-lg">Extra Action</div>
                   <p className="text-sm text-muted-foreground">
-                    Additional administrative functionality.
+                    Give User a Super Admin access
                   </p>
                 </motion.div>
               </div>
@@ -743,6 +786,65 @@ function SuperAdminDashboard({ currentUser }) {
           >
             Cancel
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Super admin Role assignment to user Dialog */}
+      <Dialog
+        open={openDialog === "extraActions"}
+        onClose={handleCloseDialog}
+        maxWidth="md"
+        fullWidth
+        sx={{ "& .MuiDialog-paper": { minHeight: "300px" } }}
+      >
+        <DialogTitle>Make user a Super Admin</DialogTitle>
+        <DialogContent className="min-h-[200px] flex flex-col justify-between">
+          <div>
+            <label className="block text-lg font-medium mb-3">User Name</label>
+            <select
+              value={selectedUser}
+              onChange={handleUserChange}
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              required
+            >
+              <option value="" disabled>
+                Select a user
+              </option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.username}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isSuperAdmin}
+                onChange={handleToggleSuperAdmin}
+              />
+            }
+            label="Is Super Admin"
+          />
+        </DialogContent>
+        <DialogActions>
+          <DialogActions className="flex justify-end gap-4 p-4">
+            <Button
+              onClick={handleMakeSuperAdmin}
+              className="bg-emerald-600 hover:bg-green-300 active:bg-emerald-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed"
+              disabled={!selectedUser}
+            >
+              ✅ Make Super Admin
+            </Button>
+
+            <Button
+              onClick={handleCloseDialog}
+              className="bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-800 font-semibold px-6 py-3 rounded-lg shadow-md transition duration-300 ease-in-out"
+            >
+              ❌ Cancel
+            </Button>
+          </DialogActions>
         </DialogActions>
       </Dialog>
     </div>
