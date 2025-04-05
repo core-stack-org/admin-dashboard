@@ -4,14 +4,14 @@ import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const Project = ({ currentUser, closeModal, onClose }) => {
+const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [organization, setOrganization] = useState(null);
   const [userId, setUserId] = useState(null);
   const [projectAppType, setProjectAppType] = useState("");
   const [state, setState] = useState({ id: "", name: "" });
-  const [statesList, setStatesList] = useState([]);
+  // const [statesList, setStatesList] = useState([]);
 
   // console.log(currentuser.user);
   const navigate = useNavigate();
@@ -22,32 +22,6 @@ const Project = ({ currentUser, closeModal, onClose }) => {
       setUserId(currentUser.user.id);
     }
   }, [currentUser]);
-
-  useEffect(() => {
-    fetchStates();
-  }, []);
-
-  const fetchStates = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
-        {
-          method: "GET",
-          headers: {
-            "content-type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-          },
-        }
-      );
-      const data = await response.json();
-      const sortedStates = data.states.sort((a, b) =>
-        a.state_name.localeCompare(b.state_name)
-      );
-      setStatesList(sortedStates);
-    } catch (error) {
-      console.error("Error fetching states:", error);
-    }
-  };
 
   const handleStateChange = (event) => {
     const selectedValue = event.target.value;
@@ -103,7 +77,7 @@ const Project = ({ currentUser, closeModal, onClose }) => {
       if (!response.ok) {
         throw new Error("Failed to create project");
       }
-
+      sessionStorage.setItem("formData", JSON.stringify(formData));
       toast.success("Project created successfully");
       setTimeout(() => {
         if (closeModal) closeModal();

@@ -15,15 +15,10 @@ import {
   Alert,
   Dialog,
 } from "@mui/material";
-// import { Server } from "lucide-react";
-import { CircuitBoard } from "lucide-react";
-import SyncIcon from "@mui/icons-material/Sync";
-import FunctionsIcon from "@mui/icons-material/Functions";
-
+import DeleteIcon from "@mui/icons-material/Delete";
+import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import DeleteIcon from "@mui/icons-material/Delete";
 import PlantationAssessment from "./plantationAssessment";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
@@ -31,15 +26,15 @@ import { Tooltip, Button } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import CalculateIcon from "@mui/icons-material/Calculate";
 
-const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
+const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const [isLayerAvailable, setIsLayerAvailable] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
-
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const [tabIndex, setTabIndex] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -47,9 +42,34 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
   const [appTypes, setAppTypes] = useState([]);
   const [bbox, setBBox] = useState(null);
   const [openDialog, setOpenDialog] = useState({ projectId: null, type: null });
+  const handleOpenEditDialog = (project) => {
+    setSelectedProject(project);
+    setIsEditDialogOpen(true);
+  };
+  // Add this function to remove a file by index
+  const handleRemoveFile = (indexToRemove) => {
+    setSelectedFiles((prevFiles) =>
+      prevFiles.filter((_, index) => index !== indexToRemove)
+    );
+  };
 
-  const openModal = (dialogType) => setOpenDialog(dialogType);
-  // const closeModal = () => setOpenDialog(null);
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+    setActiveTab(0);
+  };
+  const getStateName = (stateId) => {
+    const state = statesList.find((s) => s.id === stateId);
+    console.log(
+      `State ID: ${stateId}, Found State Name: ${
+        state ? state.state_name : "Not Found"
+      }`
+    );
+    return state ? state.state_name : "Unknown State";
+  };
+
+  useEffect(() => {
+    getStateName();
+  }, []);
 
   const [toast, setToast] = useState({
     open: false,
@@ -90,7 +110,42 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
         const data = await response.json();
         console.log("Projects:", data);
 
-        setProjects(data);
+        // Fetch states list
+        const statesResponse = await fetch(
+          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+            },
+          }
+        );
+
+        if (!statesResponse.ok) {
+          throw new Error(`HTTP error! Status: ${statesResponse.status}`);
+        }
+
+        const statesData = await statesResponse.json();
+        console.log("States Data:", statesData);
+
+        // Create a mapping of state_census_code -> state_name
+        const stateMap = {};
+        statesData.states.forEach((state) => {
+          stateMap[state.state_census_code] = state.state_name;
+        });
+
+        // Add state_name to projects
+        const updatedProjects = data.map((project) => ({
+          ...project,
+          state_name: stateMap[project.state] || "Unknown State",
+        }));
+
+        updatedProjects.forEach((project) =>
+          console.log(`Project: ${project.name}, State: ${project.state_name}`)
+        );
+
+        setProjects(updatedProjects);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -130,12 +185,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
     }
   };
 
-  const handleRemoveFile = (index) => {
-    setSelectedFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
-
   const handleUploadKml = async () => {
-    console.log(selectedProject.id);
     if (!selectedFiles || selectedFiles.length === 0) {
       setToast({
         open: true,
@@ -146,7 +196,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
     }
 
     const formData = new FormData();
-
     if (selectedFiles.length > 1) {
       selectedFiles.forEach((file) => {
         formData.append("files[]", file);
@@ -158,19 +207,21 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject.id}/plantation/kml/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject.id}/plantation/kml/`,
         {
           method: "POST",
           body: formData,
           headers: {
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "420",
+            // ❌ Don't add Content-Type manually for FormData
           },
         }
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+        const errorText = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status}, ${errorText}`);
       }
 
       const result = await response.json();
@@ -179,11 +230,11 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
       setToast({
         open: true,
         message:
-          "KML file uploaded successfully! It may take 5-10 minutes for processing before it becomes visible.",
+          "KML file uploaded successfully! It may take 5–10 minutes to process before becoming visible.",
         severity: "success",
       });
-      setSelectedFiles([]); // Clear selected files after upload
-      setIsLayerAvailable(false); // Disable View button initially
+      setSelectedFiles([]);
+      setIsLayerAvailable(false);
     } catch (error) {
       console.error("Error uploading files:", error);
       setToast({
@@ -193,6 +244,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
       });
     }
   };
+
   const handleViewEditProfile = (project) => {
     setSelectedProject(project);
     setIsProfileDialogOpen(true);
@@ -207,17 +259,31 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
   };
 
   const handleCompute = async (project) => {
+    console.log("🚀 Selected Project for Compute:", project);
+
     if (!project) {
       console.error("❌ No project selected.");
       alert("Please select a project first.");
       return;
     }
 
-    // Extract required fields from the project
-    const { state, appTypes, id } = project;
-    const appTypeId = appTypes?.length > 0 ? appTypes[0].id : null; // Assuming we need the first app type ID
+    // Find the project in the updated projects state to get state_name
+    const matchedProject = projects.find((p) => p.id === project.id);
 
-    if (!state || !appTypeId) {
+    if (!matchedProject) {
+      console.error("❌ Project not found in updated projects state.");
+      alert("Something went wrong. Please refresh and try again.");
+      return;
+    }
+
+    console.log("State Name Extracted:", matchedProject.state_name); // Debugging output
+
+    // Extract required fields
+    const { state, appTypes, id } = project;
+    const state_name = matchedProject.state_name; // ✅ Get the correct state name
+    const appTypeId = appTypes?.length > 0 ? appTypes[0].id : null;
+
+    if (!state_name || !matchedProject.id) {
       console.error("❌ Missing required project details.");
       alert("Project data is incomplete. Please check.");
       return;
@@ -225,21 +291,25 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
 
     // Construct the formData object
     const formData = {
-      project_app_id: id,
-      state: state,
-      start_year: 2017, // Modify as needed
-      end_year: 2023, // Modify as needed
+      project_app_id: matchedProject.id,
+      state: state_name, // ✅ Use state_name instead of state ID
+      start_year: 2017,
+      end_year: 2023,
     };
 
-    console.log("📤 Sending formData:", formData); // Debugging output
+    console.log("📤 Sending formData:", formData);
 
     try {
+      const token = sessionStorage.getItem("accessToken");
+
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/plantation_site_suitability/`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(formData),
         }
@@ -252,7 +322,9 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
       const result = await response.json();
       console.log("✅ Compute API Response:", result);
 
-      alert("Compute successful!");
+      alert(
+        "Task initiated successfully! Please wait to view the layer or download the Geojson."
+      );
     } catch (error) {
       console.error("❌ Error calling compute API:", error);
       alert("Failed to compute. Please try again.");
@@ -273,7 +345,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
       .toLowerCase();
     const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
 
-    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3Acfpt_infoplantation_suitability&outputFormat=application%2Fjson`;
+    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3Acfpt_infoplantation_suitability&outputFormat=application%2Fjson`;
     let dynamicBbox = "";
     try {
       const response = await fetch(wfsurl);
@@ -292,11 +364,12 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
       dynamicBbox =
         extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
       console.log(dynamicBbox);
+      console.log(formattedOrganizationName, formattedProjectName);
 
       setBBox(extent);
     } catch (error) {}
     // const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-    const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+    const geojsonViewUrl = `${process.env.REACT_APP_GEOSERVER_BASEURL}plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
 
     https: window.open(geojsonViewUrl, "_blank");
 
@@ -328,7 +401,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
       .toLowerCase();
     console.log(formattedOrganizationName, formattedProjectName);
 
-    const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
+    const geojsonUrl = `${process.env.REACT_APP_GEOSERVER_BASEURL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
     console.log(geojsonUrl);
 
     https: try {
@@ -420,59 +493,45 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
                           <div className="text-gray-700 text-sm flex items-center gap-4">
                             <span className="font-medium">🔗 App Type:</span>
                             <span className="font-semibold text-blue-600">
-                              {project.appTypes?.length > 0
-                                ? project.appTypes
-                                    .map((app) => app.app_type_display)
-                                    .join(", ")
-                                : "No App Type"}
+                              {project.app_type}
                             </span>
                           </div>
                           {/* Button Section */}
-                          <div className="flex items-center gap-3 mt-2 justify-start w-full">
-                            <Tooltip title="Upload KML" arrow>
-                              <Button
-                                variant="outlined"
-                                color="primary"
-                                className="rounded-md shadow p-3 text-sm"
-                                onClick={() => handleOpenDialog(project)}
-                              >
-                                <CloudUploadIcon />
-                              </Button>
-                            </Tooltip>
 
-                            <Tooltip title="View/Edit Profile" arrow>
+                          <div className="flex items-center gap-3 mt-2 justify-start w-full">
+                            {/* Edit Profile Button */}
+                            <Tooltip title="Edit" arrow>
                               <Button
                                 variant="outlined"
                                 color="secondary"
                                 className="rounded-md shadow p-3 text-sm"
-                                onClick={() => handleViewEditProfile(project)}
+                                onClick={() => handleOpenEditDialog(project)}
                               >
                                 <EditIcon />
                               </Button>
                             </Tooltip>
 
-                            <Tooltip title="Download GeoJSON" arrow>
+                            {/* View KML Button */}
+                            <Tooltip title="View Layer" arrow>
                               <Button
                                 variant="outlined"
                                 color="primary"
                                 className="rounded-md shadow p-3 text-sm"
-                                onClick={() =>
-                                  handleOpenDownloadDialog(project)
-                                }
+                                onClick={() => handleViewGeoJSON(project)}
                               >
-                                <FileDownloadIcon />
+                                <VisibilityIcon />
                               </Button>
                             </Tooltip>
 
-                            <Tooltip title="Compute" arrow>
+                            {/* Download GeoJSON Button */}
+                            <Tooltip title="Download GeoJSON" arrow>
                               <Button
-                                variant="outlined"
-                                color="secondary"
+                                variant="contained"
+                                color="primary"
                                 className="rounded-md shadow p-3 text-sm"
-                                onClick={() => handleCompute(project)}
+                                onClick={() => handleDownloadGeoJSON(project)}
                               >
-                                {/* <Server /> */}
-                                <FunctionsIcon />
+                                <FileDownloadIcon />
                               </Button>
                             </Tooltip>
                           </div>
@@ -485,137 +544,230 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose }) => {
             </div>
           </div>
 
-          {/* Move Dialog Outside the Loop */}
           <Dialog
-            open={isDialogOpen}
-            onClose={handleCloseDialog}
+            open={isEditDialogOpen}
+            onClose={handleCloseEditDialog}
             maxWidth="md"
             fullWidth
             sx={{
-              "& .MuiPaper-root": {
-                borderRadius: 4,
-                padding: "20px",
-                boxShadow: "0px 5px 15px rgba(0, 0, 0, 0.2)",
+              "& .MuiDialog-paper": {
+                minHeight: "450px", // Adjust the height as needed
+                borderRadius: "12px", // Slightly rounded corners for better aesthetics
               },
             }}
           >
-            <DialogTitle>
-              <Typography variant="h6" fontWeight="bold">
-                Upload KML for Project:{" "}
-                <span className="text-blue-600">{selectedProject?.name}</span>
+            <DialogTitle sx={{ position: "relative", pb: 2 }}>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ textAlign: "center" }}
+              >
+                Manage Project – {selectedProject?.name}
               </Typography>
+
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Follow these steps to complete the processing:
+                <br />
+                1. Select and upload KML files.
+                <br />
+                2. Review or update the project profile, then save it.
+                <br />
+                3. Click on <strong>Process KML</strong> to start processing.
+              </Typography>
+
               <IconButton
-                onClick={handleCloseDialog}
+                onClick={handleCloseEditDialog}
                 sx={{ position: "absolute", right: 8, top: 8 }}
               >
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent>
-              <div className="flex flex-col items-center space-y-4">
-                {/* Custom File Input */}
-                <label htmlFor="kml-upload" className="w-full">
-                  <input
-                    id="kml-upload"
-                    type="file"
-                    accept=".kml"
-                    multiple
-                    hidden
-                    onChange={handlefileSelect}
-                  />
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    component="span"
-                    fullWidth
-                    sx={{
-                      padding: "12px",
-                      borderRadius: "8px",
-                      fontWeight: "bold",
-                      textTransform: "none",
-                    }}
-                  >
-                    <CloudUploadIcon sx={{ marginRight: "8px" }} />
-                    Choose KML Files
-                  </Button>
-                </label>
 
-                {/* Display Selected File Names */}
-                {selectedFiles.length > 0 && (
-                  <div className="w-full bg-gray-100 p-2 rounded-lg text-center">
-                    {selectedFiles.map((file, index) => (
-                      <Typography key={index} variant="body2">
-                        📂 {file.name}
-                      </Typography>
-                    ))}
-                  </div>
-                )}
-                {/* Upload Button */}
-                <Button
-                  variant="contained"
-                  color="primary"
-                  fullWidth
-                  sx={{
-                    padding: "12px",
-                    borderRadius: "8px",
-                    fontWeight: "bold",
-                    textTransform: "none",
-                  }}
-                  onClick={handleUploadKml}
-                >
-                  <CloudUploadIcon sx={{ marginRight: "8px" }} />
-                  Upload
-                </Button>
-              </div>
-              <Snackbar
-                open={toast.open}
-                autoHideDuration={6000}
-                onClose={handleCloseToast}
-                anchorOrigin={{
-                  vertical: "bottom",
-                  horizontal: "right",
-                }} // Move to bottom-right
+            <DialogContent
+              sx={{
+                backgroundColor: "#fafafa",
+                borderRadius: 2,
+                p: 3,
+                border: "1px solid #ddd",
+                mt: 1,
+              }}
+            >
+              <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                textColor="primary"
+                indicatorColor="primary"
+                variant="fullWidth"
                 sx={{
-                  position: "absolute",
-                  bottom: 12,
-                  right: 10, // Position it on the right side
+                  backgroundColor: "#f5f5f5", // Light grey background
+                  borderBottom: "2px solid #e0e0e0", // Divider line
+                  "& .MuiTab-root": {
+                    textTransform: "uppercase",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    padding: "12px 16px",
+                  },
+                  "& .Mui-selected": {
+                    color: "#1565c0", // Darker blue for selected tab
+                    fontWeight: "bold",
+                  },
+                  "& .MuiTabs-indicator": {
+                    height: "3px", // Thicker indicator
+                    backgroundColor: "#1565c0",
+                  },
                 }}
               >
-                <Alert
-                  onClose={handleCloseToast}
-                  severity={toast.severity}
-                  sx={{ width: "100%" }}
-                >
-                  {toast.message}
-                </Alert>
-              </Snackbar>
-            </DialogContent>
-          </Dialog>
+                <Tab label="Upload KML" />
+                <Tab label=" Edit Profile" />
+                <Tab label="Process KMLs" />
+              </Tabs>
 
-          <Dialog
-            open={isProfileDialogOpen}
-            onClose={() => setIsProfileDialogOpen(false)}
-            maxWidth="md"
-            fullWidth
-          >
-            <DialogTitle>
-              <Typography variant="h6" fontWeight="bold">
-                Edit Profile - {selectedProject?.name}
-              </Typography>
-              <IconButton
-                onClick={() => setIsProfileDialogOpen(false)}
-                sx={{ position: "absolute", right: 8, top: 8 }}
-              >
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <DialogContent>
-              {selectedProject && (
-                <PlantationAssessment
-                  isEmbedded={true}
-                  project={selectedProject}
-                />
-              )}
+              <Box mt={3}>
+                {/* Upload KML Tab */}
+                {activeTab === 0 && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      width: "100%",
+                    }}
+                  >
+                    <label htmlFor="kml-upload" style={{ width: "100%" }}>
+                      <input
+                        id="kml-upload"
+                        type="file"
+                        accept=".kml"
+                        multiple
+                        hidden
+                        onChange={handlefileSelect}
+                      />
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        component="span"
+                        fullWidth // This makes the button take full dialog width
+                        sx={{
+                          padding: "12px",
+                          borderRadius: "8px",
+                          fontWeight: "bold",
+                          textTransform: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <CloudUploadIcon sx={{ marginRight: "8px" }} />
+                        Choose KML Files
+                      </Button>
+                    </label>
+
+                    {selectedFiles.length > 0 && (
+                      <Box
+                        sx={{
+                          width: "100%",
+                          backgroundColor: "#f4f4f4",
+                          p: 2,
+                          borderRadius: "8px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {selectedFiles.length > 0 && (
+                          <Box
+                            sx={{
+                              width: "100%",
+                              backgroundColor: "#f4f4f4",
+                              p: 2,
+                              borderRadius: "8px",
+                            }}
+                          >
+                            {selectedFiles.map((file, index) => (
+                              <Box
+                                key={index}
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  padding: "4px 8px",
+                                  borderBottom:
+                                    index !== selectedFiles.length - 1
+                                      ? "1px solid #ccc"
+                                      : "none",
+                                }}
+                              >
+                                <Typography variant="body2">
+                                  📂 {file.name}
+                                </Typography>
+                                <IconButton
+                                  onClick={() => handleRemoveFile(index)}
+                                  size="small"
+                                  color="error"
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      sx={{
+                        width: "250px", // Keeping Upload button compact
+                        alignSelf: "center",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        fontWeight: "bold",
+                        textTransform: "none",
+                      }}
+                      onClick={handleUploadKml}
+                    >
+                      Upload
+                    </Button>
+                  </Box>
+                )}
+
+                {/* Profile Tab */}
+                {activeTab === 1 && selectedProject && (
+                  <PlantationAssessment
+                    isEmbedded={true}
+                    project={selectedProject}
+                    currentUser={currentUser}
+                    closeModal={handleCloseEditDialog}
+                  />
+                )}
+
+                {/* Compute Tab */}
+                {activeTab === 2 && (
+                  <Box className="flex flex-col items-center justify-center">
+                    <Typography
+                      variant="body1"
+                      className="text-gray-600 text-center"
+                      sx={{ marginBottom: "32px" }} // Adds spacing between text and button
+                    >
+                      Click here to start processing the KMLs for this project.
+                    </Typography>
+
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      onClick={() => handleCompute(selectedProject)}
+                      sx={{
+                        padding: "12px 24px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                      }}
+                    >
+                      <AutorenewIcon />
+                      Process KMLs
+                    </Button>
+                  </Box>
+                )}
+              </Box>
             </DialogContent>
           </Dialog>
 

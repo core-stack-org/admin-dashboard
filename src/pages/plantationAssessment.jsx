@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const climateOptions = {
   annualPrecipitation: {
@@ -37,7 +37,7 @@ const climateOptions = {
       "This is the ratio of precipitation to potential evapotranspiration (PET), where PET is calculated using the Penman-Monteith equation.",
     options: ["<0.05", "0.05-0.20", "0.20-0.50", "0.50-0.65", ">0.65"],
   },
-  referenceEvapotranspiration: {
+  referenceEvapoTranspiration: {
     label: "Reference Evapotranspiration (mm/day)",
     description:
       "This is the maximum of actual evapotranspiration based on current land-use, or actual projected evapotranspiration for the crop/tree to be planted.",
@@ -154,7 +154,7 @@ const soilOptions = {
       "Sand",
     ],
   },
-  topsoilBulkDensity: {
+  topsoilBD: {
     label: "Topsoil Bulk Density (kg/dm³)",
     options: [
       "<1.1",
@@ -168,7 +168,7 @@ const soilOptions = {
       ">1.7",
     ],
   },
-  subsoilBulkDensity: {
+  subsoilBD: {
     label: "Subsoil Bulk Density (kg/dm³)",
     options: [
       "<1.3",
@@ -182,7 +182,7 @@ const soilOptions = {
       ">1.8",
     ],
   },
-  soilDrainage: {
+  drainage: {
     label: "Soil Drainage",
     options: [
       "Excessively drained",
@@ -194,7 +194,7 @@ const soilOptions = {
       "Very poorly drained",
     ],
   },
-  availableWaterCapacity: {
+  AWC: {
     label: "Available Water Capacity (mm/m)",
     options: ["150", "125", "100", "75", "50", "15"],
   },
@@ -236,11 +236,11 @@ const topographyOptions = {
 };
 
 const ecologyOptions = {
-  ndvi: {
+  NDVI: {
     label: "NDVI based on current land-use",
     options: ["0.7-1", "0.5-0.7", "0.2-0.5", "0-0.2", "<0"],
   },
-  landUse: {
+  LULC: {
     label: "Current Land-use",
     options: [
       "Forest",
@@ -255,7 +255,7 @@ const ecologyOptions = {
 };
 
 const socioeconomicOptions = {
-  distanceToDrainage: {
+  distToDrainage: {
     label: "Distance to Drainage Lines (m)",
     options: [
       "0-5",
@@ -267,67 +267,128 @@ const socioeconomicOptions = {
       ">1000",
     ],
   },
-  distanceToSettlements: {
+  distToSettlements: {
     label: "Distance to Settlements (m)",
     options: ["0-20", "20-100", "100-200", "200-500", "500-1000", ">1000"],
   },
-  distanceToRoads: {
+  distToRoad: {
     label: "Distance to Roads (m)",
     options: ["0-20", "20-100", "100-200", "200-500", "500-1000", ">1000"],
   },
 };
 
-const PlantationAssessmentForm = () => {
+const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
+  console.log(project.id, currentUser);
   const [page, setPage] = useState(1);
-  const [formData, setFormData] = useState({
-    annualPrecipitation: "",
-    meanAnnualTemperature: "",
-    aridityIndex: "",
-    referenceEvapoTranspiration: "",
-    Climate: "35",
-    topsoilPH: "",
-    subsoilPH: "",
-    topsoilOC: "",
-    subsoilOC: "",
-    topsoilCEC: "",
-    subsoilCEC: "",
-    topsoilTexture: "",
-    subsoilTexture: "",
-    topsoilBD: "",
-    subsoilBD: "",
-    drainage: "",
-    AWC: "",
-    Soil: "20",
-    elevation: "",
-    slope: "",
-    aspect: "",
-    Topography: "25",
-    NDVI: "",
-    LULC: "",
-    Ecology: "10",
-    distToDrainage: "",
-    distToSettlements: "",
-    distToRoad: "",
-    Socioeconomic: "10",
-  });
+  const [formData, setFormData] = useState({});
+  const [profileData, setProfileData] = useState({});
 
-  const handleCheckboxChange = (key, value) => {
-    setFormData((prev) => {
-      const currentValues = prev[key] ? prev[key].split(", ") : [];
-      const newValues = currentValues.includes(value)
-        ? currentValues.filter((v) => v !== value) // Remove if already selected
-        : [...currentValues, value]; // Add new value
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/plantation/profile/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-      return {
-        ...prev,
-        [key]: newValues.join(", "), // Store as comma-separated string
-      };
-    });
+        if (!response.ok) throw new Error("Failed to fetch data");
+
+        const data = await response.json();
+        console.log("Profile Data:", data);
+        setProfileData(data);
+        setFormData({
+          AWC: data[0].config_user_input.AWC,
+          Climate: data[0].config_user_input.Climate,
+          Ecology: data[0].config_user_input.Ecology,
+          LULC: data[0].config_user_input.LULC,
+          NDVI: data[0].config_user_input.NDVI,
+          Socioeconomic: data[0].config_user_input.Socioeconomic,
+          Soil: data[0].config_user_input.Soil,
+          Topography: data[0].config_user_input.Topography,
+          annualPrecipitation: data[0].config_user_input.annualPrecipitation,
+          aridityIndex: data[0].config_user_input.aridityIndex,
+          aspect: data[0].config_user_input.aspect || "",
+          distToDrainage: data[0].config_user_input.distToDrainage,
+          distToRoad: data[0].config_user_input.distToRoad,
+          distToSettlements: data[0].config_user_input.distToSettlements,
+          drainage: data[0].config_user_input.drainage,
+          elevation: data[0].config_user_input.elevation,
+          meanAnnualTemperature:
+            data[0].config_user_input.meanAnnualTemperature,
+          referenceEvapoTranspiration:
+            data[0].config_user_input.referenceEvapoTranspiration,
+          slope: data[0].config_user_input.slope,
+          subsoilBD: data[0].config_user_input.subsoilBD,
+          subsoilCEC: data[0].config_user_input.subsoilCEC,
+          subsoilOC: data[0].config_user_input.subsoilOC,
+          subsoilPH: data[0].config_user_input.subsoilPH,
+          subsoilTexture: data[0].config_user_input.subsoilTexture,
+          topsoilBD: data[0].config_user_input.topsoilBD,
+          topsoilCEC: data[0].config_user_input.topsoilCEC,
+          topsoilOC: data[0].config_user_input.topsoilOC,
+          topsoilPH: data[0].config_user_input.topsoilPH,
+          topsoilTexture: data[0].config_user_input.topsoilTexture,
+        });
+        console.log(setFormData);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [project.id]);
+
+  // Debugging: Log formData when it updates
+  useEffect(() => {
+    console.log("Updated FormData:", formData);
+  }, [formData]);
+
+  // Checkbox handler
+  const handleCheckboxChange = (key, range) => {
+    const values = formData[key]?.split(", ").filter(Boolean) || [];
+    const updatedValues = values.includes(range)
+      ? values.filter((val) => val !== range)
+      : [...values, range];
+
+    setFormData((prev) => ({
+      ...prev,
+      [key]: updatedValues.join(", "),
+    }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Form submitted with data:", formData, null, 2);
+
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/plantation/profile/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData), // Sending formData as the request body
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("API response data:", data);
+    } catch (error) {
+      console.error("Error during API call:", error);
+    }
   };
 
   return (
@@ -364,7 +425,7 @@ const PlantationAssessmentForm = () => {
                 <div key={range} className="mb-2">
                   <input
                     type="checkbox"
-                    checked={formData[key]?.includes(range)}
+                    checked={formData[key]?.split(", ").includes(range)}
                     onChange={() => handleCheckboxChange(key, range)}
                     className="mr-2"
                   />
@@ -374,15 +435,16 @@ const PlantationAssessmentForm = () => {
             </div>
           ))}
 
+          {/* Climate Weightage */}
           <div className="pl-8 mt-8">
             <h4 className="text-lg font-semibold mb-2">
               Climate Weightage (default 35%)
             </h4>
             <input
               type="text"
-              value={formData.climateWeightage}
+              value={formData.Climate}
               onChange={(e) =>
-                setFormData({ ...formData, climateWeightage: e.target.value })
+                setFormData({ ...formData, Climate: e.target.value })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
             />
@@ -416,7 +478,7 @@ const PlantationAssessmentForm = () => {
                 <div key={range} className="mb-2">
                   <input
                     type="checkbox"
-                    checked={formData[key]?.includes(range) || false} // Ensure no undefined error
+                    checked={formData[key]?.split(", ").includes(range)}
                     onChange={() => handleCheckboxChange(key, range)}
                     className="mr-2"
                   />
@@ -432,11 +494,11 @@ const PlantationAssessmentForm = () => {
             </h4>
             <input
               type="text"
-              value={formData.soilWeightage}
+              value={formData.Soil}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  soil: { ...formData.soil, soilWeightage: e.target.value },
+                  soil: { ...formData.Soil, Soil: e.target.value },
                 })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
@@ -472,7 +534,7 @@ const PlantationAssessmentForm = () => {
                   <div key={range} className="mb-2">
                     <input
                       type="checkbox"
-                      checked={formData[key]?.includes(range) || false} // Ensure safe access
+                      checked={formData[key]?.split(", ").includes(range)}
                       onChange={() => handleCheckboxChange(key, range)}
                       className="mr-2"
                     />
@@ -489,11 +551,11 @@ const PlantationAssessmentForm = () => {
             </h4>
             <input
               type="text"
-              value={formData.topographyWeightage}
+              value={formData.Topography}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  topographyWeightage: e.target.value,
+                  Topography: e.target.value,
                 })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
@@ -527,7 +589,7 @@ const PlantationAssessmentForm = () => {
                 <div key={range} className="mb-2">
                   <input
                     type="checkbox"
-                    checked={formData[key]?.includes(range) || false}
+                    checked={formData[key]?.split(", ").includes(range)}
                     onChange={() => handleCheckboxChange(key, range)}
                     className="mr-2"
                   />
@@ -543,11 +605,11 @@ const PlantationAssessmentForm = () => {
             </h4>
             <input
               type="text"
-              value={formData.ecologyWeightage}
+              value={formData.Ecology}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  ecologyWeightage: e.target.value,
+                  Ecology: e.target.value,
                 })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
@@ -585,7 +647,7 @@ const PlantationAssessmentForm = () => {
                   <div key={range} className="mb-2">
                     <input
                       type="checkbox"
-                      checked={formData[key]?.includes(range)}
+                      checked={formData[key]?.split(", ").includes(range)}
                       onChange={() => handleCheckboxChange(key, range)}
                       className="mr-2"
                     />
@@ -602,11 +664,11 @@ const PlantationAssessmentForm = () => {
             </h4>
             <input
               type="text"
-              value={formData.socioeconomicWeightage}
+              value={formData.Socioeconomic}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  socioeconomicWeightage: e.target.value,
+                  Socioeconomic: e.target.value,
                 })
               }
               className="w-full p-2 border rounded-lg border-gray-300"

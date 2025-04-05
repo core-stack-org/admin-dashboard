@@ -52,6 +52,7 @@ function SuperAdminDashboard({ currentUser }) {
   const isActive = currentUser?.user?.is_active ? "Active" : "Inactive";
   const [selectedUser, setSelectedUser] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [statesList, setStatesList] = useState([]);
 
   const handleOpenDialog = (dialogName) => {
     setOpenDialog(dialogName);
@@ -128,6 +129,31 @@ function SuperAdminDashboard({ currentUser }) {
     }
   };
 
+  useEffect(() => {
+    fetchStates();
+  }, []);
+
+  const fetchStates = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+      const data = await response.json();
+      const sortedStates = data.states.sort((a, b) =>
+        a.state_name.localeCompare(b.state_name)
+      );
+      setStatesList(sortedStates);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
   const fetchProjects = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
@@ -401,7 +427,7 @@ function SuperAdminDashboard({ currentUser }) {
             >
               <Button
                 variant="default"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white"
                 onClick={() => handleOpenDialog("organization")}
               >
                 <Building2 className="h-6 w-6" />
@@ -538,7 +564,10 @@ function SuperAdminDashboard({ currentUser }) {
       >
         <DialogTitle>Create Organization</DialogTitle>
         <DialogContent>
-          <OrganizationForm onClose={handleCloseDialog} />
+          <OrganizationForm
+            onClose={handleCloseDialog}
+            loadOrganization={loadOrganization}
+          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">
@@ -570,7 +599,11 @@ function SuperAdminDashboard({ currentUser }) {
         {/* Dialog Body */}
         <DialogContent dividers>
           <div className="p-6">
-            <Project onClose={handleCloseDialog} currentUser={currentUser} />
+            <Project
+              onClose={handleCloseDialog}
+              currentUser={currentUser}
+              statesList={statesList}
+            />
           </div>
         </DialogContent>
 
@@ -637,6 +670,7 @@ function SuperAdminDashboard({ currentUser }) {
             onClose={handleCloseDialog}
             currentUser={currentUser}
             isSuperAdmin={true}
+            onUserCreated={loadUsers}
           />
         </DialogContent>
         <DialogActions>

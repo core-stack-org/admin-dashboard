@@ -8,7 +8,7 @@ import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export function OrganizationForm({ onClose }) {
+export function OrganizationForm({ onClose, loadOrganization }) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -47,6 +47,7 @@ export function OrganizationForm({ onClose }) {
           name: "",
           description: "",
         });
+        loadOrganization();
         setTimeout(() => {
           toast.dismiss(); // Dismiss all toasts before navigating
         }, 5000);

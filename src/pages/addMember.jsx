@@ -6,7 +6,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
+const AddMember = ({
+  closeModal,
+  currentUser,
+  onClose,
+  isSuperAdmin,
+  onUserCreated,
+}) => {
   console.log(currentUser.user.organization_name);
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
@@ -138,7 +144,7 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
+          `${process.env.REACT_APP_BASEURL}api/v1/auth/register/`,
           {
             method: "POST",
             headers: {
@@ -164,6 +170,8 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
           setSelectedOption(null);
           setSelectedPermission([]);
           setErrors({});
+          onUserCreated();
+
           setTimeout(() => {
             toast.dismiss(); // Dismiss all toasts before navigating
             navigate("/dashboard");
@@ -178,7 +186,7 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
         }
       } catch (error) {
         console.error("Error during registration:", error);
-        toast.error("An error occurred. Please try again later.");
+        // toast.error("An error occurred. Please try again later.");
       }
     }
   };

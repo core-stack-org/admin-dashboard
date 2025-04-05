@@ -44,8 +44,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
   const [userRoles, setUserRoles] = useState([]);
   const [groups, setGroups] = useState([]);
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const [toast, setToast] = useState({
     open: false,
@@ -75,6 +73,11 @@ const ProjectManagerDashboard = ({ currentUser }) => {
         console.log("Projects:", data);
 
         setProjects(data);
+        if (Array.isArray(data) && data.length === 1) {
+          const project = data[0].project.id;
+          console.log("Project ID:", project);
+          setSelectedProject(project); // ✅ Store project object
+        }
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -83,28 +86,44 @@ const ProjectManagerDashboard = ({ currentUser }) => {
     fetchProjects();
   }, []);
 
-  // useEffect(() => {
-  //   const fetchUsers = async () => {
-  //     try {
-  //       const response = await fetch(
-  //         `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId}/users/`
-  //       );
-  //       if (!response.ok) {
-  //         throw new Error("Failed to fetch users");
-  //       }
-  //       const data = await response.json();
-  //       setUsers(data);
-  //     } catch (err) {
-  //       setError(err.message);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+  useEffect(() => {
+    const loadUsers = async () => {
+      console.log("Loading users...");
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        console.log(token);
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}api/v1/users/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-  //   if (projectId) {
-  //     fetchUsers();
-  //   }
-  // }, [projectId]);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Users loaded:", data);
+
+        if (!Array.isArray(data)) {
+          console.error("Unexpected API response format:", data);
+          return;
+        }
+
+        setUsers(data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        return [];
+      }
+    };
+    loadUsers();
+  }, []);
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
@@ -162,7 +181,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject.id}/plantation/kml/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject}/plantation/kml/`,
         {
           method: "POST",
           body: formData,
@@ -399,66 +418,67 @@ const ProjectManagerDashboard = ({ currentUser }) => {
           View Project Details
         </DialogTitle>
         <DialogContent>
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
-              {/* Header */}
-              <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center">
-                <h2 className="text-xl font-semibold">View Project Details</h2>
-                <button
-                  onClick={() => setIsProjectDialogOpen(false)}
-                  className="text-white rounded-full p-2 hover:bg-green-700 bg-green-600"
-                >
-                  ✕
-                </button>
-              </div>
+          <div className="p-6">
+            {projects.length > 0 && projects[0]?.project ? (
+              <div className="flex flex-col space-y-6">
+                {/* Project Details */}
+                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    📌 Project Name:{" "}
+                    {projects[0].project.name || "No name available"}
+                  </h3>
 
-              {/* Content */}
-              <div className="p-6">
-                <div className="flex flex-col space-y-6">
-                  {/* Organization Details */}
-                  <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                    <div className="flex items-center mb-4">
-                      <h3 className="text-lg font-semibold">Name: Test</h3>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500 mb-1">
-                          Organization ID
-                        </p>
-                        <p className="text-sm font-medium">test</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">
-                      Description
-                    </h4>
-                    <p className="text-sm text-gray-700">test </p>
-                  </div>
-
-                  {/* Created On */}
-                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="grid md:grid-cols-2 gap-4 mt-4">
                     <div>
-                      <p className="text-gray-500 mb-1">Created On</p>
-                      <p>test</p>
+                      <p className="text-sm text-gray-500 mb-1">Project ID</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {projects[0].project.id ?? "Not provided"}
+                      </p>
                     </div>
-                  </div>
-
-                  {/* Close Button */}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => setIsProjectDialogOpen(false)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
-                    >
-                      Close
-                    </button>
+                    <div>
+                      <p className="text-sm text-gray-500 mb-1">
+                        🏢 Organization
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {projects[0].project.organization_name ||
+                          "Not available"}
+                      </p>
+                    </div>
                   </div>
                 </div>
+
+                {/* Description */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500 mb-2">
+                    📝 Description
+                  </h4>
+                  <p className="text-sm text-gray-700 bg-gray-100 p-3 rounded-lg">
+                    {projects[0].project.description ||
+                      "No description provided"}
+                  </p>
+                </div>
+
+                {/* App Type */}
+                <div className="text-sm">
+                  <p className="text-gray-500 mb-1">🔗 App Type</p>
+                  <p className="font-medium text-blue-600">
+                    {projects[0].project.app_type || "Not specified"}
+                  </p>
+                </div>
+
+                {/* Role */}
+                <div className="text-sm">
+                  <p className="text-gray-500 mb-1">🛠 Role</p>
+                  <p className="font-medium text-gray-900">
+                    {projects[0].role?.name || "No role assigned"}
+                  </p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <p className="text-gray-500 text-center">
+                No project details available
+              </p>
+            )}
           </div>
         </DialogContent>
         <DialogActions>
@@ -471,6 +491,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog
         open={isRoleDialogOpen}
         onClose={() => setIsRoleDialogOpen(false)}
@@ -531,16 +552,15 @@ const ProjectManagerDashboard = ({ currentUser }) => {
                               </label>
                               <select
                                 value={selectedUser}
-                                onChange={(e) => {
-                                  console.log("selected user", e.target.value);
-                                  setSelectedUser(e.target.value);
+                                onChange={(e) =>
+                                  setSelectedUser(e.target.value)
+                                }
+                                className="block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                style={{
+                                  maxHeight: "50px",
                                 }}
-                                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                                required
                               >
-                                <option value="" disabled>
-                                  Select a user
-                                </option>
+                                <option value="">Select a user</option>
                                 {users.map((user) => (
                                   <option key={user.id} value={user.id}>
                                     {user.username}
