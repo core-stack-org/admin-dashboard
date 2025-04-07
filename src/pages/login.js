@@ -42,7 +42,7 @@ const LoginPage = ({ setCurrentUser }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/auth/login/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/auth/login/`,
         {
           method: "POST",
           headers: {

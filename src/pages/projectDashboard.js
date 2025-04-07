@@ -92,7 +92,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         console.log("Token:", token);
 
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
+          `${process.env.REACT_APP_BASEURL}api/v1/projects/`,
           {
             method: "GET",
             headers: {
@@ -229,8 +229,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
 
       setToast({
         open: true,
-        message:
-          "KML file uploaded successfully! It may take 5–10 minutes to process before becoming visible.",
+        message: "KML file uploaded successfully!",
         severity: "success",
       });
       setSelectedFiles([]);
@@ -291,7 +290,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
 
     // Construct the formData object
     const formData = {
-      project_app_id: matchedProject.id,
+      project_id: matchedProject.id,
       state: state_name, // ✅ Use state_name instead of state ID
       start_year: 2017,
       end_year: 2023,
@@ -303,7 +302,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       const token = sessionStorage.getItem("accessToken");
 
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/plantation_site_suitability/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/plantation_site_suitability/`,
         {
           method: "POST",
           headers: {
@@ -321,10 +320,12 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
 
       const result = await response.json();
       console.log("✅ Compute API Response:", result);
-
-      alert(
-        "Task initiated successfully! Please wait to view the layer or download the Geojson."
-      );
+      setToast({
+        open: true,
+        message:
+          "Task initiated successfully! Please wait to view the layer or download the Geojson.",
+        severity: "success",
+      });
     } catch (error) {
       console.error("❌ Error calling compute API:", error);
       alert("Failed to compute. Please try again.");
@@ -337,7 +338,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   };
 
   const handleViewGeoJSON = async (project) => {
-    console.log(project);
     const organizationName = project.organization_name;
     const projectName = project.name;
     const formattedOrganizationName = organizationName
@@ -345,42 +345,36 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       .toLowerCase();
     const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
 
-    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3Acfpt_infoplantation_suitability&outputFormat=application%2Fjson`;
+    const wfsUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
     let dynamicBbox = "";
+
     try {
-      const response = await fetch(wfsurl);
+      const response = await fetch(wfsUrl);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       const adminLayer = await response.json();
-
       const vectorSource = new VectorSource({
         features: new GeoJSON().readFeatures(adminLayer),
       });
-
       const extent = vectorSource.getExtent();
 
-      dynamicBbox =
-        extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
-      console.log(dynamicBbox);
-      console.log(formattedOrganizationName, formattedProjectName);
-
+      dynamicBbox = extent.join("%2C"); // xMin, yMin, xMax, yMax
       setBBox(extent);
-    } catch (error) {}
-    // const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-    const geojsonViewUrl = `${process.env.REACT_APP_GEOSERVER_BASEURL}plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
 
-    https: window.open(geojsonViewUrl, "_blank");
+      const layerName = `plantation:${formattedOrganizationName}_${formattedProjectName}_suitability`;
 
-    console.log("Checking GeoJSON layer:", geojsonViewUrl);
+      const geojsonViewUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
 
-    try {
-      const response = await fetch(geojsonViewUrl, { method: "HEAD" }); // Only fetch headers
+      console.log("Checking GeoJSON layer:", geojsonViewUrl);
+
+      // Check if layer is available before opening
+      const headResponse = await fetch(geojsonViewUrl, { method: "HEAD" });
 
       if (
-        response.ok &&
-        response.headers.get("Content-Type")?.includes("text/html")
+        headResponse.ok &&
+        headResponse.headers.get("Content-Type")?.includes("text/html")
       ) {
         window.open(geojsonViewUrl, "_blank");
       } else {
@@ -388,44 +382,42 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       }
     } catch (error) {
       console.error("Error checking GeoJSON layer:", error);
-      toast.error("An error occurred while fetching the layer.");
+      toast.error("An error occurred while checking the layer.");
     }
   };
 
-  const handleDownloadGeoJSON = async (organization, project) => {
+  const handleDownloadGeoJSON = async (project) => {
+    const organizationName = project.organization_name;
+    const projectName = project.name;
     const formattedOrganizationName = organizationName
       .replace(/\s+/g, "_")
       .toLowerCase();
-    const formattedProjectName = selectedProject?.name
-      ?.replace(/\s+/g, "_")
-      .toLowerCase();
-    console.log(formattedOrganizationName, formattedProjectName);
+    const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
 
-    const geojsonUrl = `${process.env.REACT_APP_GEOSERVER_BASEURL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
-    console.log(geojsonUrl);
+    const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
 
-    https: try {
+    console.log("Downloading GeoJSON from:", geojsonUrl);
+
+    try {
       const response = await fetch(geojsonUrl);
       const contentType = response.headers.get("content-type");
 
       if (!response.ok) throw new Error("Failed to fetch GeoJSON");
 
-      // Check for XML response, which usually indicates an error
       if (contentType && contentType.includes("text/xml")) {
         console.warn("Received XML response instead of JSON.");
-        alert("Data not available yet. Please check after some time.");
+        alert("Layer not available yet. Please check after some time.");
         return;
       }
 
       const data = await response.json();
-      console.log("GeoJSON Data:", data);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-"); // Avoid invalid filename characters
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
       const fileName = `${formattedOrganizationName}_${formattedProjectName}_${timestamp}.geojson`;
 
-      // Create a Blob and trigger download
       const blob = new Blob([JSON.stringify(data)], {
         type: "application/json",
       });
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -436,6 +428,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Error downloading GeoJSON:", error);
+      alert("Something went wrong while downloading the file.");
     }
   };
 
@@ -727,6 +720,28 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                     >
                       Upload
                     </Button>
+                    <Snackbar
+                      open={toast.open}
+                      autoHideDuration={6000}
+                      onClose={handleCloseToast}
+                      anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                      }} // Move to bottom-right
+                      sx={{
+                        position: "absolute",
+                        bottom: 12,
+                        right: 10, // Position it on the right side
+                      }}
+                    >
+                      <Alert
+                        onClose={handleCloseToast}
+                        severity={toast.severity}
+                        sx={{ width: "100%" }}
+                      >
+                        {toast.message}
+                      </Alert>
+                    </Snackbar>
                   </Box>
                 )}
 
@@ -768,6 +783,28 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                   </Box>
                 )}
               </Box>
+              <Snackbar
+                open={toast.open}
+                autoHideDuration={6000}
+                onClose={handleCloseToast}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }} // Move to bottom-right
+                sx={{
+                  position: "absolute",
+                  bottom: 12,
+                  right: 10, // Position it on the right side
+                }}
+              >
+                <Alert
+                  onClose={handleCloseToast}
+                  severity={toast.severity}
+                  sx={{ width: "100%" }}
+                >
+                  {toast.message}
+                </Alert>
+              </Snackbar>
             </DialogContent>
           </Dialog>
 

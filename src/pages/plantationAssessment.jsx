@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Snackbar, Alert } from "@mui/material";
 
 const climateOptions = {
   annualPrecipitation: {
@@ -282,6 +283,14 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
   const [page, setPage] = useState(1);
   const [formData, setFormData] = useState({});
   const [profileData, setProfileData] = useState({});
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const handleCloseToast = () => {
+    setToast({ ...toast, open: false });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -386,8 +395,18 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
       }
       const data = await response.json();
       console.log("API response data:", data);
+      setToast({
+        open: true,
+        message: "Form submitted successfully! Move to process the KMLs",
+        severity: "success",
+      });
     } catch (error) {
       console.error("Error during API call:", error);
+      setToast({
+        open: true,
+        message: "Failed to submit!",
+        severity: "error",
+      });
     }
   };
 
@@ -706,6 +725,28 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
             Submit
           </button>
         )}
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={6000}
+          onClose={handleCloseToast}
+          anchorOrigin={{
+            vertical: "bottom",
+            horizontal: "right",
+          }} // Move to bottom-right
+          sx={{
+            position: "absolute",
+            bottom: 12,
+            right: 10, // Position it on the right side
+          }}
+        >
+          <Alert
+            onClose={handleCloseToast}
+            severity={toast.severity}
+            sx={{ width: "100%" }}
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
       </div>
     </form>
   );
