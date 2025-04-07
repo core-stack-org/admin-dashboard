@@ -253,11 +253,8 @@ function SuperAdminDashboard({ currentUser }) {
   };
 
   const handleMakeSuperAdmin = async () => {
-    console.log("Making user Super Admin:", selectedUser, isSuperAdmin);
-
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log("Token:", token);
 
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}api/v1/users/${selectedUser}/`,
@@ -279,8 +276,6 @@ function SuperAdminDashboard({ currentUser }) {
       }
 
       const data = await response.json();
-      console.log("Updated User Data:", data);
-
       alert("User updated successfully!");
     } catch (error) {
       console.error("Error updating user:", error);

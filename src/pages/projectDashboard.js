@@ -28,7 +28,6 @@ import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 
 const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
-  console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const [isLayerAvailable, setIsLayerAvailable] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -59,11 +58,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   };
   const getStateName = (stateId) => {
     const state = statesList.find((s) => s.id === stateId);
-    console.log(
-      `State ID: ${stateId}, Found State Name: ${
-        state ? state.state_name : "Not Found"
-      }`
-    );
     return state ? state.state_name : "Unknown State";
   };
 
@@ -84,13 +78,9 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   });
 
   useEffect(() => {
-    console.log("Fetching projects...");
-
     const fetchProjects = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
-        console.log("Token:", token);
-
         const response = await fetch(
           `${process.env.REACT_APP_BASEURL}api/v1/projects/`,
           {
@@ -108,9 +98,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         }
 
         const data = await response.json();
-        console.log("Projects:", data);
-
-        // Fetch states list
         const statesResponse = await fetch(
           `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
           {
@@ -127,9 +114,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         }
 
         const statesData = await statesResponse.json();
-        console.log("States Data:", statesData);
-
-        // Create a mapping of state_census_code -> state_name
         const stateMap = {};
         statesData.states.forEach((state) => {
           stateMap[state.state_census_code] = state.state_name;
@@ -140,11 +124,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
           ...project,
           state_name: stateMap[project.state] || "Unknown State",
         }));
-
-        updatedProjects.forEach((project) =>
-          console.log(`Project: ${project.name}, State: ${project.state_name}`)
-        );
-
         setProjects(updatedProjects);
       } catch (error) {
         console.error("Error fetching projects:", error);
@@ -157,7 +136,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const handleOpenDialog = (project) => {
     setSelectedProject(project); // Store the whole project object
     setSelectedFiles([]);
-    console.log("Selected Project:", project); // Log the entire project
     setIsDialogOpen(true);
   };
 
@@ -223,10 +201,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         const errorText = await response.text();
         throw new Error(`HTTP error! Status: ${response.status}, ${errorText}`);
       }
-
       const result = await response.json();
-      console.log("Upload successful:", result);
-
       setToast({
         open: true,
         message: "KML file uploaded successfully!",
@@ -258,15 +233,11 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   };
 
   const handleCompute = async (project) => {
-    console.log("🚀 Selected Project for Compute:", project);
-
     if (!project) {
       console.error("❌ No project selected.");
       alert("Please select a project first.");
       return;
     }
-
-    // Find the project in the updated projects state to get state_name
     const matchedProject = projects.find((p) => p.id === project.id);
 
     if (!matchedProject) {
@@ -274,9 +245,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       alert("Something went wrong. Please refresh and try again.");
       return;
     }
-
-    console.log("State Name Extracted:", matchedProject.state_name); // Debugging output
-
     // Extract required fields
     const { state, appTypes, id } = project;
     const state_name = matchedProject.state_name; // ✅ Get the correct state name
@@ -295,9 +263,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       start_year: 2017,
       end_year: 2023,
     };
-
-    console.log("📤 Sending formData:", formData);
-
     try {
       const token = sessionStorage.getItem("accessToken");
 
@@ -319,7 +284,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       }
 
       const result = await response.json();
-      console.log("✅ Compute API Response:", result);
       setToast({
         open: true,
         message:
@@ -366,10 +330,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       const layerName = `plantation:${formattedOrganizationName}_${formattedProjectName}_suitability`;
 
       const geojsonViewUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-
-      console.log("Checking GeoJSON layer:", geojsonViewUrl);
-
-      // Check if layer is available before opening
       const headResponse = await fetch(geojsonViewUrl, { method: "HEAD" });
 
       if (
@@ -393,11 +353,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       .replace(/\s+/g, "_")
       .toLowerCase();
     const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
-
     const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
-
-    console.log("Downloading GeoJSON from:", geojsonUrl);
-
     try {
       const response = await fetch(geojsonUrl);
       const contentType = response.headers.get("content-type");

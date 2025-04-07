@@ -13,7 +13,6 @@ const AddMember = ({
   isSuperAdmin,
   onUserCreated,
 }) => {
-  console.log(currentUser.user.organization_name);
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -49,7 +48,6 @@ const AddMember = ({
   }, [isSuperAdmin]);
 
   const loadOrganization = async () => {
-    console.log("loading org");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
@@ -62,7 +60,6 @@ const AddMember = ({
         }
       );
       const data = await response.json();
-      console.log(data);
       if (Array.isArray(data)) {
         setOrganizations(data);
       } else {
@@ -125,7 +122,6 @@ const AddMember = ({
     return newErrors;
   };
   const handleSubmit = async (e) => {
-    console.log("hittingapi");
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -178,7 +174,7 @@ const AddMember = ({
           }, 5000);
         } else {
           const errorData = await response.json(); // Parse the JSON response
-          console.log("API Error:", errorData); // Debug to see the error message structure
+          console.error("API Error:", errorData); // Debug to see the error message structure
           const errorMessages = Object.values(errorData).flat().join(", ");
           toast.error(
             errorMessages || "Registration failed. Please try again."

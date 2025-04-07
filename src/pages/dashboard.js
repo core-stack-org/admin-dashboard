@@ -6,9 +6,7 @@ import AppUserDashboard from "./appUserDashboard.js";
 
 const Dashboard = ({ currentUser }) => {
   useEffect(() => {
-    console.log("Current User:", currentUser);
     const userGroup = currentUser?.user?.groups?.[0]?.name;
-    console.log("User Group:", userGroup);
   }, [currentUser]);
 
   const renderContent = () => {

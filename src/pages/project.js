@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -11,10 +10,6 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   const [userId, setUserId] = useState(null);
   const [projectAppType, setProjectAppType] = useState("");
   const [state, setState] = useState({ id: "", name: "" });
-  // const [statesList, setStatesList] = useState([]);
-
-  // console.log(currentuser.user);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (currentUser?.user?.organization) {
@@ -33,8 +28,6 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
     const [state_id, state_name] = selectedValue.split("_");
     setState({ id: state_id, name: state_name });
   };
-
-  console.log(currentUser);
   const handleSubmit = async (e) => {
     e.preventDefault();
 

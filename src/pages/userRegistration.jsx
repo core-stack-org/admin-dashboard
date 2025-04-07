@@ -38,7 +38,6 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
 
   const loadOrganization = async () => {
-    console.log("loading org");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
@@ -51,7 +50,6 @@ const RegistrationForm = () => {
         }
       );
       const data = await response.json();
-      console.log(data);
       return data.map((org) => ({
         value: org.id,
         label: org.name,
@@ -103,7 +101,6 @@ const RegistrationForm = () => {
     return newErrors;
   };
   const handleSubmit = async (e) => {
-    console.log("hittingapi");
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -153,7 +150,6 @@ const RegistrationForm = () => {
           setErrors({});
         } else {
           const errorData = await response.json(); // Parse the JSON response
-          console.log("API Error:", errorData); // Debug to see the error message structure
           const errorMessages = Object.values(errorData).flat().join(", ");
           toast.error(
             errorMessages || "Registration failed. Please try again."

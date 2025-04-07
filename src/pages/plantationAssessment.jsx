@@ -279,7 +279,6 @@ const socioeconomicOptions = {
 };
 
 const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
-  console.log(project.id, currentUser);
   const [page, setPage] = useState(1);
   const [formData, setFormData] = useState({});
   const [profileData, setProfileData] = useState({});
@@ -308,9 +307,7 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
         );
 
         if (!response.ok) throw new Error("Failed to fetch data");
-
         const data = await response.json();
-        console.log("Profile Data:", data);
         setProfileData(data);
         setFormData({
           AWC: data[0].config_user_input.AWC,
@@ -345,7 +342,6 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
           topsoilPH: data[0].config_user_input.topsoilPH,
           topsoilTexture: data[0].config_user_input.topsoilTexture,
         });
-        console.log(setFormData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -355,9 +351,7 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
   }, [project.id]);
 
   // Debugging: Log formData when it updates
-  useEffect(() => {
-    console.log("Updated FormData:", formData);
-  }, [formData]);
+  useEffect(() => {}, [formData]);
 
   // Checkbox handler
   const handleCheckboxChange = (key, range) => {
@@ -374,8 +368,6 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted with data:", formData, null, 2);
-
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
@@ -387,14 +379,13 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
             "ngrok-skip-browser-warning": "420",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(formData), // Sending formData as the request body
+          body: JSON.stringify(formData),
         }
       );
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("API response data:", data);
       setToast({
         open: true,
         message: "Form submitted successfully! Move to process the KMLs",

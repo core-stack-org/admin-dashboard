@@ -35,7 +35,6 @@ const LocationFormComponent = ({}) => {
       showYear: layersData.layers_json[key].show_year,
     };
   });
-  console.log(layers);
 
   useEffect(() => {
     fetchStates();
@@ -149,9 +148,6 @@ const LocationFormComponent = ({}) => {
     setError(null);
     const selectedLayer = layersData.layers_json[layerName];
     const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/"); // Gets "generate_ci_layer/"
-
-    console.log(selectedLayer);
-    // toast.info("Layer generation started...");
 
     const payload = {
       state: state.name,

@@ -32,7 +32,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
 const OrgAdminDashboard = ({ currentUser }) => {
-  console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const organizationId = currentUser?.user?.organization;
   const userName = currentUser?.user?.username;
@@ -151,28 +150,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
       prev - 3 >= 0 ? prev - 3 : projectActions.length - 3
     );
   };
-
-  const handleUserChange = (e) => {
-    const userId = e.target.value;
-
-    // Find the selected user object
-    const user = users.find((user) => user.id.toString() === userId);
-
-    // Extract roles from the user's `groups` array
-    const roles = user?.groups ?? [];
-
-    // Log roles to the console for verification
-    console.log(`Selected User: ${user?.username}`);
-    console.log(
-      `Roles:`,
-      roles.map((role) => role.name)
-    );
-
-    // Update state (optional, for UI implementation later)
-    setSelectedUser(userId);
-    setUserRoles(roles);
-  };
-
   const handleOpenModal = async (type) => {
     setModalType(type);
     setIsModalOpen(true);
@@ -212,7 +189,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
   };
 
   const closeModal = () => {
-    console.log("closing");
     setIsModalOpen(false);
   };
 
@@ -236,7 +212,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         setOrgMembers(data);
       } else {
         console.error("Failed to fetch organization members");
@@ -288,8 +263,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
       );
 
       const usersData = await response.json();
-      console.log("Raw Users Response:", usersData); // Check the actual response
-
       if (Array.isArray(usersData)) {
         setUsers(usersData);
       } else if (usersData && Array.isArray(usersData.users)) {
@@ -303,13 +276,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
   };
 
   useEffect(() => {
-    console.log("Fetching users...");
-
     fetchUsers();
   }, []);
 
   useEffect(() => {
-    console.log("Fetching roles...");
     const fetchGroups = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
@@ -326,7 +296,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
         );
 
         const groupData = await response.json();
-        console.log("Fetched Groups:", groupData);
 
         if (Array.isArray(groupData)) {
           setGroups(groupData); // Set groups properly
@@ -344,7 +313,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
   const updateOrganizationDetails = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/organizations/${organizationId}/`,
         {
@@ -359,7 +327,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         setOrgDetails(data);
         openModal(true);
       } else {
@@ -396,52 +363,13 @@ const OrgAdminDashboard = ({ currentUser }) => {
     }
   };
 
-  const removerole = async (e) => {
-    e.preventDefault();
-
-    if (!selectedUser || !selectedRole) {
-      toast.error("Please select both a user and a role.");
-      return;
-    } // Prevent form from reloading the page
-    try {
-      const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/users/${userid}/remove_group/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            group_id: selectedRole,
-          }),
-        }
-      );
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("Role removed successfully!", {
-          onClose: () => closeModal(), // Ensures toast is displayed before closing
-        });
-      } else {
-        toast.error(
-          `Failed to remove role: ${data.message || "Unknown error"}`
-        );
-      }
-    } catch (error) {
-      console.error("Error assigning role:", error);
-      toast.error("An error occurred while assigning the role.");
-    }
-  };
   const assignRole = async (e) => {
     e.preventDefault();
 
     if (!selectedUser || !selectedRole) {
       toast.error("Please select both a user and a role.");
       return;
-    } // Prevent form from reloading the page
-    console.log(selectedRole, selectedUser);
+    }
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(

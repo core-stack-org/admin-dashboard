@@ -83,7 +83,6 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
   }, []);
 
   useEffect(() => {
-    console.log("Fetching roles...");
     const fetchGroups = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
@@ -100,10 +99,9 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
         );
 
         const groupData = await response.json();
-        console.log("Fetched Groups:", groupData);
 
         if (Array.isArray(groupData)) {
-          setGroups(groupData); // Set groups properly
+          setGroups(groupData);
         } else {
           console.error("Unexpected groups API response:", groupData);
         }
@@ -156,18 +154,15 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
       // Show all roles
       setUserRoles(groups);
     } else {
-      // Show only assigned roles from the user object
       setUserRoles(user?.groups || []);
     }
 
-    setSelectedRole(""); // Clear previously selected role
+    setSelectedRole("");
   };
 
   const handleAssignOrUpdate = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
-
-      // Step 1: Check if the user is already assigned to the project
       const checkRes = await fetch(
         `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject}/users/${selectedUser}`,
         {
@@ -187,7 +182,6 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
       let body = {};
 
       if (isAssigned) {
-        // User already assigned → Update roles (PATCH or PUT)
         method = "PATCH"; // or "PUT" depending on your API spec
         apiUrl = `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject}/users/${checkData[0].id}/`;
 
@@ -195,7 +189,6 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
           group: selectedRole, // or array of groups depending on API
         };
       } else {
-        // User not assigned → Assign role (POST)
         method = "POST";
         apiUrl = `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject}/users/`;
 
@@ -231,12 +224,6 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
   };
 
   const removeUserFromProject = async () => {
-    console.log(selectedProject, userProjectId);
-    // const formData = {
-    //   user_id: selectedUser,
-    //   role_id: selectedRole,
-    // };
-
     const token = sessionStorage.getItem("accessToken");
 
     const response = await fetch(
@@ -279,63 +266,6 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
       toast.error("Operation failed.");
     }
   };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!selectedProject || !selectedUser || !selectedRole) {
-  //     toast.error("Please select a project, user, and role.");
-  //     return;
-  //   }
-
-  //   // Find the selected user's name
-  //   const user = users.find((u) => u.id.toString() === selectedUser);
-  //   const userName = user ? user.username : "Unknown User";
-
-  //   // Find the selected project's name
-  //   const project = projects.find((p) => p.id.toString() === selectedProject);
-  //   const projectName = project ? project.name : "Unknown Project";
-
-  //   // Find the selected role's name
-  //   const role = userRoles.find((r) => r.id.toString() === selectedRole);
-  //   const roleName = role ? role.name : "Unknown Role";
-
-  //   // Log values
-  //   console.log("Selected User:", userName, `(ID: ${selectedUser})`);
-  //   console.log("Selected Project:", projectName, `(ID: ${selectedProject})`);
-  //   console.log("Selected Role:", roleName, `(ID: ${selectedRole})`);
-
-  //   const formData = {
-  //     user: selectedUser,
-  //     group: selectedRole,
-  //   };
-
-  //   try {
-  //     const token = sessionStorage.getItem("accessToken");
-
-  //     const response = await fetch(
-  //       `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject}/users/`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //         body: JSON.stringify(formData),
-  //       }
-  //     );
-
-  //     if (!response.ok) {
-  //       throw new Error("Failed to assign project role");
-  //     }
-
-  //     toast.success("Project role assigned successfully!");
-  //     closeModal();
-  //   } catch (error) {
-  //     console.error("Error submitting project:", error);
-  //     toast.error("Failed to assign project role.");
-  //   }
-  // };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

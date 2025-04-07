@@ -24,7 +24,6 @@ import Project from "../pages/project.js";
 import { ToastContainer } from "react-toastify";
 
 const ProjectManagerDashboard = ({ currentUser }) => {
-  console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const organizationId = currentUser?.user?.organization;
   const userName = currentUser?.user?.username;
@@ -52,11 +51,9 @@ const ProjectManagerDashboard = ({ currentUser }) => {
   });
 
   useEffect(() => {
-    console.log("fetching projects");
     const fetchProjects = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
-        console.log(token);
         const response = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/users/my_projects/`,
           {
@@ -70,12 +67,10 @@ const ProjectManagerDashboard = ({ currentUser }) => {
         );
 
         const data = await response.json();
-        console.log("Projects:", data);
 
         setProjects(data);
         if (Array.isArray(data) && data.length === 1) {
           const project = data[0].project.id;
-          console.log("Project ID:", project);
           setSelectedProject(project); // ✅ Store project object
         }
       } catch (error) {
@@ -88,10 +83,8 @@ const ProjectManagerDashboard = ({ currentUser }) => {
 
   useEffect(() => {
     const loadUsers = async () => {
-      console.log("Loading users...");
       try {
         const token = sessionStorage.getItem("accessToken");
-        console.log(token);
         const response = await fetch(
           `${process.env.REACT_APP_BASEURL}api/v1/users/`,
           {
@@ -103,14 +96,10 @@ const ProjectManagerDashboard = ({ currentUser }) => {
             },
           }
         );
-
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-
         const data = await response.json();
-        console.log("Users loaded:", data);
-
         if (!Array.isArray(data)) {
           console.error("Unexpected API response format:", data);
           return;
@@ -158,7 +147,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
   };
 
   const handleUploadKml = async () => {
-    console.log(selectedProject.id);
     if (!selectedFiles || selectedFiles.length === 0) {
       setToast({
         open: true,
@@ -197,8 +185,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
       }
 
       const result = await response.json();
-      console.log("Upload successful:", result);
-
       setToast({
         open: true,
         message:
@@ -222,8 +208,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
     if (!selectedUser || !selectedRole) {
       toast.error("Please select both a user and a role.");
       return;
-    } // Prevent form from reloading the page
-    console.log(selectedRole, selectedUser);
+    }
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(

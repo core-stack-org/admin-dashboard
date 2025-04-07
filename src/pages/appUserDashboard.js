@@ -52,7 +52,6 @@ export default function AppUserDashboard() {
   };
 
   const handleUploadKml = async () => {
-    // console.log(selectedProject.id);
     if (!selectedFiles || selectedFiles.length === 0) {
       setToast({
         open: true,
@@ -91,8 +90,6 @@ export default function AppUserDashboard() {
       }
 
       const result = await response.json();
-      console.log("Upload successful:", result);
-
       setToast({
         open: true,
         message:

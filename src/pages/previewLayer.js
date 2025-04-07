@@ -179,9 +179,7 @@ const PreviewLayerComponent = () => {
 
       dynamicBbox =
         extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
-      console.log(dynamicBbox);
-
-      setBBox(extent); // Optionally store the bbox in the state
+      setBBox(extent);
     } catch (error) {}
     const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
 

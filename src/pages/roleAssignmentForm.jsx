@@ -20,10 +20,8 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
   }, []);
 
   const loadUsers = async () => {
-    console.log("Loading users...");
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
         {
@@ -39,10 +37,7 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log("Users loaded:", data);
-
       if (!Array.isArray(data)) {
         console.error("Unexpected API response format:", data);
         return;
@@ -56,8 +51,6 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
   };
 
   const fetchUserGroups = async () => {
-    console.log("Fetching user groups...");
-
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
@@ -82,8 +75,6 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       }
 
       const data = await response.json();
-      console.log("User groups loaded:", data);
-
       if (!Array.isArray(data)) {
         console.error("Unexpected API response format:", data);
         return;
@@ -103,11 +94,6 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       toast.error("Please select both a user and a role.");
       return;
     }
-
-    console.log("Assigning Role:", {
-      user_id: selectedUser,
-      group_id: selectedRole,
-    });
 
     try {
       const token = sessionStorage.getItem("accessToken");
