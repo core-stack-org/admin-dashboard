@@ -20,7 +20,6 @@ const OrganizationDetails = ({ modalData, closeModal, mode }) => {
 
   const handleSubmit = async () => {
     if (isEditMode) {
-      console.log(formData);
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
@@ -40,7 +39,6 @@ const OrganizationDetails = ({ modalData, closeModal, mode }) => {
         }
 
         const updatedData = await response.json();
-        console.log("Organization updated successfully:", updatedData);
       } catch (error) {
         console.error("Error updating organization:", error);
       }

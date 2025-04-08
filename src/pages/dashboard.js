@@ -2,12 +2,11 @@ import React, { useEffect } from "react";
 import SuperAdminDashboard from "./superAdminDashboard.jsx";
 import OrgAdminDashboard from "./orgAdminDashboard.jsx";
 import ProjectManagerDashboard from "./projectManagerDashboard.jsx";
+import AppUserDashboard from "./appUserDashboard.js";
 
 const Dashboard = ({ currentUser }) => {
   useEffect(() => {
-    console.log("Current User:", currentUser);
     const userGroup = currentUser?.user?.groups?.[0]?.name;
-    console.log("User Group:", userGroup);
   }, [currentUser]);
 
   const renderContent = () => {
@@ -25,6 +24,8 @@ const Dashboard = ({ currentUser }) => {
       return <OrgAdminDashboard currentUser={currentUser} />;
     } else if (userGroup === "Project Manager") {
       return <ProjectManagerDashboard currentUser={currentUser} />;
+    } else if (userGroup === "App User") {
+      return <AppUserDashboard currentUser={currentUser} />;
     }
     return <p>No content available for this role.</p>;
   };

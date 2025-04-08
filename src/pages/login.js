@@ -42,7 +42,7 @@ const LoginPage = ({ setCurrentUser }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/auth/login/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/auth/login/`,
         {
           method: "POST",
           headers: {
@@ -60,12 +60,9 @@ const LoginPage = ({ setCurrentUser }) => {
       }
 
       const data = await response.json();
-      // localStorage.setItem("token", data.access);
-      console.log(data);
       sessionStorage.setItem("accessToken", data.access);
       sessionStorage.setItem("refreshToken", data.refresh);
       localStorage.setItem("currentUser", JSON.stringify(data)); // Store in local storage
-      console.log(data.user);
       setCurrentUser(data);
       toast.success("Login successful!");
 

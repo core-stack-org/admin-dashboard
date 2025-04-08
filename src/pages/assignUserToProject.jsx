@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const AssignUserToProject = ({ currentUser, closeModal }) => {
+const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
   const [organization, setOrganization] = useState(null);
   const [userId, setUserId] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -13,6 +13,7 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
   const [userRoles, setUserRoles] = useState([]); // Stores roles for selected user
   const [selectedRole, setSelectedRole] = useState(""); // Stores selected role
   const [groups, setGroups] = useState([]);
+  const [userProjectId, setUserProjectId] = useState(null);
 
   const navigate = useNavigate();
 
@@ -82,7 +83,6 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
   }, []);
 
   useEffect(() => {
-    console.log("Fetching roles...");
     const fetchGroups = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
@@ -99,10 +99,9 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
         );
 
         const groupData = await response.json();
-        console.log("Fetched Groups:", groupData);
 
         if (Array.isArray(groupData)) {
-          setGroups(groupData); // Set groups properly
+          setGroups(groupData);
         } else {
           console.error("Unexpected groups API response:", groupData);
         }
@@ -114,14 +113,136 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
     fetchGroups();
   }, []);
 
-  // Handle user selection and update roles dynamically
+  useEffect(() => {
+    const fetchUserProjectId = async () => {
+      if (!selectedProject || !selectedUser || mode !== "remove") return;
+
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        const res = await fetch(
+          `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject}/users/`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setUserProjectId(data[0].id);
+        } else {
+          console.warn("No project-user relation found.");
+        }
+      } catch (err) {
+        console.error("Error fetching userProjectId:", err);
+      }
+    };
+
+    fetchUserProjectId();
+  }, [selectedUser, selectedProject, mode]);
+
   const handleUserChange = (e) => {
     const userId = e.target.value;
     setSelectedUser(userId);
 
     const user = users.find((u) => u.id.toString() === userId);
-    setUserRoles(user ? user.groups || [] : []);
-    setSelectedRole(""); // Reset selected role when user changes
+
+    if (mode === "assign") {
+      // Show all roles
+      setUserRoles(groups);
+    } else {
+      setUserRoles(user?.groups || []);
+    }
+
+    setSelectedRole("");
+  };
+
+  const handleAssignOrUpdate = async () => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const checkRes = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject}/users/${selectedUser}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const checkData = await checkRes.json();
+      const isAssigned = Array.isArray(checkData) && checkData.length > 0;
+
+      let apiUrl = "";
+      let method = "";
+      let body = {};
+
+      if (isAssigned) {
+        method = "PATCH"; // or "PUT" depending on your API spec
+        apiUrl = `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject}/users/${checkData[0].id}/`;
+
+        body = {
+          group: selectedRole, // or array of groups depending on API
+        };
+      } else {
+        method = "POST";
+        apiUrl = `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject}/users/`;
+
+        body = {
+          user: selectedUser,
+          group: selectedRole,
+        };
+      }
+
+      const finalRes = await fetch(apiUrl, {
+        method,
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!finalRes.ok) {
+        throw new Error("API failed");
+      }
+
+      toast.success(
+        isAssigned
+          ? "Role updated successfully!"
+          : "Role assigned successfully!"
+      );
+      closeModal();
+    } catch (err) {
+      console.error("❌ Error assigning/updating role:", err);
+      toast.error("Something went wrong.");
+    }
+  };
+
+  const removeUserFromProject = async () => {
+    const token = sessionStorage.getItem("accessToken");
+
+    const response = await fetch(
+      `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedProject}/users/${userProjectId}/`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        // body: JSON.stringify(formData),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to remove project role");
+    }
+
+    toast.success("Project role removed successfully!");
   };
 
   const handleSubmit = async (e) => {
@@ -132,52 +253,17 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
       return;
     }
 
-    // Find the selected user's name
-    const user = users.find((u) => u.id.toString() === selectedUser);
-    const userName = user ? user.username : "Unknown User";
-
-    // Find the selected project's name
-    const project = projects.find((p) => p.id.toString() === selectedProject);
-    const projectName = project ? project.name : "Unknown Project";
-
-    // Find the selected role's name
-    const role = userRoles.find((r) => r.id.toString() === selectedRole);
-    const roleName = role ? role.name : "Unknown Role";
-
-    // Log values
-    console.log("Selected User:", userName, `(ID: ${selectedUser})`);
-    console.log("Selected Project:", projectName, `(ID: ${selectedProject})`);
-    console.log("Selected Role:", roleName, `(ID: ${selectedRole})`);
-
-    const formData = {
-      user: selectedUser,
-      group: selectedRole,
-    };
-
     try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject}/users/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to assign project role");
+      if (mode === "assign") {
+        await handleAssignOrUpdate();
+      } else {
+        await removeUserFromProject();
       }
 
-      toast.success("Project role assigned successfully!");
       closeModal();
     } catch (error) {
-      console.error("Error submitting project:", error);
-      toast.error("Failed to assign project role.");
+      console.error("Error in submit:", error);
+      toast.error("Operation failed.");
     }
   };
 
@@ -186,11 +272,19 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
       <ToastContainer position="bottom-left" />
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
         {/* Header */}
-        <div className="bg-fuchsia-600 text-white px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Assign Project Role</h2>
+        <div
+          className={`${
+            mode === "assign" ? "bg-fuchsia-600" : "bg-red-600"
+          } text-white px-6 py-4 flex justify-between items-center`}
+        >
+          <h2 className="text-xl font-semibold">
+            {mode === "assign" ? "Assign Project Role" : "Remove Project Role"}
+          </h2>
           <button
             onClick={closeModal}
-            className="text-white hover:bg-fuchsia-700 rounded-full p-2 focus:outline-none"
+            className={`text-white ${
+              mode === "assign" ? "hover:bg-fuchsia-700" : "hover:bg-red-700"
+            } rounded-full p-2 focus:outline-none`}
           >
             <svg
               className="w-5 h-5"
@@ -270,17 +364,11 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
                 <option value="" disabled>
                   Select role
                 </option>
-                {groups
-                  .filter(
-                    (group) =>
-                      group.name === "Organization Admin" ||
-                      group.name === "Project Manager"
-                  ) // Filter required roles
-                  .map((group) => (
-                    <option key={group.id} value={group.id}>
-                      {group.name}
-                    </option>
-                  ))}
+                {userRoles.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
               </select>
             </div>
 
@@ -288,9 +376,13 @@ const AssignUserToProject = ({ currentUser, closeModal }) => {
             <div className="text-center">
               <button
                 type="submit"
-                className="px-8 py-3 bg-fuchsia-600 text-white rounded-md hover:bg-fuchsia-700 transition text-lg"
+                className={`px-8 py-3 text-white rounded-md transition text-lg ${
+                  mode === "assign"
+                    ? "bg-fuchsia-600 hover:bg-fuchsia-700"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
               >
-                Assign Role
+                {mode === "assign" ? "Assign Role" : "Remove Role"}
               </button>
             </div>
           </form>

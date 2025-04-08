@@ -2,13 +2,6 @@ import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const roles = [
-  { id: "role1", name: "Super Admin" },
-  { id: "role2", name: "Organization Admin" },
-  { id: "role3", name: "Project Manager" },
-  { id: "role4", name: "User Manager" },
-];
-
 const RoleAssignmentForm = ({ closeModal, onClose }) => {
   const [formData, setFormData] = useState({ userId: "", roleId: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,10 +20,8 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
   }, []);
 
   const loadUsers = async () => {
-    console.log("Loading users...");
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
         {
@@ -46,10 +37,7 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log("Users loaded:", data);
-
       if (!Array.isArray(data)) {
         console.error("Unexpected API response format:", data);
         return;
@@ -63,8 +51,6 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
   };
 
   const fetchUserGroups = async () => {
-    console.log("Fetching user groups...");
-
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
@@ -89,8 +75,6 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       }
 
       const data = await response.json();
-      console.log("User groups loaded:", data);
-
       if (!Array.isArray(data)) {
         console.error("Unexpected API response format:", data);
         return;
@@ -111,11 +95,6 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       return;
     }
 
-    console.log("Assigning Role:", {
-      user_id: selectedUser,
-      group_id: selectedRole,
-    });
-
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
@@ -124,7 +103,7 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
       }
 
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/users/${selectedUser}/set_group/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/users/${selectedUser}/set_group/`,
         {
           method: "PUT",
           headers: {
@@ -132,7 +111,7 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
             Authorization: `Bearer ${token.trim()}`,
           },
           body: JSON.stringify({
-            group_id: selectedRole,
+            group_id: Number(selectedRole),
           }),
         }
       );

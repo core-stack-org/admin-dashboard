@@ -3,8 +3,6 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const UserMappingForm = ({ closeModal, onClose }) => {
-  console.log("User mapping form loaded");
-  const [selectedOption, setSelectedOption] = useState(null);
   const [users, setUsers] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -26,12 +24,6 @@ const UserMappingForm = ({ closeModal, onClose }) => {
       toast.error("Both fields are required");
       return;
     }
-
-    console.log("Submitting Form:", {
-      user_id: selectedUser,
-      organization_id: selectedOrganization,
-    });
-
     try {
       const token = sessionStorage.getItem("accessToken");
       if (!token) {
@@ -70,7 +62,6 @@ const UserMappingForm = ({ closeModal, onClose }) => {
   };
 
   const loadOrganization = async () => {
-    console.log("loading org");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
@@ -83,7 +74,6 @@ const UserMappingForm = ({ closeModal, onClose }) => {
         }
       );
       const data = await response.json();
-      console.log(data);
       if (Array.isArray(data)) {
         setOrganizations(data);
       } else {
@@ -96,10 +86,8 @@ const UserMappingForm = ({ closeModal, onClose }) => {
   };
 
   const loadUsers = async () => {
-    console.log("Loading users...");
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
         {
@@ -117,8 +105,6 @@ const UserMappingForm = ({ closeModal, onClose }) => {
       }
 
       const data = await response.json();
-      console.log("Users loaded:", data);
-
       if (!Array.isArray(data)) {
         console.error("Unexpected API response format:", data);
         return;

@@ -6,8 +6,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 
-const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
-  console.log(currentUser.user.organization_name);
+const AddMember = ({
+  closeModal,
+  currentUser,
+  onClose,
+  isSuperAdmin,
+  onUserCreated,
+}) => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -43,7 +48,6 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
   }, [isSuperAdmin]);
 
   const loadOrganization = async () => {
-    console.log("loading org");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
@@ -56,7 +60,6 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
         }
       );
       const data = await response.json();
-      console.log(data);
       if (Array.isArray(data)) {
         setOrganizations(data);
       } else {
@@ -119,7 +122,6 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
     return newErrors;
   };
   const handleSubmit = async (e) => {
-    console.log("hittingapi");
     e.preventDefault();
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
@@ -138,7 +140,7 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
+          `${process.env.REACT_APP_BASEURL}api/v1/auth/register/`,
           {
             method: "POST",
             headers: {
@@ -164,13 +166,15 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
           setSelectedOption(null);
           setSelectedPermission([]);
           setErrors({});
+          onUserCreated();
+
           setTimeout(() => {
             toast.dismiss(); // Dismiss all toasts before navigating
             navigate("/dashboard");
           }, 5000);
         } else {
           const errorData = await response.json(); // Parse the JSON response
-          console.log("API Error:", errorData); // Debug to see the error message structure
+          console.error("API Error:", errorData); // Debug to see the error message structure
           const errorMessages = Object.values(errorData).flat().join(", ");
           toast.error(
             errorMessages || "Registration failed. Please try again."
@@ -178,7 +182,7 @@ const AddMember = ({ closeModal, currentUser, onClose, isSuperAdmin }) => {
         }
       } catch (error) {
         console.error("Error during registration:", error);
-        toast.error("An error occurred. Please try again later.");
+        // toast.error("An error occurred. Please try again later.");
       }
     }
   };

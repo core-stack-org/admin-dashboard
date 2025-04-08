@@ -14,6 +14,8 @@ import {
   Edit,
   UserPlus,
   UserMinus,
+  Settings,
+  Globe,
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faUserCog } from "@fortawesome/free-solid-svg-icons";
@@ -30,7 +32,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
 const OrgAdminDashboard = ({ currentUser }) => {
-  console.log(currentUser);
   const organizationName = currentUser?.user?.organization_name;
   const organizationId = currentUser?.user?.organization;
   const userName = currentUser?.user?.username;
@@ -50,55 +51,131 @@ const OrgAdminDashboard = ({ currentUser }) => {
   const [selectedRole, setSelectedRole] = useState("");
   const [userRoles, setUserRoles] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [statesList, setStatesList] = useState([]);
+  const [visibleCards, setVisibleCards] = useState(3);
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState("");
 
-  const handleUserChange = (e) => {
-    const userId = e.target.value;
+  useEffect(() => {
+    const updateVisibleCards = () => {
+      if (window.innerWidth < 768)
+        setVisibleCards(1); // Mobile: 1 card at a time
+      else if (window.innerWidth < 1024) setVisibleCards(2); // Tablet: 2 cards
+      else setVisibleCards(3); // Desktop: 3 cards
+    };
+    window.addEventListener("resize", updateVisibleCards);
+    updateVisibleCards();
+    return () => window.removeEventListener("resize", updateVisibleCards);
+  }, []);
 
-    // Find the selected user object
-    const user = users.find((user) => user.id.toString() === userId);
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/projects/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
-    // Extract roles from the user's `groups` array
-    const roles = user?.groups ?? [];
+        const data = await response.json();
+        setProjects(data);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
 
-    // Log roles to the console for verification
-    console.log(`Selected User: ${user?.username}`);
-    console.log(
-      `Roles:`,
-      roles.map((role) => role.name)
-    );
+    fetchProjects();
+  }, []);
 
-    // Update state (optional, for UI implementation later)
-    setSelectedUser(userId);
-    setUserRoles(roles);
+  const projectActions = [
+    {
+      id: "projects",
+      title: "Create Project",
+      description: "Create a new project for your organization",
+      color:
+        "from-violet-100 to-purple-200 dark:from-violet-800 dark:to-purple-700",
+      borderColor: "border-purple-300 dark:border-purple-600",
+      iconBg: "bg-purple-600",
+      icon: <FolderPlus className="h-7 w-7 text-white" />,
+      textColor: "text-purple-700",
+    },
+    {
+      id: "listprojects",
+      title: "List Projects",
+      description: "View all projects in your organization",
+      color: "from-blue-100 to-sky-200 dark:from-blue-800 dark:to-sky-700",
+      borderColor: "border-sky-300 dark:border-sky-600",
+      iconBg: "bg-blue-600",
+      icon: <ListTodo className="h-7 w-7 text-white" />,
+      textColor: "text-blue-700",
+    },
+    {
+      id: "assignproject",
+      title: "Assign Project Role",
+      description: "Assign users to roles within projects",
+      color:
+        "from-fuchsia-100 to-pink-200 dark:from-fuchsia-800 dark:to-pink-700",
+      borderColor: "border-pink-300 dark:border-pink-600",
+      iconBg: "bg-pink-600",
+      icon: <UserCheck className="h-7 w-7 text-white" />,
+      textColor: "text-pink-700",
+    },
+    {
+      id: "removeuserrole",
+      title: "Remove User Role",
+      description: "Remove user role from a project",
+      color: "from-red-100 to-rose-200 dark:from-red-800 dark:to-rose-700",
+      borderColor: "border-red-300 dark:border-red-600",
+      iconBg: "bg-red-600",
+      icon: <UserMinus className="h-7 w-7 text-white" />,
+      textColor: "text-red-700",
+    },
+  ];
+
+  const [startIndex, setStartIndex] = useState(0);
+
+  const nextSlide = () => {
+    setStartIndex((prev) => (prev + 3 < projectActions.length ? prev + 3 : 0));
   };
 
+  const prevSlide = () => {
+    setStartIndex((prev) =>
+      prev - 3 >= 0 ? prev - 3 : projectActions.length - 3
+    );
+  };
   const handleOpenModal = async (type) => {
     setModalType(type);
     setIsModalOpen(true);
     setSelectedUser("");
     setSelectedRole("");
+
     try {
       let data = null;
+
       if (type === "view") {
         data = await fetchOrganizationDetails();
       } else if (type === "update") {
         data = await updateOrganizationDetails();
-      } else if (type === "members") {
-        data = await fetchOrgMembers();
-      } else if (type === "projects") {
-        data = await fetchOrgMembers();
-      } else if (type === "listprojects") {
-        data = await fetchOrgMembers();
-      } else if (type === "assignproject") {
-        data = await fetchOrgMembers();
-      } else if (type === "addmember") {
-        data = await fetchOrgMembers();
-      } else if (type === "removeMember") {
-        data = await fetchOrgMembers();
-      } else if (type === "assignrole") {
-        data = await fetchOrgMembers();
-      } else if (type === "members") {
-        data = await fetchOrgMembers();
+      } else if (
+        [
+          "members",
+          "projects",
+          "listprojects",
+          "assignproject",
+          "addmember",
+          "removeMember",
+          "assignrole",
+          "removeuserrole",
+        ].includes(type)
+      ) {
+        data = await fetchOrgMembers(); // or a more specific fetchProjectMembers() if available
       }
 
       if (data?.data) {
@@ -110,17 +187,20 @@ const OrgAdminDashboard = ({ currentUser }) => {
       console.error("Failed to fetch data:", error);
     }
   };
+
   const closeModal = () => {
-    console.log("closing");
     setIsModalOpen(false);
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
   const fetchOrgMembers = async () => {
     setIsModalOpen(true);
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/users/`,
         {
           method: "GET",
           headers: {
@@ -132,7 +212,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
       );
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         setOrgMembers(data);
       } else {
         console.error("Failed to fetch organization members");
@@ -168,42 +247,39 @@ const OrgAdminDashboard = ({ currentUser }) => {
     }
   };
 
-  useEffect(() => {
-    console.log("Fetching users...");
-    const fetchUsers = async () => {
-      try {
-        const token = sessionStorage.getItem("accessToken");
-        const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "ngrok-skip-browser-warning": "420",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const usersData = await response.json();
-        console.log("Raw Users Response:", usersData); // Check the actual response
-
-        if (Array.isArray(usersData)) {
-          setUsers(usersData);
-        } else if (usersData && Array.isArray(usersData.users)) {
-          setUsers(usersData.users); // If users are nested under 'users'
-        } else {
-          console.error("Unexpected users API response:", usersData);
+  const fetchUsers = async () => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching users:", error);
+      );
+
+      const usersData = await response.json();
+      if (Array.isArray(usersData)) {
+        setUsers(usersData);
+      } else if (usersData && Array.isArray(usersData.users)) {
+        setUsers(usersData.users); // If users are nested under 'users'
+      } else {
+        console.error("Unexpected users API response:", usersData);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchUsers();
   }, []);
 
   useEffect(() => {
-    console.log("Fetching roles...");
     const fetchGroups = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
@@ -220,7 +296,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
         );
 
         const groupData = await response.json();
-        console.log("Fetched Groups:", groupData);
 
         if (Array.isArray(groupData)) {
           setGroups(groupData); // Set groups properly
@@ -238,7 +313,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
   const updateOrganizationDetails = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/organizations/${organizationId}/`,
         {
@@ -253,7 +327,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log(data);
         setOrgDetails(data);
         openModal(true);
       } else {
@@ -264,58 +337,43 @@ const OrgAdminDashboard = ({ currentUser }) => {
     }
   };
 
-  const removerole = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    fetchStates();
+  }, []);
 
-    if (!selectedUser || !selectedRole) {
-      toast.error("Please select both a user and a role.");
-      return;
-    } // Prevent form from reloading the page
-
+  const fetchStates = async () => {
     try {
-      const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/users/${userid}/remove_group/`,
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
         {
-          method: "PUT",
+          method: "GET",
           headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
           },
-          body: JSON.stringify({
-            group_id: selectedRole,
-          }),
         }
       );
-
       const data = await response.json();
-
-      if (response.ok) {
-        toast.success("Role removed successfully!", {
-          onClose: () => closeModal(), // Ensures toast is displayed before closing
-        });
-      } else {
-        toast.error(
-          `Failed to remove role: ${data.message || "Unknown error"}`
-        );
-      }
+      const sortedStates = data.states.sort((a, b) =>
+        a.state_name.localeCompare(b.state_name)
+      );
+      setStatesList(sortedStates);
     } catch (error) {
-      console.error("Error assigning role:", error);
-      toast.error("An error occurred while assigning the role.");
+      console.error("Error fetching states:", error);
     }
   };
+
   const assignRole = async (e) => {
     e.preventDefault();
 
     if (!selectedUser || !selectedRole) {
       toast.error("Please select both a user and a role.");
       return;
-    } // Prevent form from reloading the page
-    console.log(selectedRole, selectedUser);
+    }
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/users/${selectedUser}/set_group/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/users/${selectedUser}/set_group/`,
         {
           method: "PUT",
           headers: {
@@ -323,7 +381,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            group_id: selectedRole,
+            group_id: Number(selectedRole),
           }),
         }
       );
@@ -573,16 +631,16 @@ const OrgAdminDashboard = ({ currentUser }) => {
               )}
               {modalType === "members" && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
+                  <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl mx-6 overflow-hidden">
                     {/* Header */}
-                    <div className="bg-indigo-600 text-white px-6 py-4 flex justify-between items-center">
-                      <h2 className="text-xl font-semibold">List of Members</h2>
+                    <div className="bg-indigo-700 text-white px-8 py-5 flex justify-between items-center">
+                      <h2 className="text-2xl font-bold">Org Members</h2>
                       <button
                         onClick={closeModal}
-                        className="text-white hover:bg-indigo-700 rounded-full p-2 focus:outline-none"
+                        className="text-white hover:bg-indigo-800 rounded-full p-2 focus:outline-none"
                       >
                         <svg
-                          className="w-5 h-5"
+                          className="w-6 h-6"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -599,29 +657,49 @@ const OrgAdminDashboard = ({ currentUser }) => {
                     </div>
 
                     {/* Body */}
-                    <div className="p-6">
+                    <div className="p-6 overflow-auto max-h-[70vh]">
                       {users.length > 0 ? (
                         <div className="bg-white shadow-md rounded-lg overflow-hidden">
                           <table className="w-full border-collapse">
                             <thead>
-                              <tr>
-                                <th className="py-3 px-4 text-left">S. No.</th>
+                              <tr className="bg-gray-200 text-md text-gray-800">
+                                <th className="py-3 px-4 text-left w-12">
+                                  S. No.
+                                </th>
                                 <th className="py-3 px-4 text-left">Name</th>
                                 <th className="py-3 px-4 text-left">Email</th>
+                                <th className="py-3 px-4 text-left">Roles</th>
+                                <th className="py-3 px-4 text-left">Project</th>
                               </tr>
                             </thead>
                             <tbody>
                               {users.map((user, index) => (
                                 <tr
                                   key={user.id}
-                                  className="border-b border-gray-200 hover:bg-gray-100 transition"
+                                  className="border-b border-gray-300 hover:bg-gray-100 transition"
                                 >
-                                  <td className="py-3 px-4">{index + 1}</td>
-                                  <td className="py-3 px-4 font-medium text-gray-700">
+                                  <td className="py-3 px-4 text-gray-700 text-center">
+                                    {index + 1}
+                                  </td>
+                                  <td className="py-3 px-4 font-semibold text-gray-900">
                                     {user.username}
                                   </td>
-                                  <td className="py-3 px-4 text-gray-600">
+                                  <td className="py-3 px-4 text-gray-700">
                                     {user.email}
+                                  </td>
+                                  <td className="py-3 px-4 text-gray-700">
+                                    {user.groups.length > 0
+                                      ? user.groups
+                                          .map((group) => group.name)
+                                          .join(", ")
+                                      : "N/A"}
+                                  </td>
+                                  <td className="py-3 px-4 text-gray-700">
+                                    {user.project_details?.length > 0
+                                      ? user.project_details
+                                          .map((p) => p.project_name)
+                                          .join(", ")
+                                      : "N/A"}
                                   </td>
                                 </tr>
                               ))}
@@ -629,7 +707,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                           </table>
                         </div>
                       ) : (
-                        <p className="text-gray-500 text-center">
+                        <p className="text-gray-600 text-center text-lg">
                           No users found.
                         </p>
                       )}
@@ -639,7 +717,11 @@ const OrgAdminDashboard = ({ currentUser }) => {
               )}
               {modalType === "projects" && (
                 <div>
-                  <Project currentUser={currentUser} closeModal={closeModal} />
+                  <Project
+                    currentUser={currentUser}
+                    closeModal={closeModal}
+                    statesList={statesList}
+                  />
                 </div>
               )}
               {modalType === "listprojects" && (
@@ -647,6 +729,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   <ProjectDashboard
                     closeModal={closeModal}
                     currentUser={currentUser}
+                    statesList={statesList}
                   />
                 </div>
               )}
@@ -655,6 +738,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   <AssignUserToProject
                     closeModal={closeModal}
                     currentUser={currentUser}
+                    mode="assign"
                   />
                 </div>
               )}{" "}
@@ -664,6 +748,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                     closeModal={closeModal}
                     currentUser={currentUser}
                     isSuperAdmin={false}
+                    onUserCreated={fetchUsers}
                   />
                 </div>
               )}
@@ -756,21 +841,11 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                       <option value="" disabled>
                                         Select role
                                       </option>
-                                      {groups
-                                        .filter(
-                                          (group) =>
-                                            group.name ===
-                                              "Organization Admin" ||
-                                            group.name === "Project Manager"
-                                        ) // Filter required roles
-                                        .map((group) => (
-                                          <option
-                                            key={group.id}
-                                            value={group.id}
-                                          >
-                                            {group.name}
-                                          </option>
-                                        ))}
+                                      {groups.map((group) => (
+                                        <option key={group.id} value={group.id}>
+                                          {group.name}
+                                        </option>
+                                      ))}
                                     </select>
                                   </div>
 
@@ -793,110 +868,13 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   </div>
                 </div>
               )}
-              {modalType === "removeMember" && (
+              {modalType === "removeuserrole" && (
                 <div>
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
-                      {/* Header */}
-                      <div className="bg-red-600 text-white px-6 py-4 flex justify-between items-center">
-                        <h2 className="text-xl font-semibold">
-                          Remove role from user
-                        </h2>
-                        <button
-                          onClick={closeModal}
-                          className="text-white hover:bg-red-700 rounded-full p-2 focus:outline-none"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            ></path>
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* Body */}
-                      <div className="p-6">
-                        <div className="flex flex-col space-y-6">
-                          <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <div className=" mb-4">
-                              <form onSubmit={removerole} className="space-y-2">
-                                {/* User Name */}
-                                <div className="w-full">
-                                  <label className="block text-lg font-medium mb-3">
-                                    User Name
-                                  </label>
-                                  <select
-                                    value={selectedUser}
-                                    onChange={handleUserChange}
-                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                                    required
-                                  >
-                                    <option value="" disabled>
-                                      Select a user
-                                    </option>
-                                    {users.map((user) => (
-                                      <option key={user.id} value={user.id}>
-                                        {user.username}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-
-                                {/* Role Name */}
-                                <div>
-                                  <label className="block text-lg font-medium mb-3">
-                                    Role Name
-                                  </label>
-                                  <select
-                                    value={selectedRole}
-                                    onChange={(e) =>
-                                      setSelectedRole(e.target.value)
-                                    }
-                                    className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                                    required
-                                  >
-                                    <option value="" disabled>
-                                      Select a role
-                                    </option>
-                                    {userRoles.length > 0 ? (
-                                      userRoles.map((role) => (
-                                        <option key={role.id} value={role.id}>
-                                          {role.name}
-                                        </option>
-                                      ))
-                                    ) : (
-                                      <option value="" disabled>
-                                        No roles available
-                                      </option>
-                                    )}
-                                  </select>
-                                </div>
-
-                                {/* Submit Button */}
-                                <div className="text-center">
-                                  <button
-                                    type="submit"
-                                    className="px-8 py-3 bg-red-600 text-white rounded-md hover:bg-red-700 transition text-lg"
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-                              </form>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <AssignUserToProject
+                    currentUser={currentUser}
+                    closeModal={closeModal}
+                    mode="remove"
+                  />
                 </div>
               )}
               <button
@@ -908,84 +886,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
             </div>
           </Dialog>
 
-          {/* User Management Section */}
           <motion.div variants={itemVariants}>
-            <div className="mb-4 mt-12">
-              <h2 className="text-xl font-semibold flex items-center">
-                <Users className="mr-2 h-5 w-5 text-amber-500" />
-                User Management
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Add, remove, and manage user roles within your organization
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Add Member Button */}
-              <motion.div
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="cursor-pointer"
-                onClick={() => handleOpenModal("addmember")}
-              >
-                <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900 dark:to-emerald-800 border border-emerald-200 dark:border-emerald-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                  <div className="bg-green-500 p-3 rounded-full mb-3">
-                    <UserPlus className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-green-600 dark:text-green-300 mb-1">
-                    Add Member
-                  </h3>
-                  <p className="text-sm text-green-500 dark:text-green-400">
-                    Invite new users to your organization
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* Remove Member Button */}
-              <motion.div
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="cursor-pointer"
-                onClick={() => handleOpenModal("removeMember")}
-              >
-                <div className="bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-900 dark:to-rose-800 border border-rose-200 dark:border-rose-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                  <div className="bg-red-500 p-3 rounded-full mb-3">
-                    <UserMinus className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-red-600 dark:text-red-300 mb-1">
-                    Remove Role from user
-                  </h3>
-                  <p className="text-sm text-red-500 dark:text-red-400">
-                    Remove role from your user
-                  </p>
-                </div>
-              </motion.div>
-
-              {/* Assign Role Button */}
-              <motion.div
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="cursor-pointer"
-                onClick={() => handleOpenModal("assignrole")}
-              >
-                <div className="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900 dark:to-yellow-800 border border-yellow-200 dark:border-yellow-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                  <div className="bg-amber-500 p-3 rounded-full mb-3">
-                    <UserCog className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-amber-600 dark:text-amber-300 mb-1">
-                    Assign Role
-                  </h3>
-                  <p className="text-sm text-amber-500 dark:text-amber-400">
-                    Manage user permissions and roles
-                  </p>
-                </div>
-              </motion.div>
-            </div>
             {/* Project Management Section */}
             <motion.div variants={itemVariants} className="mt-8">
+              {/*Project section */}
               <div className="mb-4">
                 <h2 className="text-xl font-semibold flex items-center">
                   <FolderKanban className="mr-2 h-5 w-5 text-purple-500" />
@@ -994,67 +898,123 @@ const OrgAdminDashboard = ({ currentUser }) => {
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                   View, create, and manage projects and project team members
                 </p>
+
+                {/* Slider Container */}
+                <div className="relative flex items-center mt-4">
+                  {/* Left Arrow */}
+                  <button
+                    onClick={prevSlide}
+                    className="p-3 bg-gray-300 dark:bg-gray-700 rounded-full mr-2 hover:bg-gray-400 dark:hover:bg-gray-600 transition shadow-md"
+                  >
+                    ◀
+                  </button>
+
+                  {/* Visible Area */}
+                  <div className="w-full overflow-hidden rounded-xl">
+                    <motion.div
+                      className="flex gap-4"
+                      animate={{ x: `-${startIndex * (100 / visibleCards)}%` }}
+                      transition={{
+                        type: "tween",
+                        duration: 0.5,
+                        ease: "easeInOut",
+                      }}
+                      style={{ minWidth: "100%", display: "flex" }}
+                    >
+                      {projectActions.map((action, index) => {
+                        return (
+                          <motion.div
+                            key={action.id}
+                            className="cursor-pointer w-1/3 flex-shrink-0 p-2"
+                            whileHover={{ scale: 1.06 }}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => handleOpenModal(action.id)}
+                          >
+                            <div
+                              className={`bg-gradient-to-br ${action.color} ${action.borderColor} border-2 h-44 rounded-2xl shadow-md flex flex-col items-center justify-center text-center px-5 py-6 transition-all`}
+                            >
+                              <div
+                                className={`${action.iconBg} p-4 rounded-full mb-3 shadow-lg`}
+                              >
+                                {action.icon}
+                              </div>
+                              <h3
+                                className={`font-semibold text-lg mb-1 ${action.textColor}`}
+                              >
+                                {action.title}
+                              </h3>
+                              <p className={`text-sm ${action.textColor}`}>
+                                {action.description}
+                              </p>
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </motion.div>
+                  </div>
+
+                  {/* Right Arrow */}
+                  <button
+                    onClick={nextSlide}
+                    className="p-3 bg-gray-300 dark:bg-gray-700 rounded-full ml-2 hover:bg-gray-400 dark:hover:bg-gray-600 transition shadow-md"
+                  >
+                    ▶
+                  </button>
+                </div>
               </div>
 
+              <div className="mb-4 mt-12">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <Users className="mr-2 h-5 w-5 text-amber-500" />
+                  User Management
+                </h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Add, remove, and manage user roles within your organization
+                </p>
+              </div>
+
+              {/* User Management Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Create Project Button */}
+                {/* Add Member Button */}
                 <motion.div
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                   className="cursor-pointer"
-                  onClick={() => handleOpenModal("projects")}
+                  onClick={() => handleOpenModal("addmember")}
                 >
-                  <div className="bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900 dark:to-purple-800 border border-purple-200 dark:border-purple-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                    <div className="bg-violet-500 p-3 rounded-full mb-3">
-                      <FolderPlus className="h-6 w-6 text-white" />
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900 dark:to-emerald-800 border border-emerald-200 dark:border-emerald-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+                    <div className="bg-green-500 p-3 rounded-full mb-3">
+                      <UserPlus className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-violet-600 dark:text-violet-300 mb-1">
-                      Create Project
+                    <h3 className="font-semibold text-green-600 dark:text-green-300 mb-1">
+                      Add Member
                     </h3>
-                    <p className="text-sm text-violet-500 dark:text-violet-400">
-                      Create a new project for your organization
-                    </p>
-                  </div>
-                </motion.div>
-                {/* List Projects Button */}
-                <motion.div
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  className="cursor-pointer"
-                  onClick={() => handleOpenModal("listprojects")}
-                >
-                  <div className="bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900 dark:to-sky-800 border border-sky-200 dark:border-sky-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                    <div className="bg-blue-500 p-3 rounded-full mb-3">
-                      <ListTodo className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-blue-600 dark:text-blue-300 mb-1">
-                      List Projects
-                    </h3>
-                    <p className="text-sm text-blue-500 dark:text-blue-400">
-                      View all projects in your organization
+                    <p className="text-sm text-green-500 dark:text-green-400">
+                      Invite new users to your organization
                     </p>
                   </div>
                 </motion.div>
 
-                {/* Assign User to Project Role Button */}
+                {/* Remove Member Button */}
+
+                {/* Assign Role Button */}
                 <motion.div
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                   className="cursor-pointer"
-                  onClick={() => handleOpenModal("assignproject")}
+                  onClick={() => handleOpenModal("assignrole")}
                 >
-                  <div className="bg-gradient-to-br from-fuchsia-50 to-pink-100 dark:from-fuchsia-900 dark:to-pink-800 border border-pink-200 dark:border-pink-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                    <div className="bg-fuchsia-500 p-3 rounded-full mb-3">
-                      <UserCheck className="h-6 w-6 text-white" />
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900 dark:to-yellow-800 border border-yellow-200 dark:border-yellow-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+                    <div className="bg-amber-500 p-3 rounded-full mb-3">
+                      <UserCog className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-fuchsia-600 dark:text-fuchsia-300 mb-1">
-                      Assign Project Role
+                    <h3 className="font-semibold text-amber-600 dark:text-amber-300 mb-1">
+                      Assign Role
                     </h3>
-                    <p className="text-sm text-fuchsia-500 dark:text-fuchsia-400">
-                      Assign users to roles within projects
+                    <p className="text-sm text-amber-500 dark:text-amber-400">
+                      Manage user permissions and roles
                     </p>
                   </div>
                 </motion.div>
