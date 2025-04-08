@@ -181,34 +181,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     );
   }
 
-  // Add additional items only if not Administrator
-  if (role !== "Administrator") {
-    menuItems.push(
-      {
-        icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
-        label: "Activate Block",
-        href: "/activateBlock",
-      },
-      {
-        icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-        label: "Plan Creation",
-        href: "/planCreation",
-      },
-      {
-        icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
-        label: "Generate Layers",
-        isSubmenu: true,
-        layers: layers,
-        href: "/locationForm",
-      },
-      {
-        icon: <Eye size={20} />,
-        label: "Preview Layers",
-        href: "/previewLayers",
-      }
-    );
-  }
-
   const handleLayerClick = (layerLabel) => {
     const selectedLayerData = layersData.layers_json[layerLabel]; // Get the layer details
     setSelectedLayer(selectedLayerData);
