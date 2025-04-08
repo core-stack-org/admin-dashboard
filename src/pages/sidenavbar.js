@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, Eye } from "lucide-react";
+import { LogOut, Eye, EyeOff } from "lucide-react";
 import { Bell } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -22,6 +22,13 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [layerNames, setLayerNames] = useState([]);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isChangeModalOpen, setIsChangeModalOpen] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState("");
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -75,6 +82,63 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     } catch (error) {
       console.error("Error during logout:", error);
     }
+  };
+
+  const handleChangePassword = async (oldPass, newPass, newPassConfirm) => {
+    const payload = {
+      old_password: oldPass,
+      new_password: newPass,
+      new_password_confirm: newPassConfirm,
+    };
+
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/users/change_password/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!response.ok) {
+        const errorDetails = await response.text();
+        throw new Error(
+          `HTTP error! Status: ${response.status}. Details: ${errorDetails}`
+        );
+      }
+
+      const result = await response.json();
+      toast.success("Password updated successfully!");
+      console.log("Password change response:", result);
+      // Clear and close modal on success
+      setOldPassword("");
+      setNewPassword("");
+      setNewPasswordConfirm("");
+      setIsChangeModalOpen(false);
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast.error("Error changing password. Please try again.");
+    }
+  };
+
+  const handleSubmitPasswordChange = (e) => {
+    e.preventDefault();
+    if (newPassword !== newPasswordConfirm) {
+      toast.error("New passwords do not match!");
+      return;
+    }
+    handleChangePassword(oldPassword, newPassword, newPasswordConfirm);
+  };
+
+  const openChangePasswordModal = () => {
+    setIsChangeModalOpen(true);
+    setIsDropdownOpen(false);
   };
 
   const menuItems = [
@@ -282,6 +346,33 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                       Profile
                     </button>
                   </li>
+                  {/* New Change Password option */}
+                  <li className="hover:bg-gray-50">
+                    <button
+                      className="flex items-center w-full px-4 py-2 text-sm text-blue-600"
+                      onClick={openChangePasswordModal}
+                    >
+                      {/* Use whichever lock icon you prefer */}
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-4 h-4 mr-3 text-blue-500"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 2a4 4 0 00-4 4v2H5a2 2 
+           0 00-2 2v6a2 2 0 002 2h10a2 2 
+           0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 
+           0 00-4-4zm0 12a1 1 0 110-2 1 1 
+           0 010 2z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Change Password
+                    </button>
+                  </li>
+
                   <li className="border-t">
                     <button
                       className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
@@ -309,6 +400,110 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
           </div>
         </div>
       </nav>
+      {/* Change Password Modal */}
+      {isChangeModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center z-40">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black opacity-50"
+            onClick={() => setIsChangeModalOpen(false)}
+          ></div>
+
+          <div className="bg-white rounded-lg shadow-lg z-50 p-6 w-96">
+            <h2 className="text-xl font-bold mb-4">Change Password</h2>
+            <form onSubmit={handleSubmitPasswordChange}>
+              {/* Current Password */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  Current Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? "text" : "password"}
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                  >
+                    {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                  >
+                    {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm New Password */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">
+                  Confirm New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={newPasswordConfirm}
+                    onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border rounded focus:outline-none focus:ring"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  className="mr-4 px-4 py-2 rounded bg-gray-200 text-gray-700"
+                  onClick={() => setIsChangeModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded bg-blue-600 text-white"
+                >
+                  Change Password
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
