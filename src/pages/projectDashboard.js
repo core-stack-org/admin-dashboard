@@ -301,48 +301,81 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     setToast({ ...toast, open: false });
   };
 
+  // const handleViewGeoJSON = async (project) => {
+  //   const organizationName = project.organization_name;
+  //   const projectName = project.name;
+  //   const formattedOrganizationName = organizationName
+  //     .replace(/\s+/g, "_")
+  //     .toLowerCase();
+  //   const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
+
+  //   const wfsUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
+  //   let dynamicBbox = "";
+
+  //   try {
+  //     const response = await fetch(wfsUrl);
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! Status: ${response.status}`);
+  //     }
+
+  //     const adminLayer = await response.json();
+  //     const vectorSource = new VectorSource({
+  //       features: new GeoJSON().readFeatures(adminLayer),
+  //     });
+  //     const extent = vectorSource.getExtent();
+
+  //     dynamicBbox = extent.join("%2C"); // xMin, yMin, xMax, yMax
+  //     setBBox(extent);
+  //     console.log(dynamicBbox);
+
+  //     const layerName = `plantation:${formattedOrganizationName}_${formattedProjectName}_suitability`;
+
+  //     const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+
+  //     window.open(geojsonViewUrl, "_blank");
+  //   } catch (error) {
+  //     console.error("Error checking GeoJSON layer:", error);
+  //   }
+  // };
+
   const handleViewGeoJSON = async (project) => {
     const organizationName = project.organization_name;
     const projectName = project.name;
+
     const formattedOrganizationName = organizationName
       .replace(/\s+/g, "_")
       .toLowerCase();
     const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
+    console.log(formattedOrganizationName, formattedProjectName);
 
-    const wfsUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
+    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
+
+    console.log(wfsurl);
+
     let dynamicBbox = "";
-
     try {
-      const response = await fetch(wfsUrl);
+      const response = await fetch(wfsurl);
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const adminLayer = await response.json();
+      console.log(adminLayer);
+
       const vectorSource = new VectorSource({
         features: new GeoJSON().readFeatures(adminLayer),
       });
       const extent = vectorSource.getExtent();
 
-      dynamicBbox = extent.join("%2C"); // xMin, yMin, xMax, yMax
+      dynamicBbox =
+        extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
       setBBox(extent);
+      console.log(dynamicBbox);
+      const layerName = `plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability`;
 
-      const layerName = `plantation:${formattedOrganizationName}_${formattedProjectName}_suitability`;
-
-      const geojsonViewUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-      const headResponse = await fetch(geojsonViewUrl, { method: "HEAD" });
-
-      if (
-        headResponse.ok &&
-        headResponse.headers.get("Content-Type")?.includes("text/html")
-      ) {
-        window.open(geojsonViewUrl, "_blank");
-      } else {
-        alert("Layer is not available. Please wait for some time.");
-      }
+      const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+      window.open(geojsonViewUrl, "_blank");
     } catch (error) {
-      console.error("Error checking GeoJSON layer:", error);
-      toast.error("An error occurred while checking the layer.");
+      console.error("Error generating GeoJSON view URL:", error);
     }
   };
 
@@ -354,6 +387,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       .toLowerCase();
     const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
     const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
+
     try {
       const response = await fetch(geojsonUrl);
       const contentType = response.headers.get("content-type");
