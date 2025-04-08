@@ -29,6 +29,9 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  console.log(currentuser);
+  const role = currentuser?.user?.groups?.[0]?.name;
+  console.log("User Role:", role); // Output: "Administrator"
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -141,55 +144,42 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     setIsDropdownOpen(false);
   };
 
+  const restrictedRoles = ["Administrator", "Project Manager", "App User"];
+
   const menuItems = [
     {
       icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
       label: "Dashboard",
       href: "/dashboard",
     },
-    {
-      icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
-      label: "Activate Block",
-      href: "/activateBlock",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-      label: "Plan Creation",
-      href: "/planCreation",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
-      label: "Generate Layers",
-      isSubmenu: true,
-      layers: layers,
-      href: "/locationForm",
-    },
-    {
-      icon: <Eye size={20} />,
-      label: "Preview Layers",
-      href: "/previewLayers",
-    },
-    // {
-    //   icon: <FontAwesomeIcon icon={faUserCog} size="lg" />,
-    //   label: "Setup User",
-    //   href: "/setupUser",
-    // },
-    // {
-    //   icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
-    //   label: "Project",
-    //   href: "/project",
-    // },
-    // {
-    //   icon: <FontAwesomeIcon icon={faFolderOpen} size="lg" />,
-    //   label: "Project Dashboard",
-    //   href: "/projectDashboard",
-    // },
-    // {
-    //   icon: <FontAwesomeIcon icon={faUserPlus} size="lg" />,
-    //   label: "Create User",
-    //   href: "/register",
-    // },
   ];
+
+  if (!restrictedRoles.includes(role)) {
+    menuItems.push(
+      {
+        icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
+        label: "Activate Block",
+        href: "/activateBlock",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
+        label: "Plan Creation",
+        href: "/planCreation",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
+        label: "Generate Layers",
+        isSubmenu: true,
+        layers: layers,
+        href: "/locationForm",
+      },
+      {
+        icon: <Eye size={20} />,
+        label: "Preview Layers",
+        href: "/previewLayers",
+      }
+    );
+  }
 
   const handleLayerClick = (layerLabel) => {
     const selectedLayerData = layersData.layers_json[layerLabel]; // Get the layer details
