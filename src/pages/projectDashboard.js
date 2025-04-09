@@ -26,6 +26,8 @@ import { Tooltip, Button } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import Project from "../pages/project.js";
+import { FolderIcon } from "lucide-react";
 
 const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -40,7 +42,15 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const [projects, setProjects] = useState([]);
   const [appTypes, setAppTypes] = useState([]);
   const [bbox, setBBox] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [showProjectForm, setShowProjectForm] = useState(false);
   const [openDialog, setOpenDialog] = useState({ projectId: null, type: null });
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   const handleOpenEditDialog = (project) => {
     setSelectedProject(project);
     setIsEditDialogOpen(true);
@@ -65,18 +75,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     getStateName();
   }, []);
 
-  const [toast, setToast] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-  const [formData, setFormData] = useState({
-    project_app_id: 1,
-    state: "telangana",
-    start_year: 2017,
-    end_year: 2023,
-  });
-
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -98,6 +96,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         }
 
         const data = await response.json();
+        console.log(data);
         const statesResponse = await fetch(
           `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
           {
@@ -133,24 +132,19 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     fetchProjects();
   }, []);
 
-  const handleOpenDialog = (project) => {
-    setSelectedProject(project); // Store the whole project object
-    setSelectedFiles([]);
-    setIsDialogOpen(true);
+  const handleCreateProject = () => {
+    console.log("Create Project clicked");
+    setShowProjectForm(true);
   };
-
-  const handleCloseDialog = () => {
-    setIsDialogOpen(false);
-    setSelectedFiles([]);
-  };
-
-  const handleClose = () => {
-    setSelectedProject(null);
-    setTabIndex(0);
-    setIsDialogOpen(false);
-  };
-
-  const [selectedFiles, setSelectedFiles] = useState([]);
+  if (showProjectForm) {
+    return (
+      <Project
+        statesList={statesList}
+        closeModal={closeModal}
+        currentUser={currentUser}
+      />
+    );
+  }
 
   const handlefileSelect = (event) => {
     const files = Array.from(event.target.files);
@@ -217,15 +211,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         severity: "error",
       });
     }
-  };
-
-  const handleViewEditProfile = (project) => {
-    setSelectedProject(project);
-    setIsProfileDialogOpen(true);
-  };
-  const handleOpenDownloadDialog = (project) => {
-    setSelectedProject(project);
-    setIsDownloadDialogOpen(true);
   };
 
   const handleCloseDownloadDialog = () => {
@@ -300,43 +285,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const handleCloseToast = () => {
     setToast({ ...toast, open: false });
   };
-
-  // const handleViewGeoJSON = async (project) => {
-  //   const organizationName = project.organization_name;
-  //   const projectName = project.name;
-  //   const formattedOrganizationName = organizationName
-  //     .replace(/\s+/g, "_")
-  //     .toLowerCase();
-  //   const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
-
-  //   const wfsUrl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
-  //   let dynamicBbox = "";
-
-  //   try {
-  //     const response = await fetch(wfsUrl);
-  //     if (!response.ok) {
-  //       throw new Error(`HTTP error! Status: ${response.status}`);
-  //     }
-
-  //     const adminLayer = await response.json();
-  //     const vectorSource = new VectorSource({
-  //       features: new GeoJSON().readFeatures(adminLayer),
-  //     });
-  //     const extent = vectorSource.getExtent();
-
-  //     dynamicBbox = extent.join("%2C"); // xMin, yMin, xMax, yMax
-  //     setBBox(extent);
-  //     console.log(dynamicBbox);
-
-  //     const layerName = `plantation:${formattedOrganizationName}_${formattedProjectName}_suitability`;
-
-  //     const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-
-  //     window.open(geojsonViewUrl, "_blank");
-  //   } catch (error) {
-  //     console.error("Error checking GeoJSON layer:", error);
-  //   }
-  // };
 
   const handleViewGeoJSON = async (project) => {
     const organizationName = project.organization_name;
@@ -422,6 +370,21 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     }
   };
 
+  const handleUploadExcel = () => {
+    console.log("Upload excel button clicked");
+  };
+
+  const handleExcelSelect = (event) => {
+    const files = Array.from(event.target.files);
+    const validFiles = files.filter((file) => file.name.endsWith(".xlsx"));
+
+    if (validFiles.length > 0) {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    } else {
+      alert("Please upload valid xls files.");
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-4 overflow-hidden max-h-[90vh]">
@@ -457,71 +420,202 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
             <div className="bg-gray-50 p-6 rounded-4xl border border-gray-300 shadow-md">
               <div className="mb-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {projects.map((project) => (
-                    <Card
-                      key={project.id}
-                      className="cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white rounded-4xl overflow-hidden border border-gray-200"
-                    >
-                      <CardContent>
-                        <div className="flex flex-col items-start space-y-4">
-                          {/* Project Info Section */}
-                          <div className="text-gray-700 text-sm flex items-center gap-4">
-                            <span className="font-medium">
-                              📌 Project Name:
-                            </span>
-                            <span className="font-semibold text-gray-900">
-                              {project.name}
-                            </span>
-                          </div>
-                          <div className="text-gray-700 text-sm flex items-center gap-4">
-                            <span className="font-medium">🔗 App Type:</span>
-                            <span className="font-semibold text-blue-600">
-                              {project.app_type}
-                            </span>
-                          </div>
-                          {/* Button Section */}
+                  {projects.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full min-h-[300px] py-10 space-y-6">
+                      <p className="text-gray-600 text-lg font-semibold text-center">
+                        🚫 No project available!! Please create new.
+                      </p>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleCreateProject}
+                        className="rounded-lg px-6 py-2 text-white font-medium"
+                      >
+                        ➕ Create New Project
+                      </Button>
+                    </div>
+                  ) : (
+                    projects.map((project) => (
+                      <Card
+                        key={project.id}
+                        className="w-full cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white rounded-4xl overflow-hidden border border-gray-200"
+                      >
+                        <CardContent>
+                          <div className="flex flex-col items-start space-y-4">
+                            <div className="text-gray-700 text-sm flex items-center gap-4">
+                              <span className="font-medium">
+                                📌 Project Name:
+                              </span>
+                              <span className="font-semibold text-gray-900">
+                                {project.name}
+                              </span>
+                            </div>
+                            <div className="text-gray-700 text-sm flex items-center gap-4">
+                              <span className="font-medium">🔗 App Type:</span>
+                              <span className="font-semibold text-blue-600">
+                                {project.app_type}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 mt-2 justify-start w-full">
+                              {project.app_type === "plantation" ? (
+                                <>
+                                  <Tooltip title="Edit" arrow>
+                                    <Button
+                                      variant="outlined"
+                                      color="secondary"
+                                      className="rounded-md shadow p-3 text-sm"
+                                      onClick={() =>
+                                        handleOpenEditDialog(project)
+                                      }
+                                    >
+                                      <EditIcon />
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip title="View Layer" arrow>
+                                    <Button
+                                      variant="outlined"
+                                      color="primary"
+                                      className="rounded-md shadow p-3 text-sm"
+                                      onClick={() => handleViewGeoJSON(project)}
+                                    >
+                                      <VisibilityIcon />
+                                    </Button>
+                                  </Tooltip>
+                                  <Tooltip title="Download GeoJSON" arrow>
+                                    <Button
+                                      variant="contained"
+                                      color="primary"
+                                      className="rounded-md shadow p-3 text-sm"
+                                      onClick={() =>
+                                        handleDownloadGeoJSON(project)
+                                      }
+                                    >
+                                      <FileDownloadIcon />
+                                    </Button>
+                                  </Tooltip>
+                                </>
+                              ) : project.app_type === "waterbody" ? (
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 2,
+                                    width: "100%",
+                                  }}
+                                >
+                                  <input
+                                    type="file"
+                                    accept=".xlsx,.xls"
+                                    id={`excel-upload-${project.id}`}
+                                    style={{ display: "none" }}
+                                    multiple
+                                    onChange={(e) =>
+                                      handleExcelSelect(e, project)
+                                    }
+                                  />
+                                  <Tooltip title="Upload Excel" arrow>
+                                    <label
+                                      htmlFor={`excel-upload-${project.id}`}
+                                    >
+                                      <Button
+                                        variant="contained"
+                                        color="primary"
+                                        className="rounded-md shadow p-3 text-sm flex items-center"
+                                        component="span"
+                                      >
+                                        <CloudUploadIcon />
+                                      </Button>
+                                    </label>
+                                  </Tooltip>
 
-                          <div className="flex items-center gap-3 mt-2 justify-start w-full">
-                            {/* Edit Profile Button */}
-                            <Tooltip title="Edit" arrow>
-                              <Button
-                                variant="outlined"
-                                color="secondary"
-                                className="rounded-md shadow p-3 text-sm"
-                                onClick={() => handleOpenEditDialog(project)}
-                              >
-                                <EditIcon />
-                              </Button>
-                            </Tooltip>
-
-                            {/* View KML Button */}
-                            <Tooltip title="View Layer" arrow>
-                              <Button
-                                variant="outlined"
-                                color="primary"
-                                className="rounded-md shadow p-3 text-sm"
-                                onClick={() => handleViewGeoJSON(project)}
-                              >
-                                <VisibilityIcon />
-                              </Button>
-                            </Tooltip>
-
-                            {/* Download GeoJSON Button */}
-                            <Tooltip title="Download GeoJSON" arrow>
-                              <Button
-                                variant="contained"
-                                color="primary"
-                                className="rounded-md shadow p-3 text-sm"
-                                onClick={() => handleDownloadGeoJSON(project)}
-                              >
-                                <FileDownloadIcon />
-                              </Button>
-                            </Tooltip>
+                                  {selectedFiles.length > 0 && (
+                                    <Box
+                                      sx={{
+                                        width: "100%",
+                                        backgroundColor: "#f9f9f9",
+                                        p: 2,
+                                        borderRadius: "8px",
+                                        boxShadow:
+                                          "inset 0 0 5px rgba(0,0,0,0.1)",
+                                      }}
+                                    >
+                                      {selectedFiles.map((file, index) => (
+                                        <Box
+                                          key={index}
+                                          sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            padding: "6px 12px",
+                                            borderRadius: "6px",
+                                            mb: 1,
+                                            backgroundColor: "#fff",
+                                            "&:hover": {
+                                              backgroundColor: "#f0f0f0",
+                                            },
+                                          }}
+                                        >
+                                          <Box
+                                            sx={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              gap: 1,
+                                              overflow: "hidden",
+                                              flex: 1,
+                                            }}
+                                          >
+                                            <FolderIcon
+                                              sx={{ color: "#ffa000" }}
+                                            />
+                                            <Tooltip title={file.name}>
+                                              <Typography
+                                                variant="body2"
+                                                noWrap
+                                                sx={{
+                                                  maxWidth: "calc(100% - 40px)", // account for icon & delete
+                                                  fontSize: "14px",
+                                                }}
+                                              >
+                                                {file.name}
+                                              </Typography>
+                                            </Tooltip>
+                                          </Box>
+                                          <IconButton
+                                            onClick={() =>
+                                              handleRemoveFile(index)
+                                            }
+                                            size="small"
+                                            color="error"
+                                          >
+                                            <DeleteIcon fontSize="small" />
+                                          </IconButton>
+                                        </Box>
+                                      ))}
+                                      <Button
+                                        variant="contained"
+                                        color="primary"
+                                        fullWidth
+                                        sx={{
+                                          mt: 2,
+                                          py: 1.5,
+                                          fontWeight: 600,
+                                          borderRadius: "8px",
+                                          textTransform: "none",
+                                        }}
+                                        onClick={handleUploadExcel}
+                                      >
+                                        Upload
+                                      </Button>
+                                    </Box>
+                                  )}
+                                </Box>
+                              ) : null}
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

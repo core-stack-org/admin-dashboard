@@ -164,6 +164,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       </option>
                       <option value="plantation">plantation</option>
                       <option value="watershed">watershed</option>
+                      <option value="waterbody">waterbody rejuvenation</option>
                     </select>
                   </div>
 
