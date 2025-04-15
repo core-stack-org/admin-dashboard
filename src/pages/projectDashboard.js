@@ -32,19 +32,14 @@ import { FolderIcon } from "lucide-react";
 const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const organizationName = currentUser?.user?.organization_name;
   const [isLayerAvailable, setIsLayerAvailable] = useState(false);
-  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
-  const [tabIndex, setTabIndex] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [projects, setProjects] = useState([]);
-  const [appTypes, setAppTypes] = useState([]);
   const [bbox, setBBox] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showProjectForm, setShowProjectForm] = useState(false);
-  const [openDialog, setOpenDialog] = useState({ projectId: null, type: null });
   const [toast, setToast] = useState({
     open: false,
     message: "",
