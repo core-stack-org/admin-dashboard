@@ -184,14 +184,6 @@ function SuperAdminDashboard({ currentUser }) {
     }
   };
 
-  const handleOpenModal = (modalName) => {
-    setActiveModal(modalName);
-  };
-
-  const handleCloseModal = () => {
-    setActiveModal(null);
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -284,7 +276,7 @@ function SuperAdminDashboard({ currentUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-8 mt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-100 p-4 md:p-8 mt-16">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -292,10 +284,10 @@ function SuperAdminDashboard({ currentUser }) {
         className="max-w-7xl mx-auto space-y-8"
       >
         <motion.div variants={itemVariants}>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
             Super Admin Dashboard
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="mt-1 text-gray-600">
             Manage organizations, projects, users, and roles
           </p>
         </motion.div>

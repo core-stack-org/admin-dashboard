@@ -4,7 +4,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation } from "react-router-dom";
 
-const LocationFormComponent = ({}) => {
+const LocationFormComponent = ({ currentUser }) => {
+  console.log(currentUser);
   const location = useLocation();
   const { layerName, showDates } = location.state || {};
 
@@ -18,7 +19,6 @@ const LocationFormComponent = ({}) => {
   const [endYear, setEndYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isStatusBoxOpen, setIsStatusBoxOpen] = useState(false);
 
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
@@ -147,7 +147,9 @@ const LocationFormComponent = ({}) => {
     e.preventDefault();
     setError(null);
     const selectedLayer = layersData.layers_json[layerName];
-    const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/"); // Gets "generate_ci_layer/"
+    console.log(layersData);
+    const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
+    console.log(apiUrlSuffix);
 
     const payload = {
       state: state.name,
@@ -160,6 +162,7 @@ const LocationFormComponent = ({}) => {
     setIsLoading(true);
 
     try {
+      const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
         `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
         {
@@ -167,6 +170,7 @@ const LocationFormComponent = ({}) => {
           headers: {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         }

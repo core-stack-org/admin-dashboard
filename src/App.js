@@ -60,7 +60,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 />
                 <Route
                   path="/generate-layers/:layerName"
-                  element={<LocationForm />}
+                  element={<LocationForm currentUser={currentUser} />}
                 />
               </>
             ) : (

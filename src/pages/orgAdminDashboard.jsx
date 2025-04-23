@@ -100,42 +100,42 @@ const OrgAdminDashboard = ({ currentUser }) => {
       title: "Create Project",
       description: "Create a new project for your organization",
       color:
-        "from-violet-100 to-purple-200 dark:from-violet-800 dark:to-purple-700",
-      borderColor: "border-purple-300 dark:border-purple-600",
-      iconBg: "bg-purple-600",
+        "from-violet-50 to-purple-100 dark:from-violet-50 dark:to-purple-100",
+      borderColor: "border-purple-300 dark:border-purple-300",
+      iconBg: "bg-purple-500",
       icon: <FolderPlus className="h-7 w-7 text-white" />,
-      textColor: "text-purple-700",
+      textColor: "text-purple-500",
     },
     {
       id: "listprojects",
       title: "List Projects",
       description: "View all projects in your organization",
-      color: "from-blue-100 to-sky-200 dark:from-blue-800 dark:to-sky-700",
-      borderColor: "border-sky-300 dark:border-sky-600",
-      iconBg: "bg-blue-600",
+      color: "from-blue-50 to-sky-100 dark:from-blue-50 dark:to-sky-100",
+      borderColor: "border-sky-300 dark:border-sky-300",
+      iconBg: "bg-blue-500",
       icon: <ListTodo className="h-7 w-7 text-white" />,
-      textColor: "text-blue-700",
+      textColor: "text-blue-500",
     },
     {
       id: "assignproject",
       title: "Assign Project Role",
       description: "Assign users to roles within projects",
       color:
-        "from-fuchsia-100 to-pink-200 dark:from-fuchsia-800 dark:to-pink-700",
-      borderColor: "border-pink-300 dark:border-pink-600",
-      iconBg: "bg-pink-600",
+        "from-fuchsia-50 to-pink-100 dark:from-fuchsia-50 dark:to-pink-100",
+      borderColor: "border-pink-300 dark:border-pink-300",
+      iconBg: "bg-pink-500",
       icon: <UserCheck className="h-7 w-7 text-white" />,
-      textColor: "text-pink-700",
+      textColor: "text-pink-500",
     },
     {
       id: "removeuserrole",
       title: "Remove User Role",
       description: "Remove user role from a project",
-      color: "from-red-100 to-rose-200 dark:from-red-800 dark:to-rose-700",
-      borderColor: "border-red-300 dark:border-red-600",
-      iconBg: "bg-red-600",
+      color: "from-red-50 to-rose-100 dark:from-red-50 dark:to-rose-100",
+      borderColor: "border-red-300 dark:border-red-300",
+      iconBg: "bg-red-500",
       icon: <UserMinus className="h-7 w-7 text-white" />,
-      textColor: "text-red-700",
+      textColor: "text-red-500",
     },
   ];
 
@@ -370,6 +370,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
       toast.error("Please select both a user and a role.");
       return;
     }
+
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
@@ -390,7 +391,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
 
       if (response.ok) {
         toast.success("Role assigned successfully!", {
-          onClose: () => closeModal(), // Ensures toast is displayed before closing
+          onClose: () => {
+            fetchUsers(); // ✅ Refresh the org member list
+            closeModal(); // ✅ Close the modal
+          },
         });
       } else {
         toast.error(
@@ -444,7 +448,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 p-4 md:p-8 mt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-00 p-4 md:p-8 mt-16">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -558,14 +562,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
               className="cursor-pointer"
               onClick={() => handleOpenModal("view")}
             >
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-900 dark:to-blue-800 border border-blue-200 dark:border-blue-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+              <div className="bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-50 dark:to-blue-100 border border-blue-200 dark:border-blue-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
                 <div className="bg-blue-500 p-3 rounded-full mb-3">
                   <Eye className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-blue-600 dark:text-blue-300 mb-1">
+                <h3 className="font-semibold text-blue-600 dark:text-blue-600 mb-1">
                   View
                 </h3>
-                <p className="text-sm text-blue-500 dark:text-blue-400">
+                <p className="text-sm text-blue-500 dark:text-blue-500">
                   View organization details
                 </p>
               </div>
@@ -579,14 +583,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
               className="cursor-pointer"
               onClick={() => handleOpenModal("update")}
             >
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-900 dark:to-teal-800 border border-teal-200 dark:border-teal-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-50 dark:to-teal-100 border border-teal-200 dark:border-teal-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
                 <div className="bg-teal-500 p-3 rounded-full mb-3">
                   <Edit className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-teal-600 dark:text-teal-300 mb-1">
+                <h3 className="font-semibold text-teal-600 dark:text-teal-600 mb-1">
                   Update
                 </h3>
-                <p className="text-sm text-teal-500 dark:text-teal-400">
+                <p className="text-sm text-teal-500 dark:text-teal-500">
                   Modify organization settings
                 </p>
               </div>
@@ -600,14 +604,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
               className="cursor-pointer"
               onClick={() => handleOpenModal("members")}
             >
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-900 dark:to-indigo-800 border border-indigo-200 dark:border-indigo-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-50 dark:to-indigo-100 border border-indigo-200 dark:border-indigo-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
                 <div className="bg-indigo-500 p-3 rounded-full mb-3">
                   <Users className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="font-semibold text-indigo-600 dark:text-indigo-300 mb-1">
+                <h3 className="font-semibold text-indigo-600 dark:text-indigo-600 mb-1">
                   Org Members
                 </h3>
-                <p className="text-sm text-indigo-500 dark:text-indigo-400">
+                <p className="text-sm text-indigo-500 dark:text-indigo-500">
                   Manage organization members
                 </p>
               </div>
@@ -904,7 +908,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   {/* Left Arrow */}
                   <button
                     onClick={prevSlide}
-                    className="p-3 bg-gray-300 dark:bg-gray-700 rounded-full mr-2 hover:bg-gray-400 dark:hover:bg-gray-600 transition shadow-md"
+                    className="p-3 bg-gray-300 dark:bg-gray-300 rounded-full mr-2 hover:bg-gray-400 dark:hover:bg-gray-400 transition shadow-md"
                   >
                     ◀
                   </button>
@@ -956,7 +960,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   {/* Right Arrow */}
                   <button
                     onClick={nextSlide}
-                    className="p-3 bg-gray-300 dark:bg-gray-700 rounded-full ml-2 hover:bg-gray-400 dark:hover:bg-gray-600 transition shadow-md"
+                    className="p-3 bg-gray-300 dark:bg-gray-300 rounded-full ml-2 hover:bg-gray-400 dark:hover:bg-gray-400 transition shadow-md"
                   >
                     ▶
                   </button>
@@ -968,7 +972,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   <Users className="mr-2 h-5 w-5 text-amber-500" />
                   User Management
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
                   Add, remove, and manage user roles within your organization
                 </p>
               </div>
@@ -983,21 +987,18 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   className="cursor-pointer"
                   onClick={() => handleOpenModal("addmember")}
                 >
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900 dark:to-emerald-800 border border-emerald-200 dark:border-emerald-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+                  <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-50 dark:to-emerald-100 border border-emerald-200 dark:border-emerald-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
                     <div className="bg-green-500 p-3 rounded-full mb-3">
                       <UserPlus className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-green-600 dark:text-green-300 mb-1">
+                    <h3 className="font-semibold text-green-600 dark:text-green-600 mb-1">
                       Add Member
                     </h3>
-                    <p className="text-sm text-green-500 dark:text-green-400">
+                    <p className="text-sm text-green-500 dark:text-green-500">
                       Invite new users to your organization
                     </p>
                   </div>
                 </motion.div>
-
-                {/* Remove Member Button */}
-
                 {/* Assign Role Button */}
                 <motion.div
                   variants={buttonVariants}
@@ -1006,14 +1007,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   className="cursor-pointer"
                   onClick={() => handleOpenModal("assignrole")}
                 >
-                  <div className="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-900 dark:to-yellow-800 border border-yellow-200 dark:border-yellow-700 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
+                  <div className="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-50 dark:to-yellow-100 border border-yellow-200 dark:border-yellow-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
                     <div className="bg-amber-500 p-3 rounded-full mb-3">
                       <UserCog className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="font-semibold text-amber-600 dark:text-amber-300 mb-1">
+                    <h3 className="font-semibold text-amber-600 dark:text-amber-600 mb-1">
                       Assign Role
                     </h3>
-                    <p className="text-sm text-amber-500 dark:text-amber-400">
+                    <p className="text-sm text-amber-500 dark:text-amber-500">
                       Manage user permissions and roles
                     </p>
                   </div>
