@@ -370,6 +370,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
       toast.error("Please select both a user and a role.");
       return;
     }
+
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
@@ -390,7 +391,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
 
       if (response.ok) {
         toast.success("Role assigned successfully!", {
-          onClose: () => closeModal(), // Ensures toast is displayed before closing
+          onClose: () => {
+            fetchUsers(); // ✅ Refresh the org member list
+            closeModal(); // ✅ Close the modal
+          },
         });
       } else {
         toast.error(
@@ -995,9 +999,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
                     </p>
                   </div>
                 </motion.div>
-
-                {/* Remove Member Button */}
-
                 {/* Assign Role Button */}
                 <motion.div
                   variants={buttonVariants}
