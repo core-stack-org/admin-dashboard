@@ -1,33 +1,51 @@
-import React, { useEffect } from "react";
+import React from "react";
 import SuperAdminDashboard from "./superAdminDashboard.jsx";
 import OrgAdminDashboard from "./orgAdminDashboard.jsx";
 import ProjectManagerDashboard from "./projectManagerDashboard.jsx";
 import AppUserDashboard from "./appUserDashboard.js";
 
 const Dashboard = ({ currentUser }) => {
-  useEffect(() => {
-    const userGroup = currentUser?.user?.groups?.[0]?.name;
-  }, [currentUser]);
+  const getHighestPriorityRole = () => {
+    if (currentUser?.user?.is_superadmin) {
+      return "Super Admin";
+    }
+
+    const userGroups = currentUser?.user?.groups?.map((g) => g.name) || [];
+
+    const priorityOrder = [
+      "Organization Admin",
+      "Org Admin",
+      "Administrator",
+      "Project Manager",
+      "App User",
+    ];
+
+    for (const role of priorityOrder) {
+      if (userGroups.includes(role)) {
+        return role;
+      }
+    }
+
+    // If no known roles found, fallback to App User
+    return "App User";
+  };
 
   const renderContent = () => {
-    if (currentUser?.user?.is_superadmin) {
-      return <SuperAdminDashboard currentUser={currentUser} />;
-    }
+    const highestRole = getHighestPriorityRole();
 
-    const userGroup = currentUser?.user?.groups?.[0]?.name;
-
-    if (
-      userGroup === "Organization Admin" ||
-      userGroup === "Org Admin" ||
-      userGroup === "Administrator"
-    ) {
-      return <OrgAdminDashboard currentUser={currentUser} />;
-    } else if (userGroup === "Project Manager") {
-      return <ProjectManagerDashboard currentUser={currentUser} />;
-    } else if (userGroup === "App User") {
-      return <AppUserDashboard currentUser={currentUser} />;
+    switch (highestRole) {
+      case "Super Admin":
+        return <SuperAdminDashboard currentUser={currentUser} />;
+      case "Organization Admin":
+      case "Org Admin":
+      case "Administrator":
+        return <OrgAdminDashboard currentUser={currentUser} />;
+      case "Project Manager":
+        return <ProjectManagerDashboard currentUser={currentUser} />;
+      case "App User":
+      default:
+        return <AppUserDashboard currentUser={currentUser} />;
     }
-    return <p>No content available for this role.</p>;
   };
 
   return (

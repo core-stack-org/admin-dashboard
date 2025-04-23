@@ -184,14 +184,6 @@ function SuperAdminDashboard({ currentUser }) {
     }
   };
 
-  const handleOpenModal = (modalName) => {
-    setActiveModal(modalName);
-  };
-
-  const handleCloseModal = () => {
-    setActiveModal(null);
-  };
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {

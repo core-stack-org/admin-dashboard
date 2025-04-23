@@ -56,7 +56,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     const accessToken = sessionStorage.getItem("accessToken");
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/auth/logout/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/auth/logout/`,
         {
           method: "POST",
           mode: "cors",
@@ -146,6 +146,9 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
 
   const restrictedRoles = ["Administrator", "Project Manager", "App User"];
 
+  const isSuperAdmin = currentuser.user.is_superadmin;
+  const userRoles = currentuser.user.groups || [];
+
   const menuItems = [
     {
       icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
@@ -154,11 +157,20 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     },
   ];
 
-  if (!restrictedRoles.includes(role)) {
+  const showFullMenu =
+    isSuperAdmin ||
+    (userRoles.length > 0 &&
+      !userRoles.some((role) => {
+        console.log("Checking role:", role); // Log each role in the user's groups
+        return restrictedRoles.includes(role.name || role); // If role is an object, check the 'name' property
+      }));
+
+  console.log("showFullMenu:", showFullMenu);
+  if (showFullMenu) {
     menuItems.push(
       {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
-        label: "Activate Block",
+        label: "Activate Location",
         href: "/activateBlock",
       },
       {
