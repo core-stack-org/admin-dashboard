@@ -743,6 +743,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                     closeModal={closeModal}
                     currentUser={currentUser}
                     mode="assign"
+                    onUserCreated={fetchUsers}
                   />
                 </div>
               )}{" "}

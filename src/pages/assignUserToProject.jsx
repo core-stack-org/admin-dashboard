@@ -3,7 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
+const AssignUserToProject = ({
+  currentUser,
+  closeModal,
+  mode = "assign",
+  onUserCreated,
+}) => {
   const [organization, setOrganization] = useState(null);
   const [userId, setUserId] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -216,6 +221,7 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
           ? "Role updated successfully!"
           : "Role assigned successfully!"
       );
+      onUserCreated();
       closeModal();
     } catch (err) {
       console.error("❌ Error assigning/updating role:", err);
@@ -259,7 +265,7 @@ const AssignUserToProject = ({ currentUser, closeModal, mode = "assign" }) => {
       } else {
         await removeUserFromProject();
       }
-
+      onUserCreated();
       closeModal();
     } catch (error) {
       console.error("Error in submit:", error);
