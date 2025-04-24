@@ -96,7 +96,7 @@ function SuperAdminDashboard({ currentUser }) {
     try {
       const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/users/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/users/`,
         {
           method: "GET",
           headers: {

@@ -74,14 +74,14 @@ function AppLayout({ currentUser, setCurrentUser }) {
 }
 function App() {
   const [currentUser, setCurrentUser] = useState(() => {
-    return JSON.parse(localStorage.getItem("currentUser"));
+    return JSON.parse(sessionStorage.getItem("currentUser"));
   });
 
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem("currentUser", JSON.stringify(currentUser));
+      sessionStorage.setItem("currentUser", JSON.stringify(currentUser));
     } else {
-      localStorage.removeItem("currentUser");
+      sessionStorage.removeItem("currentUser");
     }
   }, [currentUser]);
 

@@ -62,7 +62,6 @@ const LoginPage = ({ setCurrentUser }) => {
       const data = await response.json();
       sessionStorage.setItem("accessToken", data.access);
       sessionStorage.setItem("refreshToken", data.refresh);
-      localStorage.setItem("currentUser", JSON.stringify(data)); // Store in local storage
       setCurrentUser(data);
       toast.success("Login successful!");
 
