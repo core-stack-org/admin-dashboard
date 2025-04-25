@@ -160,8 +160,8 @@ const PreviewLayerComponent = () => {
           .replace(/blockname/g, formattedBlock)
       : `${formattedDistrict}_${formattedBlock}`;
 
-    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3Acfpt_infoplantation_suitability&outputFormat=application%2Fjson`;
-    // const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&bbox=77.60057629388909%2C16.03395532759504%2C77.75345653355072%2C16.07371263198302&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}/panchayat_boundaries/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=panchayat_boundaries%3A${formattedDistrict}_${formattedBlock}&outputFormat=application%2Fjson`;
+
     let dynamicBbox = "";
     try {
       const response = await fetch(wfsurl);
@@ -179,7 +179,8 @@ const PreviewLayerComponent = () => {
 
       dynamicBbox =
         extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
-      setBBox(extent);
+
+      setBBox(extent); // Optionally store the bbox in the state
     } catch (error) {}
     const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
 

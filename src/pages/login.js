@@ -1,27 +1,25 @@
 import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import logo from "../assets/core-stack logo.png";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
 
 const LoginPage = ({ setCurrentUser }) => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
   const [errors, setErrors] = useState({});
   const [loginErr, setLoginErr] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.username) {
-      newErrors.username = "Username is required";
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Please enter a valid email";
     }
 
     if (!formData.password) {
@@ -42,14 +40,14 @@ const LoginPage = ({ setCurrentUser }) => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/auth/login/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/user/login`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            username: formData.username,
+            email: formData.email,
             password: formData.password,
           }),
         }
@@ -60,15 +58,10 @@ const LoginPage = ({ setCurrentUser }) => {
       }
 
       const data = await response.json();
+      // localStorage.setItem("token", data.access);
       sessionStorage.setItem("accessToken", data.access);
-      sessionStorage.setItem("refreshToken", data.refresh);
       setCurrentUser(data);
-      toast.success("Login successful!");
-
-      setTimeout(() => {
-        toast.dismiss(); // Dismiss all toasts before navigating
-        navigate("/dashboard");
-      }, 1000);
+      navigate("/activateBlock");
     } catch (err) {
       setLoginErr(err.message || "Login failed");
     }
@@ -88,18 +81,12 @@ const LoginPage = ({ setCurrentUser }) => {
     }
   };
 
-  const handleRegisterRedirect = () => {
-    navigate("/register"); // Redirect to registration page
-  };
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
-      <ToastContainer position="top-right" autoClose={3000} closeOnClick />
-      <div className="w-full max-w-md space-y-6 rounded-lg bg-white p-8 shadow-lg">
+    <div className="min-h-screen bg-[#1e2532] flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-6 rounded-lg bg-[#1e2532] p-8">
         <div className="text-center">
           <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
-          <h2 className="mt-4 text-2xl font-bold text-gray-900">
-            CoRE Stack Dashboard
-          </h2>
+          <h2 className="mt-4 text-2xl font-bold text-white">NRM Dashboard</h2>
         </div>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
@@ -107,48 +94,40 @@ const LoginPage = ({ setCurrentUser }) => {
             <div>
               <div className="relative">
                 <Mail
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={20}
                 />
                 <input
-                  type="username"
-                  name="username"
-                  value={formData.username}
+                  type="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleChange}
-                  className="w-full rounded border border-gray-300 bg-white pl-10 pr-3 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="User Name"
+                  className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Email address"
                 />
               </div>
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-500">{errors.username}</p>
+              {errors.email && (
+                <p className="mt-1 text-sm text-red-400">{errors.email}</p>
               )}
             </div>
 
             <div>
               <div className="relative">
                 <Lock
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   size={20}
                 />
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type="password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full rounded border border-gray-300 bg-white pl-10 pr-10 py-2 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded bg-[#2a3441] pl-10 pr-3 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Password"
                 />
-                {/* Eye Icon for Toggling Password */}
-                <button
-                  type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 focus:outline-none"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                </button>
               </div>
               {errors.password && (
-                <p className="mt-1 text-sm text-red-500">{errors.password}</p>
+                <p className="mt-1 text-sm text-red-400">{errors.password}</p>
               )}
             </div>
           </div>
@@ -160,19 +139,8 @@ const LoginPage = ({ setCurrentUser }) => {
             Sign in
           </button>
           {loginErr && (
-            <p className="mt-4 text-sm text-red-500 text-center">{loginErr}</p>
+            <p className="mt-4 text-sm text-red-400 text-center">{loginErr}</p>
           )}
-          <div className="text-center">
-            <p className="text-gray-600">
-              Don't have an account?{" "}
-              <span
-                onClick={handleRegisterRedirect}
-                className="text-blue-500 cursor-pointer hover:underline"
-              >
-                Register here
-              </span>
-            </p>
-          </div>
         </form>
       </div>
     </div>
