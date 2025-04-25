@@ -4,7 +4,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation } from "react-router-dom";
 
-const LocationFormComponent = ({ addTask }) => {
+const LocationFormComponent = ({ currentUser }) => {
+  console.log(currentUser);
   const location = useLocation();
   const { layerName, showDates } = location.state || {};
 
@@ -18,7 +19,6 @@ const LocationFormComponent = ({ addTask }) => {
   const [endYear, setEndYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isStatusBoxOpen, setIsStatusBoxOpen] = useState(false);
 
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
@@ -146,24 +146,8 @@ const LocationFormComponent = ({ addTask }) => {
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
-
-    // toast.info("Layer generation started...");
-    const taskId = `TASK-${Math.floor(Math.random() * 10000)}`; // Replace with API-generated task ID
-    const newTask = { id: taskId, layerName, status: "Started" };
-
-    // Add task to the sidebar
-    addTask(newTask);
-
-    // Simulate status updates
-    setTimeout(() => {
-      addTask({ ...newTask, status: "In Progress" });
-      // toast.info("Layer generation in progress...");
-    }, 2000);
-
-    setTimeout(() => {
-      addTask({ ...newTask, status: "Completed" });
-      // toast.success("Layer generation completed!");
-    }, 5000);
+    const selectedLayer = layersData.layers_json[layerName];
+    const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
 
     const payload = {
       state: state.name,
@@ -176,17 +160,28 @@ const LocationFormComponent = ({ addTask }) => {
     setIsLoading(true);
 
     try {
+      const token = sessionStorage.getItem("accessToken");
       const response = await fetch(
-        `${process.env.REACT_APP_LAYER_API_URL_V1}`,
+        `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
         }
       );
+
+      // Handle unauthorized or token expired
+      if (response.status === 401) {
+        toast.error("Session expired. Please login again.");
+        sessionStorage.clear(); // clear tokens and user info
+        window.location.href = "/login"; // redirect to login
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Error: ${response.statusText}`);
