@@ -37,7 +37,7 @@
 
         },
         "LULC": {
-            "api_url": "${config.layer_api_url_v1}/lulc_v3_river_basin/",
+            "api_url": "${config.layer_api_url_v1}/lulc_v3/",
             "show_Dates": true,
             "date_range":[2017,2023],
             "workspace":"LULC_level_1"
@@ -66,7 +66,7 @@
 
 
         },
-        "Surface Water bodies": {
+        "Surface Water Bodies": {
             "api_url": "${config.layer_api_url_v1}/generate_swb/",
             "show_Dates": true,
             "date_range":[2017,2023],
@@ -95,7 +95,7 @@
             "end":"_raster"
 
         },
-        "Crop Grid_layer": {
+        "Crop Grid": {
             "api_url": "${config.layer_api_url_v1}/crop_grid/",
             "show_Dates": false,
             "workspace":"crop_grid_layers",
