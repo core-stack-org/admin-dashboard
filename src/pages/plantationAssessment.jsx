@@ -1,417 +1,270 @@
-import { useState, useEffect } from "react";
-import { Snackbar, Alert } from "@mui/material";
+import React, { useState } from "react";
 
-const climateOptions = {
-  annualPrecipitation: {
-    label: "Annual Precipitation (mm)",
-    options: [
-      "<400",
-      "400-600",
-      "600-740",
-      "740-860",
-      "860-1000",
-      "1000-1100",
-      "1100-1250",
-      "1250-1440",
-      "1440-2000",
-      ">2000",
-    ],
-  },
-  meanAnnualTemperature: {
-    label: "Mean Annual Temperature (°C)",
-    options: [
-      "<5",
-      "5-10",
-      "10-15",
-      "15-20",
-      "20-22",
-      "22-24",
-      "24-26",
-      "26-28",
-      "28-30",
-      ">30",
-    ],
-  },
-  aridityIndex: {
-    label: "Aridity Index",
-    description:
-      "This is the ratio of precipitation to potential evapotranspiration (PET), where PET is calculated using the Penman-Monteith equation.",
-    options: ["<0.05", "0.05-0.20", "0.20-0.50", "0.50-0.65", ">0.65"],
-  },
-  referenceEvapoTranspiration: {
-    label: "Reference Evapotranspiration (mm/day)",
-    description:
-      "This is the maximum of actual evapotranspiration based on current land-use, or actual projected evapotranspiration for the crop/tree to be planted.",
-    options: ["0-2", "2-4", "4-6", "6-8", "8-10", ">10"],
-  },
-};
+const sections = [
+  "Registration",
+  "Climate",
+  "Soil",
+  "Topography",
+  "Ecology",
+  "Socioeconomic",
+];
 
-const soilOptions = {
-  topsoilPH: {
-    label: "Topsoil pH",
-    options: [
-      "<4.5",
-      "4.5-5.5",
-      "5.5-6",
-      "6-6.5",
-      "6.5-7",
-      "7-7.5",
-      "7.5-8.5",
-      "8.5-9",
-      ">9",
-    ],
-  },
-  subsoilPH: {
-    label: "Subsoil pH",
-    options: [
-      "<4.5",
-      "4.5-5.5",
-      "5.5-6",
-      "6-6.5",
-      "6.5-7",
-      "7-7.5",
-      "7.5-8.5",
-      "8.5-9",
-      ">9",
-    ],
-  },
-  topsoilOC: {
-    label: "Topsoil Organic Carbon (% weight)",
-    options: [
-      "<0.5",
-      "0.5-0.7",
-      "0.7-1",
-      "1-1.2",
-      "1.2-1.5",
-      "1.5-2",
-      "2-2.5",
-      "2.5-3",
-      "3-3.5",
-      ">3",
-    ],
-  },
-  subsoilOC: {
-    label: "Subsoil Organic Carbon (% weight)",
-    options: [
-      "<0.1",
-      "0.1-0.2",
-      "0.2-0.4",
-      "0.4-0.6",
-      "0.6-0.8",
-      "0.8-1",
-      "1-1.5",
-      "1.5-2",
-      "2-2.5",
-      ">2.5",
-    ],
-  },
-  topsoilCEC: {
-    label: "Topsoil Cation Exchange Capacity (cmol/kg)",
-    options: [
-      "0-5",
-      "5-10",
-      "10-15",
-      "15-20",
-      "20-25",
-      "25-35",
-      "35-45",
-      ">45",
-    ],
-  },
-  subsoilCEC: {
-    label: "Subsoil Cation Exchange Capacity (cmol/kg)",
-    options: [
-      "0-5",
-      "5-10",
-      "10-15",
-      "15-20",
-      "20-25",
-      "25-35",
-      "35-45",
-      ">45",
-    ],
-  },
-  topsoilTexture: {
-    label: "Topsoil Texture",
-    description:
-      "Please select the appropriate soil texture based on the given legend.",
-    options: ["Coarse", "Medium", "Fine"],
-  },
-  subsoilTexture: {
-    label: "Subsoil Texture",
-    options: [
-      "Clay (heavy)",
-      "Silty clay",
-      "Clay",
-      "Silty clay loam",
-      "Clay loam",
-      "Silt",
-      "Silt loam",
-      "Sandy clay",
-      "Loam",
-      "Sandy clay loam",
-      "Sandy loam",
-      "Loamy sand",
-      "Sand",
-    ],
-  },
-  topsoilBD: {
-    label: "Topsoil Bulk Density (kg/dm³)",
-    options: [
-      "<1.1",
-      "1.1-1.3",
-      "1.3-1.35",
-      "1.35-1.40",
-      "1.40-1.45",
-      "1.45-1.5",
-      "1.5-1.6",
-      "1.6-1.7",
-      ">1.7",
-    ],
-  },
-  subsoilBD: {
-    label: "Subsoil Bulk Density (kg/dm³)",
-    options: [
-      "<1.3",
-      "1.3-1.35",
-      "1.35-1.4",
-      "1.4-1.45",
-      "1.45-1.5",
-      "1.5-1.55",
-      "1.55-1.7",
-      "1.7-1.8",
-      ">1.8",
-    ],
-  },
-  drainage: {
-    label: "Soil Drainage",
-    options: [
-      "Excessively drained",
-      "Somewhat excessively drained",
-      "Well drained",
-      "Moderately well drained",
-      "Imperfectly drained",
-      "Poorly drained",
-      "Very poorly drained",
-    ],
-  },
-  AWC: {
-    label: "Available Water Capacity (mm/m)",
-    options: ["150", "125", "100", "75", "50", "15"],
-  },
-};
-
-const topographyOptions = {
-  elevation: {
-    label: "Elevation (m)",
-    options: [
-      "0-100",
-      "100-200",
-      "200-500",
-      "500-800",
-      "800-1200",
-      "1200-1500",
-      "1500-2200",
-      "2200-3500",
-      "3500-4500",
-      ">4500",
-    ],
-  },
-  slope: {
-    label: "Slope (degrees)",
-    options: ["0-5", "5-10", "10-15", "15-20", "20-25", "25-30", "30-44"],
-  },
-  aspect: {
-    label: "Aspect (Direction Facing)",
-    options: [
-      "North",
-      "North-East",
-      "East",
-      "South-East",
-      "South",
-      "South-West",
-      "West",
-      "North-West",
-    ],
-  },
-};
-
-const ecologyOptions = {
-  NDVI: {
-    label: "NDVI based on current land-use",
-    options: ["0.7-1", "0.5-0.7", "0.2-0.5", "0-0.2", "<0"],
-  },
-  LULC: {
-    label: "Current Land-use",
-    options: [
-      "Forest",
-      "Grassland",
-      "Flooded vegetation",
-      "Cropland",
-      "Shrub and scrub",
-      "Bare ground",
-      "Snow and ice",
-    ],
-  },
-};
-
-const socioeconomicOptions = {
-  distToDrainage: {
-    label: "Distance to Drainage Lines (m)",
-    options: [
-      "0-5",
-      "5-50",
-      "50-100",
-      "100-250",
-      "250-500",
-      "500-1000",
-      ">1000",
-    ],
-  },
-  distToSettlements: {
-    label: "Distance to Settlements (m)",
-    options: ["0-20", "20-100", "100-200", "200-500", "500-1000", ">1000"],
-  },
-  distToRoad: {
-    label: "Distance to Roads (m)",
-    options: ["0-20", "20-100", "100-200", "200-500", "500-1000", ">1000"],
-  },
-};
-
-const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
-  const [page, setPage] = useState(1);
-  const [formData, setFormData] = useState({});
-  const [profileData, setProfileData] = useState({});
-  const [toast, setToast] = useState({
-    open: false,
-    message: "",
-    severity: "success",
+export default function PlantationAssessment({ isEmbedded }) {
+  const [activeSection, setActiveSection] = useState(0);
+  const [formData, setFormData] = useState({
+    registration: { institution: "", email: "", aezZone: "", cropSpecies: "" },
+    climate: {
+      precipitation: [],
+      temperature: [],
+      aridityIndex: [],
+      evapotranspiration: [],
+      climateWeightage: "35%",
+    },
+    soil: {
+      topsoilPh: [],
+      subsoilPh: [],
+      topsoilOrganicCarbon: [],
+      subsoilOrganicCarbon: [],
+      topsoilCationExchange: [],
+      subsoilCationExchange: [],
+      topsoilTexture: "",
+      subsoilTexture: "",
+      topsoilBulkDensity: "",
+      subsoilBulkDensity: "",
+      soilDrainage: "",
+      availableWaterCapacity: "",
+      soilWeightage: "20%",
+    },
+    topography: {
+      elevation: "",
+      slope: "",
+      aspect: "",
+      topographyWeightage: "25%",
+    },
+    ecology: {
+      ndvi: [],
+      landUse: [],
+      ecologyWeightage: "10%",
+    },
+    socioeconomic: {
+      drainageDistance: [],
+      settlementDistance: [],
+      roadDistance: [],
+      socioeconomicWeightage: "10%",
+      remarks: "",
+    },
   });
-  const handleCloseToast = () => {
-    setToast({ ...toast, open: false });
-  };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = sessionStorage.getItem("accessToken");
-        const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/plantation/profile/`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  const [errors, setErrors] = useState({ institution: false, email: false });
 
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const data = await response.json();
-        setProfileData(data);
-        setFormData({
-          AWC: data[0].config_user_input.AWC,
-          Climate: data[0].config_user_input.Climate,
-          Ecology: data[0].config_user_input.Ecology,
-          LULC: data[0].config_user_input.LULC,
-          NDVI: data[0].config_user_input.NDVI,
-          Socioeconomic: data[0].config_user_input.Socioeconomic,
-          Soil: data[0].config_user_input.Soil,
-          Topography: data[0].config_user_input.Topography,
-          annualPrecipitation: data[0].config_user_input.annualPrecipitation,
-          aridityIndex: data[0].config_user_input.aridityIndex,
-          aspect: data[0].config_user_input.aspect || "",
-          distToDrainage: data[0].config_user_input.distToDrainage,
-          distToRoad: data[0].config_user_input.distToRoad,
-          distToSettlements: data[0].config_user_input.distToSettlements,
-          drainage: data[0].config_user_input.drainage,
-          elevation: data[0].config_user_input.elevation,
-          meanAnnualTemperature:
-            data[0].config_user_input.meanAnnualTemperature,
-          referenceEvapoTranspiration:
-            data[0].config_user_input.referenceEvapoTranspiration,
-          slope: data[0].config_user_input.slope,
-          subsoilBD: data[0].config_user_input.subsoilBD,
-          subsoilCEC: data[0].config_user_input.subsoilCEC,
-          subsoilOC: data[0].config_user_input.subsoilOC,
-          subsoilPH: data[0].config_user_input.subsoilPH,
-          subsoilTexture: data[0].config_user_input.subsoilTexture,
-          topsoilBD: data[0].config_user_input.topsoilBD,
-          topsoilCEC: data[0].config_user_input.topsoilCEC,
-          topsoilOC: data[0].config_user_input.topsoilOC,
-          topsoilPH: data[0].config_user_input.topsoilPH,
-          topsoilTexture: data[0].config_user_input.topsoilTexture,
-        });
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-
-    fetchData();
-  }, [project.id]);
-
-  // Debugging: Log formData when it updates
-  useEffect(() => {}, [formData]);
-
-  // Checkbox handler
-  const handleCheckboxChange = (key, range) => {
-    const values = formData[key]?.split(", ").filter(Boolean) || [];
-    const updatedValues = values.includes(range)
-      ? values.filter((val) => val !== range)
-      : [...values, range];
-
-    setFormData((prev) => ({
-      ...prev,
-      [key]: updatedValues.join(", "),
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/plantation/profile/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const data = await response.json();
-      setToast({
-        open: true,
-        message: "Form submitted successfully! Move to process the KMLs",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error during API call:", error);
-      setToast({
-        open: true,
-        message: "Failed to submit!",
-        severity: "error",
-      });
+  const handleNext = () => {
+    if (activeSection === 0) {
+      const newErrors = {
+        institution: formData.registration.institution.trim() === "",
+        email: formData.registration.email.trim() === "",
+      };
+      setErrors(newErrors);
+      if (newErrors.institution || newErrors.email) return;
     }
+    setActiveSection((prev) => Math.min(prev + 1, sections.length - 1));
+  };
+
+  const handleBack = () => setActiveSection((prev) => Math.max(prev - 1, 0));
+
+  const handleCheckboxChange = (category, value) => {
+    setFormData((prevData) => {
+      const updatedValues = prevData.climate[category].includes(value)
+        ? prevData.climate[category].filter((item) => item !== value)
+        : [...prevData.climate[category], value];
+      return {
+        ...prevData,
+        climate: { ...prevData.climate, [category]: updatedValues },
+      };
+    });
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-5xl mx-auto p-6 border rounded-lg shadow-lg bg-white mt-4"
+    <div
+      className={`w-full max-w-5xl mx-auto p-6 border rounded-lg shadow-lg bg-white ${
+        isEmbedded ? "mt-0" : "mt-24"
+      }`}
     >
+      {" "}
       <h2 className="text-2xl font-bold text-center mb-4">
         Plantation Site Suitability Assessment
       </h2>
-      {page === 1 && (
+      <h3 className="text-xl font-semibold mb-2">{sections[activeSection]}</h3>
+      <hr className="mb-4" />
+      {activeSection === 0 && (
         <>
-          <h3 className="text-xl font-semibold mb-2">Climate</h3>
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-4">
+              Name of Institution <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.registration.institution}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  registration: {
+                    ...formData.registration,
+                    institution: e.target.value,
+                  },
+                })
+              }
+              className={`w-full p-2 border rounded-lg border-gray-300 ${
+                errors.institution ? "border-red-500" : ""
+              }`}
+              required
+            />
+            {errors.institution && (
+              <p className="text-red-500 text-sm">This field is required.</p>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-4 mt-12">
+              Email Address <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="email"
+              value={formData.registration.email}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  registration: {
+                    ...formData.registration,
+                    email: e.target.value,
+                  },
+                })
+              }
+              className={`w-full p-2 border rounded-lg border-gray-300 ${
+                errors.email ? "border-red-500" : ""
+              }`}
+              required
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm">This field is required.</p>
+            )}
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-4 mt-12">
+              Which AEZ does the plantation site fall in?
+            </label>
+            <select
+              value={formData.registration.aezZone}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  registration: {
+                    ...formData.registration,
+                    aezZone: e.target.value,
+                  },
+                })
+              }
+              className="w-full p-2 border rounded-lg border-gray-300"
+            >
+              <option value="">Select</option>
+              <option value="zone1">
+                Western Himalayas, cold arid eco-region (A13E1)
+              </option>
+              <option value="zone2">
+                Western Plain, Kachchh and part of Kathiawar Peninsula, hot arid
+                eco-region(M9E1)
+              </option>
+              <option value="zone3">
+                Deccan plateau, hot arid ecosubregion (K6E2)
+              </option>
+              <option value="zone4">
+                Northern Plain (and Central Highlands) including Aravallis, hot
+                semi-arid ecoregion (N8D2)
+              </option>
+              <option value="zone5">
+                Central (Malwa) Highlands, Gujarat plains and Kathiawar
+                Peninsula Ecoregion (I5 D2)
+              </option>
+              <option value="zone6">
+                Deccan Plateau, hot semi-arid eco-region (K4D2)
+              </option>
+              <option value="zone7">
+                Deccan Plateau (Telangana) and Eastern Ghats, hot semiarid
+                ecoregion (K6D2)
+              </option>
+              <option value="zone8">
+                Eastern Ghats and Tamil Nadu Uplands and Deccan (Karnataka)
+                Plateau, hot semiarid eco-region (H1D2)
+              </option>
+              <option value="zone9">
+                Northern Plain, hot subhumid (dry) eco-region (N8C3)
+              </option>
+              <option value="zone10">
+                Central Highlands (Malwa and Bundelkhand), hot subhumid (dry)
+                eco-region (I6C3(4))
+              </option>
+              <option value="zone11">
+                Chattisgarh/Mahanadi Basin Agro-eco-region (J3 C3)"
+              </option>
+              <option value="zone12">
+                Eastern Plateau (Chhotanagpur) and Eastern Ghats, hot subhumid
+                eco-region (J23C3(4))
+              </option>
+              <option value="zone13">
+                Eastern Plain, hot subhumid (moist) ecoregion (08C4)"
+              </option>
+              <option value="zone14">
+                Western Himalayas, warm subhumid (to humid with inclusion of
+                perhumid) ecoregion [A15C(BA)4(5)]
+              </option>
+              <option value="zone15">
+                Assam and Bengal Plain, hot subhumid to humid (inclusion of
+                perhumid) eco-region (Q8C(BA)5)
+              </option>
+              <option value="zone16">
+                Eastern Himalayas, warm perhumid eco-region (C11A5)
+              </option>
+              <option value="zone17">
+                North-eastern Hills (Purvachal), warm perhumid ecoregion (D2A5)
+              </option>
+              <option value="zone18">
+                Eastern Coastal Plain, hot subhumid to semiarid ecoregion
+                (S7Cd2-5)
+              </option>
+              <option value="zone19">
+                Western Ghats and Coastal Plain, hot humid-perhumid eco-region
+                (E2BA5)
+              </option>
+              <option value="zone20">
+                Islands of Andaman-Nicobar and Lakshadweep, hot humid to
+                perhumid island ecoregion (T1A(B)5/T1B(A)5)
+              </option>
+            </select>
+          </div>
+
+          <div className="mb-3">
+            <label className="block text-sm font-medium mb-4 mt-12">
+              What is the crop/tree species being planted?
+            </label>
+            <input
+              type="text"
+              value={formData.registration.cropSpecies}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  registration: {
+                    ...formData.registration,
+                    cropSpecies: e.target.value,
+                  },
+                })
+              }
+              className="w-full p-2 border rounded-lg border-gray-300"
+            />
+          </div>
+        </>
+      )}
+      {activeSection === 1 && (
+        <>
           <div className="mb-4 p-4 bg-gray-100 border-l-4 border-blue-500">
             <p className="text-sm text-gray-700">
               <strong>Climate Parameters:</strong> <br />
@@ -426,45 +279,124 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
               the end of this section.
             </p>
           </div>
-          <hr className="mb-4" />
 
-          {Object.entries(climateOptions).map(([key, { label, options }]) => (
-            <div key={key} className="pl-8 mt-8">
-              <h4 className="text-lg font-semibold mb-2">{label}</h4>
-              {options.map((range) => (
+          <div className="pl-8">
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              1. Annual Precipitation (mm)
+            </h4>
+            {[
+              "<400",
+              "400-600",
+              "600-740",
+              "740-860",
+              "860-1000",
+              "1000-1100",
+              "1100-1250",
+              "1250-1440",
+              "1440-2000",
+              ">2000",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.climate.precipitation?.includes(range) || false
+                  }
+                  onChange={() => handleCheckboxChange("precipitation", range)}
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              2. Mean Annual Temperature (°C)
+            </h4>
+            {[
+              "<5",
+              "5-10",
+              "10-15",
+              "15-20",
+              "20-22",
+              "22-24",
+              "24-26",
+              "26-28",
+              "28-30",
+              ">30",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.climate.temperature?.includes(range) || false
+                  }
+                  onChange={() => handleCheckboxChange("temperature", range)}
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              3. Aridity Index
+            </h4>
+            {["<0.05", "0.05-0.20", "0.20-0.50", "0.50-0.65", ">0.65"].map(
+              (range) => (
                 <div key={range} className="mb-2">
                   <input
                     type="checkbox"
-                    checked={formData[key]?.split(", ").includes(range)}
-                    onChange={() => handleCheckboxChange(key, range)}
+                    checked={
+                      formData.climate.aridityIndex?.includes(range) || false
+                    }
+                    onChange={() => handleCheckboxChange("aridityIndex", range)}
                     className="mr-2"
                   />
                   <label>{range}</label>
                 </div>
-              ))}
-            </div>
-          ))}
+              )
+            )}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              4. Reference Evapotranspiration (mm/day)
+            </h4>
+            {["0-2", "2-4", "4-6", "6-8", "8-10", ">10"].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.climate.evapotranspiration?.includes(range) ||
+                    false
+                  }
+                  onChange={() =>
+                    handleCheckboxChange("evapotranspiration", range)
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
 
-          {/* Climate Weightage */}
-          <div className="pl-8 mt-8">
-            <h4 className="text-lg font-semibold mb-2">
-              Climate Weightage (default 35%)
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              5. Climate Weightage (default 35%)
             </h4>
             <input
               type="text"
-              value={formData.Climate}
+              value={formData.climate.climateWeightage}
               onChange={(e) =>
-                setFormData({ ...formData, Climate: e.target.value })
+                setFormData({
+                  ...formData,
+                  climate: {
+                    ...formData.climate,
+                    climateWeightage: e.target.value,
+                  },
+                })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
             />
           </div>
         </>
       )}
-
-      {page === 2 && (
+      {activeSection === 2 && (
         <>
-          <h3 className="text-xl font-semibold mt-10 mb-2">Soil Parameters</h3>
           <div className="mb-4 p-4 bg-gray-100 border-l-4 border-blue-500">
             <p className="text-sm text-gray-700">
               <strong>The soil parameters are:</strong> <br />
@@ -480,46 +412,370 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
               end of this section.
             </p>
           </div>
-          <hr className="mb-4" />
-          {Object.entries(soilOptions).map(([key, { label, options }]) => (
-            <div key={key} className="pl-8 mt-8">
-              <h4 className="text-lg font-semibold mb-2">{label}</h4>
-              {options.map((range) => (
-                <div key={range} className="mb-2">
-                  <input
-                    type="checkbox"
-                    checked={formData[key]?.split(", ").includes(range)}
-                    onChange={() => handleCheckboxChange(key, range)}
-                    className="mr-2"
-                  />
-                  <label>{range}</label>
-                </div>
-              ))}
-            </div>
-          ))}
+          <div className="pl-8">
+            <h4 className="text-lg font-semibold mb-2 mt-8">1. Topsoil pH</h4>
+            {[
+              "<4.5",
+              "4.5-5.5",
+              "5.5-6",
+              "6-6.5",
+              "6.5-7",
+              "7-7.5",
+              "7.5-8.5",
+              "8.5-9",
+              ">9",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={formData.soil.topsoilPh?.includes(range) || false}
+                  onChange={() =>
+                    handleCheckboxChange("topsoilPh", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
 
-          <div className="pl-8 mt-8">
-            <h4 className="text-lg font-semibold mb-2">
-              Soil Weightage (default 20%)
+            <h4 className="text-lg font-semibold mb-2 mt-8">2. Subsoil pH</h4>
+            {[
+              "<4.5",
+              "4.5-5.5",
+              "5.5-6",
+              "6-6.5",
+              "6.5-7",
+              "7-7.5",
+              "7.5-8.5",
+              "8.5-9",
+              ">9",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={formData.soil.subsoilPh?.includes(range) || false}
+                  onChange={() =>
+                    handleCheckboxChange("subsoilPh", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              3. Topsoil Organic Carbon (%weight)
             </h4>
+            {[
+              "<0.5",
+              "0.5-0.7",
+              "0.7-1",
+              "1-1.2",
+              "1.2-1.5",
+              "1.5-2",
+              "2-2.5",
+              "2.5-3",
+              "3-3.5",
+              ">3",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.soil.topsoilOrganicCarbon?.includes(range) || false
+                  }
+                  onChange={() =>
+                    handleCheckboxChange("topsoilOrganicCarbon", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              4. Subsoil Organic Carbon (%weight)
+            </h4>
+            {[
+              "<0.1",
+              "0.1-0.2",
+              "0.2-0.4",
+              "0.4-0.6",
+              "0.6-0.8",
+              "0.8-1",
+              "1-1.5",
+              "1.5-2",
+              "2-2.5",
+              ">2.5",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.soil.subsoilOrganicCarbon?.includes(range) || false
+                  }
+                  onChange={() =>
+                    handleCheckboxChange("subsoilOrganicCarbon", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              5. Topsoil Cation Exchange Capacity (cmol/kg)
+            </h4>
+            {[
+              "0-5",
+              "5-10",
+              "10-15",
+              "15-20",
+              "20-25",
+              "25-35",
+              "35-45",
+              ">45",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.soil.topsoilCationExchange?.includes(range) ||
+                    false
+                  }
+                  onChange={() =>
+                    handleCheckboxChange("topsoilCationExchange", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              6. Subsoil Cation Exchange Capacity (cmol/kg)
+            </h4>
+            {[
+              "0-5",
+              "5-10",
+              "10-15",
+              "15-20",
+              "20-25",
+              "25-35",
+              "35-45",
+              ">45",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.soil.topsoilCationExchange?.includes(range) ||
+                    false
+                  }
+                  onChange={() =>
+                    handleCheckboxChange("topsoilCationExchange", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+          </div>
+
+          <div className="pl-8">
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              6. Topsoil Texture
+            </h4>
+            <p className="italic">(please select based on the given legend)</p>
+
+            {["Coarse", "Medium", "Fine"].map((texture) => (
+              <div key={texture} className="mb-2">
+                <input
+                  type="radio"
+                  name="topsoilTexture"
+                  value={texture}
+                  checked={formData.soil.topsoilTexture === texture}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      soil: { ...formData.soil, topsoilTexture: texture },
+                    })
+                  }
+                  className="mr-2"
+                />
+                <label>{texture}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              7. Subsoil Texture
+            </h4>
+            {[
+              "Clay (heavy)",
+              "Silty clay",
+              "Clay",
+              "Silty clay loam",
+              "Clay loam",
+              "Silt",
+              "Silt loam",
+              "Sandy clay",
+              "Loam",
+              "Sandy clay loam",
+              "Sandy loam",
+              "Loamy sand",
+              "Sand",
+            ].map((texture) => (
+              <div key={texture} className="mb-2">
+                <input
+                  type="radio"
+                  name="subsoilTexture"
+                  value={texture}
+                  checked={formData.soil.subsoilTexture === texture}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      soil: { ...formData.soil, subsoilTexture: texture },
+                    })
+                  }
+                  className="mr-2"
+                />
+                <label>{texture}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              8. Topsoil Bulk Density (kg/dm³)
+            </h4>
+            {[
+              "<1.1",
+              "1.1-1.3",
+              "1.3-1.35",
+              "1.35-1.40",
+              "1.40-1.45",
+              "1.45-1.5",
+              "1.5-1.6",
+              "1.6-1.7",
+              ">1.7",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="radio"
+                  name="topsoilBulkDensity"
+                  value={range}
+                  checked={formData.soil.topsoilBulkDensity === range}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      soil: { ...formData.soil, topsoilBulkDensity: range },
+                    })
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              9. Subsoil Bulk Density (kg/dm³)
+            </h4>
+            {[
+              "<1.3",
+              "1.3-1.35",
+              "1.35-1.4",
+              "1.4-1.45",
+              "1.45-1.5",
+              "1.5-1.55",
+              "1.55-1.7",
+              "1.7-1.8",
+              ">1.8",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="radio"
+                  name="subsoilBulkDensity"
+                  value={range}
+                  checked={formData.soil.subsoilBulkDensity === range}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      soil: { ...formData.soil, subsoilBulkDensity: range },
+                    })
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              10. Soil Drainage
+            </h4>
+            {[
+              "Excessively drained",
+              "Somewhat excessively drained",
+              "Well drained",
+              "Moderately well drained",
+              "Imperfectly drained",
+              "Poorly drained",
+              "Very poorly drained",
+            ].map((type) => (
+              <div key={type} className="mb-2">
+                <input
+                  type="radio"
+                  name="soilDrainage"
+                  value={type}
+                  checked={formData.soil.soilDrainage === type}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      soil: { ...formData.soil, soilDrainage: type },
+                    })
+                  }
+                  className="mr-2"
+                />
+                <label>{type}</label>
+              </div>
+            ))}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              11. Available Water Capacity (mm/m)
+            </h4>
+            {[" 150", "125", "100", "75", "50", "15"].map((type) => (
+              <div key={type} className="mb-2">
+                <input
+                  type="radio"
+                  name="soilDrainage"
+                  value={type}
+                  checked={formData.soil.soilDrainage === type}
+                  onChange={() =>
+                    setFormData({
+                      ...formData,
+                      soil: { ...formData.soil, soilDrainage: type },
+                    })
+                  }
+                  className="mr-2"
+                />
+                <label>{type}</label>
+              </div>
+            ))}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              12. Soil Weightage (default 20%)
+            </h4>
+
             <input
               type="text"
-              value={formData.Soil}
+              className="w-full p-2 border rounded"
+              value={formData.soil.soilWeightage}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  soil: { ...formData.Soil, Soil: e.target.value },
+                  soil: { ...formData.soil, soilWeightage: e.target.value },
                 })
               }
-              className="w-full p-2 border rounded-lg border-gray-300"
             />
           </div>
         </>
       )}
-
-      {page === 3 && (
+      {activeSection === 3 && (
         <>
-          <h3 className="text-xl font-semibold mt-10 mb-2">Topography</h3>
           <div className="mb-4 p-4 bg-gray-100 border-l-4 border-blue-500">
             <p className="text-sm text-gray-700">
               <strong>The topography parameters are:</strong> <br />
@@ -534,105 +790,183 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
               at the end of this section.
             </p>
           </div>
-          <hr className="mb-4" />
-
-          {Object.entries(topographyOptions).map(
-            ([key, { label, options }]) => (
-              <div key={key} className="pl-8 mt-8">
-                <h4 className="text-lg font-semibold mb-2">{label}</h4>
-                {options.map((range) => (
-                  <div key={range} className="mb-2">
-                    <input
-                      type="checkbox"
-                      checked={formData[key]?.split(", ").includes(range)}
-                      onChange={() => handleCheckboxChange(key, range)}
-                      className="mr-2"
-                    />
-                    <label>{range}</label>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-
-          <div className="pl-8 mt-8">
-            <h4 className="text-lg font-semibold mb-2">
-              Topography Weightage (default 25%)
+          <div className="pl-8">
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              1. Elevation (m)
             </h4>
+            {[
+              "0-100",
+              "100-200",
+              "200-500",
+              "500-800",
+              "800-1200",
+              "1200-1500",
+              "1500-2200",
+              "2200-3500",
+              "3500-4500",
+              ">4500",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.topography.elevation?.includes(range) || false
+                  }
+                  onChange={() => handleCheckboxChange(range)}
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              2. Slope (degrees)
+            </h4>
+            {["0-5", "5-10", "10-15", "15-20", "20-25", "25-30", "30-44"].map(
+              (range) => (
+                <div key={range} className="mb-2">
+                  <input
+                    type="checkbox"
+                    checked={
+                      formData.topography.slope?.includes(range) || false
+                    }
+                    onChange={() =>
+                      handleCheckboxChange("slope", range, "topography")
+                    }
+                    className="mr-2"
+                  />
+                  <label>{range}</label>
+                </div>
+              )
+            )}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              3. Aspect (direction facing)
+            </h4>
+            {[
+              "North",
+              "North-East",
+              "East",
+              "South-East",
+              "South",
+              "South-West",
+              "West",
+              "North-West",
+            ].map((range) => (
+              <div key={range} className="mb-2">
+                <input
+                  type="checkbox"
+                  checked={
+                    formData.soil.topsoilOrganicCarbon?.includes(range) || false
+                  }
+                  onChange={() =>
+                    handleCheckboxChange("topsoilOrganicCarbon", range, "soil")
+                  }
+                  className="mr-2"
+                />
+                <label>{range}</label>
+              </div>
+            ))}
+
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              4. Topography Weightage (default 25%):
+            </h4>
+
             <input
               type="text"
-              value={formData.Topography}
+              className="w-full p-2 border rounded"
+              value={formData.topography.topographyWeightage}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  Topography: e.target.value,
+                  topography: {
+                    ...formData.topography,
+                    topographyWeightage: e.target.value,
+                  },
                 })
               }
-              className="w-full p-2 border rounded-lg border-gray-300"
             />
           </div>
         </>
       )}
-
-      {page === 4 && (
+      {activeSection === 4 && (
         <>
-          <h3 className="text-xl font-semibold mb-2">Ecology Parameters</h3>
-          <hr className="mb-4" />
           <div className="mb-4 p-4 bg-gray-100 border-l-4 border-blue-500">
-            {" "}
             <p className="text-sm text-gray-700">
               <strong>The ecology parameters are:</strong> <br />
-              - NDVI <br />
+              - NDVI
+              <br />
               - Forest Cover (based on LULC classes) <br />
               <br />
               For each parameter, please select the range of values which is
               ideal for the crop/tree to be planted. Choose as many options as
               appropriate. You can adjust the weightage of the Ecology layer at
-              the end of this section.{" "}
-            </p>{" "}
+              the end of this section.
+            </p>
           </div>
+          <div className="pl-8">
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              1. NDVI based on current land-use
+            </h4>
+            {["0.7-1", "0.5-0.7", "0.2-0.5", "0-0.2", "<0"].map((ndvi) => (
+              <label key={ndvi} className="block">
+                <input
+                  type="checkbox"
+                  value={ndvi}
+                  checked={formData.ecology.ndvi.includes(ndvi)}
+                  onChange={() => handleCheckboxChange("ndvi", ndvi, "ecology")}
+                />{" "}
+                {ndvi}
+              </label>
+            ))}
 
-          {Object.entries(ecologyOptions).map(([key, { label, options }]) => (
-            <div key={key} className="pl-8 mt-8">
-              <h4 className="text-lg font-semibold mb-2">{label}</h4>
-              {options.map((range) => (
-                <div key={range} className="mb-2">
-                  <input
-                    type="checkbox"
-                    checked={formData[key]?.split(", ").includes(range)}
-                    onChange={() => handleCheckboxChange(key, range)}
-                    className="mr-2"
-                  />
-                  <label>{range}</label>
-                </div>
-              ))}
-            </div>
-          ))}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              2. Current Land-Use
+            </h4>
+            {[
+              "Forest",
+              "Grassland",
+              "Flooded vegetation",
+              "Cropland",
+              "Shrub and scrub",
+              "Bare ground",
+              "Snow and ice",
+            ].map((landUse) => (
+              <label key={landUse} className="block">
+                <input
+                  type="checkbox"
+                  value={landUse}
+                  checked={formData.ecology.landUse.includes(landUse)}
+                  onChange={() =>
+                    handleCheckboxChange("landUse", landUse, "ecology")
+                  }
+                />{" "}
+                {landUse}
+              </label>
+            ))}
 
-          <div className="pl-8 mt-8">
-            <h4 className="text-lg font-semibold mb-2">
-              Ecology Weightage (default 10%)
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              3. Ecology Weightage (default 10%)
             </h4>
             <input
               type="text"
-              value={formData.Ecology}
+              className="w-full p-2 border rounded"
+              value={formData.ecology.ecologyWeightage}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  Ecology: e.target.value,
+                  ecology: {
+                    ...formData.ecology,
+                    ecologyWeightage: e.target.value,
+                  },
                 })
               }
-              className="w-full p-2 border rounded-lg border-gray-300"
             />
           </div>
         </>
       )}
-
-      {page === 5 && (
+      {activeSection === 5 && (
         <>
-          <h3 className="text-xl font-semibold mb-2">
-            Socioeconomic Parameters
-          </h3>
           <div className="mb-4 p-4 bg-gray-100 border-l-4 border-blue-500">
             <p className="text-sm text-gray-700">
               <strong>The socioeconomic parameters are:</strong> <br />
@@ -647,100 +981,128 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
               layer at the end of this section.
             </p>
           </div>
-          <hr className="mb-4" />
+          <div className="pl-8">
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              1. Distance to Drainage Lines (m)
+            </h4>
+            {[
+              "0-5",
+              "5-50",
+              "50-100",
+              "100-250",
+              "250-500",
+              "500-1000",
+              ">1000",
+            ].map((ndvi) => (
+              <label key={ndvi} className="block">
+                <input
+                  type="checkbox"
+                  value={ndvi}
+                  checked={formData.ecology.ndvi.includes(ndvi)}
+                  onChange={() => handleCheckboxChange("ndvi", ndvi, "ecology")}
+                />{" "}
+                {ndvi}
+              </label>
+            ))}
 
-          {Object.entries(socioeconomicOptions).map(
-            ([key, { label, options }]) => (
-              <div key={key} className="pl-8 mt-8">
-                <h4 className="text-lg font-semibold mb-2">{label}</h4>
-                {options.map((range) => (
-                  <div key={range} className="mb-2">
-                    <input
-                      type="checkbox"
-                      checked={formData[key]?.split(", ").includes(range)}
-                      onChange={() => handleCheckboxChange(key, range)}
-                      className="mr-2"
-                    />
-                    <label>{range}</label>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              2. Distance to Settlements (m)
+            </h4>
+            {["0-20", "20-100", "100-200", "200-500", "500-1000", ">1000"].map(
+              (dist) => (
+                <label key={dist} className="block">
+                  <input
+                    type="checkbox"
+                    value={dist}
+                    checked={formData.socioeconomic.settlementDistance.includes(
+                      dist
+                    )}
+                    onChange={() =>
+                      handleCheckboxChange(
+                        "settlementDistance",
+                        dist,
+                        "socioeconomic"
+                      )
+                    }
+                  />{" "}
+                  {dist}
+                </label>
+              )
+            )}
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              3. Distance to Roads (m)
+            </h4>
+            {["0-20", "20-100", "100-200", "200-500", "500-1000", ">1000"].map(
+              (dist) => (
+                <label key={dist} className="block">
+                  <input
+                    type="checkbox"
+                    value={dist}
+                    checked={formData.socioeconomic.roadDistance.includes(dist)}
+                    onChange={() =>
+                      handleCheckboxChange(
+                        "roadDistance",
+                        dist,
+                        "socioeconomic"
+                      )
+                    }
+                  />{" "}
+                  {dist}
+                </label>
+              )
+            )}
 
-          <div className="pl-8 mt-8">
-            <h4 className="text-lg font-semibold mb-2">
-              Socioeconomic Weightage (default 10%)
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              4. Socioeconomic Weightage (default 10%)
             </h4>
             <input
               type="text"
-              value={formData.Socioeconomic}
+              className="w-full p-2 border rounded"
+              value={formData.socioeconomic.socioeconomicWeightage}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  Socioeconomic: e.target.value,
+                  socioeconomic: {
+                    ...formData.socioeconomic,
+                    socioeconomicWeightage: e.target.value,
+                  },
                 })
               }
-              className="w-full p-2 border rounded-lg border-gray-300"
+            />
+            <h4 className="text-lg font-semibold mb-2 mt-8">
+              5. Any remarks or feedback:
+            </h4>
+            <textarea
+              className="w-full p-2 border rounded"
+              value={formData.socioeconomic.remarks}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  socioeconomic: {
+                    ...formData.socioeconomic,
+                    remarks: e.target.value,
+                  },
+                })
+              }
             />
           </div>
         </>
       )}
-      {/* Navigation Buttons */}
-      <div className="flex justify-between mt-6">
-        {page > 1 && (
-          <button
-            type="button"
-            onClick={() => setPage(page - 1)}
-            className="px-6 py-2 bg-gray-400 text-white font-semibold rounded-lg shadow"
-          >
-            Previous
-          </button>
-        )}
-
-        {page < 5 && (
-          <button
-            type="button"
-            onClick={() => setPage(page + 1)}
-            className="px-6 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow"
-          >
-            Next
-          </button>
-        )}
-
-        {page === 5 && (
-          <button
-            type="submit"
-            className="px-6 py-2 bg-green-500 text-white font-semibold rounded-lg shadow"
-          >
-            Submit
-          </button>
-        )}
-        <Snackbar
-          open={toast.open}
-          autoHideDuration={6000}
-          onClose={handleCloseToast}
-          anchorOrigin={{
-            vertical: "bottom",
-            horizontal: "right",
-          }} // Move to bottom-right
-          sx={{
-            position: "absolute",
-            bottom: 12,
-            right: 10, // Position it on the right side
-          }}
+      <div className="flex justify-between mt-8">
+        <button
+          onClick={handleBack}
+          disabled={activeSection === 0}
+          className="px-4 py-2 border rounded-lg bg-gray-200 disabled:opacity-50"
         >
-          <Alert
-            onClose={handleCloseToast}
-            severity={toast.severity}
-            sx={{ width: "100%" }}
-          >
-            {toast.message}
-          </Alert>
-        </Snackbar>
+          Back
+        </button>
+        <button
+          onClick={handleNext}
+          className="px-4 py-2 border rounded-lg bg-blue-500 text-white"
+        >
+          {activeSection === sections.length - 1 ? "Submit" : "Next"}
+        </button>
       </div>
-    </form>
+    </div>
   );
-};
-
-export default PlantationAssessmentForm;
+}
