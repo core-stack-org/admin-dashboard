@@ -147,9 +147,7 @@ const LocationFormComponent = ({ currentUser }) => {
     e.preventDefault();
     setError(null);
     const selectedLayer = layersData.layers_json[layerName];
-    console.log(layersData);
     const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
-    console.log(apiUrlSuffix);
 
     const payload = {
       state: state.name,
@@ -175,6 +173,15 @@ const LocationFormComponent = ({ currentUser }) => {
           body: JSON.stringify(payload),
         }
       );
+
+      // Handle unauthorized or token expired
+      if (response.status === 401) {
+        toast.error("Session expired. Please login again.");
+        sessionStorage.clear(); // clear tokens and user info
+        window.location.href = "/login"; // redirect to login
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Error: ${response.statusText}`);

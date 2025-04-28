@@ -62,7 +62,8 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     setActiveTab(0);
   };
   const getStateName = (stateId) => {
-    const state = statesList.find((s) => s.id === stateId);
+    const state = (statesList || []).find((s) => s.id === stateId);
+
     return state ? state.state_name : "Unknown State";
   };
 

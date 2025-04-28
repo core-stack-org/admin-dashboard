@@ -38,7 +38,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   };
 
   const [activeItem, setActiveItem] = useState(
-    localStorage.getItem("activeItem") || "Dashboard"
+    sessionStorage.getItem("activeItem") || "Dashboard"
   );
   const [layers, setLayers] = useState([]);
   useEffect(() => {
@@ -48,42 +48,127 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     setLayerNames(layers);
   }, []);
   useEffect(() => {
-    localStorage.setItem("activeItem", activeItem);
+    sessionStorage.setItem("activeItem", activeItem);
   }, [activeItem]);
 
+  // const handleLogout = async () => {
+  //   const token = sessionStorage.getItem("refreshToken");
+  //   const accessToken = sessionStorage.getItem("accessToken");
+  //   try {
+  //     const response = await fetch(
+  //       `${process.env.REACT_APP_BASEURL}api/v1/auth/logout/`,
+  //       {
+  //         method: "POST",
+  //         mode: "cors",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //         body: JSON.stringify({
+  //           refresh_token: token,
+  //         }),
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       toast.success("Logged out successfully!");
+
+  //       sessionStorage.removeItem("accessToken");
+  //       sessionStorage.removeItem("refreshToken");
+  //       localStorage.removeItem("currentUser");
+  //       setCurrentUser(null);
+  //       navigate("/");
+  //     } else {
+  //       const errorData = await response.json();
+  //       console.error("Logout failed", errorData);
+  //     }
+  //   } catch (error) {
+  //     console.error("Error during logout:", error);
+  //   }
+  // };
+
   const handleLogout = async () => {
-    const token = sessionStorage.getItem("refreshToken");
-    const accessToken = sessionStorage.getItem("accessToken");
+    let accessToken = sessionStorage.getItem("accessToken");
+    let refreshToken = sessionStorage.getItem("refreshToken");
+
+    const logoutApiCall = async (token, refreshToken) => {
+      return fetch(`${process.env.REACT_APP_BASEURL}api/v1/auth/logout/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+    };
+
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/auth/logout/`,
-        {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({
-            refresh_token: token,
-          }),
-        }
+      console.log(
+        "🚀 Attempting logout with current access token:",
+        accessToken
       );
+      let response = await logoutApiCall(accessToken, refreshToken);
+
+      if (response.status === 401 || response.status === 403) {
+        console.warn("🔄 Access token expired, refreshing...");
+        try {
+          const { access, refresh } = await refreshAccessToken(); // get both tokens
+          sessionStorage.setItem("accessToken", access);
+          sessionStorage.setItem("refreshToken", refresh);
+          accessToken = access;
+          refreshToken = refresh;
+          console.log("✅ New tokens set, retrying logout...");
+          response = await logoutApiCall(accessToken, refreshToken);
+        } catch (refreshError) {
+          console.error("❌ Token refresh failed during logout:", refreshError);
+          throw refreshError;
+        }
+      }
 
       if (response.ok) {
-        toast.success("Logged out successfully!");
-
+        toast.success("✅ Logged out successfully!");
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
-        localStorage.removeItem("currentUser");
+        sessionStorage.removeItem("currentUser");
         setCurrentUser(null);
         navigate("/");
       } else {
         const errorData = await response.json();
-        console.error("Logout failed", errorData);
+        console.error("❌ Logout failed:", errorData);
       }
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error("🔥 Error during logout:", error);
+    }
+  };
+
+  const refreshAccessToken = async () => {
+    const refreshToken = sessionStorage.getItem("refreshToken");
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/auth/token/refresh/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refresh: refreshToken }),
+        }
+      );
+
+      if (!response.ok) throw new Error("Failed to refresh token");
+
+      const data = await response.json();
+      sessionStorage.setItem("accessToken", data.access);
+      sessionStorage.setItem("refreshToken", data.refresh);
+
+      console.log("✅ New tokens generated:", data.access, data.refresh);
+      return {
+        access: data.access,
+        refresh: data.refresh,
+      };
+    } catch (error) {
+      console.error("❌ Refresh token failed:", error);
+      throw error;
     }
   };
 
