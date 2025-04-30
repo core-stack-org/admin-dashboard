@@ -151,6 +151,12 @@
             "show_Dates": true,
             "workspace":""
 
+        },
+        "Restoration": {
+            "api_url": "${config.layer_api_url_v1}/restoration_opportunity/",
+            "show_Dates": false,
+            "workspace":""
+
         }
      
         

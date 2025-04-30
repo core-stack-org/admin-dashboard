@@ -370,6 +370,9 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     console.log("Upload excel button clicked");
   };
 
+  const handleCreatePlan = () => {
+    console.log("handle create plan button clicked");
+  };
   const handleExcelSelect = (event) => {
     const files = Array.from(event.target.files);
     const validFiles = files.filter((file) => file.name.endsWith(".xlsx"));
@@ -605,6 +608,17 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                     </Box>
                                   )}
                                 </Box>
+                              ) : project.app_type === "watershed" ? (
+                                <Tooltip title="Create Plan" arrow>
+                                  <Button
+                                    variant="contained"
+                                    color="success"
+                                    className="rounded-md shadow p-3 text-sm"
+                                    onClick={() => handleCreatePlan(project)}
+                                  >
+                                    Create Plan
+                                  </Button>
+                                </Tooltip>
                               ) : null}
                             </div>
                           </div>
