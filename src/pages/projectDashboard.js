@@ -8,26 +8,34 @@ import {
   Tabs,
   Tab,
   Box,
-  Paper,
   Typography,
   IconButton,
   Snackbar,
   Alert,
   Dialog,
+  DialogActions,
+  TableCell,
+  CircularProgress,
+  Table,
+  TableRow,
+  TableBody,
+  TableHead,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import PlantationAssessment from "./plantationAssessment";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
 import { Tooltip, Button } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Project from "../pages/project.js";
 import { FolderIcon } from "lucide-react";
+import PlanCreation from "./planCreation.js";
 
 const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -40,6 +48,13 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const [bbox, setBBox] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showProjectForm, setShowProjectForm] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [openPlanDialog, setOpenPlanDialog] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+
   const [toast, setToast] = useState({
     open: false,
     message: "",
@@ -126,6 +141,10 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     };
 
     fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    handleViewPlan();
   }, []);
 
   const handleCreateProject = () => {
@@ -370,6 +389,62 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     console.log("Upload excel button clicked");
   };
 
+  const handleViewPlan = async (project) => {
+    setOpenDialog(true);
+    setLoadingPlans(true);
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/watershed/plans/`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch plans");
+      const data = await res.json();
+      console.log(data);
+      setPlans(Array.isArray(data) ? data : data.results || []);
+    } catch (err) {
+      console.error(err);
+      // toast.error("Error fetching plans");
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
+  const handlePlanSaved = (savedPlan) => {
+    console.log("Saved Plan:", savedPlan); // Debugging line
+    setPlans((prevPlans) => {
+      const planExists = prevPlans.some((plan) => plan.id === savedPlan.id);
+
+      if (planExists) {
+        console.log("Plan exists, updating:", savedPlan); // Debugging line
+        // Update the plan with the new data
+        return prevPlans.map((plan) =>
+          plan.id === savedPlan.id ? { ...plan, ...savedPlan } : plan
+        );
+      } else {
+        console.log("Plan doesn't exist, adding:", savedPlan); // Debugging line
+        // Add the new plan to the list
+        return [...prevPlans, savedPlan];
+      }
+    });
+  };
+
+  const handleEditPlan = (plan) => {
+    setSelectedPlanId(plan.id);
+    setOpenPlanDialog(true);
+  };
+
+  const handleCreatePlan = (id) => {
+    setSelectedProject(id);
+    setSelectedPlanId(null); // important to indicate create mode
+    setOpenPlanDialog(true);
+  };
+
   const handleExcelSelect = (event) => {
     const files = Array.from(event.target.files);
     const validFiles = files.filter((file) => file.name.endsWith(".xlsx"));
@@ -605,6 +680,167 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                     </Box>
                                   )}
                                 </Box>
+                              ) : project.app_type === "watershed" ? (
+                                <div className="flex items-center gap-2">
+                                  <Tooltip title="View Plan" arrow>
+                                    <Button
+                                      variant="outlined"
+                                      color="primary"
+                                      className="rounded-md shadow p-3 text-sm"
+                                      onClick={() => handleViewPlan(project)}
+                                    >
+                                      <VisibilityIcon />
+                                    </Button>
+                                  </Tooltip>
+                                  <Dialog
+                                    open={openDialog}
+                                    onClose={() => setOpenDialog(false)}
+                                    maxWidth="md"
+                                    fullWidth
+                                    PaperProps={{
+                                      className: "rounded-xl shadow-lg",
+                                    }}
+                                  >
+                                    <DialogTitle className="text-xl font-semibold px-6 pt-6 pb-2">
+                                      🗂️ Plans for this Project
+                                    </DialogTitle>
+
+                                    <DialogContent
+                                      dividers
+                                      className="px-6 pb-4"
+                                    >
+                                      {loadingPlans ? (
+                                        <div className="text-center py-10">
+                                          <CircularProgress />
+                                        </div>
+                                      ) : plans.length === 0 ? (
+                                        <p className="text-gray-500 text-center py-6">
+                                          No plans found.
+                                        </p>
+                                      ) : (
+                                        <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
+                                          <Table size="small">
+                                            <TableHead>
+                                              <TableRow className="bg-gray-100">
+                                                <TableCell className="font-semibold text-gray-700">
+                                                  Plan Name
+                                                </TableCell>
+                                                <TableCell className="font-semibold text-gray-700">
+                                                  Facilitator
+                                                </TableCell>
+                                                <TableCell className="font-semibold text-gray-700">
+                                                  Village
+                                                </TableCell>
+                                                <TableCell
+                                                  align="right"
+                                                  className="font-semibold text-gray-700"
+                                                >
+                                                  Action
+                                                </TableCell>
+                                              </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                              {plans.map((plan, index) => (
+                                                <TableRow
+                                                  key={plan.id}
+                                                  className={
+                                                    index % 2 === 0
+                                                      ? "bg-white"
+                                                      : "bg-gray-50"
+                                                  }
+                                                >
+                                                  <TableCell>
+                                                    {plan.plan}
+                                                  </TableCell>
+                                                  <TableCell>
+                                                    {plan.facilitator_name ||
+                                                      "—"}
+                                                  </TableCell>
+                                                  <TableCell>
+                                                    {plan.village_name || "—"}
+                                                  </TableCell>
+                                                  <TableCell align="right">
+                                                    <Tooltip
+                                                      title="Edit Plan"
+                                                      arrow
+                                                    >
+                                                      <IconButton
+                                                        onClick={() =>
+                                                          handleEditPlan(plan)
+                                                        }
+                                                        color="primary"
+                                                      >
+                                                        <EditIcon />
+                                                      </IconButton>
+                                                    </Tooltip>
+                                                  </TableCell>
+                                                </TableRow>
+                                              ))}
+                                            </TableBody>
+                                          </Table>
+                                        </div>
+                                      )}
+                                    </DialogContent>
+
+                                    <DialogActions className="px-6 pb-4">
+                                      <Button
+                                        onClick={() => setOpenDialog(false)}
+                                        color="primary"
+                                        variant="outlined"
+                                        className="rounded-md"
+                                      >
+                                        Close
+                                      </Button>
+                                    </DialogActions>
+                                  </Dialog>
+                                  <Tooltip title="Create Plan" arrow>
+                                    <Button
+                                      variant="outlined"
+                                      color="success"
+                                      className="rounded-md shadow p-3 text-sm min-w-0"
+                                      onClick={() =>
+                                        handleCreatePlan(project.id)
+                                      }
+                                    >
+                                      <AddIcon />
+                                    </Button>
+                                  </Tooltip>
+                                  <Dialog
+                                    open={openPlanDialog}
+                                    onClose={() => {
+                                      setOpenPlanDialog(false);
+                                      setSelectedPlanId(null);
+                                    }}
+                                    fullWidth
+                                    maxWidth="md"
+                                  >
+                                    <DialogContent>
+                                      <PlanCreation
+                                        onClose={() => {
+                                          setOpenPlanDialog(false);
+                                          setSelectedPlanId(null);
+                                        }}
+                                        projectId={project}
+                                        planId={selectedPlanId}
+                                        onPlanSaved={handlePlanSaved}
+                                      />
+                                    </DialogContent>
+                                  </Dialog>
+
+                                  {/* <Dialog
+                                    open={open}
+                                    onClose={handleClose}
+                                    fullWidth
+                                    maxWidth="md"
+                                  >
+                                    <DialogContent>
+                                      <PlanCreation
+                                        onClose={handleClose}
+                                        projectId={project}
+                                      />
+                                    </DialogContent>
+                                  </Dialog> */}
+                                </div>
                               ) : null}
                             </div>
                           </div>
