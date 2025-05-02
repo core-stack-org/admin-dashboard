@@ -259,11 +259,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         href: "/activateBlock",
       },
       {
-        icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-        label: "Plan Creation",
-        href: "/planCreation",
-      },
-      {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
         label: "Generate Layers",
         isSubmenu: true,
