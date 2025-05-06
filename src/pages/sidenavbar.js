@@ -51,42 +51,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     sessionStorage.setItem("activeItem", activeItem);
   }, [activeItem]);
 
-  // const handleLogout = async () => {
-  //   const token = sessionStorage.getItem("refreshToken");
-  //   const accessToken = sessionStorage.getItem("accessToken");
-  //   try {
-  //     const response = await fetch(
-  //       `${process.env.REACT_APP_BASEURL}api/v1/auth/logout/`,
-  //       {
-  //         method: "POST",
-  //         mode: "cors",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${accessToken}`,
-  //         },
-  //         body: JSON.stringify({
-  //           refresh_token: token,
-  //         }),
-  //       }
-  //     );
-
-  //     if (response.ok) {
-  //       toast.success("Logged out successfully!");
-
-  //       sessionStorage.removeItem("accessToken");
-  //       sessionStorage.removeItem("refreshToken");
-  //       localStorage.removeItem("currentUser");
-  //       setCurrentUser(null);
-  //       navigate("/");
-  //     } else {
-  //       const errorData = await response.json();
-  //       console.error("Logout failed", errorData);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error during logout:", error);
-  //   }
-  // };
-
   const handleLogout = async () => {
     let accessToken = sessionStorage.getItem("accessToken");
     let refreshToken = sessionStorage.getItem("refreshToken");
@@ -257,6 +221,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
         label: "Activate Location",
         href: "/activateBlock",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
+        label: "Plan Creation",
+        href: "/planCreation",
       },
       {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
