@@ -16,6 +16,9 @@ const ActivateBlock = () => {
   });
   const [actualLocationType, setActualLocationType] = useState("State");
   const [selectedBlock, setSelectedBlock] = useState(null);
+  const [state, setState] = useState({ id: "", name: "" });
+  const [district, setDistrict] = useState({ id: "", name: "" });
+  const [block, setBlock] = useState({ id: "", name: "" });
 
   useEffect(() => {
     if (locationType === "State") fetchStates();
@@ -94,6 +97,44 @@ const ActivateBlock = () => {
     }
   };
 
+  const handleStateChange = (event) => {
+    const selectedValue = event.target.value;
+    if (!selectedValue) {
+      setState({ id: "", name: "" });
+      return;
+    }
+
+    const [state_id, state_name] = selectedValue.split("_");
+    setState({ id: state_id, name: state_name });
+    setDistrictsList([]);
+    setBlocksList([]);
+    fetchDistricts(state_id);
+  };
+
+  const handleDistrictChange = (event) => {
+    const selectedValue = event.target.value;
+    if (!selectedValue) {
+      setDistrict({ id: "", name: "" });
+      return;
+    }
+
+    const [id, district_name] = selectedValue.split("_");
+    setDistrict({ id: id, name: district_name });
+    setBlocksList([]);
+    fetchBlocks(id);
+  };
+
+  const handleBlockChange = (event) => {
+    const selectedValue = event.target.value;
+    if (!selectedValue) {
+      setBlock({ id: "", name: "" });
+      return;
+    }
+
+    const [id, block_name] = selectedValue.split("_");
+    setBlock({ id: id, name: block_name });
+  };
+
   const handleActivate = async () => {
     if (selectedLocation.active_status !== false) return;
 
@@ -111,7 +152,7 @@ const ActivateBlock = () => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/activate_location/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/activate_location/`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -244,23 +285,17 @@ const ActivateBlock = () => {
             className="w-full p-3 border rounded"
             value={selectedLocation.id}
             onChange={(e) => {
+              handleStateChange(e);
               const selected = getLocationOptions().find(
                 (item) => item.id === e.target.value
               );
               setSelectedLocation(
                 selected || { id: "", name: "", active_status: null }
               );
-
-              if (locationType === "State") {
-                setSelectedState(selected || null);
-                setSelectedDistrict(null);
-                setActualLocationType("State"); // <-- ADD THIS LINE
-              }
-
-              if (locationType === "District") {
-                setSelectedDistrict(selected || null);
-                setActualLocationType("District"); // <-- Optional fallback
-              }
+              setSelectedState(selected || null);
+              setSelectedDistrict(null);
+              setSelectedBlock(null);
+              setActualLocationType("State");
             }}
 
             // onChange={(e) => {
@@ -299,15 +334,16 @@ const ActivateBlock = () => {
             className="w-full p-3 border rounded"
             value={selectedDistrict?.id || ""}
             onChange={(e) => {
+              handleDistrictChange(e);
               const selected = districtsList.find(
                 (d) => String(d.id) === e.target.value
               );
-              setSelectedDistrict(selected || null);
-
               setSelectedLocation(
                 selected || { id: "", name: "", active_status: null }
               );
-              setActualLocationType("District"); // <-- ADD THIS LINE
+              setSelectedDistrict(selected || null);
+              setSelectedBlock(null);
+              setActualLocationType("District");
             }}
 
             // onChange={(e) => {
@@ -344,6 +380,7 @@ const ActivateBlock = () => {
             className="w-full p-3 border rounded"
             value={selectedBlock?.id || ""}
             onChange={(e) => {
+              handleBlockChange(e);
               const selected = blocksList.find(
                 (b) => String(b.id) === e.target.value
               );

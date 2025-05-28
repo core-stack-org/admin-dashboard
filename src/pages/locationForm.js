@@ -19,6 +19,7 @@ const LocationFormComponent = ({ currentUser }) => {
   const [endYear, setEndYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
@@ -143,27 +144,115 @@ const LocationFormComponent = ({ currentUser }) => {
     const [id, block_name] = selectedValue.split("_");
     setBlock({ id: id, name: block_name });
   };
+  // const handleGenerateLayer = async (e) => {
+  //   e.preventDefault();
+  //   setError(null);
+  //   const selectedLayer = layersData.layers_json[layerName];
+  //   const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
+
+  //   const payload = {
+  //     state: state.name,
+  //     district: district.name,
+  //     block: block.name,
+  //     start_year: parseInt(showDates ? dateRange[0] : null),
+  //     end_year: parseInt(showDates ? dateRange[1] : null),
+  //   };
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const token = sessionStorage.getItem("accessToken");
+  //     const response = await fetch(
+  //       `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           "ngrok-skip-browser-warning": "420",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     // Handle unauthorized or token expired
+  //     if (response.status === 401) {
+  //       toast.error("Session expired. Please login again.");
+  //       sessionStorage.clear(); // clear tokens and user info
+  //       window.location.href = "/login"; // redirect to login
+  //       return;
+  //     }
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json().catch(() => null);
+  //       throw new Error(errorData?.message || `Error: ${response.statusText}`);
+  //     }
+
+  //     const data = await response.json();
+
+  //     toast.success("Layer generated successfully!");
+
+  //     if (data.success) {
+  //       alert("Layer generated successfully!");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error generating layer:", error);
+
+  //     toast.error(
+  //       error.message || "Failed to generate layer. Please try again."
+  //     );
+  //     setError(error.message || "Failed to generate layer. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
+
     const selectedLayer = layersData.layers_json[layerName];
     const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
 
-    const payload = {
-      state: state.name,
-      district: district.name,
-      block: block.name,
-      start_year: parseInt(showDates ? dateRange[0] : null),
-      end_year: parseInt(showDates ? dateRange[1] : null),
-    };
+    const token = sessionStorage.getItem("accessToken");
+
+    const apiUrl = `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`;
 
     setIsLoading(true);
 
     try {
-      const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(
-        `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
-        {
+      let response;
+      if (layerName === "FES CLART") {
+        if (!selectedFile) {
+          toast.error("Please upload a file.");
+          setIsLoading(false);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("state", state.name);
+        formData.append("district", district.name);
+        formData.append("block", block.name);
+        formData.append("file", selectedFile);
+
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420",
+          },
+          body: formData,
+        });
+      } else {
+        const payload = {
+          state: state.name,
+          district: district.name,
+          block: block.name,
+          start_year: parseInt(showDates ? startYear || dateRange[0] : null),
+          end_year: parseInt(showDates ? endYear || dateRange[1] : null),
+        };
+
+        response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -171,14 +260,13 @@ const LocationFormComponent = ({ currentUser }) => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
-        }
-      );
+        });
+      }
 
-      // Handle unauthorized or token expired
       if (response.status === 401) {
         toast.error("Session expired. Please login again.");
-        sessionStorage.clear(); // clear tokens and user info
-        window.location.href = "/login"; // redirect to login
+        sessionStorage.clear();
+        window.location.href = "/login";
         return;
       }
 
@@ -188,15 +276,12 @@ const LocationFormComponent = ({ currentUser }) => {
       }
 
       const data = await response.json();
-
       toast.success("Layer generated successfully!");
-
       if (data.success) {
         alert("Layer generated successfully!");
       }
     } catch (error) {
       console.error("Error generating layer:", error);
-
       toast.error(
         error.message || "Failed to generate layer. Please try again."
       );
@@ -293,53 +378,61 @@ const LocationFormComponent = ({ currentUser }) => {
           </select>
         </div>
 
-        {/* Year Fields */}
-        {showDates && (
-          <>
-            {/* Start Year Dropdown */}
-            <div>
-              <label
-                htmlFor="start-year"
-                className="text-lg font-semibold mb-2 block"
-              >
-                Start Year:
-              </label>
-              <select
-                id="start-year"
-                value={startYear || dateRange[0]}
-                onChange={(e) => setStartYear(e.target.value)}
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {layerName === "FES CLART" && (
+          <div>
+            <label className="text-lg font-semibold mb-2 block">
+              Upload File:
+            </label>
+            <input
+              type="file"
+              accept=".zip,.geojson,.kml"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="w-full px-4 py-2 border text-lg rounded-lg"
+            />
+          </div>
+        )}
 
-            {/* End Year Dropdown */}
-            <div>
-              <label
-                htmlFor="end-year"
-                className="text-lg font-semibold mb-2 block"
-              >
-                End Year:
-              </label>
-              <select
-                id="end-year"
-                value={endYear || dateRange[1]}
-                onChange={(e) => setEndYear(e.target.value)}
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
+        {/* Year Fields */}
+        {/* Start Year Dropdown */}
+        {showDates && (
+          <div>
+            <label className="text-lg font-semibold mb-2 block">
+              Start Year:
+            </label>
+            <select
+              value={startYear || dateRange[0]}
+              onChange={(e) => setStartYear(e.target.value)}
+              className="w-full px-4 py-3 border text-lg rounded-lg"
+            >
+              <option value="">Select Start Year</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* End Year Dropdown */}
+        {showDates && (
+          <div>
+            <label className="text-lg font-semibold mb-2 block">
+              End Year:
+            </label>
+            <select
+              value={endYear || dateRange[1]}
+              onChange={(e) => setEndYear(e.target.value)}
+              className="w-full px-4 py-3 border text-lg rounded-lg"
+            >
+              <option value="">Select End Year</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
 
         {/* Submit Button */}
