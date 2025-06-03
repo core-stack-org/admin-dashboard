@@ -244,13 +244,23 @@ const LocationFormComponent = ({ currentUser }) => {
           body: formData,
         });
       } else {
-        const payload = {
+        let payload = {
           state: state.name,
           district: district.name,
           block: block.name,
-          start_year: parseInt(showDates ? startYear || dateRange[0] : null),
-          end_year: parseInt(showDates ? endYear || dateRange[1] : null),
         };
+
+        if (layerName === "LULC Farm Boundaries") {
+          payload.start_year = 2023;
+          payload.end_year = 2024;
+        } else {
+          payload.start_year = parseInt(
+            showDates ? startYear || dateRange[0] : null
+          );
+          payload.end_year = parseInt(
+            showDates ? endYear || dateRange[1] : null
+          );
+        }
 
         response = await fetch(apiUrl, {
           method: "POST",
@@ -298,9 +308,12 @@ const LocationFormComponent = ({ currentUser }) => {
     }
     return years;
   };
-
   const years =
-    dateRange.length === 2 ? generateYears(dateRange[0], dateRange[1]) : [];
+    layerName === "LULC Farm Boundaries"
+      ? [2023, 2024]
+      : dateRange.length === 2
+      ? generateYears(dateRange[0], dateRange[1])
+      : [];
 
   return (
     <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-32">
@@ -400,8 +413,13 @@ const LocationFormComponent = ({ currentUser }) => {
               Start Year:
             </label>
             <select
-              value={startYear || dateRange[0]}
+              value={
+                layerName === "LULC Farm Boundaries"
+                  ? "2023"
+                  : startYear || dateRange[0]
+              }
               onChange={(e) => setStartYear(e.target.value)}
+              disabled={layerName === "LULC Farm Boundaries"}
               className="w-full px-4 py-3 border text-lg rounded-lg"
             >
               <option value="">Select Start Year</option>
@@ -421,8 +439,13 @@ const LocationFormComponent = ({ currentUser }) => {
               End Year:
             </label>
             <select
-              value={endYear || dateRange[1]}
+              value={
+                layerName === "LULC Farm Boundaries"
+                  ? "2024"
+                  : endYear || dateRange[1]
+              }
               onChange={(e) => setEndYear(e.target.value)}
+              disabled={layerName === "LULC Farm Boundaries"}
               className="w-full px-4 py-3 border text-lg rounded-lg"
             >
               <option value="">Select End Year</option>
