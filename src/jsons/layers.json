@@ -20,20 +20,27 @@
             "end":""
 
         },
-        "MWS Fortnight": {
+        "MWS": {
             "api_url": "${config.layer_api_url_v1}/generate_mws_layer/",
-            "show_Dates": true,
-            "date_range":[2017,2023],
+            "show_Dates": false,
             "workspace":"mws_layers",
-            "end":"deltaG_fortnight_distname_blockname"
+            "end":""
 
         },
-        "MWS Annual":{
-            "api_url": "${config.layer_api_url_v1}/generate_well_depth/",
+        "Hydrology Fortnight":{
+            "api_url": "${config.layer_api_url_v1}/hydrology_fortnightly/",
             "show_Dates":true,
             "workspace":"mws_layers",
             "date_range":[2017,2023],
-            "end":"deltaG_well_depth_distname_blockname"
+            "end":""
+
+        },
+        "Hydrology Annual":{
+            "api_url": "${config.layer_api_url_v1}/hydrology_annual/",
+            "show_Dates":true,
+            "workspace":"mws_layers",
+            "date_range":[2017,2023],
+            "end":""
 
         },
         "LULC": {
@@ -156,10 +163,47 @@
             "api_url": "${config.layer_api_url_v1}/restoration_opportunity/",
             "show_Dates": false,
             "workspace":""
-
-        }
-     
-        
+        },
+        "Aquifer": {
+            "api_url": "${config.layer_api_url_v1}/aquifer_vector/ ",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "SOGE": {
+            "api_url": "${config.layer_api_url_v1}/soge_vector/ ",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "FES_CLART": {
+            "api_url": "${config.layer_api_url_v1}/fes_clart_layer/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,  
+        "LULC Farm Boundaries": {
+            "api_url": "${config.layer_api_url_v1}/lulc_farm_boundary/ ",
+            "show_Dates": true,
+            "workspace":""
+        }  ,
+        "LULC v4  ": {
+            "api_url": "${config.layer_api_url_v1}/lulc_v4/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        " Generate Farm ponds  ": {
+            "api_url": "${config.layer_api_url_v1}/generate_ponds/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        " Merge SWB with ponds ": {
+            "api_url": "${config.layer_api_url_v1}/merge_swb_ponds/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        " Generate Wells  ": {
+            "api_url": "${config.layer_api_url_v1}/generate_wells/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  
     }
 }
 
