@@ -37,6 +37,8 @@ const LocationFormComponent = ({ currentUser }) => {
     };
   });
 
+  console.log(layersData.layers_json);
+
   useEffect(() => {
     fetchStates();
   }, []);
@@ -210,13 +212,16 @@ const LocationFormComponent = ({ currentUser }) => {
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
-
+    console.log(layerName);
     const selectedLayer = layersData.layers_json[layerName];
+    console.log(selectedLayer);
     const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
+    console.log(apiUrlSuffix);
 
     const token = sessionStorage.getItem("accessToken");
 
     const apiUrl = `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`;
+    console.log(apiUrl);
 
     setIsLoading(true);
 
