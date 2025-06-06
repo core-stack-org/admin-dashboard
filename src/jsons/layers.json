@@ -184,22 +184,22 @@
             "show_Dates": true,
             "workspace":""
         }  ,
-        "LULC v4  ": {
+        "LULC V4": {
             "api_url": "${config.layer_api_url_v1}/lulc_v4/ ",
             "show_Dates": false,
             "workspace":""
         }  ,
-        " Generate Farm ponds  ": {
+        "Generate Farm ponds": {
             "api_url": "${config.layer_api_url_v1}/generate_ponds/ ",
             "show_Dates": false,
             "workspace":""
         }  ,
-        " Merge SWB with ponds ": {
+        "Merge SWB with ponds": {
             "api_url": "${config.layer_api_url_v1}/merge_swb_ponds/ ",
             "show_Dates": false,
             "workspace":""
         }  ,
-        " Generate Wells  ": {
+        "Generate Wells": {
             "api_url": "${config.layer_api_url_v1}/generate_wells/ ",
             "show_Dates": false,
             "workspace":""
