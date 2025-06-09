@@ -174,7 +174,7 @@
             "show_Dates": false,
             "workspace":""
         },
-        "FES_CLART": {
+        "FES CLART": {
             "api_url": "${config.layer_api_url_v1}/fes_clart_layer/ ",
             "show_Dates": false,
             "workspace":""

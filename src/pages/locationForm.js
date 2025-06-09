@@ -238,7 +238,7 @@ const LocationFormComponent = ({ currentUser }) => {
         formData.append("state", state.name);
         formData.append("district", district.name);
         formData.append("block", block.name);
-        formData.append("file", selectedFile);
+        formData.append("clart_file", selectedFile);
 
         response = await fetch(apiUrl, {
           method: "POST",
