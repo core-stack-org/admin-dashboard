@@ -403,7 +403,7 @@ const LocationFormComponent = ({ currentUser }) => {
             </label>
             <input
               type="file"
-              accept=".zip,.geojson,.kml"
+              accept=".zip,.geojson,.kml,.tiff"
               onChange={(e) => setSelectedFile(e.target.files[0])}
               className="w-full px-4 py-2 border text-lg rounded-lg"
             />
