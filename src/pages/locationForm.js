@@ -255,7 +255,7 @@ const LocationFormComponent = ({ currentUser }) => {
           block: block.name,
         };
 
-        if (layerName === "LULC Farm Boundaries") {
+        if (layerName === "LULC Farm Boundaries" || layerName === "LULC V4") {
           payload.start_year = 2023;
           payload.end_year = 2024;
         } else {
@@ -314,7 +314,7 @@ const LocationFormComponent = ({ currentUser }) => {
     return years;
   };
   const years =
-    layerName === "LULC Farm Boundaries"
+    layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
       ? [2023, 2024]
       : dateRange.length === 2
       ? generateYears(dateRange[0], dateRange[1])
@@ -419,7 +419,7 @@ const LocationFormComponent = ({ currentUser }) => {
             </label>
             <select
               value={
-                layerName === "LULC Farm Boundaries"
+                layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
                   ? "2023"
                   : startYear || dateRange[0]
               }
@@ -445,7 +445,7 @@ const LocationFormComponent = ({ currentUser }) => {
             </label>
             <select
               value={
-                layerName === "LULC Farm Boundaries"
+                layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
                   ? "2024"
                   : endYear || dateRange[1]
               }
