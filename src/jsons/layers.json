@@ -186,7 +186,7 @@
         }  ,
         "LULC V4": {
             "api_url": "${config.layer_api_url_v1}/lulc_v4/ ",
-            "show_Dates": false,
+            "show_Dates": true,
             "workspace":""
         }  ,
         "Generate Farm ponds": {
