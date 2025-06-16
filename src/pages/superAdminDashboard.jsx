@@ -208,22 +208,6 @@ function SuperAdminDashboard({ currentUser }) {
     },
   };
 
-  const buttonVariants = {
-    hover: {
-      scale: 1.03,
-      boxShadow: "0 5px 15px rgba(0, 0, 0, 0.1)",
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10,
-      },
-    },
-    tap: {
-      scale: 0.97,
-      boxShadow: "0 2px 5px rgba(0, 0, 0, 0.1)",
-    },
-  };
-
   const handleViewOrganizations = () => {
     handleOpenDialog("viewOrganizations");
   };
@@ -276,224 +260,303 @@ function SuperAdminDashboard({ currentUser }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-100 p-4 md:p-8 mt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-100 p-4 md:p-8">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
         className="max-w-7xl mx-auto space-y-8"
       >
-        <motion.div variants={itemVariants}>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+        <motion.div
+          variants={itemVariants}
+          className="relative text-center mb-16"
+        >
+          {/* Radial background circle using ::before simulation */}
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[-1] rounded-full"
+            style={{
+              width: "200px",
+              height: "200px",
+              background:
+                "radial-gradient(circle, rgba(0, 150, 255, 0.08) 0%, transparent 70%)",
+            }}
+          />
+
+          <h1
+            className="text-[3.5rem] font-black uppercase tracking-[2px] mb-4"
+            style={{
+              background: "linear-gradient(45deg, #0066cc, #6600cc, #cc6600)",
+              backgroundSize: "200% 200%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              animation: "gradientShift 3s ease-in-out infinite",
+            }}
+          >
             Super Admin Dashboard
           </h1>
-          <p className="mt-1 text-gray-600">
-            Manage organizations, projects, users, and roles
+
+          <p className="text-[1.2rem] text-gray-600 opacity-80">
+            Advanced system control and management interface
           </p>
+
+          {/* Add keyframes for gradient shift */}
+          <style>{`
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
         </motion.div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Organization Info */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader className="pb-3">
-                <Typography variant="h6" className="flex items-center">
-                  <Building2 className="mr-2 h-5 w-5 text-primary" />
-                  Organization
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Current organization details
-                </Typography>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Name:
-                    </Typography>
-                    <Typography variant="body1">{organizationName}</Typography>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      ID:
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {organizationId}
-                    </Typography>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Status:
-                    </Typography>
-                    <Badge>
-                      {/* {organization.active ? "Active" : "Inactive"} */}{" "}
-                      Active
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Projects:
-                    </Typography>
-                    <Typography variant="body1">{projectCount}</Typography>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Users:
-                    </Typography>
-                    <Typography variant="body1">{userCount}</Typography>
-                  </div>
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              show: { opacity: 1, y: 0 },
+            }}
+            initial="hidden"
+            animate="show"
+            className="group transition-all"
+          >
+            <div className="relative bg-white border border-gray-300 rounded-xl p-6 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-blue-600 group">
+              {/* Top hover bar */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-xl" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-blue-600 font-semibold text-lg flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-blue-600" />
+                  Organization Control
+                </h3>
+                <span className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">
+                  {isActive}
+                </span>
+              </div>
+
+              {/* Details */}
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">
+                    Organization
+                  </span>
+                  <span className="text-gray-900 font-bold">
+                    {organizationName}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">System ID</span>
+                  <span className="text-gray-800 font-bold">
+                    {organizationId}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">
+                    Active Projects
+                  </span>
+                  <span className="text-gray-900 font-bold">
+                    {projectCount}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Total Users</span>
+                  <span className="text-gray-900 font-bold">{userCount}</span>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           {/* User Details */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader className="pb-3">
-                <Typography variant="h6" className="flex items-center">
-                  <UserCog className="mr-2 h-5 w-5 text-primary" />
+          <motion.div variants={itemVariants} className="group transition-all">
+            <div className="relative bg-white border border-gray-300 rounded-xl p-6 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-2 hover:border-blue-600">
+              {/* Hover top border */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-xl" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2 text-blue-600 font-semibold text-lg">
+                  <UserCog className="h-5 w-5" />
                   User Details
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  Current user information
-                </Typography>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Name:
-                    </Typography>
-                    <Typography variant="body1">{userName}</Typography>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Email:
-                    </Typography>
-                    <Typography variant="body2">{email}</Typography>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Contact:
-                    </Typography>
-                    <Typography variant="body1">{contact_number}</Typography>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Role:
-                    </Typography>
-                    <Badge variant="secondary">Super Admin</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <Typography variant="body1" className="font-medium">
-                      Status:
-                    </Typography>
-                    <Typography
-                      variant="body1"
-                      className={
-                        isActive === "Active"
-                          ? "text-green-600"
-                          : "text-red-600"
-                      }
-                    >
-                      {isActive}
-                    </Typography>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
+                <span
+                  className={`text-white text-xs font-bold uppercase px-3 py-1 rounded-full bg-gradient-to-r ${
+                    isActive === "Active"
+                      ? "from-green-500 to-green-600"
+                      : "from-red-500 to-red-600"
+                  }`}
+                >
+                  {isActive === "Active" ? "Online" : isActive}
+                </span>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Name</span>
+                  <span className="text-gray-900 font-bold">{userName}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Email</span>
+                  <span className="text-gray-800 font-semibold">{email}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Contact</span>
+                  <span className="text-gray-900 font-semibold">
+                    {contact_number}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Role</span>
+                  <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                    Super Admin
+                  </span>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
-        <motion.div variants={itemVariants}>
-          <h2 className="text-xl font-semibold mb-4">Administrative Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                variant="default"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+        <motion.div variants={itemVariants} className="mb-10">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+            System Operations
+          </h2>{" "}
+          <div
+            className="grid gap-8"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            }}
+          >
+            {" "}
+            {/* Create Organization */}
+            <motion.div>
+              <div
                 onClick={() => handleOpenDialog("organization")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4285f4] hover:shadow-[0_15px_30px_rgba(66,133,244,0.2)] min-h-[250px]"
               >
-                <Building2 className="h-6 w-6" />
-                <span>Create Organization</span>
-              </Button>
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">🏢</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Create Organization
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Initialize new organizational structure
+                </p>
+              </div>
             </motion.div>
-
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                variant="default"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-purple-500 to-purple-600"
+            {/* Create Project */}
+            <motion.div>
+              <div
                 onClick={() => handleOpenDialog("project")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#9c27b0] hover:shadow-[0_15px_30px_rgba(156,39,176,0.2)] min-h-[250px]"
               >
-                <FolderKanban className="h-6 w-6" />
-                <span>Create Project</span>
-              </Button>
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">📁</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Create Project
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Deploy new project environment
+                </p>
+              </div>
             </motion.div>
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                variant="default"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-green-500 to-green-600"
+            {/* Create User */}
+            <motion.div>
+              <div
                 onClick={() => handleOpenDialog("createUser")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4caf50] hover:shadow-[0_15px_30px_rgba(76,175,80,0.2)] min-h-[250px]"
               >
-                <UserPlus className="h-6 w-6" />
-                <span>Create User</span>
-              </Button>
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">👤</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Create User
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Register new application user
+                </p>
+              </div>
             </motion.div>
-
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                variant="default"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-slate-500 to-slate-600"
+            {/* Map User to Organization */}
+            <motion.div>
+              <div
                 onClick={() => handleOpenDialog("userMapping")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#607d8b] hover:shadow-[0_15px_30px_rgba(96,125,139,0.2)] min-h-[250px]"
               >
-                <Users className="h-6 w-6" />
-                <span>Map User to Organization</span>
-              </Button>
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">👥</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Map User to Organization
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Link user roles within an organization
+                </p>
+              </div>
             </motion.div>
-
-            <motion.div
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              <Button
-                variant="default"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-amber-500 to-amber-600"
+            {/* Assign Roles */}
+            <motion.div>
+              <div
                 onClick={() => handleOpenDialog("roleAssignment")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#ff9800] hover:shadow-[0_15px_30px_rgba(255,152,0,0.2)] min-h-[250px]"
               >
-                <ShieldCheck className="h-6 w-6" />
-                <span>Assign Roles</span>
-              </Button>
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">🛡️</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Assign Roles
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Define access levels for users
+                </p>
+              </div>
             </motion.div>
           </div>
         </motion.div>
-        <motion.div variants={itemVariants}>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center">
-                <Shield className="mr-2 h-5 w-5 text-primary" />
-                <h2 className="text-lg font-semibold">Privileged Actions</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Quick access to system-wide management
-              </p>
-            </CardHeader>
-            <CardContent>
+
+        <motion.div variants={itemVariants} className="mb-10">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+            System Management
+          </h2>{" "}
+          <div
+            className="grid gap-8"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            }}
+          >
+            {[
+              {
+                title: "View All Users",
+                desc: "Manage and review all system users.",
+                onClick: handleViewUsers,
+              },
+              {
+                title: "View All Organizations",
+                desc: "Access and manage registered organizations.",
+                onClick: handleViewOrganizations,
+              },
+              {
+                title: "View All Projects",
+                desc: "Browse projects along with their organization names.",
+                onClick: handleViewProjects,
+              },
+              {
+                title: "Extra Action",
+                desc: "Give User a Super Admin access",
+                onClick: handleExtraAction,
+              },
+            ].map(({ title, desc, onClick }, i) => (
+              <motion.div
+                key={i}
+                onClick={onClick}
+                className="relative bg-white border border-[#e0e0e0] rounded-[15px] p-8 cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:border-[#0066cc] hover:shadow-[-10px_10px_30px_rgba(0,102,204,0.15)] group"
+              >
+                {/* Gradient bar on right side on hover */}
+                <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-[#0066cc] to-[#6600cc] transform scale-y-0 origin-top transition-transform duration-300 group-hover:scale-y-100" />
+
+                <div className="text-[1.4rem] font-bold text-[#333] mb-3">
+                  {title}
+                </div>
+                <p className="text-[#666] leading-relaxed">{desc}</p>
+              </motion.div>
+            ))}
+          </div>
+          {/* <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
@@ -538,8 +601,7 @@ function SuperAdminDashboard({ currentUser }) {
                   </p>
                 </motion.div>
               </div>
-            </CardContent>
-          </Card>
+            </CardContent> */}
         </motion.div>
       </motion.div>
 

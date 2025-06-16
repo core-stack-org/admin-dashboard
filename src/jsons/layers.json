@@ -189,12 +189,12 @@
             "show_Dates": true,
             "workspace":""
         }  ,
-        "Generate Farm ponds": {
+        "Generate Farm Ponds": {
             "api_url": "${config.layer_api_url_v1}/generate_ponds/ ",
             "show_Dates": false,
             "workspace":""
         }  ,
-        "Merge SWB with ponds": {
+        "Merge SWB With Ponds": {
             "api_url": "${config.layer_api_url_v1}/merge_swb_ponds/ ",
             "show_Dates": false,
             "workspace":""
