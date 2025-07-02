@@ -8,26 +8,36 @@ import {
   Tabs,
   Tab,
   Box,
-  Paper,
   Typography,
   IconButton,
   Snackbar,
   Alert,
   Dialog,
+  DialogActions,
+  TableCell,
+  CircularProgress,
+  Table,
+  TableRow,
+  TableBody,
+  TableHead,
+  Collapse,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import CloseIcon from "@mui/icons-material/Close";
-import VisibilityIcon from "@mui/icons-material/Visibility";
 import PlantationAssessment from "./plantationAssessment";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
 import { Tooltip, Button } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import EditIcon from "@mui/icons-material/Edit";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Project from "../pages/project.js";
 import { FolderIcon } from "lucide-react";
+import PlanCreation from "./planCreation.js";
+import { TreePine, Waves, Mountain, ChevronRight } from "lucide-react";
 
 const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -40,11 +50,77 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const [bbox, setBBox] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [showProjectForm, setShowProjectForm] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [plans, setPlans] = useState([]);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [openPlanDialog, setOpenPlanDialog] = useState(false);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const isSuperAdmin = currentUser?.user?.is_superadmin;
+
   const [toast, setToast] = useState({
     open: false,
     message: "",
     severity: "success",
   });
+
+  const [expandedGroups, setExpandedGroups] = useState({
+    plantation: true,
+    waterbody: true,
+    watershed: true,
+  });
+
+  const groupedProjects = projects.reduce((acc, project) => {
+    if (!acc[project.app_type]) acc[project.app_type] = [];
+    acc[project.app_type].push(project);
+    return acc;
+  }, {});
+
+  const getGroupIcon = (appType) => {
+    switch (appType) {
+      case "plantation":
+        return <TreePine className="w-5 h-5 text-green-600" />;
+      case "waterbody":
+        return <Waves className="w-5 h-5 text-blue-600" />;
+      case "watershed":
+        return <Mountain className="w-5 h-5 text-purple-600" />;
+      default:
+        return null;
+    }
+  };
+
+  const getGroupTitle = (appType) => {
+    switch (appType) {
+      case "plantation":
+        return "Plantation Projects";
+      case "waterbody":
+        return "Waterbody Projects";
+      case "watershed":
+        return "Watershed Projects";
+      default:
+        return `${appType.charAt(0).toUpperCase() + appType.slice(1)} Projects`;
+    }
+  };
+
+  const getGroupStyle = (appType) => {
+    switch (appType) {
+      case "plantation":
+        return "bg-green-50 border border-green-300 hover:bg-green-100";
+      case "waterbody":
+        return "bg-blue-50 border border-blue-300 hover:bg-blue-100";
+      case "watershed":
+        return "bg-purple-50 border border-purple-300 hover:bg-purple-100";
+      default:
+        return "bg-gray-50 border border-gray-300 hover:bg-gray-100";
+    }
+  };
+
+  const toggleGroup = (appType) => {
+    setExpandedGroups((prev) => ({
+      ...prev,
+      [appType]: !prev[appType],
+    }));
+  };
 
   const handleOpenEditDialog = (project) => {
     setSelectedProject(project);
@@ -126,6 +202,10 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     };
 
     fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    handleViewPlan();
   }, []);
 
   const handleCreateProject = () => {
@@ -370,6 +450,62 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     console.log("Upload excel button clicked");
   };
 
+  const handleViewPlan = async (project) => {
+    setOpenDialog(true);
+    setLoadingPlans(true);
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/watershed/plans/`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch plans");
+      const data = await res.json();
+      console.log(data);
+      setPlans(Array.isArray(data) ? data : data.results || []);
+    } catch (err) {
+      console.error(err);
+      // toast.error("Error fetching plans");
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
+  const handlePlanSaved = (savedPlan) => {
+    console.log("Saved Plan:", savedPlan); // Debugging line
+    setPlans((prevPlans) => {
+      const planExists = prevPlans.some((plan) => plan.id === savedPlan.id);
+
+      if (planExists) {
+        console.log("Plan exists, updating:", savedPlan); // Debugging line
+        // Update the plan with the new data
+        return prevPlans.map((plan) =>
+          plan.id === savedPlan.id ? { ...plan, ...savedPlan } : plan
+        );
+      } else {
+        console.log("Plan doesn't exist, adding:", savedPlan); // Debugging line
+        // Add the new plan to the list
+        return [...prevPlans, savedPlan];
+      }
+    });
+  };
+
+  const handleEditPlan = (plan) => {
+    setSelectedPlanId(plan.id);
+    setOpenPlanDialog(true);
+  };
+
+  const handleCreatePlan = (id) => {
+    setSelectedProject(id);
+    setSelectedPlanId(null); // important to indicate create mode
+    setOpenPlanDialog(true);
+  };
+
   const handleExcelSelect = (event) => {
     const files = Array.from(event.target.files);
     const validFiles = files.filter((file) => file.name.endsWith(".xlsx"));
@@ -381,9 +517,99 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     }
   };
 
+  const renderProjectTasks = (project) => {
+    if (project.app_type === "plantation") {
+      return (
+        <>
+          <Tooltip title="Edit" arrow>
+            <Button
+              variant="outlined"
+              color="secondary"
+              className="rounded-md shadow p-3 text-sm"
+              onClick={() => handleOpenEditDialog(project)}
+            >
+              <EditIcon />
+            </Button>
+          </Tooltip>
+          <Tooltip title="View Layer" arrow>
+            <Button
+              variant="outlined"
+              color="primary"
+              className="rounded-md shadow p-3 text-sm"
+              onClick={() => handleViewGeoJSON(project)}
+            >
+              <VisibilityIcon />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Download GeoJSON" arrow>
+            <Button
+              variant="contained"
+              color="primary"
+              className="rounded-md shadow p-3 text-sm"
+              onClick={() => handleDownloadGeoJSON(project)}
+            >
+              <FileDownloadIcon />
+            </Button>
+          </Tooltip>
+        </>
+      );
+    } else if (project.app_type === "waterbody") {
+      return (
+        <>
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            id={`excel-upload-${project.id}`}
+            style={{ display: "none" }}
+            multiple
+            onChange={(e) => handleExcelSelect(e, project)}
+          />
+          <Tooltip title="Upload Excel" arrow>
+            <label htmlFor={`excel-upload-${project.id}`}>
+              <Button
+                variant="contained"
+                color="primary"
+                className="rounded-md shadow p-3 text-sm flex items-center"
+                component="span"
+              >
+                <CloudUploadIcon />
+              </Button>
+            </label>
+          </Tooltip>
+        </>
+      );
+    } else if (project.app_type === "watershed") {
+      return (
+        <>
+          <Tooltip title="View Plan" arrow>
+            <Button
+              variant="outlined"
+              color="primary"
+              className="rounded-md shadow p-3 text-sm"
+              onClick={() => handleViewPlan(project)}
+            >
+              <VisibilityIcon />
+            </Button>
+          </Tooltip>
+          <Tooltip title="Create Plan" arrow>
+            <Button
+              variant="outlined"
+              color="success"
+              className="rounded-md shadow p-3 text-sm min-w-0"
+              onClick={() => handleCreatePlan(project.id)}
+            >
+              <AddIcon />
+            </Button>
+          </Tooltip>
+        </>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl mx-4 overflow-hidden max-h-[90vh]">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-7xl mx-6 overflow-hidden max-h-[90vh]">
         {/* Header */}
         <div className="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold">All Projects</h2>
@@ -411,11 +637,12 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-4">
           <div className="flex flex-col">
             <div className="bg-gray-50 p-6 rounded-4xl border border-gray-300 shadow-md">
               <div className="mb-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"> */}
+                <div>
                   {projects.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full min-h-[300px] py-10 space-y-6">
                       <p className="text-gray-600 text-lg font-semibold text-center">
@@ -430,187 +657,403 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                         ➕ Create New Project
                       </Button>
                     </div>
+                  ) : isSuperAdmin ? (
+                    <Box className="w-full overflow-x-auto min-w-7xl">
+                      <Box className="flex gap-6 p-6 bg-white rounded-xl overflow-x-auto scrollbar-hide ">
+                        {Object.entries(groupedProjects).map(
+                          ([appType, projectList]) => (
+                            <Box
+                              key={appType}
+                              className="min-w-[320px] max-w-[350px] flex-shrink-0"
+                            >
+                              <Box
+                                className={`rounded-xl p-4 mb-2 flex justify-between items-center cursor-pointer transition-all duration-200 shadow-sm ${getGroupStyle(
+                                  appType
+                                )}`}
+                                onClick={() => toggleGroup(appType)}
+                              >
+                                <Box className="flex items-center gap-4">
+                                  {getGroupIcon(appType)}
+                                  <Box>
+                                    <Typography className="font-semibold text-gray-800">
+                                      {getGroupTitle(appType)}
+                                    </Typography>
+                                    <Typography className="text-sm text-gray-600">
+                                      {projectList.length} project
+                                      {projectList.length !== 1 ? "s" : ""}
+                                    </Typography>
+                                  </Box>
+                                  <span className="bg-white px-3 py-0.5 rounded-full text-sm text-gray-700 shadow ml-2">
+                                    {projectList.length}
+                                  </span>
+                                </Box>
+                                <ChevronRight
+                                  className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${
+                                    expandedGroups[appType] ? "rotate-90" : ""
+                                  }`}
+                                />
+                              </Box>
+
+                              <Collapse in={expandedGroups[appType]}>
+                                <Box className="pl-4 pt-2 space-y-2">
+                                  {projectList.map((project) => (
+                                    <Box
+                                      key={project.id}
+                                      className="p-4 bg-white border border-gray-200 rounded-md shadow-sm hover:shadow transition-all"
+                                    >
+                                      <Typography className="text-sm text-gray-700">
+                                        Project Name:
+                                        <span className="ml-1 font-medium text-gray-900">
+                                          {project.name}
+                                        </span>
+                                      </Typography>
+                                      <Box className="mt-3 flex flex-wrap gap-2">
+                                        {renderProjectTasks(project)}
+                                      </Box>
+                                    </Box>
+                                  ))}
+                                </Box>
+                              </Collapse>
+                            </Box>
+                          )
+                        )}
+                      </Box>
+                    </Box>
                   ) : (
-                    projects.map((project) => (
-                      <Card
-                        key={project.id}
-                        className="w-full cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white rounded-4xl overflow-hidden border border-gray-200"
-                      >
-                        <CardContent>
-                          <div className="flex flex-col items-start space-y-4">
-                            <div className="text-gray-700 text-sm flex items-center gap-4">
-                              <span className="font-medium">
-                                📌 Project Name:
-                              </span>
-                              <span className="font-semibold text-gray-900">
-                                {project.name}
-                              </span>
-                            </div>
-                            <div className="text-gray-700 text-sm flex items-center gap-4">
-                              <span className="font-medium">🔗 App Type:</span>
-                              <span className="font-semibold text-blue-600">
-                                {project.app_type}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-3 mt-2 justify-start w-full">
-                              {project.app_type === "plantation" ? (
-                                <>
-                                  <Tooltip title="Edit" arrow>
-                                    <Button
-                                      variant="outlined"
-                                      color="secondary"
-                                      className="rounded-md shadow p-3 text-sm"
-                                      onClick={() =>
-                                        handleOpenEditDialog(project)
-                                      }
-                                    >
-                                      <EditIcon />
-                                    </Button>
-                                  </Tooltip>
-                                  <Tooltip title="View Layer" arrow>
-                                    <Button
-                                      variant="outlined"
-                                      color="primary"
-                                      className="rounded-md shadow p-3 text-sm"
-                                      onClick={() => handleViewGeoJSON(project)}
-                                    >
-                                      <VisibilityIcon />
-                                    </Button>
-                                  </Tooltip>
-                                  <Tooltip title="Download GeoJSON" arrow>
-                                    <Button
-                                      variant="contained"
-                                      color="primary"
-                                      className="rounded-md shadow p-3 text-sm"
-                                      onClick={() =>
-                                        handleDownloadGeoJSON(project)
-                                      }
-                                    >
-                                      <FileDownloadIcon />
-                                    </Button>
-                                  </Tooltip>
-                                </>
-                              ) : project.app_type === "waterbody" ? (
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    gap: 2,
-                                    width: "100%",
-                                  }}
-                                >
-                                  <input
-                                    type="file"
-                                    accept=".xlsx,.xls"
-                                    id={`excel-upload-${project.id}`}
-                                    style={{ display: "none" }}
-                                    multiple
-                                    onChange={(e) =>
-                                      handleExcelSelect(e, project)
-                                    }
-                                  />
-                                  <Tooltip title="Upload Excel" arrow>
-                                    <label
-                                      htmlFor={`excel-upload-${project.id}`}
-                                    >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {projects.map((project) => (
+                        <Card
+                          key={project.id}
+                          className="w-full cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 bg-white rounded-4xl overflow-hidden border border-gray-200"
+                        >
+                          <CardContent>
+                            <div className="flex flex-col items-start space-y-4">
+                              <div className="text-gray-700 text-sm flex items-center gap-4">
+                                <span className="font-medium">
+                                  📌 Project Nameee:
+                                </span>
+                                <span className="font-semibold text-gray-900">
+                                  {project.name}
+                                </span>
+                              </div>
+                              <div className="text-gray-700 text-sm flex items-center gap-4">
+                                <span className="font-medium">
+                                  🔗 App Type:
+                                </span>
+                                <span className="font-semibold text-blue-600">
+                                  {project.app_type}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-3 mt-2 justify-start w-full">
+                                {project.app_type === "plantation" ? (
+                                  <>
+                                    <Tooltip title="Edit" arrow>
+                                      <Button
+                                        variant="outlined"
+                                        color="secondary"
+                                        className="rounded-md shadow p-3 text-sm"
+                                        onClick={() =>
+                                          handleOpenEditDialog(project)
+                                        }
+                                      >
+                                        <EditIcon />
+                                      </Button>
+                                    </Tooltip>
+                                    <Tooltip title="View Layer" arrow>
+                                      <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        className="rounded-md shadow p-3 text-sm"
+                                        onClick={() =>
+                                          handleViewGeoJSON(project)
+                                        }
+                                      >
+                                        <VisibilityIcon />
+                                      </Button>
+                                    </Tooltip>
+                                    <Tooltip title="Download GeoJSON" arrow>
                                       <Button
                                         variant="contained"
                                         color="primary"
-                                        className="rounded-md shadow p-3 text-sm flex items-center"
-                                        component="span"
+                                        className="rounded-md shadow p-3 text-sm"
+                                        onClick={() =>
+                                          handleDownloadGeoJSON(project)
+                                        }
                                       >
-                                        <CloudUploadIcon />
+                                        <FileDownloadIcon />
                                       </Button>
-                                    </label>
-                                  </Tooltip>
-
-                                  {selectedFiles.length > 0 && (
-                                    <Box
-                                      sx={{
-                                        width: "100%",
-                                        backgroundColor: "#f9f9f9",
-                                        p: 2,
-                                        borderRadius: "8px",
-                                        boxShadow:
-                                          "inset 0 0 5px rgba(0,0,0,0.1)",
-                                      }}
-                                    >
-                                      {selectedFiles.map((file, index) => (
-                                        <Box
-                                          key={index}
-                                          sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "space-between",
-                                            padding: "6px 12px",
-                                            borderRadius: "6px",
-                                            mb: 1,
-                                            backgroundColor: "#fff",
-                                            "&:hover": {
-                                              backgroundColor: "#f0f0f0",
-                                            },
-                                          }}
+                                    </Tooltip>
+                                  </>
+                                ) : project.app_type === "waterbody" ? (
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      gap: 2,
+                                      width: "100%",
+                                    }}
+                                  >
+                                    <input
+                                      type="file"
+                                      accept=".xlsx,.xls"
+                                      id={`excel-upload-${project.id}`}
+                                      style={{ display: "none" }}
+                                      multiple
+                                      onChange={(e) =>
+                                        handleExcelSelect(e, project)
+                                      }
+                                    />
+                                    <Tooltip title="Upload Excel" arrow>
+                                      <label
+                                        htmlFor={`excel-upload-${project.id}`}
+                                      >
+                                        <Button
+                                          variant="contained"
+                                          color="primary"
+                                          className="rounded-md shadow p-3 text-sm flex items-center"
+                                          component="span"
                                         >
+                                          <CloudUploadIcon />
+                                        </Button>
+                                      </label>
+                                    </Tooltip>
+
+                                    {selectedFiles.length > 0 && (
+                                      <Box
+                                        sx={{
+                                          width: "100%",
+                                          backgroundColor: "#f9f9f9",
+                                          p: 2,
+                                          borderRadius: "8px",
+                                          boxShadow:
+                                            "inset 0 0 5px rgba(0,0,0,0.1)",
+                                        }}
+                                      >
+                                        {selectedFiles.map((file, index) => (
                                           <Box
+                                            key={index}
                                             sx={{
                                               display: "flex",
                                               alignItems: "center",
-                                              gap: 1,
-                                              overflow: "hidden",
-                                              flex: 1,
+                                              justifyContent: "space-between",
+                                              padding: "6px 12px",
+                                              borderRadius: "6px",
+                                              mb: 1,
+                                              backgroundColor: "#fff",
+                                              "&:hover": {
+                                                backgroundColor: "#f0f0f0",
+                                              },
                                             }}
                                           >
-                                            <FolderIcon
-                                              sx={{ color: "#ffa000" }}
-                                            />
-                                            <Tooltip title={file.name}>
-                                              <Typography
-                                                variant="body2"
-                                                noWrap
-                                                sx={{
-                                                  maxWidth: "calc(100% - 40px)", // account for icon & delete
-                                                  fontSize: "14px",
-                                                }}
-                                              >
-                                                {file.name}
-                                              </Typography>
-                                            </Tooltip>
+                                            <Box
+                                              sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                overflow: "hidden",
+                                                flex: 1,
+                                              }}
+                                            >
+                                              <FolderIcon
+                                                sx={{ color: "#ffa000" }}
+                                              />
+                                              <Tooltip title={file.name}>
+                                                <Typography
+                                                  variant="body2"
+                                                  noWrap
+                                                  sx={{
+                                                    maxWidth:
+                                                      "calc(100% - 40px)", // account for icon & delete
+                                                    fontSize: "14px",
+                                                  }}
+                                                >
+                                                  {file.name}
+                                                </Typography>
+                                              </Tooltip>
+                                            </Box>
+                                            <IconButton
+                                              onClick={() =>
+                                                handleRemoveFile(index)
+                                              }
+                                              size="small"
+                                              color="error"
+                                            >
+                                              <DeleteIcon fontSize="small" />
+                                            </IconButton>
                                           </Box>
-                                          <IconButton
-                                            onClick={() =>
-                                              handleRemoveFile(index)
-                                            }
-                                            size="small"
-                                            color="error"
-                                          >
-                                            <DeleteIcon fontSize="small" />
-                                          </IconButton>
-                                        </Box>
-                                      ))}
+                                        ))}
+                                        <Button
+                                          variant="contained"
+                                          color="primary"
+                                          fullWidth
+                                          sx={{
+                                            mt: 2,
+                                            py: 1.5,
+                                            fontWeight: 600,
+                                            borderRadius: "8px",
+                                            textTransform: "none",
+                                          }}
+                                          onClick={handleUploadExcel}
+                                        >
+                                          Upload
+                                        </Button>
+                                      </Box>
+                                    )}
+                                  </Box>
+                                ) : project.app_type === "watershed" ? (
+                                  <div className="flex items-center gap-2">
+                                    <Tooltip title="View Plan" arrow>
                                       <Button
-                                        variant="contained"
+                                        variant="outlined"
                                         color="primary"
-                                        fullWidth
-                                        sx={{
-                                          mt: 2,
-                                          py: 1.5,
-                                          fontWeight: 600,
-                                          borderRadius: "8px",
-                                          textTransform: "none",
-                                        }}
-                                        onClick={handleUploadExcel}
+                                        className="rounded-md shadow p-3 text-sm"
+                                        onClick={() => handleViewPlan(project)}
                                       >
-                                        Upload
+                                        <VisibilityIcon />
                                       </Button>
-                                    </Box>
-                                  )}
-                                </Box>
-                              ) : null}
+                                    </Tooltip>
+                                    <Dialog
+                                      open={openDialog}
+                                      onClose={() => setOpenDialog(false)}
+                                      maxWidth="md"
+                                      fullWidth
+                                      PaperProps={{
+                                        className: "rounded-xl shadow-lg",
+                                      }}
+                                    >
+                                      <DialogTitle className="text-xl font-semibold px-6 pt-6 pb-2">
+                                        🗂️ Plans for this Project
+                                      </DialogTitle>
+
+                                      <DialogContent
+                                        dividers
+                                        className="px-6 pb-4"
+                                      >
+                                        {loadingPlans ? (
+                                          <div className="text-center py-10">
+                                            <CircularProgress />
+                                          </div>
+                                        ) : plans.length === 0 ? (
+                                          <p className="text-gray-500 text-center py-6">
+                                            No plans found.
+                                          </p>
+                                        ) : (
+                                          <div className="overflow-x-auto rounded-lg shadow border border-gray-200">
+                                            <Table size="small">
+                                              <TableHead>
+                                                <TableRow className="bg-gray-100">
+                                                  <TableCell className="font-semibold text-gray-700">
+                                                    Plan Name
+                                                  </TableCell>
+                                                  <TableCell className="font-semibold text-gray-700">
+                                                    Facilitator
+                                                  </TableCell>
+                                                  <TableCell className="font-semibold text-gray-700">
+                                                    Village
+                                                  </TableCell>
+                                                  <TableCell
+                                                    align="right"
+                                                    className="font-semibold text-gray-700"
+                                                  >
+                                                    Action
+                                                  </TableCell>
+                                                </TableRow>
+                                              </TableHead>
+                                              <TableBody>
+                                                {plans.map((plan, index) => (
+                                                  <TableRow
+                                                    key={plan.id}
+                                                    className={
+                                                      index % 2 === 0
+                                                        ? "bg-white"
+                                                        : "bg-gray-50"
+                                                    }
+                                                  >
+                                                    <TableCell>
+                                                      {plan.plan}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {plan.facilitator_name ||
+                                                        "—"}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {plan.village_name || "—"}
+                                                    </TableCell>
+                                                    <TableCell align="right">
+                                                      <Tooltip
+                                                        title="Edit Plan"
+                                                        arrow
+                                                      >
+                                                        <IconButton
+                                                          onClick={() =>
+                                                            handleEditPlan(plan)
+                                                          }
+                                                          color="primary"
+                                                        >
+                                                          <EditIcon />
+                                                        </IconButton>
+                                                      </Tooltip>
+                                                    </TableCell>
+                                                  </TableRow>
+                                                ))}
+                                              </TableBody>
+                                            </Table>
+                                          </div>
+                                        )}
+                                      </DialogContent>
+
+                                      <DialogActions className="px-6 pb-4">
+                                        <Button
+                                          onClick={() => setOpenDialog(false)}
+                                          color="primary"
+                                          variant="outlined"
+                                          className="rounded-md"
+                                        >
+                                          Close
+                                        </Button>
+                                      </DialogActions>
+                                    </Dialog>
+                                    <Tooltip title="Create Plan" arrow>
+                                      <Button
+                                        variant="outlined"
+                                        color="success"
+                                        className="rounded-md shadow p-3 text-sm min-w-0"
+                                        onClick={() =>
+                                          handleCreatePlan(project.id)
+                                        }
+                                      >
+                                        <AddIcon />
+                                      </Button>
+                                    </Tooltip>
+                                    <Dialog
+                                      open={openPlanDialog}
+                                      onClose={() => {
+                                        setOpenPlanDialog(false);
+                                        setSelectedPlanId(null);
+                                      }}
+                                      fullWidth
+                                      maxWidth="md"
+                                    >
+                                      <DialogContent>
+                                        <PlanCreation
+                                          onClose={() => {
+                                            setOpenPlanDialog(false);
+                                            setSelectedPlanId(null);
+                                          }}
+                                          projectId={project}
+                                          planId={selectedPlanId}
+                                          onPlanSaved={handlePlanSaved}
+                                        />
+                                      </DialogContent>
+                                    </Dialog>
+                                  </div>
+                                ) : null}
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
