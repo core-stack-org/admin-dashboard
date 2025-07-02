@@ -66,7 +66,7 @@ const LoginPage = ({ setCurrentUser }) => {
       toast.success("Login successful!");
 
       setTimeout(() => {
-        toast.dismiss(); // Dismiss all toasts before navigating
+        toast.dismiss();
         navigate("/dashboard");
       }, 1000);
     } catch (err) {
@@ -89,7 +89,7 @@ const LoginPage = ({ setCurrentUser }) => {
   };
 
   const handleRegisterRedirect = () => {
-    navigate("/register"); // Redirect to registration page
+    navigate("/register");
   };
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
