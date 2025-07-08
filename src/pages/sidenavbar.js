@@ -222,11 +222,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Activate Location",
         href: "/activateBlock",
       },
-      {
-        icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-        label: "Plan Creation",
-        href: "/planCreation",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
+      //   label: "Plan Creation",
+      //   href: "/planCreation",
+      // },
       {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
         label: "Generate Layers",

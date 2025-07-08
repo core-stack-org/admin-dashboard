@@ -99,43 +99,33 @@ const OrgAdminDashboard = ({ currentUser }) => {
       id: "projects",
       title: "Create Project",
       description: "Create a new project for your organization",
-      color:
-        "from-violet-50 to-purple-100 dark:from-violet-50 dark:to-purple-100",
-      borderColor: "border-purple-300 dark:border-purple-300",
       iconBg: "bg-purple-500",
       icon: <FolderPlus className="h-7 w-7 text-white" />,
-      textColor: "text-purple-500",
+      hoverBorder: "hover:border-purple-500",
     },
     {
       id: "listprojects",
       title: "List Projects",
       description: "View all projects in your organization",
-      color: "from-blue-50 to-sky-100 dark:from-blue-50 dark:to-sky-100",
-      borderColor: "border-sky-300 dark:border-sky-300",
       iconBg: "bg-blue-500",
       icon: <ListTodo className="h-7 w-7 text-white" />,
-      textColor: "text-blue-500",
+      hoverBorder: "hover:border-blue-500",
     },
     {
       id: "assignproject",
       title: "Assign Project Role",
       description: "Assign users to roles within projects",
-      color:
-        "from-fuchsia-50 to-pink-100 dark:from-fuchsia-50 dark:to-pink-100",
-      borderColor: "border-pink-300 dark:border-pink-300",
       iconBg: "bg-pink-500",
       icon: <UserCheck className="h-7 w-7 text-white" />,
-      textColor: "text-pink-500",
+      hoverBorder: "hover:border-pink-500",
     },
     {
       id: "removeuserrole",
       title: "Remove User Role",
       description: "Remove user role from a project",
-      color: "from-red-50 to-rose-100 dark:from-red-50 dark:to-rose-100",
-      borderColor: "border-red-300 dark:border-red-300",
       iconBg: "bg-red-500",
       icon: <UserMinus className="h-7 w-7 text-white" />,
-      textColor: "text-red-500",
+      hoverBorder: "hover:border-red-500",
     },
   ];
 
@@ -448,110 +438,164 @@ const OrgAdminDashboard = ({ currentUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-00 p-4 md:p-8 mt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-00 p-4 md:p-8">
       <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
         className="max-w-7xl mx-auto space-y-8"
       >
-        <motion.div variants={itemVariants}>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
-          <p className="text-muted-foreground mt-1">
+        <motion.div
+          variants={itemVariants}
+          className="relative text-center mb-16"
+        >
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[-1] rounded-full"
+            style={{
+              width: "200px",
+              height: "200px",
+              background:
+                "radial-gradient(circle, rgba(0, 150, 255, 0.08) 0%, transparent 70%)",
+            }}
+          />
+
+          <h1
+            className="text-[3.5rem] font-black uppercase tracking-[2px] mb-4"
+            style={{
+              background: "linear-gradient(45deg, #0066cc, #6600cc, #cc6600)",
+              backgroundSize: "200% 200%",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              animation: "gradientShift 3s ease-in-out infinite",
+            }}
+          >
+            Admin Dashboard
+          </h1>
+          <p className="text-[1.2rem] text-gray-600 opacity-80">
             Manage organizations, projects, users, and roles
           </p>
+          <style>{`
+        @keyframes gradientShift {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Organization Info */}
-          <motion.div variants={itemVariants} className="flex">
-            <Card className="flex-grow flex flex-col">
-              <div className="p-4 border-b">
-                <div className="flex items-center mb-2">
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              show: { opacity: 1, y: 0 },
+            }}
+            initial="hidden"
+            animate="show"
+            className="group transition-all"
+          >
+            <div className="relative bg-white border border-gray-300 rounded-xl p-6 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-blue-600 group min-h-[280px]">
+              {/* Top Hover Bar */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-xl" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-blue-600 font-semibold text-lg flex items-center gap-2">
                   <FontAwesomeIcon
                     icon={faBuilding}
-                    className="mr-2 text-primary"
+                    className="text-blue-600 h-5 w-5"
                   />
-                  <h6 className="text-lg font-semibold">Organization</h6>
-                </div>
-                <p className="text-sm text-secondary">
-                  Current organization details
-                </p>
+                  Organization
+                </h3>
+                <span className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">
+                  {currentUser?.user?.is_active ? "Active" : "Inactive"}
+                </span>
               </div>
-              <CardContent className="flex-grow flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Name:</p>
-                    <p>{organizationName}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">ID:</p>
-                    <p className="text-secondary">{organizationId}</p>
-                  </div>
+
+              {/* Details */}
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Name</span>
+                  <span className="text-gray-900 font-bold">
+                    {organizationName}
+                  </span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">ID</span>
+                  <span className="text-gray-800 font-bold">
+                    {organizationId}
+                  </span>
+                </div>
+                {/* <div className="flex justify-between items-center">
+          <span className="text-gray-600 font-medium">Projects</span>
+          <span className="text-gray-900 font-bold">{projectCount}</span>
+        </div> */}
+              </div>
+            </div>
           </motion.div>
 
           {/* User Details */}
-          <motion.div variants={itemVariants} className="flex">
-            <Card className="flex-grow flex flex-col">
-              <div className="p-4 border-b">
-                <div className="flex items-center mb-2">
-                  <FontAwesomeIcon
-                    icon={faUserCog}
-                    className="mr-2 text-primary"
-                  />
-                  <h6 className="text-lg font-semibold">User Details</h6>
+          <motion.div
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              show: { opacity: 1, y: 0 },
+            }}
+            initial="hidden"
+            animate="show"
+            className="group transition-all"
+          >
+            <div className="relative bg-white border border-gray-300 rounded-xl p-6 overflow-hidden transition-all duration-300 hover:shadow-2xl hover:-translate-y-2 hover:border-blue-600 group min-h-[280px]">
+              {/* Top Hover Bar */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-t-xl" />
+
+              {/* Header */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2 text-blue-600 font-semibold text-lg">
+                  <FontAwesomeIcon icon={faUserCog} className="h-5 w-5" />
+                  User Details
                 </div>
-                <p className="text-sm text-secondary">
-                  Current user information
-                </p>
+                <span
+                  className={`text-white text-xs font-bold uppercase px-3 py-1 rounded-full bg-gradient-to-r ${
+                    currentUser?.user?.is_active
+                      ? "from-green-500 to-green-600"
+                      : "from-red-500 to-red-600"
+                  }`}
+                >
+                  {currentUser?.user?.is_active ? "Online" : "Inactive"}
+                </span>
               </div>
-              <CardContent className="flex-grow flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Name:</p>
-                    <p>{userName}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Email:</p>
-                    <p>{email}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Contact:</p>
-                    <p>{contact_number}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Role:</p>
-                    <Badge variant="secondary">{role}</Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="font-medium">Status:</p>
-                    <Badge
-                      variant={
-                        currentUser?.user?.is_active ? "success" : "destructive"
-                      }
-                    >
-                      {currentUser?.user?.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
+
+              {/* Details */}
+              <div className="space-y-4 text-sm">
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Name</span>
+                  <span className="text-gray-900 font-bold">{userName}</span>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Email</span>
+                  <span className="text-gray-800 font-semibold">{email}</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="text-gray-600 font-medium">Contact</span>
+                  <span className="text-gray-900 font-semibold">
+                    {contact_number}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 font-medium">Role</span>
+                  <span className="bg-gray-100 text-gray-800 text-xs font-semibold px-3 py-1 rounded-full">
+                    {role}
+                  </span>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </div>
 
         {/* Organization Management Section */}
-        <motion.div variants={itemVariants}>
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold flex items-center">
-              <Building2 className="mr-2 h-5 w-5 text-blue-500" />
-              Organization Management
-            </h2>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-              View, update and manage organization members
-            </p>
-          </div>
+        <motion.div variants={itemVariants} className="mb-10">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+            Organization Management
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* View Button */}
@@ -562,16 +606,24 @@ const OrgAdminDashboard = ({ currentUser }) => {
               className="cursor-pointer"
               onClick={() => handleOpenModal("view")}
             >
-              <div className="bg-gradient-to-br from-cyan-50 to-blue-100 dark:from-cyan-50 dark:to-blue-100 border border-blue-200 dark:border-blue-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                <div className="bg-blue-500 p-3 rounded-full mb-3">
-                  <Eye className="h-6 w-6 text-white" />
+              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4285f4] hover:shadow-[0_15px_30px_rgba(66,133,244,0.2)] min-h-[200px] z-10">
+                {/* Smooth radial hover effect inside only */}
+                <div className="absolute inset-0 pointer-events-none z-0">
+                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                 </div>
-                <h3 className="font-semibold text-blue-600 dark:text-blue-600 mb-1">
-                  View
-                </h3>
-                <p className="text-sm text-blue-500 dark:text-blue-500">
-                  View organization details
-                </p>
+
+                {/* Card content stays above effect */}
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="bg-blue-500 p-2 rounded-full mb-2">
+                    <Eye className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                    View
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    View organization details
+                  </p>
+                </div>
               </div>
             </motion.div>
 
@@ -583,16 +635,22 @@ const OrgAdminDashboard = ({ currentUser }) => {
               className="cursor-pointer"
               onClick={() => handleOpenModal("update")}
             >
-              <div className="bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-50 dark:to-teal-100 border border-teal-200 dark:border-teal-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                <div className="bg-teal-500 p-3 rounded-full mb-3">
-                  <Edit className="h-6 w-6 text-white" />
+              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-teal-500 hover:shadow-[0_15px_30px_rgba(13,148,136,0.2)] min-h-[200px] z-10">
+                <div className="absolute inset-0 pointer-events-none z-0">
+                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(13,148,136,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                 </div>
-                <h3 className="font-semibold text-teal-600 dark:text-teal-600 mb-1">
-                  Update
-                </h3>
-                <p className="text-sm text-teal-500 dark:text-teal-500">
-                  Modify organization settings
-                </p>
+
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="bg-teal-500 p-2 rounded-full mb-2">
+                    <Edit className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                    Update
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Modify organization settings
+                  </p>
+                </div>
               </div>
             </motion.div>
 
@@ -604,16 +662,22 @@ const OrgAdminDashboard = ({ currentUser }) => {
               className="cursor-pointer"
               onClick={() => handleOpenModal("members")}
             >
-              <div className="bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-50 dark:to-indigo-100 border border-indigo-200 dark:border-indigo-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                <div className="bg-indigo-500 p-3 rounded-full mb-3">
-                  <Users className="h-6 w-6 text-white" />
+              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-indigo-500 hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)] min-h-[200px] z-10">
+                <div className="absolute inset-0 pointer-events-none z-0">
+                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                 </div>
-                <h3 className="font-semibold text-indigo-600 dark:text-indigo-600 mb-1">
-                  Org Members
-                </h3>
-                <p className="text-sm text-indigo-500 dark:text-indigo-500">
-                  Manage organization members
-                </p>
+
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="bg-indigo-500 p-2 rounded-full mb-2">
+                    <Users className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                    Org Members
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Manage organization members
+                  </p>
+                </div>
               </div>
             </motion.div>
           </div>
@@ -621,7 +685,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
           <Dialog
             open={isModalOpen}
             onClose={closeModal}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+            className="fixed inset-0 z-[999] bg-black bg-opacity-50 flex items-center justify-center"
           >
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl p-6">
               {(modalType === "view" || modalType === "update") && (
@@ -891,91 +955,88 @@ const OrgAdminDashboard = ({ currentUser }) => {
             </div>
           </Dialog>
 
-          <motion.div variants={itemVariants}>
+          <motion.div variants={itemVariants} className="mb-10">
             {/* Project Management Section */}
-            <motion.div variants={itemVariants} className="mt-8">
+            <motion.div variants={itemVariants} className="mt-12">
               {/*Project section */}
-              <div className="mb-4">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <FolderKanban className="mr-2 h-5 w-5 text-purple-500" />
-                  Project Management
-                </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  View, create, and manage projects and project team members
-                </p>
+              <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+                Project Management
+              </h2>
 
-                {/* Slider Container */}
-                <div className="relative flex items-center mt-4">
-                  {/* Left Arrow */}
-                  <button
-                    onClick={prevSlide}
-                    className="p-3 bg-gray-300 dark:bg-gray-300 rounded-full mr-2 hover:bg-gray-400 dark:hover:bg-gray-400 transition shadow-md"
+              {/* Slider Container */}
+              {/* Slider Container */}
+              {/* Slider Container */}
+              <div className="relative w-full mt-10">
+                {/* ◀ Left Arrow (outside) */}
+                <button
+                  onClick={prevSlide}
+                  className="absolute -left-12 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white border border-gray-200 rounded-full shadow hover:bg-gray-100 transition"
+                >
+                  ◀
+                </button>
+
+                {/* ▶ Right Arrow (outside) */}
+                <button
+                  onClick={nextSlide}
+                  className="absolute -right-12 top-1/2 transform -translate-y-1/2 z-10 p-3 bg-white border border-gray-200 rounded-full shadow hover:bg-gray-100 transition"
+                >
+                  ▶
+                </button>
+
+                {/* Slider track */}
+                <div className="overflow-hidden px-2">
+                  <motion.div
+                    className="flex gap-6"
+                    animate={{ x: `-${startIndex * (100 / visibleCards)}%` }}
+                    transition={{
+                      type: "tween",
+                      duration: 0.5,
+                      ease: "easeInOut",
+                    }}
+                    style={{ minWidth: "100%" }}
                   >
-                    ◀
-                  </button>
+                    {projectActions.map((action) => (
+                      <motion.div
+                        key={action.id}
+                        className="w-1/3 flex-shrink-0"
+                        variants={buttonVariants}
+                        whileHover="hover"
+                        whileTap="tap"
+                        onClick={() => handleOpenModal(action.id)}
+                      >
+                        <div
+                          className={`relative group bg-white border-2 border-transparent rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] ${action.hoverBorder} hover:shadow-[0_15px_30px_rgba(0,0,0,0.1)] min-h-[200px] h-[200px] max-w-[92%] mx-auto flex flex-col items-center justify-center my-10`}
+                        >
+                          {/* Hover Ripple Effect */}
+                          <div className="absolute inset-0 pointer-events-none z-0">
+                            <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                          </div>
 
-                  {/* Visible Area */}
-                  <div className="w-full overflow-hidden rounded-xl">
-                    <motion.div
-                      className="flex gap-4"
-                      animate={{ x: `-${startIndex * (100 / visibleCards)}%` }}
-                      transition={{
-                        type: "tween",
-                        duration: 0.5,
-                        ease: "easeInOut",
-                      }}
-                      style={{ minWidth: "100%", display: "flex" }}
-                    >
-                      {projectActions.map((action, index) => {
-                        return (
-                          <motion.div
-                            key={action.id}
-                            className="cursor-pointer w-1/3 flex-shrink-0 p-2"
-                            whileHover={{ scale: 1.06 }}
-                            whileTap={{ scale: 0.96 }}
-                            onClick={() => handleOpenModal(action.id)}
-                          >
+                          {/* Card Content */}
+                          <div className="relative z-10 flex flex-col items-center">
                             <div
-                              className={`bg-gradient-to-br ${action.color} ${action.borderColor} border-2 h-44 rounded-2xl shadow-md flex flex-col items-center justify-center text-center px-5 py-6 transition-all`}
+                              className={`${action.iconBg} p-3 rounded-full mb-2`}
                             >
-                              <div
-                                className={`${action.iconBg} p-4 rounded-full mb-3 shadow-lg`}
-                              >
-                                {action.icon}
-                              </div>
-                              <h3
-                                className={`font-semibold text-lg mb-1 ${action.textColor}`}
-                              >
-                                {action.title}
-                              </h3>
-                              <p className={`text-sm ${action.textColor}`}>
-                                {action.description}
-                              </p>
+                              {action.icon}
                             </div>
-                          </motion.div>
-                        );
-                      })}
-                    </motion.div>
-                  </div>
-
-                  {/* Right Arrow */}
-                  <button
-                    onClick={nextSlide}
-                    className="p-3 bg-gray-300 dark:bg-gray-300 rounded-full ml-2 hover:bg-gray-400 dark:hover:bg-gray-400 transition shadow-md"
-                  >
-                    ▶
-                  </button>
+                            <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                              {action.title}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              {action.description}
+                            </p>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
               </div>
 
               <div className="mb-4 mt-12">
-                <h2 className="text-xl font-semibold flex items-center">
-                  <Users className="mr-2 h-5 w-5 text-amber-500" />
+                <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
                   User Management
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-slate-500 mt-1">
-                  Add, remove, and manage user roles within your organization
-                </p>
               </div>
 
               {/* User Management Section */}
@@ -988,18 +1049,25 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   className="cursor-pointer"
                   onClick={() => handleOpenModal("addmember")}
                 >
-                  <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-50 dark:to-emerald-100 border border-emerald-200 dark:border-emerald-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                    <div className="bg-green-500 p-3 rounded-full mb-3">
-                      <UserPlus className="h-6 w-6 text-white" />
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-emerald-500 hover:shadow-[0_15px_30px_rgba(16,185,129,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                     </div>
-                    <h3 className="font-semibold text-green-600 dark:text-green-600 mb-1">
-                      Add Member
-                    </h3>
-                    <p className="text-sm text-green-500 dark:text-green-500">
-                      Invite new users to your organization
-                    </p>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="bg-green-500 p-3 rounded-full mb-2">
+                        <UserPlus className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                        Add Member
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Invite new users to your organization
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
+
                 {/* Assign Role Button */}
                 <motion.div
                   variants={buttonVariants}
@@ -1008,16 +1076,22 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   className="cursor-pointer"
                   onClick={() => handleOpenModal("assignrole")}
                 >
-                  <div className="bg-gradient-to-br from-amber-50 to-yellow-100 dark:from-amber-50 dark:to-yellow-100 border border-yellow-200 dark:border-yellow-200 h-40 rounded-lg overflow-hidden shadow-sm flex flex-col items-center justify-center text-center p-6 transition-all">
-                    <div className="bg-amber-500 p-3 rounded-full mb-3">
-                      <UserCog className="h-6 w-6 text-white" />
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-amber-500 hover:shadow-[0_15px_30px_rgba(251,191,36,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                     </div>
-                    <h3 className="font-semibold text-amber-600 dark:text-amber-600 mb-1">
-                      Assign Role
-                    </h3>
-                    <p className="text-sm text-amber-500 dark:text-amber-500">
-                      Manage user permissions and roles
-                    </p>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="bg-amber-500 p-3 rounded-full mb-2">
+                        <UserCog className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                        Assign Role
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Manage user permissions and roles
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
               </div>
