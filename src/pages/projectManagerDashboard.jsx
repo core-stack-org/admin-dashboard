@@ -655,7 +655,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
             {/* Project Summary */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                📌 {projects[0]?.project?.name || "No name available"}
+                {projects[0]?.project?.name || "No name available"}
               </h3>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
