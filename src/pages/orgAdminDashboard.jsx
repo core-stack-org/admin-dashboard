@@ -14,8 +14,7 @@ import {
   Edit,
   UserPlus,
   UserMinus,
-  Settings,
-  Globe,
+  Plug,
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faUserCog } from "@fortawesome/free-solid-svg-icons";
@@ -30,6 +29,7 @@ import AddMember from "./addMember.jsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import GenerateApiKeyPage from "../GenerateApiKeyPage.jsx";
 
 const OrgAdminDashboard = ({ currentUser }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -163,6 +163,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
           "removeMember",
           "assignrole",
           "removeuserrole",
+          "generateapikey",
         ].includes(type)
       ) {
         data = await fetchOrgMembers(); // or a more specific fetchProjectMembers() if available
@@ -821,6 +822,16 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   />
                 </div>
               )}
+              {modalType === "generateapikey" && (
+                <div>
+                  <GenerateApiKeyPage
+                    closeModal={closeModal}
+                    currentUser={currentUser}
+                    isSuperAdmin={false}
+                    onUserCreated={fetchUsers}
+                  />
+                </div>
+              )}
               {modalType === "assignrole" && (
                 <div>
                   <div>
@@ -946,12 +957,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   />
                 </div>
               )}
-              <button
-                onClick={closeModal}
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
-              >
-                Close
-              </button>
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={closeModal}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </Dialog>
 
@@ -1090,6 +1103,33 @@ const OrgAdminDashboard = ({ currentUser }) => {
                       </h3>
                       <p className="text-sm text-gray-600">
                         Manage user permissions and roles
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* Generate API Key Button */}
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  className="cursor-pointer"
+                  onClick={() => handleOpenModal("generateapikey")}
+                >
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-indigo-500 hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                    </div>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="bg-indigo-500 p-3 rounded-full mb-2">
+                        <Plug className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                        Generate API Key
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Create a secure key for API access
                       </p>
                     </div>
                   </div>

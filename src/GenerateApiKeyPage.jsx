@@ -48,7 +48,7 @@ const GenerateApiKeyPage = ({ currentUser }) => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto bg-white rounded shadow mt-64">
+    <div className="max-w-xl mx-auto bg-white rounded shadow">
       <h2 className="text-xl font-bold mb-4">Generate API Key</h2>
       <button
         className="mb-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"

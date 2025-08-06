@@ -204,11 +204,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       label: "Dashboard",
       href: "/dashboard",
     },
-    {
-      icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-      label: "Generate API Key",
-      href: "/generateApiKey",
-    },
   ];
 
   const showFullMenu =
