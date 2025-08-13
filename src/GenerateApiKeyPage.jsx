@@ -184,6 +184,7 @@ const GenerateApiKeyPage = ({ currentUser }) => {
           {apiLoading ? (
             <tr>
               <td colSpan="5" className="px-4 py-4 text-center text-gray-500">
+                <span className="inline-block w-4 h-4 mr-2 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
                 Loading API keys...
               </td>
             </tr>
