@@ -6,10 +6,12 @@ const GenerateApiKeyPage = ({ currentUser }) => {
   const [keys, setKeys] = useState([]);
   const [generateLoading, setGenerateLoading] = useState(false);
   const [deactivateLoadingIndex, setDeactivateLoadingIndex] = useState(null);
+  const [apiLoading, setApiLoading] = useState(true);
 
   // Fetch API keys on mount
   useEffect(() => {
     const fetchApiKeys = async () => {
+      setApiLoading(true);
       const token = sessionStorage.getItem("accessToken");
 
       try {
@@ -28,7 +30,6 @@ const GenerateApiKeyPage = ({ currentUser }) => {
         if (!response.ok)
           throw new Error(data.message || "Failed to fetch API keys");
 
-        // Transform API response to match table format
         const formattedKeys = data.api_keys.map((item) => ({
           key: item.api_key,
           show: false,
@@ -40,6 +41,8 @@ const GenerateApiKeyPage = ({ currentUser }) => {
       } catch (error) {
         console.error("Error fetching API keys:", error);
         toast.error("❌ Failed to load API keys");
+      } finally {
+        setApiLoading(false);
       }
     };
 
@@ -49,7 +52,7 @@ const GenerateApiKeyPage = ({ currentUser }) => {
   const generateApiKey = async () => {
     if (keys.length >= 2) {
       toast.warn(
-        "You can only have 2 active API keys. Please deactivate one before creating a new one."
+        "You can only have 2 active API keys. Please delete one before creating a new one."
       );
       return;
     }
@@ -144,19 +147,6 @@ const GenerateApiKeyPage = ({ currentUser }) => {
     toast.info(" API Key copied to clipboard!");
   };
 
-  const toggleStatus = (index) => {
-    setKeys((prev) =>
-      prev.map((item, i) =>
-        i === index
-          ? {
-              ...item,
-              status: item.status === "Active" ? "Inactive" : "Active",
-            }
-          : item
-      )
-    );
-  };
-
   const toggleShowKey = (index) => {
     setKeys((prev) =>
       prev.map((item, i) =>
@@ -191,7 +181,13 @@ const GenerateApiKeyPage = ({ currentUser }) => {
           </tr>
         </thead>
         <tbody>
-          {keys.length === 0 ? (
+          {apiLoading ? (
+            <tr>
+              <td colSpan="5" className="px-4 py-4 text-center text-gray-500">
+                Loading API keys...
+              </td>
+            </tr>
+          ) : keys.length === 0 ? (
             <tr>
               <td
                 colSpan="4"
@@ -228,23 +224,7 @@ const GenerateApiKeyPage = ({ currentUser }) => {
                     </button>
                   )}
                 </td>
-                {/* <td className="px-4 py-2 text-center">
-                  <button
-                    onClick={() => deactivateKey(index)}
-                    disabled={deactivateLoadingIndex === index}
-                    className={`px-3 py-1 rounded text-white ${
-                      item.status === "Active"
-                        ? "bg-green-500 hover:bg-green-600"
-                        : "bg-red-500 hover:bg-red-600"
-                    }`}
-                  >
-                    {deactivateLoadingIndex === index
-                      ? item.status === "Active"
-                        ? "Deactivating..."
-                        : "Activating..."
-                      : item.status}
-                  </button>
-                </td> */}
+
                 <td className="px-4 py-2 text-center flex items-center justify-center gap-2">
                   <span
                     className={
@@ -282,175 +262,3 @@ const GenerateApiKeyPage = ({ currentUser }) => {
 };
 
 export default GenerateApiKeyPage;
-
-// import React, { useState } from "react";
-// import { toast } from "react-toastify";
-// import { Eye, Copy } from "lucide-react";
-
-// const GenerateApiKeyPage = ({ currentUser }) => {
-//   const [keys, setKeys] = useState([]);
-//   const [loading, setLoading] = useState(false);
-
-//   const generateApiKey = async () => {
-//     if (keys.length >= 2) {
-//       toast.warn(
-//         "You can only have 2 active API keys. Please deactivate one before creating a new one."
-//       );
-//       return;
-//     }
-
-//     setLoading(true);
-
-//     const token = sessionStorage.getItem("accessToken");
-//     try {
-//       const response = await fetch(
-//         `${process.env.REACT_APP_BASEURL}api/v1/generate_api_key/`,
-//         {
-//           method: "POST",
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//           body: JSON.stringify({
-//             name: currentUser.user.username,
-//           }),
-//         }
-//       );
-
-//       const data = await response.json();
-//       if (!response.ok)
-//         throw new Error(data.detail || "Failed to generate key");
-
-//       const expiryDate = new Date();
-//       expiryDate.setFullYear(expiryDate.getFullYear() + 10);
-
-//       setKeys((prev) => [
-//         ...prev,
-//         {
-//           key: data.key,
-//           show: false,
-//           status: "Active",
-//           expiry: expiryDate.toLocaleDateString(),
-//         },
-//       ]);
-
-//       toast.success("✅ API Key generated successfully!");
-//     } catch (error) {
-//       console.error("Error generating API key:", error);
-//       toast.error("❌ Failed to generate API Key");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const copyToClipboard = (key) => {
-//     navigator.clipboard.writeText(key);
-//     toast.info("🔑 API Key copied to clipboard!");
-//   };
-
-//   const toggleStatus = (index) => {
-//     setKeys((prev) =>
-//       prev.map((item, i) =>
-//         i === index
-//           ? {
-//               ...item,
-//               status: item.status === "Active" ? "Inactive" : "Active",
-//             }
-//           : item
-//       )
-//     );
-//   };
-
-//   const toggleShowKey = (index) => {
-//     setKeys((prev) =>
-//       prev.map((item, i) =>
-//         i === index ? { ...item, show: !item.show } : item
-//       )
-//     );
-//   };
-
-//   return (
-//     <div className="max-w-3xl mx-auto bg-white rounded shadow p-6">
-//       {/* Heading + Plus Button */}
-//       <div className="flex justify-between items-center mb-4">
-//         <h2 className="text-xl font-bold">Manage API Key</h2>
-//         <button
-//           onClick={generateApiKey}
-//           disabled={loading}
-//           className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-//         >
-//           {loading ? "Generating..." : "+"}
-//         </button>
-//       </div>
-
-//       {/* Table */}
-//       <table className="w-full border-collapse border border-gray-300">
-//         <thead className="bg-gray-100">
-//           <tr>
-//             <th className="px-4 py-2 text-left">Key</th>
-//             <th className="px-4 py-2 text-center">Actions</th>
-//             <th className="px-4 py-2 text-center">Status</th>
-//             <th className="px-4 py-2 text-center">Expiry</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {keys.length === 0 ? (
-//             <tr>
-//               <td
-//                 colSpan="4"
-//                 className="px-4 py-4 text-center text-gray-500 italic"
-//               >
-//                 No API key generated, click on + to generate
-//               </td>
-//             </tr>
-//           ) : (
-//             keys.map((item, index) => (
-//               <tr key={index} className="border-b">
-//                 <td className="px-4 py-2">
-//                   <input
-//                     type={item.show ? "text" : "password"}
-//                     value={item.key}
-//                     readOnly
-//                     className="w-full px-2 py-1 border rounded"
-//                   />
-//                 </td>
-//                 <td className="px-4 py-2 text-center">
-//                   {!item.show ? (
-//                     <button
-//                       onClick={() => toggleShowKey(index)}
-//                       className="text-gray-500 hover:text-black"
-//                     >
-//                       <Eye size={20} />
-//                     </button>
-//                   ) : (
-//                     <button
-//                       onClick={() => copyToClipboard(item.key)}
-//                       className="text-gray-500 hover:text-black"
-//                     >
-//                       <Copy size={20} />
-//                     </button>
-//                   )}
-//                 </td>
-//                 <td className="px-4 py-2 text-center">
-//                   <button
-//                     onClick={() => toggleStatus(index)}
-//                     className={`px-3 py-1 rounded ${
-//                       item.status === "Active"
-//                         ? "bg-green-500 text-white"
-//                         : "bg-red-500 text-white"
-//                     }`}
-//                   >
-//                     {item.status}
-//                   </button>
-//                 </td>
-//                 <td className="px-4 py-2 text-center">{item.expiry}</td>
-//               </tr>
-//             ))
-//           )}
-//         </tbody>
-//       </table>
-//     </div>
-//   );
-// };
-
-// export default GenerateApiKeyPage;
