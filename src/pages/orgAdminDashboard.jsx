@@ -590,7 +590,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
               {/* Details */}
               <div className="space-y-4 text-sm">
                 <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <span className="text-gray-600 font-medium">Name</span>
+                  <span className="text-gray-600 font-medium">User name</span>
                   <span className="text-gray-900 font-bold">{userName}</span>
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-200 pb-2">
