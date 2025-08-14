@@ -153,6 +153,9 @@ const OrgAdminDashboard = ({ currentUser }) => {
         data = await fetchOrganizationDetails();
       } else if (type === "update") {
         data = await updateOrganizationDetails();
+      } else if (type === "generateapikey") {
+        const res = await fetchUserApiKeys();
+        data = { data: res.api_keys };
       } else if (
         [
           "members",
@@ -163,7 +166,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
           "removeMember",
           "assignrole",
           "removeuserrole",
-          "generateapikey",
         ].includes(type)
       ) {
         data = await fetchOrgMembers(); // or a more specific fetchProjectMembers() if available
@@ -186,6 +188,26 @@ const OrgAdminDashboard = ({ currentUser }) => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    fetchUserApiKeys();
+  }, []);
+  const fetchUserApiKeys = async () => {
+    const token = sessionStorage.getItem("accessToken");
+    const response = await fetch(
+      `${process.env.REACT_APP_BASEURL}api/v1/get_user_api_keys/`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (!response.ok) throw new Error("Failed to fetch API keys");
+    return await response.json();
+  };
+
   const fetchOrgMembers = async () => {
     setIsModalOpen(true);
     try {
