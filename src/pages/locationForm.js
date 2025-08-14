@@ -4,7 +4,8 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useLocation } from "react-router-dom";
 
-const LocationFormComponent = ({ addTask }) => {
+const LocationFormComponent = ({ currentUser }) => {
+  console.log(currentUser);
   const location = useLocation();
   const { layerName, showDates } = location.state || {};
 
@@ -18,7 +19,7 @@ const LocationFormComponent = ({ addTask }) => {
   const [endYear, setEndYear] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isStatusBoxOpen, setIsStatusBoxOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
@@ -35,6 +36,8 @@ const LocationFormComponent = ({ addTask }) => {
       showYear: layersData.layers_json[key].show_year,
     };
   });
+
+  console.log(layersData.layers_json);
 
   useEffect(() => {
     fetchStates();
@@ -143,65 +146,157 @@ const LocationFormComponent = ({ addTask }) => {
     const [id, block_name] = selectedValue.split("_");
     setBlock({ id: id, name: block_name });
   };
+  // const handleGenerateLayer = async (e) => {
+  //   e.preventDefault();
+  //   setError(null);
+  //   const selectedLayer = layersData.layers_json[layerName];
+  //   const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
+
+  //   const payload = {
+  //     state: state.name,
+  //     district: district.name,
+  //     block: block.name,
+  //     start_year: parseInt(showDates ? dateRange[0] : null),
+  //     end_year: parseInt(showDates ? dateRange[1] : null),
+  //   };
+
+  //   setIsLoading(true);
+
+  //   try {
+  //     const token = sessionStorage.getItem("accessToken");
+  //     const response = await fetch(
+  //       `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           "ngrok-skip-browser-warning": "420",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     // Handle unauthorized or token expired
+  //     if (response.status === 401) {
+  //       toast.error("Session expired. Please login again.");
+  //       sessionStorage.clear(); // clear tokens and user info
+  //       window.location.href = "/login"; // redirect to login
+  //       return;
+  //     }
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json().catch(() => null);
+  //       throw new Error(errorData?.message || `Error: ${response.statusText}`);
+  //     }
+
+  //     const data = await response.json();
+
+  //     toast.success("Layer generated successfully!");
+
+  //     if (data.success) {
+  //       alert("Layer generated successfully!");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error generating layer:", error);
+
+  //     toast.error(
+  //       error.message || "Failed to generate layer. Please try again."
+  //     );
+  //     setError(error.message || "Failed to generate layer. Please try again.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
+    console.log(layerName);
+    const selectedLayer = layersData.layers_json[layerName];
+    console.log(selectedLayer);
+    const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
+    console.log(apiUrlSuffix);
 
-    // toast.info("Layer generation started...");
-    const taskId = `TASK-${Math.floor(Math.random() * 10000)}`; // Replace with API-generated task ID
-    const newTask = { id: taskId, layerName, status: "Started" };
+    const token = sessionStorage.getItem("accessToken");
 
-    // Add task to the sidebar
-    addTask(newTask);
-
-    // Simulate status updates
-    setTimeout(() => {
-      addTask({ ...newTask, status: "In Progress" });
-      // toast.info("Layer generation in progress...");
-    }, 2000);
-
-    setTimeout(() => {
-      addTask({ ...newTask, status: "Completed" });
-      // toast.success("Layer generation completed!");
-    }, 5000);
-
-    const payload = {
-      state: state.name,
-      district: district.name,
-      block: block.name,
-      start_year: parseInt(showDates ? dateRange[0] : null),
-      end_year: parseInt(showDates ? dateRange[1] : null),
-    };
+    const apiUrl = `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`;
+    console.log(apiUrl);
 
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_LAYER_API_URL_V1}`,
-        {
+      let response;
+      if (layerName === "FES CLART") {
+        if (!selectedFile) {
+          toast.error("Please upload a file.");
+          setIsLoading(false);
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("state", state.name);
+        formData.append("district", district.name);
+        formData.append("block", block.name);
+        formData.append("clart_file", selectedFile);
+
+        response = await fetch(apiUrl, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420",
+          },
+          body: formData,
+        });
+      } else {
+        let payload = {
+          state: state.name,
+          district: district.name,
+          block: block.name,
+        };
+
+        if (layerName === "LULC Farm Boundaries" || layerName === "LULC V4") {
+          payload.start_year = 2023;
+          payload.end_year = 2024;
+        } else {
+          payload.start_year = parseInt(
+            showDates ? startYear || dateRange[0] : null
+          );
+          payload.end_year = parseInt(
+            showDates ? endYear || dateRange[1] : null
+          );
+        }
+
+        response = await fetch(apiUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
-        }
-      );
+        });
+      }
+
+      if (response.status === 401) {
+        toast.error("Session expired. Please login again.");
+        sessionStorage.clear();
+        window.location.href = "/login";
+        return;
+      }
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.message || `Error: ${response.statusText}`);
       }
 
       const data = await response.json();
-
       toast.success("Layer generated successfully!");
-
       if (data.success) {
         alert("Layer generated successfully!");
       }
     } catch (error) {
       console.error("Error generating layer:", error);
-
       toast.error(
         error.message || "Failed to generate layer. Please try again."
       );
@@ -218,9 +313,12 @@ const LocationFormComponent = ({ addTask }) => {
     }
     return years;
   };
-
   const years =
-    dateRange.length === 2 ? generateYears(dateRange[0], dateRange[1]) : [];
+    layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
+      ? [2023, 2024]
+      : dateRange.length === 2
+      ? generateYears(dateRange[0], dateRange[1])
+      : [];
 
   return (
     <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-32">
@@ -298,53 +396,71 @@ const LocationFormComponent = ({ addTask }) => {
           </select>
         </div>
 
-        {/* Year Fields */}
-        {showDates && (
-          <>
-            {/* Start Year Dropdown */}
-            <div>
-              <label
-                htmlFor="start-year"
-                className="text-lg font-semibold mb-2 block"
-              >
-                Start Year:
-              </label>
-              <select
-                id="start-year"
-                value={startYear || dateRange[0]}
-                onChange={(e) => setStartYear(e.target.value)}
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
+        {layerName === "FES CLART" && (
+          <div>
+            <label className="text-lg font-semibold mb-2 block">
+              Upload File:
+            </label>
+            <input
+              type="file"
+              accept=".zip,.geojson,.kml,.tiff"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="w-full px-4 py-2 border text-lg rounded-lg"
+            />
+          </div>
+        )}
 
-            {/* End Year Dropdown */}
-            <div>
-              <label
-                htmlFor="end-year"
-                className="text-lg font-semibold mb-2 block"
-              >
-                End Year:
-              </label>
-              <select
-                id="end-year"
-                value={endYear || dateRange[1]}
-                onChange={(e) => setEndYear(e.target.value)}
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
+        {/* Year Fields */}
+        {/* Start Year Dropdown */}
+        {showDates && (
+          <div>
+            <label className="text-lg font-semibold mb-2 block">
+              Start Year:
+            </label>
+            <select
+              value={
+                layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
+                  ? "2023"
+                  : startYear || dateRange[0]
+              }
+              onChange={(e) => setStartYear(e.target.value)}
+              disabled={layerName === "LULC Farm Boundaries"}
+              className="w-full px-4 py-3 border text-lg rounded-lg"
+            >
+              <option value="">Select Start Year</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* End Year Dropdown */}
+        {showDates && (
+          <div>
+            <label className="text-lg font-semibold mb-2 block">
+              End Year:
+            </label>
+            <select
+              value={
+                layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
+                  ? "2024"
+                  : endYear || dateRange[1]
+              }
+              onChange={(e) => setEndYear(e.target.value)}
+              disabled={layerName === "LULC Farm Boundaries"}
+              className="w-full px-4 py-3 border text-lg rounded-lg"
+            >
+              <option value="">Select End Year</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
 
         {/* Submit Button */}

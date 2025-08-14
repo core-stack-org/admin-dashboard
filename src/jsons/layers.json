@@ -20,24 +20,31 @@
             "end":""
 
         },
-        "MWS Fortnight": {
+        "MWS": {
             "api_url": "${config.layer_api_url_v1}/generate_mws_layer/",
-            "show_Dates": true,
-            "date_range":[2017,2023],
+            "show_Dates": false,
             "workspace":"mws_layers",
-            "end":"deltaG_fortnight_distname_blockname"
+            "end":""
 
         },
-        "MWS Annual":{
-            "api_url": "${config.layer_api_url_v1}/generate_well_depth/",
+        "Hydrology Fortnight":{
+            "api_url": "${config.layer_api_url_v1}/hydrology_fortnightly/",
             "show_Dates":true,
             "workspace":"mws_layers",
             "date_range":[2017,2023],
-            "end":"deltaG_well_depth_distname_blockname"
+            "end":""
+
+        },
+        "Hydrology Annual":{
+            "api_url": "${config.layer_api_url_v1}/hydrology_annual/",
+            "show_Dates":true,
+            "workspace":"mws_layers",
+            "date_range":[2017,2023],
+            "end":""
 
         },
         "LULC": {
-            "api_url": "${config.layer_api_url_v1}/lulc_v3_river_basin/",
+            "api_url": "${config.layer_api_url_v1}/lulc_v3/",
             "show_Dates": true,
             "date_range":[2017,2023],
             "workspace":"LULC_level_1"
@@ -66,7 +73,7 @@
 
 
         },
-        "Surface Water bodies": {
+        "Surface Water Bodies": {
             "api_url": "${config.layer_api_url_v1}/generate_swb/",
             "show_Dates": true,
             "date_range":[2017,2023],
@@ -95,7 +102,7 @@
             "end":"_raster"
 
         },
-        "Crop Grid_layer": {
+        "Crop Grid": {
             "api_url": "${config.layer_api_url_v1}/crop_grid/",
             "show_Dates": false,
             "workspace":"crop_grid_layers",
@@ -130,7 +137,7 @@
         },
      "Tree Health Raster": {
             "api_url": "${config.layer_api_url_v1}/tree_health_raster/",
-            "show_Dates": false,
+            "show_Dates": true,
             "workspace":""
 
         },
@@ -151,9 +158,52 @@
             "show_Dates": true,
             "workspace":""
 
-        }
-     
-        
+        },
+        "Restoration": {
+            "api_url": "${config.layer_api_url_v1}/restoration_opportunity/",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "Aquifer": {
+            "api_url": "${config.layer_api_url_v1}/aquifer_vector/ ",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "SOGE": {
+            "api_url": "${config.layer_api_url_v1}/soge_vector/ ",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "FES CLART": {
+            "api_url": "${config.layer_api_url_v1}/fes_clart_layer/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,  
+        "LULC Farm Boundaries": {
+            "api_url": "${config.layer_api_url_v1}/lulc_farm_boundary/ ",
+            "show_Dates": true,
+            "workspace":""
+        }  ,
+        "LULC V4": {
+            "api_url": "${config.layer_api_url_v1}/lulc_v4/ ",
+            "show_Dates": true,
+            "workspace":""
+        }  ,
+        "Generate Farm Ponds": {
+            "api_url": "${config.layer_api_url_v1}/generate_ponds/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        "Merge SWB With Ponds": {
+            "api_url": "${config.layer_api_url_v1}/merge_swb_ponds/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        "Generate Wells": {
+            "api_url": "${config.layer_api_url_v1}/generate_wells/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  
     }
 }
 

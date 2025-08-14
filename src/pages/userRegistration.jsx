@@ -2,8 +2,14 @@ import React, { useEffect, useState } from "react";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import logo from "../assets/core-stack logo.png";
 
 const RegistrationForm = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
@@ -12,10 +18,14 @@ const RegistrationForm = () => {
   const [showPasswordRules, setShowPasswordRules] = useState(false);
 
   const [formData, setFormData] = useState({
-    userName: "",
+    username: "",
     email: "",
     password: "",
-    confirmPassword: "",
+    password_confirm: "",
+    first_name: "",
+    last_name: "",
+    contact_number: "",
+    organization: "",
   });
   const passwordRequirements = [
     "At least 8 characters long",
@@ -30,7 +40,7 @@ const RegistrationForm = () => {
   const loadOrganization = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/org/get_org`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
         {
           method: "GET",
           headers: {
@@ -50,57 +60,46 @@ const RegistrationForm = () => {
     }
   };
 
-  const loadPermission = async (inputValue) => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/user/permissions`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-          },
-        }
-      );
-      const data = await response.json();
-      const planPermissions = data.plan || [];
-      return planPermissions.map((permission) => ({
-        value: permission.id,
-        label: permission.name,
-      }));
-    } catch (error) {
-      console.error("Error fetching permissions:", error);
-      return [];
-    }
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+    setErrors((prevErrors) => ({
+      ...prevErrors,
+      [name]: value ? "" : prevErrors[name],
+    }));
   };
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.userName) newErrors.userName = "User name is required";
+    if (!formData.first_name) newErrors.firstName = "First name is required";
+    if (!formData.last_name) newErrors.lastName = "Last name is required";
+    if (!formData.username) newErrors.userName = "User name is required";
     if (!formData.email) {
       newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email address is invalid";
+    } else if (
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+    ) {
+      newErrors.email = "Invalid email format";
+    }
+
+    if (!formData.contact_number) {
+      newErrors.contact_number = "Contact number is required";
+    } else if (!/^\d{10}$/.test(formData.contact_number)) {
+      newErrors.contact_number = "Enter a valid 10-digit contact number";
     }
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
     }
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+    if (formData.password !== formData.password_confirm) {
+      newErrors.password_confirm = "Passwords do not match";
     }
     return newErrors;
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -108,216 +107,282 @@ const RegistrationForm = () => {
       setErrors(validationErrors);
     } else {
       const registrationData = {
-        username: formData.userName,
+        username: formData.username,
         email: formData.email,
         password: formData.password,
-        organization: selectedOption.value,
-        entity_permission: selectedPermission ? selectedPermission.value : null,
+        password_confirm: formData.password_confirm,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        contact_number: formData.contact_number,
+        organization: formData.organization,
       };
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/user/register`,
+          `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
+              // Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(registrationData),
           }
         );
 
         if (response.ok) {
+          toast.success("User registered successfully!");
+          setTimeout(() => {
+            navigate("/login");
+          }, 2000);
           setFormData({
-            userName: "",
+            username: "",
             email: "",
             password: "",
-            confirmPassword: "",
+            password_confirm: "",
+            first_name: "",
+            last_name: "",
+            contact_number: "",
+            organization: "",
           });
           setSelectedOption(null);
           setSelectedPermission([]);
           setErrors({});
         } else {
-          console.error("Registration failed");
+          const errorData = await response.json(); // Parse the JSON response
+          const errorMessages = Object.values(errorData).flat().join(", ");
+          toast.error(
+            errorMessages || "Registration failed. Please try again."
+          );
         }
       } catch (error) {
         console.error("Error during registration:", error);
+        toast.error("An error occurred. Please try again later.");
       }
     }
   };
+  const handleloginRedirect = () => {
+    navigate("/login");
+  };
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white rounded-lg shadow-md mt-32">
-      <div className="p-8">
-        <h2 className="text-2xl font-bold mb-6 text-center">
+    <div className="min-h-screen  flex items-center justify-center p-4">
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <div className="p-8 bg-white shadow-lg border border-gray-300 rounded-xl w-full max-w-4xl">
+        <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
+        <h2 className="text-2xl font-bold mb-6 text-center t">
           User Registration
         </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-8">
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label
-                htmlFor="userName"
-                className="block text-sm font-medium mb-1"
-              >
-                User Name
-              </label>
               <input
-                id="userName"
-                name="userName"
-                value={formData.userName}
+                name="first_name"
+                value={formData.first_name}
+                onChange={handleChange}
+                className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="Enter First Name"
+              />
+              {errors.first_name && (
+                <p className="text-red-500 text-sm">{errors.first_name}</p>
+              )}
+            </div>
+            <div>
+              <input
+                name="last_name"
+                value={formData.last_name}
+                onChange={handleChange}
+                className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="Enter Last Name"
+              />
+              {errors.last_name && (
+                <p className="text-red-500 text-sm">{errors.last_name}</p>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <input
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              placeholder="Enter User Name"
+            />
+            {errors.username && (
+              <p className="text-red-500 text-sm">{errors.username}</p>
+            )}
+          </div>
+
+          <div>
+            <input
+              name="email"
+              type="email"
+              value={formData.email}
+              onChange={handleChange}
+              className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              autoComplete="off"
+              placeholder="Enter valid email"
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm">{errors.email}</p>
+            )}
+          </div>
+
+          <div>
+            <input
+              name="contact_number"
+              value={formData.contact_number || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only numbers (remove non-numeric characters)
+                if (/^\d{0,10}$/.test(value)) {
+                  setFormData({ ...formData, contact_number: value });
+                }
+              }}
+              className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              placeholder="Enter 10-digit contact number"
+              a
+            />
+            {formData.contact_number?.length > 0 &&
+              formData.contact_number.length !== 10 && (
+                <p className="text-red-500 text-sm">
+                  Incorrect number. Must be 10 digits.
+                </p>
+              )}
+          </div>
+
+          {/* Organization */}
+          <div>
+            <AsyncSelect
+              loadOptions={loadOrganization}
+              defaultOptions
+              onChange={(selected) => {
+                setSelectedOption(selected);
+                setFormData({
+                  ...formData,
+                  organization: selected?.value, // Update organization in formData
+                });
+              }}
+              placeholder="Select or search for an Organisation"
+              classNamePrefix="react-select"
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  padding: "8px", // Adds padding
+                  height: "50px", // Adjust height
+                  borderRadius: "6px",
+                  borderColor: "#D1D5DB", // Tailwind's border-gray-300
+                  boxShadow: "none",
+                }),
+                placeholder: (provided) => ({
+                  ...provided,
+                  color: "#9CA3AF", // Matches Tailwind's text-gray-400
+                }),
+                valueContainer: (provided) => ({
+                  ...provided,
+                  padding: "0 12px", // Adjusts padding inside the field
+                }),
+              }}
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary25: "lightgray",
+                  primary: "gray",
+                },
+              })}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Password Field */}
+
+            <div className="relative">
+              <input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
                 onChange={handleChange}
                 autoComplete="off"
-                className={`w-full p-2 border rounded-lg ${
-                  errors.userName ? "border-red-500" : "border-gray-300"
-                }`}
+                onFocus={() => setShowPasswordRules(true)}
+                onBlur={() => setShowPasswordRules(false)} // ✅ Hide rules when moving to another field
+                className="w-full rounded border border-gray-300 pl-10 pr-10 py-4 e placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                placeholder="Enter password"
               />
-              {errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">{errors.userName}</p>
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+
+              {/* Password Rules (Hide on blur) */}
+              {showPasswordRules && (
+                <div className="absolute top-full left-0 w-full mt-2 p-2 bg-gray-100 border rounded-lg text-sm text-gray-700 shadow-lg">
+                  <p className="font-medium">Password must include:</p>
+                  <ul className="list-disc ml-5">
+                    {passwordRequirements.map((rule, index) => (
+                      <li key={index}>{rule}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
 
+            {/* Confirm Password Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
-                Email
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full p-2 border rounded-lg ${
-                  errors.email ? "border-red-500" : "border-gray-300"
-                }`}
-              />
-              {errors.email && (
-                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-              )}
-            </div>
-            <div className="relative">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-1"
-              >
-                Password
-              </label>
               <div className="relative">
                 <input
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  onFocus={() => setShowPasswordRules(true)}
-                  onBlur={() => setShowPasswordRules(false)}
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  className={`w-full p-2 border rounded-lg ${
-                    errors.password ? "border-red-500" : "border-gray-300"
-                  } pr-10`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff /> : <Eye />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-              )}
-            </div>
-            {showPasswordRules && (
-              <div className="mt-2 p-2 bg-gray-100 border rounded-lg text-sm text-gray-700">
-                <p className="font-medium">Password must include:</p>
-                <ul className="list-disc ml-5">
-                  {passwordRequirements.map((rule, index) => (
-                    <li key={index}>{rule}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Confirm Password */}
-            <div className="relative">
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium mb-1"
-              >
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                  name="password_confirm"
                   type={showConfirmPassword ? "text" : "password"}
+                  value={formData.password_confirm}
                   onChange={handleChange}
-                  className={`w-full p-2 border rounded-lg ${
-                    errors.confirmPassword
-                      ? "border-red-500"
-                      : "border-gray-300"
-                  } pr-10`}
+                  className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  placeholder="Re-Enter password "
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                 >
-                  {showConfirmPassword ? <EyeOff /> : <Eye />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.confirmPassword}
+              {errors.password_confirm && (
+                <p className="text-red-500 text-sm">
+                  {errors.password_confirm}
                 </p>
               )}
             </div>
-            <label
-              htmlFor="organisation"
-              className="block text-sm font-medium mb-2"
+          </div>
+
+          <div className="flex justify-center mt-6">
+            <button
+              type="submit"
+              className="px-4 py-4 rounded-lg bg-blue-500 text-white hover:bg-blue-600 flex items-center"
             >
-              Organisation
-            </label>
-            <AsyncSelect
-              loadOptions={loadOrganization}
-              defaultOptions
-              onChange={(selected) => setSelectedOption(selected)}
-              placeholder="Select or search for an Organisation"
-              classNamePrefix="react-select"
-            />
-
-            <div>
-              <label
-                htmlFor="planPermission"
-                className="block text-sm font-medium mb-8"
+              <CheckCircle2 className="w-4 h-4 mr-2" /> Submit
+            </button>
+          </div>
+          <div className="text-center">
+            <p className="text-gray-600">
+              Aready have an account?{" "}
+              <span
+                onClick={handleloginRedirect}
+                className="text-blue-500 cursor-pointer hover:underline"
               >
-                Permissions
-              </label>
-              <AsyncSelect
-                cacheOptions
-                loadOptions={loadPermission}
-                defaultOptions
-                onChange={(selected) => setSelectedPermission(selected)}
-                placeholder="Select or search for a permission"
-                classNamePrefix="react-select"
-              />
-            </div>
-          </div>{" "}
+                Login here
+              </span>
+            </p>
+          </div>
         </form>
-
-        <div className="flex justify-center mt-8">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 flex items-center"
-          >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Submit
-          </button>
-        </div>
       </div>
     </div>
   );
