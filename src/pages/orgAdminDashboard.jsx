@@ -722,7 +722,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
               )}
               {modalType === "members" && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl mx-6 overflow-hidden">
+                  <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl mx-6 overflow-hidden">
                     {/* Header */}
                     <div className="bg-indigo-700 text-white px-8 py-5 flex justify-between items-center">
                       <h2 className="text-2xl font-bold">Org Members</h2>
@@ -757,6 +757,9 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                 <th className="py-3 px-4 text-left w-12">
                                   S. No.
                                 </th>
+                                <th className="py-3 px-4 text-left">
+                                  Username
+                                </th>
                                 <th className="py-3 px-4 text-left">Name</th>
                                 <th className="py-3 px-4 text-left">Email</th>
                                 <th className="py-3 px-4 text-left">Roles</th>
@@ -774,6 +777,9 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                   </td>
                                   <td className="py-3 px-4 font-semibold text-gray-900">
                                     {user.username}
+                                  </td>
+                                  <td className="py-3 px-4 font-semibold text-gray-900">
+                                    {user.first_name} {user.last_name}
                                   </td>
                                   <td className="py-3 px-4 text-gray-700">
                                     {user.email}
