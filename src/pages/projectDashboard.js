@@ -42,6 +42,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const [isLayerAvailable, setIsLayerAvailable] = useState(false);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isEditDialogOpenForCE, setIsEditDialogOpenForCE] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -65,6 +66,12 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     setSelectedProject(project);
     setIsEditDialogOpen(true);
   };
+
+  const handleOpenEditDialogForCE = (project) => {
+    setSelectedProject(project);
+    setIsEditDialogOpenForCE(true);
+  };
+
   // Add this function to remove a file by index
   const handleRemoveFile = (indexToRemove) => {
     setSelectedFiles((prevFiles) =>
@@ -76,6 +83,12 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     setIsEditDialogOpen(false);
     setActiveTab(0);
   };
+
+  const handleCloseEditDialogForCE = () => {
+    setIsEditDialogOpenForCE(false);
+    setActiveTab(0);
+  };
+
   const getStateName = (stateId) => {
     const state = (statesList || []).find((s) => s.id === stateId);
 
@@ -172,6 +185,18 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     }
   };
 
+  const handleCsvFileSelect = (event) => {
+    const files = Array.from(event.target.files);
+    const validFiles = files.filter((file) => file.name.endsWith(".csv"));
+
+    if (validFiles.length > 0) {
+      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
+    } else {
+      alert("Please upload valid CSV files.");
+    }
+  };
+
+
   const handleUploadKml = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
       setToast({
@@ -228,9 +253,69 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     }
   };
 
+
+    const handleUploadCsv = async (selectedProject) => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      setToast({
+        open: true,
+        message: "No files selected!",
+        severity: "error",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+    if (selectedFiles.length > 1) {
+      selectedFiles.forEach((file) => {
+        formData.append("files[]", file);
+      });
+    } else {
+      formData.append("file", selectedFiles[0]);
+    }
+    formData.append("project_id", selectedProject.id);
+
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/map_users_to_community/`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420",
+            // ❌ Don't add Content-Type manually for FormData
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status}, ${errorText}`);
+      }
+      const result = await response.json();
+      setToast({
+        open: true,
+        message: "CSV file uploaded successfully!",
+        severity: "success",
+      });
+      setSelectedFiles([]);
+      setIsLayerAvailable(false);
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      setToast({
+        open: true,
+        message: "Failed to upload CSV file!",
+        severity: "error",
+      });
+    }
+  };
+
+
   const handleCloseDownloadDialog = () => {
     setIsDownloadDialogOpen(false);
   };
+
 
   const handleCompute = async (project) => {
     if (!project) {
@@ -841,6 +926,19 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                     </DialogContent>
                                   </Dialog> */}
                                 </div>
+                              ) : project.app_type === "community_engagement" ? (
+                                  <Tooltip title="Edit" arrow>
+                                    <Button
+                                      variant="outlined"
+                                      color="secondary"
+                                      className="rounded-md shadow p-3 text-sm"
+                                      onClick={() =>
+                                        handleOpenEditDialogForCE(project)
+                                      }
+                                    >
+                                      <EditIcon />
+                                    </Button>
+                                  </Tooltip>
                               ) : null}
                             </div>
                           </div>
@@ -1123,6 +1221,244 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
               </Snackbar>
             </DialogContent>
           </Dialog>
+
+
+
+
+
+
+          <Dialog
+            open={isEditDialogOpenForCE}
+            onClose={handleCloseEditDialogForCE}
+            maxWidth="md"
+            fullWidth
+            sx={{
+              "& .MuiDialog-paper": {
+                minHeight: "450px", // Adjust the height as needed
+                borderRadius: "12px", // Slightly rounded corners for better aesthetics
+              },
+            }}
+          >
+            <DialogTitle sx={{ position: "relative", pb: 2 }}>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ textAlign: "center" }}
+              >
+                Manage Project – {selectedProject?.name}
+              </Typography>
+
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Follow these steps:
+                <br />
+                1. Create a Community.
+                <br />
+                2. Add members to the Community.
+              </Typography>
+
+              <IconButton
+                onClick={handleCloseEditDialogForCE}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+
+            <DialogContent
+              sx={{
+                backgroundColor: "#fafafa",
+                borderRadius: 2,
+                p: 3,
+                border: "1px solid #ddd",
+                mt: 1,
+              }}
+            >
+              <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                textColor="primary"
+                indicatorColor="primary"
+                variant="fullWidth"
+                sx={{
+                  backgroundColor: "#f5f5f5", // Light grey background
+                  borderBottom: "2px solid #e0e0e0", // Divider line
+                  "& .MuiTab-root": {
+                    textTransform: "uppercase",
+                    fontWeight: "bold",
+                    fontSize: "14px",
+                    padding: "12px 16px",
+                  },
+                  "& .Mui-selected": {
+                    color: "#1565c0", // Darker blue for selected tab
+                    fontWeight: "bold",
+                  },
+                  "& .MuiTabs-indicator": {
+                    height: "3px", // Thicker indicator
+                    backgroundColor: "#1565c0",
+                  },
+                }}
+              >
+                <Tab label="Add Member" />
+              </Tabs>
+
+              <Box mt={3}>
+                {/* Add Member Tab */}
+                {activeTab === 0 && (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      width: "100%",
+                    }}
+                  >
+                    <label htmlFor="csv-upload" style={{ width: "100%" }}>
+                      <input
+                        id="csv-upload"
+                        type="file"
+                        accept=".csv"
+                        multiple
+                        hidden
+                        onChange={handleCsvFileSelect}
+                      />
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        component="span"
+                        fullWidth // This makes the button take full dialog width
+                        sx={{
+                          padding: "12px",
+                          borderRadius: "8px",
+                          fontWeight: "bold",
+                          textTransform: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <CloudUploadIcon sx={{ marginRight: "8px" }} />
+                        Choose CSV Files
+                      </Button>
+                    </label>
+
+                    {selectedFiles.length > 0 && (
+                      <Box
+                        sx={{
+                          width: "100%",
+                          backgroundColor: "#f4f4f4",
+                          p: 2,
+                          borderRadius: "8px",
+                          textAlign: "center",
+                        }}
+                      >
+                        {selectedFiles.length > 0 && (
+                          <Box
+                            sx={{
+                              width: "100%",
+                              backgroundColor: "#f4f4f4",
+                              p: 2,
+                              borderRadius: "8px",
+                            }}
+                          >
+                            {selectedFiles.map((file, index) => (
+                              <Box
+                                key={index}
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center",
+                                  padding: "4px 8px",
+                                  borderBottom:
+                                    index !== selectedFiles.length - 1
+                                      ? "1px solid #ccc"
+                                      : "none",
+                                }}
+                              >
+                                <Typography variant="body2">
+                                  📂 {file.name}
+                                </Typography>
+                                <IconButton
+                                  onClick={() => handleRemoveFile(index)}
+                                  size="small"
+                                  color="error"
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              </Box>
+                            ))}
+                          </Box>
+                        )}
+                      </Box>
+                    )}
+
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      sx={{
+                        width: "250px", // Keeping Upload button compact
+                        alignSelf: "center",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        fontWeight: "bold",
+                        textTransform: "none",
+                      }}
+                      onClick={() => handleUploadCsv(selectedProject)}
+                    >
+                      Upload
+                    </Button>
+                    <Snackbar
+                      open={toast.open}
+                      autoHideDuration={6000}
+                      onClose={handleCloseToast}
+                      anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "right",
+                      }} // Move to bottom-right
+                      sx={{
+                        position: "absolute",
+                        bottom: 12,
+                        right: 10, // Position it on the right side
+                      }}
+                    >
+                      <Alert
+                        onClose={handleCloseToast}
+                        severity={toast.severity}
+                        sx={{ width: "100%" }}
+                      >
+                        {toast.message}
+                      </Alert>
+                    </Snackbar>
+                  </Box>
+                )}
+              </Box>
+              <Snackbar
+                open={toast.open}
+                autoHideDuration={6000}
+                onClose={handleCloseToast}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "right",
+                }} // Move to bottom-right
+                sx={{
+                  position: "absolute",
+                  bottom: 12,
+                  right: 10, // Position it on the right side
+                }}
+              >
+                <Alert
+                  onClose={handleCloseToast}
+                  severity={toast.severity}
+                  sx={{ width: "100%" }}
+                >
+                  {toast.message}
+                </Alert>
+              </Snackbar>
+            </DialogContent>
+          </Dialog>
+
+
+
+
 
           {/* Download GeoJSON Dialog */}
           <Dialog
