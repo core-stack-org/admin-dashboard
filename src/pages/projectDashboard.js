@@ -38,6 +38,7 @@ import Project from "../pages/project.js";
 import { FolderIcon } from "lucide-react";
 import PlanCreation from "./planCreation.js";
 import { TreePine, Waves, Mountain, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -57,6 +58,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const [openPlanDialog, setOpenPlanDialog] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const isSuperAdmin = currentUser?.user?.is_superadmin;
+  const navigate = useNavigate();
 
   const [toast, setToast] = useState({
     open: false,
@@ -497,13 +499,16 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
 
   const handleEditPlan = (plan) => {
     setSelectedPlanId(plan.id);
-    setOpenPlanDialog(true);
+    setSelectedProject(plan.project);
+    navigate("/planCreation", {
+      state: { project: plan.project, planId: plan.id },
+    });
   };
 
-  const handleCreatePlan = (id) => {
-    setSelectedProject(id);
-    setSelectedPlanId(null); // important to indicate create mode
-    setOpenPlanDialog(true);
+  const handleCreatePlan = (project) => {
+    setSelectedProject(project);
+    setSelectedPlanId(null);
+    navigate("/planCreation", { state: { project, planId: null } });
   };
 
   const handleExcelSelect = (event) => {
@@ -596,7 +601,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
               variant="outlined"
               color="success"
               className="rounded-md shadow p-3 text-sm min-w-0"
-              onClick={() => handleCreatePlan(project.id)}
+              onClick={() => handleCreatePlan(project)}
             >
               <AddIcon />
             </Button>
@@ -1025,27 +1030,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                         <AddIcon />
                                       </Button>
                                     </Tooltip>
-                                    <Dialog
-                                      open={openPlanDialog}
-                                      onClose={() => {
-                                        setOpenPlanDialog(false);
-                                        setSelectedPlanId(null);
-                                      }}
-                                      fullWidth
-                                      maxWidth="md"
-                                    >
-                                      <DialogContent>
-                                        <PlanCreation
-                                          onClose={() => {
-                                            setOpenPlanDialog(false);
-                                            setSelectedPlanId(null);
-                                          }}
-                                          projectId={project}
-                                          planId={selectedPlanId}
-                                          onPlanSaved={handlePlanSaved}
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
                                   </div>
                                 ) : null}
                               </div>
@@ -1388,6 +1372,28 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* <Dialog
+            open={openPlanDialog}
+            onClose={() => {
+              setOpenPlanDialog(false);
+              setSelectedPlanId(null);
+            }}
+            fullWidth
+            maxWidth="md"
+          >
+            <DialogContent>
+              <PlanCreation
+                onClose={() => {
+                  setOpenPlanDialog(false);
+                  setSelectedPlanId(null);
+                }}
+                projectId={selectedProject}
+                planId={selectedPlanId}
+                onPlanSaved={handlePlanSaved}
+              />
+            </DialogContent>
+          </Dialog> */}
         </div>
       </div>
     </div>

@@ -50,10 +50,17 @@ const RegistrationForm = () => {
         }
       );
       const data = await response.json();
-      return data.map((org) => ({
-        value: org.id,
-        label: org.name,
-      }));
+      // return data.map((org) => ({
+      //   value: org.id,
+      //   label: org.name,
+      // }));
+      return [
+        ...data.map((org) => ({
+          value: org.id,
+          label: org.name,
+        })),
+        { value: "others", label: "Others" }, // ✅ static option
+      ];
     } catch (error) {
       console.error("Error fetching organizations:", error);
       return [];
@@ -295,6 +302,19 @@ const RegistrationForm = () => {
               })}
             />
           </div>
+          {selectedOption?.value === "others" && (
+            <input
+              type="text"
+              placeholder="Enter organization name"
+              className="w-full mt-2 rounded border border-gray-300 pl-3 pr-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+              value={
+                formData.organization === "others" ? "" : formData.organization
+              }
+              onChange={(e) =>
+                setFormData({ ...formData, organization: e.target.value })
+              }
+            />
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             {/* Password Field */}

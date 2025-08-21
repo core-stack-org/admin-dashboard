@@ -56,9 +56,22 @@ const LocationFormComponent = ({ currentUser }) => {
         }
       );
       const data = await response.json();
-      const sortedStates = data.states.sort((a, b) =>
+      const normalizeName = (str) =>
+        str
+          .toLowerCase()
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+
+      const normalizedStates = data.states.map((state) => ({
+        ...state,
+        state_name: normalizeName(state.state_name),
+      }));
+
+      const sortedStates = normalizedStates.sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
+
       setStatesList(sortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -291,9 +304,9 @@ const LocationFormComponent = ({ currentUser }) => {
       }
 
       const data = await response.json();
-      toast.success("Layer generated successfully!");
+      toast.success("Layer generation initiated successfully!");
       if (data.success) {
-        alert("Layer generated successfully!");
+        alert("Layer generation initiated successfully!");
       }
     } catch (error) {
       console.error("Error generating layer:", error);
