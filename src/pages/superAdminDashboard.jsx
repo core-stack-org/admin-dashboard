@@ -35,6 +35,7 @@ import RoleAssignmentForm from "./roleAssignmentForm.jsx";
 import AddMember from "./addMember.jsx";
 import RegistrationForm from "./userRegistration.jsx";
 import ProjectDashboard from "./projectDashboard.js";
+import { useNavigate } from "react-router-dom";
 
 function SuperAdminDashboard({ currentUser }) {
   const [activeModal, setActiveModal] = useState(null);
@@ -53,6 +54,7 @@ function SuperAdminDashboard({ currentUser }) {
   const [selectedUser, setSelectedUser] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [statesList, setStatesList] = useState([]);
+  const navigate = useNavigate();
 
   const handleOpenDialog = (dialogName) => {
     setOpenDialog(dialogName);
@@ -218,7 +220,8 @@ function SuperAdminDashboard({ currentUser }) {
     handleOpenDialog("viewProjects");
   };
   const handleViewUsers = () => {
-    handleOpenDialog("viewUsers");
+    // handleOpenDialog("viewUsers");
+    navigate("/users");
   };
   const handleUserChange = (event) => {
     setSelectedUser(event.target.value);
@@ -283,7 +286,7 @@ function SuperAdminDashboard({ currentUser }) {
           />
 
           <h1
-            className="text-[3.5rem] font-black uppercase tracking-[2px] mb-4"
+            className="text-[3.5rem] font-black  tracking-[2px] mb-4"
             style={{
               background: "linear-gradient(45deg, #0066cc, #6600cc, #cc6600)",
               backgroundSize: "200% 200%",
@@ -293,7 +296,7 @@ function SuperAdminDashboard({ currentUser }) {
               animation: "gradientShift 3s ease-in-out infinite",
             }}
           >
-            Super Admin Dashboard
+            Super Administrator
           </h1>
 
           <p className="text-[1.2rem] text-gray-600 opacity-80">
@@ -730,7 +733,7 @@ function SuperAdminDashboard({ currentUser }) {
       </Dialog>
 
       {/* View all users*/}
-      <Dialog
+      {/* <Dialog
         open={openDialog === "viewUsers"}
         onClose={handleCloseDialog}
         maxWidth="md"
@@ -791,7 +794,7 @@ function SuperAdminDashboard({ currentUser }) {
             Close
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* View all Organizations*/}
       <Dialog

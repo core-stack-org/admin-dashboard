@@ -21,6 +21,7 @@ import SideNavbar from "./pages/sidenavbar";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import UsersTable from "./pages/allUsers";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -62,6 +63,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/generateApiKey"
                   element={<GenerateApiKeyPage currentUser={currentUser} />}
+                />
+                <Route
+                  path="/users"
+                  element={<UsersTable currentUser={currentUser} />}
                 />
                 <Route
                   path="/generate-layers/:layerName"
