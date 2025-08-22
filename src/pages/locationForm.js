@@ -20,6 +20,8 @@ const LocationFormComponent = ({ currentUser }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [districtsLoading, setDistrictsLoading] = useState(false);
+  const [blocksLoading, setBlocksLoading] = useState(false);
 
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
@@ -43,6 +45,13 @@ const LocationFormComponent = ({ currentUser }) => {
     fetchStates();
   }, []);
 
+  const normalizeName = (str) =>
+    str
+      .toLowerCase()
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+
   const fetchStates = async () => {
     try {
       const response = await fetch(
@@ -56,12 +65,6 @@ const LocationFormComponent = ({ currentUser }) => {
         }
       );
       const data = await response.json();
-      const normalizeName = (str) =>
-        str
-          .toLowerCase()
-          .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
 
       const normalizedStates = data.states.map((state) => ({
         ...state,
@@ -79,6 +82,7 @@ const LocationFormComponent = ({ currentUser }) => {
   };
 
   const fetchDistricts = async (selectedState) => {
+    setDistrictsLoading(true);
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
@@ -91,16 +95,25 @@ const LocationFormComponent = ({ currentUser }) => {
         }
       );
       const data = await response.json();
-      const sortedDistricts = data.districts.sort((a, b) =>
+
+      const normalizedDistricts = data.districts.map((district) => ({
+        ...district,
+        district_name: normalizeName(district.district_name),
+      }));
+
+      const sortedDistricts = normalizedDistricts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
       setDistrictsList(sortedDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
+    } finally {
+      setDistrictsLoading(false);
     }
   };
 
   const fetchBlocks = async (selectedDistrict) => {
+    setBlocksLoading(true);
     try {
       const response = await fetch(
         `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
@@ -113,12 +126,19 @@ const LocationFormComponent = ({ currentUser }) => {
         }
       );
       const data = await response.json();
-      const sortedBlocks = data.blocks.sort((a, b) =>
+      const normalizedBlocks = data.blocks.map((block) => ({
+        ...block,
+        block_name: normalizeName(block.block_name),
+      }));
+
+      const sortedBlocks = normalizedBlocks.sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
       setBlocksList(sortedBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
+    } finally {
+      setBlocksLoading(false);
     }
   };
 
@@ -159,68 +179,6 @@ const LocationFormComponent = ({ currentUser }) => {
     const [id, block_name] = selectedValue.split("_");
     setBlock({ id: id, name: block_name });
   };
-  // const handleGenerateLayer = async (e) => {
-  //   e.preventDefault();
-  //   setError(null);
-  //   const selectedLayer = layersData.layers_json[layerName];
-  //   const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
-
-  //   const payload = {
-  //     state: state.name,
-  //     district: district.name,
-  //     block: block.name,
-  //     start_year: parseInt(showDates ? dateRange[0] : null),
-  //     end_year: parseInt(showDates ? dateRange[1] : null),
-  //   };
-
-  //   setIsLoading(true);
-
-  //   try {
-  //     const token = sessionStorage.getItem("accessToken");
-  //     const response = await fetch(
-  //       `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "ngrok-skip-browser-warning": "420",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //         body: JSON.stringify(payload),
-  //       }
-  //     );
-
-  //     // Handle unauthorized or token expired
-  //     if (response.status === 401) {
-  //       toast.error("Session expired. Please login again.");
-  //       sessionStorage.clear(); // clear tokens and user info
-  //       window.location.href = "/login"; // redirect to login
-  //       return;
-  //     }
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json().catch(() => null);
-  //       throw new Error(errorData?.message || `Error: ${response.statusText}`);
-  //     }
-
-  //     const data = await response.json();
-
-  //     toast.success("Layer generated successfully!");
-
-  //     if (data.success) {
-  //       alert("Layer generated successfully!");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error generating layer:", error);
-
-  //     toast.error(
-  //       error.message || "Failed to generate layer. Please try again."
-  //     );
-  //     setError(error.message || "Failed to generate layer. Please try again.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
 
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
@@ -364,37 +322,74 @@ const LocationFormComponent = ({ currentUser }) => {
         {/* District Dropdown */}
         <div>
           <label className="text-lg font-semibold mb-2 block">District:</label>
-          <select
-            value={
-              district.id && district.name
-                ? `${district.id}_${district.name}`
-                : ""
-            }
-            onChange={handleDistrictChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select District</option>
-            {districtsList.map((district) => (
-              <option
-                key={`${district.id}_${district.district_name}`} // Ensure uniqueness
-                value={`${district.id}_${district.district_name}`}
-              >
-                {district.district_name}
+          <div className="relative">
+            <select
+              value={
+                district.id && district.name
+                  ? `${district.id}_${district.name}`
+                  : ""
+              }
+              onChange={handleDistrictChange}
+              disabled={districtsLoading} // disable when loading
+              className="w-full px-4 py-3 border text-lg rounded-lg pr-10" // add space for spinner
+            >
+              <option value="">
+                {districtsLoading ? "Loading districts..." : "Select District"}
               </option>
-            ))}
-          </select>
+              {!districtsLoading &&
+                districtsList.map((district) => (
+                  <option
+                    key={`${district.id}_${district.district_name}`}
+                    value={`${district.id}_${district.district_name}`}
+                  >
+                    {district.district_name}
+                  </option>
+                ))}
+            </select>
+
+            {/* Spinner */}
+            {districtsLoading && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <svg
+                  className="animate-spin h-5 w-5 text-gray-500"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  ></path>
+                </svg>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Block Dropdown */}
+
         <div>
           <label className="text-lg font-semibold mb-2 block">Block:</label>
           <select
             value={block.id && block.name ? `${block.id}_${block.name}` : ""}
             onChange={handleBlockChange}
+            disabled={blocksLoading}
             className="w-full px-4 py-3 border text-lg rounded-lg"
           >
-            <option value="">Select Block</option>
-            {blocksList && blocksList.length > 0 ? (
+            <option value="">
+              {" "}
+              {districtsLoading ? "Loading blocks..." : "Select Block"}
+            </option>
+            {!blocksLoading && blocksList && blocksList.length > 0 ? (
               blocksList.map((block) => (
                 <option
                   key={`${block.id}_${block.block_name}`} // Ensure uniqueness
@@ -407,6 +402,30 @@ const LocationFormComponent = ({ currentUser }) => {
               <option value="">No blocks available</option>
             )}
           </select>
+          {blocksLoading && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <svg
+                className="animate-spin h-5 w-5 text-gray-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                ></path>
+              </svg>
+            </div>
+          )}
         </div>
 
         {layerName === "FES CLART" && (
