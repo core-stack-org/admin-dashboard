@@ -226,7 +226,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
           headers: {
             Authorization: `Bearer ${token}`,
             "ngrok-skip-browser-warning": "420",
-            // ❌ Don't add Content-Type manually for FormData
           },
         }
       );
@@ -1203,11 +1202,11 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                 anchorOrigin={{
                   vertical: "bottom",
                   horizontal: "right",
-                }} // Move to bottom-right
+                }}
                 sx={{
                   position: "absolute",
                   bottom: 12,
-                  right: 10, // Position it on the right side
+                  right: 10,
                 }}
               >
                 <Alert
@@ -1233,8 +1232,8 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
             fullWidth
             sx={{
               "& .MuiDialog-paper": {
-                minHeight: "450px", // Adjust the height as needed
-                borderRadius: "12px", // Slightly rounded corners for better aesthetics
+                minHeight: "450px",
+                borderRadius: "12px",
               },
             }}
           >
@@ -1279,8 +1278,8 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                 indicatorColor="primary"
                 variant="fullWidth"
                 sx={{
-                  backgroundColor: "#f5f5f5", // Light grey background
-                  borderBottom: "2px solid #e0e0e0", // Divider line
+                  backgroundColor: "#f5f5f5",
+                  borderBottom: "2px solid #e0e0e0",
                   "& .MuiTab-root": {
                     textTransform: "uppercase",
                     fontWeight: "bold",
@@ -1288,11 +1287,11 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                     padding: "12px 16px",
                   },
                   "& .Mui-selected": {
-                    color: "#1565c0", // Darker blue for selected tab
+                    color: "#1565c0",
                     fontWeight: "bold",
                   },
                   "& .MuiTabs-indicator": {
-                    height: "3px", // Thicker indicator
+                    height: "3px",
                     backgroundColor: "#1565c0",
                   },
                 }}
@@ -1437,11 +1436,11 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                 anchorOrigin={{
                   vertical: "bottom",
                   horizontal: "right",
-                }} // Move to bottom-right
+                }}
                 sx={{
                   position: "absolute",
                   bottom: 12,
-                  right: 10, // Position it on the right side
+                  right: 10,
                 }}
               >
                 <Alert
