@@ -10,12 +10,9 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   const [userId, setUserId] = useState(null);
   const [projectAppType, setProjectAppType] = useState("");
   const [state, setState] = useState({ id: "", name: "" });
-<<<<<<< HEAD
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [districtsList, setDistrictsList] = useState([]);
-=======
   const [needDesiltingPoint, setNeedDesiltingPoint] = useState(true);
->>>>>>> main
 
   useEffect(() => {
     if (currentUser?.user?.organization) {

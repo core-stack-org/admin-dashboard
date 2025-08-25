@@ -314,7 +314,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   };
 
 
-    const handleUploadCsv = async (selectedProject) => {
+  const handleUploadCsv = async (selectedProject) => {
     if (!selectedFiles || selectedFiles.length === 0) {
       setToast({
         open: true,
@@ -1117,19 +1117,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                       fullWidth
                                       maxWidth="md"
                                     >
-<<<<<<< HEAD
-                                      <AddIcon />
-                                    </Button>
-                                  </Tooltip>
-                                  <Dialog
-                                    open={openPlanDialog}
-                                    onClose={() => {
-                                      setOpenPlanDialog(false);
-                                      setSelectedPlanId(null);
-                                    }}
-                                    fullWidth
-                                    maxWidth="md"
-                                  >
                                     <DialogContent>
                                       <PlanCreation
                                         onClose={() => {
@@ -1142,20 +1129,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                       />
                                     </DialogContent>
                                   </Dialog>
-
-                                  {/* <Dialog
-                                    open={open}
-                                    onClose={handleClose}
-                                    fullWidth
-                                    maxWidth="md"
-                                  >
-                                    <DialogContent>
-                                      <PlanCreation
-                                        onClose={handleClose}
-                                        projectId={project}
-                                      />
-                                    </DialogContent>
-                                  </Dialog> */}
                                 </div>
                               ) : project.app_type === "community_engagement" ? (
                                   <Tooltip title="Edit" arrow>
@@ -1171,23 +1144,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                     </Button>
                                   </Tooltip>
                               ) : null}
-=======
-                                      <DialogContent>
-                                        <PlanCreation
-                                          onClose={() => {
-                                            setOpenPlanDialog(false);
-                                            setSelectedPlanId(null);
-                                          }}
-                                          projectId={project}
-                                          planId={selectedPlanId}
-                                          onPlanSaved={handlePlanSaved}
-                                        />
-                                      </DialogContent>
-                                    </Dialog>
-                                  </div>
-                                ) : null}
                               </div>
->>>>>>> main
                             </div>
                           </CardContent>
                         </Card>
