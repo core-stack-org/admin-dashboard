@@ -17,6 +17,8 @@
 //     fetchStates();
 //   }, []);
 
+//   console.log(projectId);
+
 //   const fetchedRef = useRef(false);
 
 //   useEffect(() => {
@@ -32,7 +34,7 @@
 
 //       // Fetch the plan
 //       const response = await fetch(
-//         `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId.id}/watershed/plans/${planId}/`,
+//         `${process.env.REACT_APP_BASEURL}api/v1/projects/${projectId.id}/watershed/plans/${planId}/`,
 //         {
 //           headers: {
 //             "Content-Type": "application/json",
@@ -229,6 +231,9 @@
 //       gramPanchayat
 //     ) {
 //       const token = sessionStorage.getItem("accessToken");
+//       const projectIdValue =
+//         typeof projectId === "object" ? projectId.id : projectId;
+
 //       const payload = {
 //         plan,
 //         state: parseInt(state.id),
@@ -240,8 +245,9 @@
 //       };
 //       const method = planId ? "PUT" : "POST";
 //       const url = planId
-//         ? `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId.id}/watershed/plans/${planId}/`
-//         : `${process.env.REACT_APP_BASEURL}/api/v1/projects/${projectId.id}/watershed/plans/`;
+//         ? `${process.env.REACT_APP_BASEURL}api/v1/projects/${projectIdValue}/watershed/plans/${planId}/`
+//         : `${process.env.REACT_APP_BASEURL}api/v1/projects/${projectIdValue}/watershed/plans/`;
+//       // `${process.env.REACT_APP_BASEURL}api/v1/projects/4/watershed/plans/`;
 
 //       try {
 //         const response = await fetch(url, {
@@ -294,13 +300,11 @@
 //       </div>
 //       <form className="space-y-8">
 //         {/* State Dropdown */}
-//         {/* State Dropdown */}
 //         <div>
 //           <label className="text-base font-medium mb-2 block text-left">
 //             State:
 //           </label>
 //           {planId ? (
-//             // In update mode, display the state name and make it non-editable
 //             <input
 //               type="text"
 //               value={state.name || ""}
@@ -308,7 +312,6 @@
 //               className="w-full px-4 py-3 border text-lg rounded-lg"
 //             />
 //           ) : (
-//             // In create mode, show the dropdown
 //             <select
 //               value={state.id && state.name ? `${state.id}_${state.name}` : ""}
 //               onChange={handleStateChange}
@@ -333,7 +336,6 @@
 //             District:
 //           </label>
 //           {planId ? (
-//             // In update mode, display the district name and make it non-editable
 //             <input
 //               type="text"
 //               value={district.name || ""}
@@ -341,7 +343,6 @@
 //               className="w-full px-4 py-3 border text-lg rounded-lg"
 //             />
 //           ) : (
-//             // In create mode, show the dropdown
 //             <select
 //               value={
 //                 district.id && district.name
@@ -370,7 +371,6 @@
 //             Block:
 //           </label>
 //           {planId ? (
-//             // In update mode, display the block name and make it non-editable
 //             <input
 //               type="text"
 //               value={block.name || ""}
@@ -378,7 +378,6 @@
 //               className="w-full px-4 py-3 border text-lg rounded-lg"
 //             />
 //           ) : (
-//             // In create mode, show the dropdown
 //             <select
 //               value={block.id && block.name ? `${block.id}_${block.name}` : ""}
 //               onChange={handleBlockChange}
@@ -650,7 +649,7 @@ const PlanCreation = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-12">
+    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-0">
       <ToastContainer />
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold">Plan Creation</h1>{" "}
