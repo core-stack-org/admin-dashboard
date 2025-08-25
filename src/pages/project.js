@@ -10,6 +10,8 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   const [userId, setUserId] = useState(null);
   const [projectAppType, setProjectAppType] = useState("");
   const [state, setState] = useState({ id: "", name: "" });
+  const [district, setDistrict] = useState({ id: "", name: "" });
+  const [districtsList, setDistrictsList] = useState([]);
   const [needDesiltingPoint, setNeedDesiltingPoint] = useState(true);
 
   useEffect(() => {
@@ -19,16 +21,55 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
     }
   }, [currentUser]);
 
+  const fetchDistricts = async (selectedState) => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+      const data = await response.json();
+      const sortedDistricts = data.districts.sort((a, b) =>
+        a.district_name.localeCompare(b.district_name)
+      );
+      setDistrictsList(sortedDistricts);
+    } catch (error) {
+      console.error("Error fetching districts:", error);
+      setDistrictsList([]);
+    }
+  };
+
   const handleStateChange = (event) => {
     const selectedValue = event.target.value;
     if (!selectedValue) {
       setState({ id: "", name: "" });
+      setDistrict({ id: "", name: "" });
+      setDistrictsList([]);
       return;
     }
 
     const [state_id, state_name] = selectedValue.split("_");
     setState({ id: state_id, name: state_name });
+    setDistrict({ id: "", name: "" });
+    fetchDistricts(state_id);
   };
+
+  const handleDistrictChange = (event) => {
+    const selectedValue = event.target.value;
+    if (!selectedValue) {
+      setDistrict({ id: "", name: "" });
+      return;
+    }
+
+    const [id, district_name] = selectedValue.split("_");
+    setDistrict({ id: id, name: district_name });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -42,12 +83,18 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
       return;
     }
 
+    if (!district.id) {
+      toast.error("District selection is required");
+      return;
+    }
+
     const formData = {
       name: projectName,
       description: projectDescription,
-      state: parseInt(state.id), // Only state ID
+      state: parseInt(state.id),
+      district: parseInt(district.id),
       app_type: projectAppType,
-      enabled: true, // Ensuring it's included
+      enabled: true,
       created_by: userId,
       updated_by: userId,
       organization: currentUser?.user?.organization,
@@ -175,6 +222,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       <option value="plantation">plantation</option>
                       <option value="watershed">watershed</option>
                       <option value="waterbody">waterbody rejuvenation</option>
+                      <option value="community_engagement">community engagement</option>
                     </select>
                   </div>
                   {projectAppType === "waterbody" && (
@@ -196,6 +244,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                     </div>
                   )}
 
+                  {/* State Dropdown */}
                   <div>
                     <label className="text-lg font-semibold mb-2 block">
                       State:
@@ -208,6 +257,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       }
                       onChange={handleStateChange}
                       className="w-full px-4 py-3 border text-lg rounded-lg"
+                      required
                     >
                       <option value="">Select State</option>
                       {statesList.map((state) => (
@@ -216,6 +266,41 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                           value={`${state.state_census_code}_${state.state_name}`}
                         >
                           {state.state_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* District Dropdown */}
+                  <div>
+                    <label className="text-lg font-semibold mb-2 block">
+                      District:
+                    </label>
+                    <select
+                      value={
+                        district.id && district.name
+                          ? `${district.id}_${district.name}`
+                          : ""
+                      }
+                      onChange={handleDistrictChange}
+                      className="w-full px-4 py-3 border text-lg rounded-lg"
+                      required
+                      disabled={!state.id || districtsList.length === 0}
+                    >
+                      <option value="">
+                        {!state.id 
+                          ? "Please select a state first" 
+                          : districtsList.length === 0 
+                            ? "Loading districts..." 
+                            : "Select District"
+                        }
+                      </option>
+                      {districtsList.map((district) => (
+                        <option
+                          key={`${district.id}_${district.district_name}`}
+                          value={`${district.id}_${district.district_name}`}
+                        >
+                          {district.district_name}
                         </option>
                       ))}
                     </select>
