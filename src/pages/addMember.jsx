@@ -95,32 +95,37 @@ const AddMember = ({
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.first_name) newErrors.firstName = "First name is required";
-    if (!formData.last_name) newErrors.lastName = "Last name is required";
-    if (!formData.username) newErrors.userName = "User name is required";
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (
-      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
-    ) {
-      newErrors.email = "Invalid email format";
+    if (!formData.first_name) newErrors.first_name = "First name is required";
+    if (!formData.last_name) newErrors.last_name = "Last name is required";
+    if (!formData.username) newErrors.username = "User name is required";
+    // Remove email validation as mandatory
+    if (formData.email) {
+      if (
+        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+      ) {
+        newErrors.email = "Invalid email format";
+      }
+    }
+    // Remove contact number as mandatory
+    if (formData.contact_number) {
+      if (!/^\d{10}$/.test(formData.contact_number)) {
+        newErrors.contact_number = "Enter a valid 10-digit contact number";
+      }
     }
 
-    if (!formData.contact_number) {
-      newErrors.contact_number = "Contact number is required";
-    } else if (!/^\d{10}$/.test(formData.contact_number)) {
-      newErrors.contact_number = "Enter a valid 10-digit contact number";
-    }
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
+
     if (formData.password !== formData.password_confirm) {
       newErrors.password_confirm = "Passwords do not match";
     }
+
     return newErrors;
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -227,28 +232,38 @@ const AddMember = ({
               <div className=" mb-4">
                 <form onSubmit={handleSubmit} className="space-y-10">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
+                    <div className="relative w-full">
                       <input
                         name="first_name"
+                        required
                         value={formData.first_name}
                         onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter First Name"
+                        className="w-full rounded border border-gray-300 pl-4 pr-8 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
+                      {/* Red asterisk positioned inside input */}
+                      <span className="absolute right-24 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                        *
+                      </span>
+
                       {errors.first_name && (
-                        <p className="text-red-500 text-sm">
+                        <p className="text-red-500 text-sm mt-1">
                           {errors.first_name}
                         </p>
                       )}
                     </div>
-                    <div>
+
+                    <div className="relative w-full">
                       <input
                         name="last_name"
                         value={formData.last_name}
                         onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded border border-gray-300 pl-4 pr-8 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Enter Last Name"
                       />
+                      <span className="absolute right-24 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                        *
+                      </span>
                       {errors.last_name && (
                         <p className="text-red-500 text-sm">
                           {errors.last_name}
@@ -257,7 +272,7 @@ const AddMember = ({
                     </div>
                   </div>
 
-                  <div>
+                  <div className="relative w-full">
                     <input
                       name="username"
                       value={formData.username}
@@ -265,6 +280,9 @@ const AddMember = ({
                       className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Enter User Name"
                     />
+                    <span className="absolute right-96 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                      *
+                    </span>
                     {errors.username && (
                       <p className="text-red-500 text-sm">{errors.username}</p>
                     )}
@@ -307,25 +325,32 @@ const AddMember = ({
                       )}
                   </div>
                   {/* Organization */}
-                  {/* Organization Selection */}
-                  <div>
+                  <div className="relative w-full">
                     {currentUser?.user?.is_superadmin ? (
-                      // Show dropdown for super admin
-                      <select
-                        name="organization"
-                        value={formData.organization}
-                        onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="">Select Organization</option>
-                        {organizations.map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name}
+                      <>
+                        <select
+                          name="organization"
+                          value={""}
+                          onChange={handleChange}
+                          className="w-full rounded border border-gray-300 pl-4 pr-10 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        >
+                          <option value="" disabled>
+                            Select Organization
                           </option>
-                        ))}
-                      </select>
+                          {organizations.map((org) => (
+                            <option key={org.id} value={org.id}>
+                              {org.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        {/* Red asterisk inside the select */}
+                        <span className="absolute top-1/2 right-96 transform -translate-y-1/2 text-red-500 pointer-events-none">
+                          *
+                        </span>
+                      </>
                     ) : (
-                      // Show prefilled and read-only organization name for org admin
                       <input
                         name="organization"
                         value={currentUser?.user?.organization_name || ""}
@@ -350,6 +375,9 @@ const AddMember = ({
                           className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Enter password"
                         />
+                        <span className="absolute right-28 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                          *
+                        </span>
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
@@ -392,6 +420,9 @@ const AddMember = ({
                           className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Re-Enter password "
                         />
+                        <span className="absolute right-20 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                          *
+                        </span>
                         <button
                           type="button"
                           onClick={() =>

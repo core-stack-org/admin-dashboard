@@ -22,6 +22,8 @@ import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import UsersTable from "./pages/allUsers";
+import AllProjects from "./pages/allProjects";
+import AllPlans from "./pages/allPlans";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -54,7 +56,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 />
                 <Route path="/activateBlock" element={<ActivateBlock />} />
 
-                <Route path="/planCreation" element={<PlanCreation />} />
+                <Route
+                  path="/projects/:projectId/planCreation"
+                  element={<PlanCreation />}
+                />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
                 <Route
                   path="/plantationAssessment"
@@ -67,6 +72,14 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/users"
                   element={<UsersTable currentUser={currentUser} />}
+                />
+                <Route
+                  path="/projects"
+                  element={<AllProjects currentUser={currentUser} />}
+                />
+                <Route
+                  path="/projects/:projectId/plans"
+                  element={<AllPlans />}
                 />
                 <Route
                   path="/generate-layers/:layerName"

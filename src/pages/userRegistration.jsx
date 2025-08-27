@@ -81,32 +81,37 @@ const RegistrationForm = () => {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.first_name) newErrors.firstName = "First name is required";
-    if (!formData.last_name) newErrors.lastName = "Last name is required";
-    if (!formData.username) newErrors.userName = "User name is required";
-    if (!formData.email) {
-      newErrors.email = "Email is required";
-    } else if (
-      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
-    ) {
-      newErrors.email = "Invalid email format";
+    if (!formData.first_name) newErrors.first_name = "First name is required";
+    if (!formData.last_name) newErrors.last_name = "Last name is required";
+    if (!formData.username) newErrors.username = "User name is required";
+    // Remove email validation as mandatory
+    if (formData.email) {
+      if (
+        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+      ) {
+        newErrors.email = "Invalid email format";
+      }
+    }
+    // Remove contact number as mandatory
+    if (formData.contact_number) {
+      if (!/^\d{10}$/.test(formData.contact_number)) {
+        newErrors.contact_number = "Enter a valid 10-digit contact number";
+      }
     }
 
-    if (!formData.contact_number) {
-      newErrors.contact_number = "Contact number is required";
-    } else if (!/^\d{10}$/.test(formData.contact_number)) {
-      newErrors.contact_number = "Enter a valid 10-digit contact number";
-    }
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (formData.password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
     }
+
     if (formData.password !== formData.password_confirm) {
       newErrors.password_confirm = "Passwords do not match";
     }
+
     return newErrors;
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
@@ -183,7 +188,7 @@ const RegistrationForm = () => {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="relative w-full">
               <input
                 name="first_name"
                 value={formData.first_name}
@@ -191,11 +196,14 @@ const RegistrationForm = () => {
                 className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Enter First Name"
               />
+              <span className="absolute right-56 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                *
+              </span>
               {errors.first_name && (
                 <p className="text-red-500 text-sm">{errors.first_name}</p>
               )}
             </div>
-            <div>
+            <div className="relative w-full">
               <input
                 name="last_name"
                 value={formData.last_name}
@@ -203,13 +211,16 @@ const RegistrationForm = () => {
                 className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Enter Last Name"
               />
+              <span className="absolute right-56 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                *
+              </span>
               {errors.last_name && (
                 <p className="text-red-500 text-sm">{errors.last_name}</p>
               )}
             </div>
           </div>
 
-          <div>
+          <div className="relative w-full">
             <input
               name="username"
               value={formData.username}
@@ -217,6 +228,9 @@ const RegistrationForm = () => {
               className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
               placeholder="Enter User Name"
             />
+            <span className="absolute right-3/4 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+              *
+            </span>
             {errors.username && (
               <p className="text-red-500 text-sm">{errors.username}</p>
             )}
@@ -261,7 +275,7 @@ const RegistrationForm = () => {
           </div>
 
           {/* Organization */}
-          <div>
+          <div className="relative w-full">
             <AsyncSelect
               loadOptions={loadOrganization}
               defaultOptions
@@ -269,27 +283,32 @@ const RegistrationForm = () => {
                 setSelectedOption(selected);
                 setFormData({
                   ...formData,
-                  organization: selected?.value, // Update organization in formData
+                  organization: selected?.value,
                 });
               }}
-              placeholder="Select or search for an Organisation"
+              placeholder={
+                <div>
+                  Select or search for an Organisation{" "}
+                  <span className="text-red-500">*</span>
+                </div>
+              }
               classNamePrefix="react-select"
               styles={{
                 control: (provided) => ({
                   ...provided,
-                  padding: "8px", // Adds padding
-                  height: "50px", // Adjust height
+                  padding: "8px",
+                  height: "50px",
                   borderRadius: "6px",
-                  borderColor: "#D1D5DB", // Tailwind's border-gray-300
+                  borderColor: "#D1D5DB",
                   boxShadow: "none",
                 }),
                 placeholder: (provided) => ({
                   ...provided,
-                  color: "#9CA3AF", // Matches Tailwind's text-gray-400
+                  color: "#9CA3AF",
                 }),
                 valueContainer: (provided) => ({
                   ...provided,
-                  padding: "0 12px", // Adjusts padding inside the field
+                  padding: "0 12px",
                 }),
               }}
               theme={(theme) => ({
@@ -302,10 +321,12 @@ const RegistrationForm = () => {
               })}
             />
           </div>
+
           {selectedOption?.value === "others" && (
             <input
               type="text"
               placeholder="Enter organization name"
+              required
               className="w-full mt-2 rounded border border-gray-300 pl-3 pr-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
               value={
                 formData.organization === "others" ? "" : formData.organization
@@ -331,6 +352,9 @@ const RegistrationForm = () => {
                 className="w-full rounded border border-gray-300 pl-10 pr-10 py-4 e placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 placeholder="Enter password"
               />
+              <span className="absolute right-56 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                *
+              </span>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -363,6 +387,9 @@ const RegistrationForm = () => {
                   className="w-full rounded border border-gray-300 pl-10 pr-3 py-4  placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
                   placeholder="Re-Enter password "
                 />
+                <span className="absolute right-52 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+                  *
+                </span>
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}

@@ -1,31 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Building2,
-  FolderKanban,
-  Users,
-  ShieldCheck,
-  UserCog,
-  Shield,
-  UserPlus,
-} from "lucide-react";
+import { Building2, ArrowLeftCircle, UserCog } from "lucide-react";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  Typography,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Button,
-  FormControl,
   Checkbox,
   FormControlLabel,
-  MenuItem,
-  Select,
-  InputLabel,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import { Badge } from "@mui/material";
 import Project from "./project.js";
@@ -217,7 +203,8 @@ function SuperAdminDashboard({ currentUser }) {
     handleOpenDialog("extraActions");
   };
   const handleViewProjects = () => {
-    handleOpenDialog("viewProjects");
+    // handleOpenDialog("viewProjects");
+    navigate("/projects");
   };
   const handleViewUsers = () => {
     // handleOpenDialog("viewUsers");
@@ -732,70 +719,6 @@ function SuperAdminDashboard({ currentUser }) {
         </DialogActions>
       </Dialog>
 
-      {/* View all users*/}
-      {/* <Dialog
-        open={openDialog === "viewUsers"}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>All Users</DialogTitle>
-        <DialogContent className="p-4 max-h-[500px] overflow-y-auto">
-          {users.length > 0 ? (
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Username</th>
-                  <th className="border p-2">Email</th>
-                  <th className="border p-2">Contact</th>
-                  <th className="border p-2">Organization</th>
-                  <th className="border p-2">Status</th>
-                  <th className="border p-2">Roles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => {
-                  // Extract group names
-                  let groupNames =
-                    user.groups?.map((group) => group.name) || [];
-
-                  // Add "Superadmin" if applicable
-                  if (user.is_superadmin) {
-                    groupNames.unshift("Superadmin");
-                  }
-
-                  return (
-                    <tr key={user.id} className="text-center border">
-                      <td className="border p-2">
-                        {user.first_name} {user.last_name}
-                      </td>
-                      <td className="border p-2">{user.username}</td>
-                      <td className="border p-2">{user.email}</td>
-                      <td className="border p-2">{user.contact_number}</td>
-                      <td className="border p-2">{user.organization_name}</td>
-                      <td className="border p-2">
-                        {user.is_active ? "Active" : "Inactive"}
-                      </td>
-                      <td className="border p-2">
-                        {groupNames.length > 0 ? groupNames.join(", ") : "None"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-500 text-center">No users found.</p>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
       {/* View all Organizations*/}
       <Dialog
         open={openDialog === "viewOrganizations"}
@@ -803,25 +726,50 @@ function SuperAdminDashboard({ currentUser }) {
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>All Organizations</DialogTitle>
+        <DialogTitle>
+          <div className="flex items-center gap-4">
+            {/* Back button */}
+            <Tooltip title="Back to Dashboard">
+              <IconButton onClick={() => navigate("/dashboard")}>
+                <ArrowLeftCircle className="w-7 h-7 text-blue-600 hover:text-purple-600 transition-colors" />
+              </IconButton>
+            </Tooltip>
+
+            {/* Title */}
+            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center">
+              All Organizations
+            </h1>
+          </div>
+        </DialogTitle>
+
         <DialogContent className="p-4 max-h-[500px] overflow-y-auto">
           {organizations.length > 0 ? (
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">Organization Name</th>
-                  <th className="border p-2">Organization ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {organizations.map((org) => (
-                  <tr key={org.id} className="text-center border">
-                    <td className="border p-2">{org.name}</td>
-                    <td className="border p-2">{org.id}</td>
+            <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto">
+              <table className="min-w-full text-sm text-left border-collapse">
+                {/* Table Head */}
+                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-4">S. No.</th>
+                    <th className="px-6 py-4">Organization Name</th>
+                    <th className="px-6 py-4">Organization ID</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                {/* Table Body */}
+                <tbody className="divide-y divide-gray-200">
+                  {organizations.map((org, index) => (
+                    <tr
+                      key={org.id}
+                      className="hover:bg-gray-50 transition duration-200 text-gray-700"
+                    >
+                      <td className="px-6 py-4">{index + 1}</td>
+                      <td className="px-6 py-4 font-medium">{org.name}</td>
+                      <td className="px-6 py-4">{org.id}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="text-gray-500 text-center">No organizations found.</p>
           )}
@@ -830,47 +778,6 @@ function SuperAdminDashboard({ currentUser }) {
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">
             Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* View all Projects Dialog */}
-      <Dialog
-        open={openDialog === "viewProjects"}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{
-          paper: {
-            style: {
-              borderRadius: "12px",
-              padding: "0",
-            },
-          },
-        }}
-      >
-        {/* Dialog Header */}
-        <DialogTitle className="text-xl font-semibold bg-violet-600 text-white px-6 py-4">
-          View all Project
-        </DialogTitle>
-
-        {/* Dialog Body */}
-        <DialogContent dividers>
-          <div className="p-6">
-            <ProjectDashboard
-              onClose={handleCloseDialog}
-              currentUser={currentUser}
-            />
-          </div>
-        </DialogContent>
-
-        {/* Dialog Footer */}
-        <DialogActions>
-          <Button
-            onClick={handleCloseDialog}
-            className="text-gray-700 px-4 py-2 rounded-lg"
-          >
-            Cancel
           </Button>
         </DialogActions>
       </Dialog>

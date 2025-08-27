@@ -6,8 +6,11 @@ import {
   Box,
   TextField,
   CircularProgress,
+  Tooltip,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
+import { ArrowLeftCircle, Home } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -19,6 +22,7 @@ const UsersTable = () => {
   const [filterType, setFilterType] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
+  const navigate = useNavigate();
 
   const loadUsers = async () => {
     try {
@@ -105,8 +109,15 @@ const UsersTable = () => {
   return (
     <Box>
       <div className="h-screen flex flex-col">
-        <div className="pt-6 bg-white  rounded-xl mt-16 flex justify-center">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center drop-shadow-md">
+        <div className="pt-6 bg-white rounded-xl mt-16 flex items-center px-6">
+          <Tooltip title="Back to Dashboard">
+            <IconButton onClick={() => navigate("/dashboard")}>
+              <ArrowLeftCircle className="w-7 h-7 text-blue-600 hover:text-purple-600 transition-colors" />
+            </IconButton>
+          </Tooltip>
+
+          {/* Centered Title */}
+          <h1 className="flex-1 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center drop-shadow-md">
             Users Information
           </h1>
         </div>

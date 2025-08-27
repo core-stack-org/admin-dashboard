@@ -154,8 +154,8 @@ const OrgAdminDashboard = ({ currentUser }) => {
       } else if (type === "update") {
         data = await updateOrganizationDetails();
       } else if (type === "generateapikey") {
-        const res = await fetchUserApiKeys();
-        data = { data: res.api_keys };
+        // const res = await fetchUserApiKeys();
+        // data = { data: res.api_keys };
       } else if (
         [
           "members",
@@ -190,7 +190,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
   }, []);
 
   useEffect(() => {
-    fetchUserApiKeys();
+    // fetchUserApiKeys();
   }, []);
   const fetchUserApiKeys = async () => {
     const token = sessionStorage.getItem("accessToken");
