@@ -246,13 +246,16 @@ const AddMember = ({
                         required
                         value={formData.first_name}
                         onChange={handleChange}
-                        placeholder="Enter First Name"
-                        className="w-full rounded border border-gray-300 pl-4 pr-8 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded border border-gray-300 pl-6 pr-3 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      {/* Red asterisk positioned inside input */}
-                      <span className="absolute right-24 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
-                        *
-                      </span>
+
+                      {/* Placeholder + red asterisk */}
+                      {!formData.first_name && (
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <span className="text-red-500"> * </span>
+                          Enter First Name
+                        </span>
+                      )}
 
                       {errors.first_name && (
                         <p className="text-red-500 text-sm mt-1">
@@ -266,12 +269,16 @@ const AddMember = ({
                         name="last_name"
                         value={formData.last_name}
                         onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-4 pr-8 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter Last Name"
+                        className="w-full rounded border border-gray-300 pl-4 pr-8 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <span className="absolute right-24 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
-                        *
-                      </span>
+
+                      {/* Custom placeholder with red asterisk */}
+                      {!formData.last_name && (
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                          <span className="text-red-500"> * </span>
+                          Enter Last Name
+                        </span>
+                      )}
                       {errors.last_name && (
                         <p className="text-red-500 text-sm">
                           {errors.last_name}
@@ -286,11 +293,13 @@ const AddMember = ({
                       value={formData.username}
                       onChange={handleChange}
                       className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter User Name"
                     />
-                    <span className="absolute right-96 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
-                      *
-                    </span>
+                    {!formData.username && (
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <span className="text-red-500"> * </span>
+                        Enter User Name
+                      </span>
+                    )}
                     {errors.username && (
                       <p className="text-red-500 text-sm">{errors.username}</p>
                     )}
@@ -335,29 +344,22 @@ const AddMember = ({
                   {/* Organization */}
                   <div className="relative w-full">
                     {currentUser?.user?.is_superadmin ? (
-                      <>
-                        <select
-                          name="organization"
-                          value={formData.organization || ""}
-                          onChange={handleChange}
-                          className="w-full rounded border border-gray-300 pl-4 pr-10 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          required
-                        >
-                          <option value="" disabled>
-                            Select Organization
+                      <select
+                        name="organization"
+                        value={formData.organization || ""}
+                        onChange={handleChange}
+                        className="w-full rounded border border-gray-300 pl-4 pr-10 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="" disabled>
+                          * Select Organization
+                        </option>
+                        {organizations.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name}
                           </option>
-                          {organizations.map((org) => (
-                            <option key={org.id} value={org.id}>
-                              {org.name}
-                            </option>
-                          ))}
-                        </select>
-
-                        {/* Red asterisk inside the select */}
-                        <span className="absolute top-1/2 right-96 transform -translate-y-1/2 text-red-500 pointer-events-none">
-                          *
-                        </span>
-                      </>
+                        ))}
+                      </select>
                     ) : (
                       <input
                         name="organization"
@@ -381,11 +383,13 @@ const AddMember = ({
                           onFocus={() => setShowPasswordRules(true)}
                           onBlur={() => setShowPasswordRules(false)} // ✅ Hide rules when moving to another field
                           className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter password"
                         />
-                        <span className="absolute right-28 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
-                          *
-                        </span>
+                        {!formData.password && (
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <span className="text-red-500"> * </span>
+                            Enter Password
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
@@ -426,11 +430,13 @@ const AddMember = ({
                           value={formData.password_confirm}
                           onChange={handleChange}
                           className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Re-Enter password "
                         />
-                        <span className="absolute right-20 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
-                          *
-                        </span>
+                        {!formData.username && (
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                            <span className="text-red-500"> * </span>
+                            Confirm Password
+                          </span>
+                        )}
                         <button
                           type="button"
                           onClick={() =>

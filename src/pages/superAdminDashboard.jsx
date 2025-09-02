@@ -18,6 +18,7 @@ import Project from "./project.js";
 import { OrganizationForm } from "./organizationForm.jsx";
 import UserMappingForm from "./userMappingForm.jsx";
 import RoleAssignmentForm from "./roleAssignmentForm.jsx";
+import UserToProject from "./userToProject.jsx";
 import AddMember from "./addMember.jsx";
 import RegistrationForm from "./userRegistration.jsx";
 import ProjectDashboard from "./projectDashboard.js";
@@ -457,7 +458,7 @@ function SuperAdminDashboard({ currentUser }) {
                 <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
                 <span className="text-[3rem] mb-4 relative z-10">👤</span>
                 <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
-                  Create User
+                  Register New User
                 </h3>
                 <p className="text-sm text-gray-600 relative z-10">
                   Register new application user
@@ -496,6 +497,22 @@ function SuperAdminDashboard({ currentUser }) {
                 </p>
               </div>
             </motion.div>
+            {/* Assign Project to user */}
+            <motion.div>
+              <div
+                onClick={() => handleOpenDialog("projectUSerAssignment")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#ff9800] hover:shadow-[0_15px_30px_rgba(255,152,0,0.2)] min-h-[250px]"
+              >
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">🛡️</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Assign Project to User
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Define Projects for users
+                </p>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
 
@@ -511,11 +528,6 @@ function SuperAdminDashboard({ currentUser }) {
           >
             {[
               {
-                title: "View All Users",
-                desc: "Manage and review all system users.",
-                onClick: handleViewUsers,
-              },
-              {
                 title: "View All Organizations",
                 desc: "Access and manage registered organizations.",
                 onClick: handleViewOrganizations,
@@ -524,6 +536,11 @@ function SuperAdminDashboard({ currentUser }) {
                 title: "View All Projects",
                 desc: "Browse projects along with their organization names.",
                 onClick: handleViewProjects,
+              },
+              {
+                title: "View All Users",
+                desc: "Manage and review all system users.",
+                onClick: handleViewUsers,
               },
             ].map(({ title, desc, onClick }, i) => (
               <motion.div
@@ -665,6 +682,24 @@ function SuperAdminDashboard({ currentUser }) {
         <DialogTitle>Assign role </DialogTitle>
         <DialogContent>
           <RoleAssignmentForm onClose={handleCloseDialog} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="secondary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Project assignment to USer Dialog */}
+      <Dialog
+        open={openDialog === "projectUSerAssignment"}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Assign Project to USer </DialogTitle>
+        <DialogContent>
+          <UserToProject onClose={handleCloseDialog} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">
