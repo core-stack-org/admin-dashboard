@@ -106,6 +106,15 @@ const UsersTable = () => {
     });
   }, [users, selectedOrg, selectedStatus, selectedRole, selectedProject]);
 
+  const clearAllFilters = () => {
+    setSelectedOrg("");
+    setSelectedProject("");
+    setSelectedRole("");
+    setSelectedStatus("");
+    setSearchText("");
+    setAnchorEl(null); // close any open filter popover
+  };
+
   return (
     <Box>
       <div className="h-screen flex flex-col">
@@ -120,6 +129,13 @@ const UsersTable = () => {
           <h1 className="flex-1 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center drop-shadow-md">
             Users Information
           </h1>
+
+          <span
+            onClick={clearAllFilters}
+            className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium"
+          >
+            Clear All Filters
+          </span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
@@ -129,7 +145,7 @@ const UsersTable = () => {
                 <CircularProgress />
               </div>
             ) : (
-              <table className="min-w-full text-sm text-left border-collapse">
+              <table className="min-w-full text-md text-left border-collapse">
                 {/* Table Head */}
                 <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
                   <tr>
@@ -179,6 +195,7 @@ const UsersTable = () => {
                               setSearchText("");
                               handleFilterClose();
                             }}
+                            sx={{ color: "blue" }}
                           >
                             All Organizations
                           </MenuItem>
@@ -243,6 +260,7 @@ const UsersTable = () => {
                               setSearchText("");
                               handleFilterClose();
                             }}
+                            sx={{ color: "blue" }}
                           >
                             All Projects
                           </MenuItem>
@@ -307,6 +325,7 @@ const UsersTable = () => {
                               setSearchText("");
                               handleFilterClose();
                             }}
+                            sx={{ color: "blue" }}
                           >
                             All Status
                           </MenuItem>
@@ -371,6 +390,7 @@ const UsersTable = () => {
                               setSearchText("");
                               handleFilterClose();
                             }}
+                            sx={{ color: "blue" }}
                           >
                             All Roles
                           </MenuItem>

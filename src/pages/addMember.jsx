@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CheckCircle2, Eye, EyeOff } from "lucide-react";
-
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/core-stack logo.png";
 
 const AddMember = ({
   closeModal,
@@ -17,18 +16,7 @@ const AddMember = ({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [selectedPermission, setSelectedPermission] = useState(null);
-  const [organizations, setOrganizations] = useState([]); // Store fetched organizations
-
   const [showPasswordRules, setShowPasswordRules] = useState(false);
-  useEffect(() => {
-    if (currentUser?.user?.organization) {
-      setFormData((prev) => ({
-        ...prev,
-        organization: currentUser.user.organization, // Store ID only
-      }));
-    }
-  }, [currentUser]);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -38,14 +26,40 @@ const AddMember = ({
     first_name: "",
     last_name: "",
     contact_number: "",
-    organization: currentUser?.user?.organization || "",
+    organization: "",
   });
+
+  const [errors, setErrors] = useState({});
+  const [userGroups, setUserGroups] = useState([]);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [organizations, setOrganizations] = useState([]);
+
+  useEffect(() => {
+    fetchUserGroups();
+  }, []);
+
+  useEffect(() => {
+    if (currentUser?.user?.organization) {
+      setFormData((prev) => ({
+        ...prev,
+        organization: currentUser.user.organization, // Store ID only
+      }));
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     if (isSuperAdmin) {
       loadOrganization();
     }
   }, [isSuperAdmin]);
+
+  const passwordRequirements = [
+    "At least 8 characters long",
+    "At least 1 number",
+    "At least 1 lowercase letter",
+    "At least 1 uppercase letter",
+    "At least 1 special character (^ $ * . [ ] { } ( ) ? - \" ! @ # % & / \\ , < > ' : ; | _ ~ ` + =)",
+  ];
 
   const loadOrganization = async () => {
     try {
@@ -71,58 +85,55 @@ const AddMember = ({
     }
   };
 
-  const passwordRequirements = [
-    "At least 8 characters long",
-    "At least 1 number",
-    "At least 1 lowercase letter",
-    "At least 1 uppercase letter",
-    "At least 1 special character (^ $ * . [ ] { } ( ) ? - \" ! @ # % & / \\ , < > ' : ; | _ ~ ` + =)",
-  ];
+  const fetchUserGroups = async () => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      if (!token) {
+        toast.error("Authentication token is missing.");
+        return;
+      }
 
-  const [errors, setErrors] = useState({});
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/groups/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        console.error("Unexpected API response format:", data);
+        return;
+      }
+
+      setUserGroups(data);
+    } catch (error) {
+      console.error("Error fetching user groups:", error);
+      toast.error("Failed to load user groups.");
+    }
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      [name]: value ? "" : prevErrors[name],
-    }));
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const validate = () => {
     const newErrors = {};
     if (!formData.first_name) newErrors.first_name = "First name is required";
     if (!formData.last_name) newErrors.last_name = "Last name is required";
-    if (!formData.username) newErrors.username = "User name is required";
-    // Remove email validation as mandatory
-    if (formData.email) {
-      if (
-        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
-      ) {
-        newErrors.email = "Invalid email format";
-      }
-    }
-    // Remove contact number as mandatory
-    if (formData.contact_number) {
-      if (!/^\d{10}$/.test(formData.contact_number)) {
-        newErrors.contact_number = "Enter a valid 10-digit contact number";
-      }
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
+    if (!formData.username) newErrors.username = "Username is required";
     if (formData.password !== formData.password_confirm) {
       newErrors.password_confirm = "Passwords do not match";
     }
-
     return newErrors;
   };
 
@@ -131,64 +142,61 @@ const AddMember = ({
     const validationErrors = validate();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-    } else {
-      const registrationData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        password_confirm: formData.password_confirm,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        contact_number: formData.contact_number,
-        organization: formData.organization,
-      };
-      try {
+      return;
+    }
+
+    try {
+      // 1️⃣ Register user
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formData),
+        }
+      );
+      const data = await response.json();
+
+      if (!response.ok) {
+        const errorMessages = Object.values(data).flat().join(", ");
+        toast.error(errorMessages || "Registration failed.");
+        return;
+      }
+
+      toast.success("User registered successfully!");
+
+      const newUserId = data.id; // 🔑 Get new user id from API
+
+      // 2️⃣ Assign Role immediately
+      if (selectedRole) {
         const token = sessionStorage.getItem("accessToken");
-        const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}api/v1/auth/register/`,
+        const roleRes = await fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/users/${newUserId}/set_group/`,
           {
-            method: "POST",
+            method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              // Authorization: `Bearer ${token}`,
+              Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(registrationData),
+            body: JSON.stringify({ group_id: Number(selectedRole) }),
           }
         );
-
-        if (response.ok) {
-          toast.success("User registered successfully!");
-          setFormData({
-            username: "",
-            email: "",
-            password: "",
-            password_confirm: "",
-            first_name: "",
-            last_name: "",
-            contact_number: "",
-            organization: "",
-          });
-          setSelectedOption(null);
-          setSelectedPermission([]);
-          setErrors({});
-          onUserCreated();
-
-          setTimeout(() => {
-            toast.dismiss(); // Dismiss all toasts before navigating
-            navigate("/dashboard");
-          }, 5000);
+        if (roleRes.ok) {
+          toast.success("Role assigned successfully!");
+          navigate("/dashboard");
         } else {
-          const errorData = await response.json(); // Parse the JSON response
-          console.error("API Error:", errorData); // Debug to see the error message structure
-          const errorMessages = Object.values(errorData).flat().join(", ");
+          const errData = await roleRes.json();
           toast.error(
-            errorMessages || "Registration failed. Please try again."
+            `Role assignment failed: ${errData.message || "Unknown error"}`
           );
         }
-      } catch (error) {
-        console.error("Error during registration:", error);
-        // toast.error("An error occurred. Please try again later.");
       }
+
+      // 3️⃣ Redirect after delay
+      setTimeout(() => navigate("/login"), 2500);
+    } catch (error) {
+      console.error("Error during registration:", error);
+      toast.error("An error occurred.");
     }
   };
 
@@ -330,7 +338,7 @@ const AddMember = ({
                       <>
                         <select
                           name="organization"
-                          value={""}
+                          value={formData.organization || ""}
                           onChange={handleChange}
                           className="w-full rounded border border-gray-300 pl-4 pr-10 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           required
@@ -443,6 +451,24 @@ const AddMember = ({
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-medium mb-2">
+                      Assign Role
+                    </label>
+                    <select
+                      value={selectedRole}
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                      className="w-full p-3 border rounded"
+                    >
+                      <option value="">Select Role</option>
+                      {userGroups.map((group) => (
+                        <option key={group.id} value={group.id}>
+                          {group.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="flex justify-center mt-6">

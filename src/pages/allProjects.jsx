@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   CircularProgress,
   IconButton,
@@ -52,41 +52,30 @@ const AllProjects = ({ statesList }) => {
           }
         );
 
-        if (!response.ok) {
+        if (!response.ok)
           throw new Error(`HTTP error! Status: ${response.status}`);
-        }
 
         const data = await response.json();
-        console.log(data);
+
+        // fetch state names
         const statesResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "ngrok-skip-browser-warning": "420",
-            },
-          }
+          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`
         );
-
-        if (!statesResponse.ok) {
-          throw new Error(`HTTP error! Status: ${statesResponse.status}`);
-        }
-
         const statesData = await statesResponse.json();
+
         const stateMap = {};
-        statesData.states.forEach((state) => {
-          stateMap[state.state_census_code] = state.state_name;
+        statesData.states.forEach((s) => {
+          stateMap[s.state_census_code] = s.state_name;
         });
 
-        // Add state_name to projects
-        const updatedProjects = data.map((project) => ({
-          ...project,
-          state_name: stateMap[project.state] || "Unknown State",
+        // enrich projects
+        const updatedProjects = data.map((p) => ({
+          ...p,
+          state_name: stateMap[p.state] || "Unknown State",
         }));
         setProjects(updatedProjects);
-      } catch (error) {
-        console.error("Error fetching projects:", error);
+      } catch (err) {
+        console.error("Error fetching projects:", err);
       } finally {
         setLoading(false);
       }
@@ -95,38 +84,72 @@ const AllProjects = ({ statesList }) => {
     fetchProjects();
   }, []);
 
-  const getStateName = (stateId) => {
-    const state = (statesList || []).find((s) => s.id === stateId);
+  // memoized filter lists
+  const appTypes = useMemo(
+    () => Array.from(new Set(projects.map((p) => p.app_type).filter(Boolean))),
+    [projects]
+  );
+  const organizations = useMemo(
+    () =>
+      Array.from(
+        new Set(projects.map((p) => p.organization_name).filter(Boolean))
+      ),
+    [projects]
+  );
+  const states = useMemo(
+    () =>
+      Array.from(new Set(projects.map((p) => p.state_name).filter(Boolean))),
+    [projects]
+  );
 
-    return state ? state.state_name : "Unknown State";
-  };
+  // apply filters
+  const filteredProjects = useMemo(() => {
+    return projects.filter((p) => {
+      return (
+        (selectedState
+          ? p.state_name?.toLowerCase() === selectedState.toLowerCase()
+          : true) &&
+        (selectedAppType
+          ? p.app_type?.toLowerCase() === selectedAppType.toLowerCase()
+          : true) &&
+        (selectedOrganization
+          ? p.organization_name?.toLowerCase() ===
+            selectedOrganization.toLowerCase()
+          : true) &&
+        (selectedStatus
+          ? (p.status || "Active").toLowerCase() ===
+            selectedStatus.toLowerCase()
+          : true)
+      );
+    });
+  }, [
+    projects,
+    selectedState,
+    selectedStatus,
+    selectedAppType,
+    selectedOrganization,
+  ]);
 
-  useEffect(() => {
-    getStateName();
-  }, []);
-
-  const appTypes = [...new Set(projects.map((p) => p.app_type))];
-
-  // filtering
-  const filteredProjects = projects.filter((project) => {
-    return (
-      (selectedState === "" || project.state_name === selectedState) &&
-      (selectedAppType === "" || project.app_type === selectedAppType) &&
-      (selectedOrganization === "" ||
-        project.organization_name === selectedOrganization) &&
-      (selectedStatus === "" || project.status === selectedStatus)
-    );
-  });
-
-  // handle filter popovers
-  const handleFilterClick = (event, type) => {
-    setAnchorEl(event.currentTarget);
+  // popover handlers
+  const handleFilterClick = (e, type) => {
+    setAnchorEl(e.currentTarget);
     setFilterType(type);
+    setSearchText("");
   };
   const handleFilterClose = () => {
     setAnchorEl(null);
     setFilterType("");
     setSearchText("");
+  };
+
+  // clear all filters
+  const clearAllFilters = () => {
+    setSelectedState("");
+    setSelectedStatus("");
+    setSelectedAppType("");
+    setSelectedOrganization("");
+    setSearchText("");
+    setAnchorEl(null);
   };
 
   return (
@@ -140,10 +163,17 @@ const AllProjects = ({ statesList }) => {
             </IconButton>
           </Tooltip>
 
-          {/* Centered Title */}
           <h1 className="flex-1 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center drop-shadow-md">
             Projects Information
           </h1>
+
+          {/* Clear All Filters */}
+          <span
+            onClick={clearAllFilters}
+            className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium"
+          >
+            Clear All Filters
+          </span>
         </div>
 
         {/* Table container */}
@@ -154,11 +184,10 @@ const AllProjects = ({ statesList }) => {
                 <CircularProgress />
               </div>
             ) : (
-              <table className="min-w-full text-sm text-left border-collapse">
-                {/* Head */}
+              <table className="min-w-full text-md text-left border-collapse">
                 <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
                   <tr>
-                    <th className="px-6 py-4">S. no.</th>
+                    <th className="px-6 py-4">S. No.</th>
                     <th className="px-6 py-4">Name</th>
                     <th className="px-6 py-4">
                       <div className="flex items-center">
@@ -208,7 +237,6 @@ const AllProjects = ({ statesList }) => {
                   </tr>
                 </thead>
 
-                {/* Body */}
                 <tbody className="divide-y divide-gray-200">
                   {filteredProjects.length > 0 ? (
                     filteredProjects.map((p, i) => (
@@ -216,11 +244,15 @@ const AllProjects = ({ statesList }) => {
                         key={p.id}
                         className="hover:bg-gray-50 transition duration-200 text-gray-700"
                       >
-                        <td className="px-6 py-4">{i + 1}</td>
+                        <td className="px-6 py-4 font-medium">{i + 1}</td>
                         <td className="px-6 py-4 font-medium">{p.name}</td>
-                        <td className="px-6 py-4">{p.app_type || "N/A"}</td>
-                        <td className="px-6 py-4">{p.state_name}</td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4 font-medium">
+                          {p.app_type || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 font-medium">
+                          {p.state_name}
+                        </td>
+                        <td className="px-6 py-4 font-medium">
                           {p.organization_name || "N/A"}
                         </td>
                         <td className="px-6 py-4">
@@ -234,7 +266,6 @@ const AllProjects = ({ statesList }) => {
                             {p.status || "Active"}
                           </span>
                         </td>
-
                         <td className="px-6 py-4 flex gap-2">
                           {/* Plantation */}
                           {p.app_type === "plantation" && (
@@ -250,7 +281,7 @@ const AllProjects = ({ statesList }) => {
                                     },
                                   }}
                                 >
-                                  <Edit2 size={18} />
+                                  <Edit2 size={24} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="View Layer">
@@ -264,7 +295,7 @@ const AllProjects = ({ statesList }) => {
                                     },
                                   }}
                                 >
-                                  <Eye size={18} />
+                                  <Eye size={24} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="Download GeoJSON">
@@ -278,12 +309,11 @@ const AllProjects = ({ statesList }) => {
                                     },
                                   }}
                                 >
-                                  <Download size={18} />
+                                  <Download size={24} />
                                 </IconButton>
                               </Tooltip>
                             </>
                           )}
-
                           {/* Waterbody */}
                           {p.app_type === "waterbody" && (
                             <>
@@ -298,7 +328,7 @@ const AllProjects = ({ statesList }) => {
                                     },
                                   }}
                                 >
-                                  <Upload size={18} />
+                                  <Upload size={24} />
                                 </IconButton>
                               </Tooltip>
                             </>
@@ -307,7 +337,7 @@ const AllProjects = ({ statesList }) => {
                           {/* Watershed */}
                           {p.app_type === "watershed" && (
                             <>
-                              <Tooltip title="Create Plans">
+                              <Tooltip title="Create Plan(s)">
                                 <IconButton
                                   size="small"
                                   sx={{
@@ -329,7 +359,7 @@ const AllProjects = ({ statesList }) => {
                                     });
                                   }}
                                 >
-                                  <FilePlus size={18} />
+                                  <FilePlus size={24} />
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title="View Plans">
@@ -352,12 +382,11 @@ const AllProjects = ({ statesList }) => {
                                     });
                                   }}
                                 >
-                                  <Eye size={18} />
+                                  <Eye size={24} />
                                 </IconButton>
                               </Tooltip>
                             </>
                           )}
-
                           {/* Community Engagement */}
                           {p.app_type === "community_engagement" && <></>}
                         </td>
@@ -366,7 +395,7 @@ const AllProjects = ({ statesList }) => {
                   ) : (
                     <tr>
                       <td
-                        colSpan={6}
+                        colSpan={7}
                         className="text-center py-6 text-gray-500"
                       >
                         No projects found.
@@ -380,7 +409,7 @@ const AllProjects = ({ statesList }) => {
         </div>
       </div>
 
-      {/* Filters Popover */}
+      {/* Shared Popover */}
       <Popover
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
@@ -397,89 +426,8 @@ const AllProjects = ({ statesList }) => {
             fullWidth
             sx={{ mb: 1 }}
           />
-          <MenuItem
-            onClick={() => {
-              if (filterType === "state") setSelectedState("");
-              if (filterType === "status") setSelectedStatus("");
-              if (filterType === "app_type") setSelectedAppType("");
-              handleFilterClose();
-            }}
-          >
-            All{" "}
-            {filterType === "state"
-              ? "States"
-              : filterType === "status"
-              ? "Status"
-              : "App Types"}
-          </MenuItem>
 
-          {filterType === "state" &&
-            statesList
-              ?.filter((s) =>
-                s.state_name.toLowerCase().includes(searchText.toLowerCase())
-              )
-              .map((s) => (
-                <MenuItem
-                  key={s.id}
-                  onClick={() => {
-                    setSelectedState(s.state_name);
-                    handleFilterClose();
-                  }}
-                >
-                  {s.state_name}
-                </MenuItem>
-              ))}
-
-          {filterType === "status" &&
-            ["Active", "Inactive"]
-              .filter((opt) =>
-                opt.toLowerCase().includes(searchText.toLowerCase())
-              )
-              .map((opt) => (
-                <MenuItem
-                  key={opt}
-                  onClick={() => {
-                    setSelectedStatus(opt);
-                    handleFilterClose();
-                  }}
-                >
-                  {opt}
-                </MenuItem>
-              ))}
-
-          {filterType === "app_type" &&
-            ["Plantation", "Watershed", "Waterbody", "community_engagement"]
-              .filter((opt) =>
-                opt.toLowerCase().includes(searchText.toLowerCase())
-              )
-              .map((opt) => (
-                <MenuItem
-                  key={opt}
-                  onClick={() => {
-                    setSelectedAppType(opt);
-                    handleFilterClose();
-                  }}
-                >
-                  {opt}
-                </MenuItem>
-              ))}
-
-          {filterType === "organization" &&
-            [...new Set(projects.map((p) => p.organization_name))]
-              .filter((org) =>
-                org?.toLowerCase().includes(searchText.toLowerCase())
-              )
-              .map((org) => (
-                <MenuItem
-                  key={org}
-                  onClick={() => {
-                    setSelectedOrganization(org);
-                    handleFilterClose();
-                  }}
-                >
-                  {org || "N/A"}
-                </MenuItem>
-              ))}
+          {/* Reset Option */}
           <MenuItem
             onClick={() => {
               if (filterType === "state") setSelectedState("");
@@ -488,6 +436,7 @@ const AllProjects = ({ statesList }) => {
               if (filterType === "organization") setSelectedOrganization("");
               handleFilterClose();
             }}
+            sx={{ color: "blue" }}
           >
             All{" "}
             {filterType === "state"
@@ -498,6 +447,67 @@ const AllProjects = ({ statesList }) => {
               ? "App Types"
               : "Organizations"}
           </MenuItem>
+
+          {/* Dynamic Options */}
+          {filterType === "state" &&
+            states
+              .filter((s) => s.toLowerCase().includes(searchText.toLowerCase()))
+              .map((s) => (
+                <MenuItem
+                  key={s}
+                  onClick={() => {
+                    setSelectedState(s);
+                    handleFilterClose();
+                  }}
+                >
+                  {s}
+                </MenuItem>
+              ))}
+
+          {filterType === "status" &&
+            ["Active", "Inactive"]
+              .filter((s) => s.toLowerCase().includes(searchText.toLowerCase()))
+              .map((s) => (
+                <MenuItem
+                  key={s}
+                  onClick={() => {
+                    setSelectedStatus(s);
+                    handleFilterClose();
+                  }}
+                >
+                  {s}
+                </MenuItem>
+              ))}
+
+          {filterType === "app_type" &&
+            ["plantation", "watershed", "waterbody", "community_engagement"]
+              .filter((s) => s.toLowerCase().includes(searchText.toLowerCase()))
+              .map((s) => (
+                <MenuItem
+                  key={s}
+                  onClick={() => {
+                    setSelectedAppType(s);
+                    handleFilterClose();
+                  }}
+                >
+                  {s.charAt(0).toUpperCase() + s.slice(1).replace("_", " ")}
+                </MenuItem>
+              ))}
+
+          {filterType === "organization" &&
+            organizations
+              .filter((s) => s.toLowerCase().includes(searchText.toLowerCase()))
+              .map((s) => (
+                <MenuItem
+                  key={s}
+                  onClick={() => {
+                    setSelectedOrganization(s);
+                    handleFilterClose();
+                  }}
+                >
+                  {s}
+                </MenuItem>
+              ))}
         </Box>
       </Popover>
     </Box>

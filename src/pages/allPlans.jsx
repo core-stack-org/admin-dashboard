@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
-import { CircularProgress, Tooltip, IconButton } from "@mui/material";
+import {
+  CircularProgress,
+  Tooltip,
+  IconButton,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Menu,
+} from "@mui/material";
 import {
   Pencil,
   Trash2,
   Ban,
   CheckCircle,
   ArrowLeftCircle,
+  MoreVertical,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -21,6 +31,9 @@ const AllPlans = () => {
   const [statesList, setStatesList] = useState([]);
   const [districtsCache, setDistrictsCache] = useState({});
   const [blocksCache, setBlocksCache] = useState({});
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
 
   const normalizeName = (str) =>
     str
@@ -201,6 +214,9 @@ const AllPlans = () => {
     }
   };
 
+  const handleMenuOpen = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
   const handleDeletePlan = async (plan) => {
     if (!window.confirm("Are you sure you want to delete this plan?")) return; // optional confirmation
 
@@ -302,7 +318,7 @@ const AllPlans = () => {
                     </td>
 
                     <td className="px-6 py-4 flex gap-2">
-                      {/* Edit */}
+                      {/* Edit - always visible */}
                       <Tooltip title="Edit" arrow>
                         <IconButton
                           size="small"
@@ -324,42 +340,58 @@ const AllPlans = () => {
                         </IconButton>
                       </Tooltip>
 
-                      {/* Enable/Disable */}
-                      <Tooltip
-                        title={plan.enabled ? "Disable" : "Enable"}
-                        arrow
-                      >
+                      {/* More actions menu */}
+                      <Tooltip title="More actions" arrow>
                         <IconButton
                           size="small"
-                          onClick={() => togglePlanEnabled(plan)}
+                          onClick={(e) => setAnchorEl(e.currentTarget)}
                         >
-                          {plan.enabled ? (
-                            <Ban
-                              size={18}
-                              className="text-yellow-500 hover:text-yellow-700"
-                            />
-                          ) : (
-                            <CheckCircle
-                              size={18}
-                              className="text-green-500 hover:text-green-700"
-                            />
-                          )}
+                          <MoreVertical size={18} />
                         </IconButton>
                       </Tooltip>
 
-                      {/* Delete */}
-                      <Tooltip title="Delete" arrow>
-                        <IconButton
-                          size="small"
-                          className="text-red-500 hover:text-red-700"
-                          onClick={() => handleDeletePlan(plan)}
+                      <Menu
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleMenuClose}
+                      >
+                        {/* Enable/Disable */}
+                        <MenuItem
+                          onClick={() => {
+                            togglePlanEnabled(plan);
+                            handleMenuClose();
+                          }}
                         >
-                          <Trash2
-                            size={18}
-                            className="text-red-500 hover:text-red-700"
+                          <ListItemIcon>
+                            {plan.enabled ? (
+                              <CheckCircle
+                                size={18}
+                                className="text-yellow-500"
+                              />
+                            ) : (
+                              <Ban size={18} className="text-green-500" />
+                            )}
+                          </ListItemIcon>
+                          <ListItemText
+                            primary={
+                              plan.enabled ? "Disable Plan" : "Enable Plan"
+                            }
                           />
-                        </IconButton>
-                      </Tooltip>
+                        </MenuItem>
+
+                        {/* Delete */}
+                        <MenuItem
+                          onClick={() => {
+                            handleDeletePlan(plan);
+                            handleMenuClose();
+                          }}
+                        >
+                          <ListItemIcon>
+                            <Trash2 size={18} className="text-red-500" />
+                          </ListItemIcon>
+                          <ListItemText primary="Delete Plan" />
+                        </MenuItem>
+                      </Menu>
                     </td>
                   </tr>
                 ))}

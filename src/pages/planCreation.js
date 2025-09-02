@@ -29,6 +29,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const [isDprGenerated, setIsDprGenerated] = useState(false);
   const [isDprReviewed, setIsDprReviewed] = useState(false);
   const [isDprApproved, setIsDprApproved] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -207,7 +208,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         {/* Back Button */}
         <div className="mb-4">
           <button
-            onClick={() => navigate("/projects")}
+            onClick={() => navigate(`/projects/${projectId}/plans`)}
             className="flex items-center gap-2 text-blue-600 hover:text-blue-800 font-medium"
           >
             <ArrowLeft size={20} /> Back to Projects
@@ -421,13 +422,84 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         {/* Submit */}
         <div className="text-center pt-2">
           <button
-            onClick={handlePlanCreation}
+            onClick={(e) => {
+              e.preventDefault();
+              setShowConfirm(true); // show confirm page instead of hitting API
+            }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl text-lg font-medium shadow-md transition-all"
           >
             {isEditMode ? "Update Plan" : "Create Plan"}
           </button>
         </div>
       </div>
+
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 shadow-lg w-full max-w-lg">
+            <h2 className="text-xl font-bold mb-4">
+              Confirm {isEditMode ? "Update" : "Creation"}
+            </h2>
+
+            <ul className="text-gray-700 space-y-2 mb-6">
+              <li>
+                <strong>State:</strong> {state.name}
+              </li>
+              <li>
+                <strong>District:</strong> {district.name}
+              </li>
+              <li>
+                <strong>Block:</strong> {block.name}
+              </li>
+              <li>
+                <strong>Facilitator:</strong> {facilitatorName}
+              </li>
+              <li>
+                <strong>Plan:</strong> {plan}
+              </li>
+              <li>
+                <strong>Village:</strong> {villageName}
+              </li>
+              <li>
+                <strong>Gram Panchayat:</strong> {gramPanchayat}
+              </li>
+              {isEditMode && (
+                <>
+                  <li>
+                    <strong>Completed:</strong> {isCompleted ? "Yes" : "No"}
+                  </li>
+                  <li>
+                    <strong>DPR Generated:</strong>{" "}
+                    {isDprGenerated ? "Yes" : "No"}
+                  </li>
+                  <li>
+                    <strong>DPR Reviewed:</strong>{" "}
+                    {isDprReviewed ? "Yes" : "No"}
+                  </li>
+                  <li>
+                    <strong>DPR Approved:</strong>{" "}
+                    {isDprApproved ? "Yes" : "No"}
+                  </li>
+                </>
+              )}
+            </ul>
+
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePlanCreation} // 🔥 API hit only after confirm
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

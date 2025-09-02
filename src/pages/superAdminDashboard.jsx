@@ -197,7 +197,7 @@ function SuperAdminDashboard({ currentUser }) {
   };
 
   const handleViewOrganizations = () => {
-    handleOpenDialog("viewOrganizations");
+    navigate("/organizations");
   };
   const handleExtraAction = () => {
     handleOpenDialog("extraActions");
@@ -525,11 +525,6 @@ function SuperAdminDashboard({ currentUser }) {
                 desc: "Browse projects along with their organization names.",
                 onClick: handleViewProjects,
               },
-              {
-                title: "Extra Action",
-                desc: "Give User a Super Admin access",
-                onClick: handleExtraAction,
-              },
             ].map(({ title, desc, onClick }, i) => (
               <motion.div
                 key={i}
@@ -546,52 +541,34 @@ function SuperAdminDashboard({ currentUser }) {
               </motion.div>
             ))}
           </div>
-          {/* <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleViewUsers}
-                >
-                  <div className="font-medium text-lg">View All Users</div>
-                  <p className="text-sm text-muted-foreground">
-                    Manage and review all system users.
-                  </p>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleViewOrganizations}
-                >
-                  <div className="font-medium text-lg">
-                    View All Organizations
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Access and manage registered organizations.
-                  </p>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleViewProjects}
-                >
-                  <div className="font-medium text-lg">View All Projects</div>
-                  <p className="text-sm text-muted-foreground">
-                    Browse projects along with their organization names.
-                  </p>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleExtraAction}
-                >
-                  <div className="font-medium text-lg">Extra Action</div>
-                  <p className="text-sm text-muted-foreground">
-                    Give User a Super Admin access
-                  </p>
-                </motion.div>
+        </motion.div>
+        <motion.div variants={itemVariants} className="mb-10">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+            System Actions
+          </h2>
+
+          <div
+            className="grid gap-8"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            }}
+          >
+            <motion.div
+              onClick={handleExtraAction}
+              className="relative bg-white border border-[#e0e0e0] rounded-[15px] p-8 cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:border-[#0066cc] hover:shadow-[-10px_10px_30px_rgba(0,102,204,0.15)] group
+                 min-h-[160px] flex flex-col justify-center items-center text-center"
+            >
+              {/* Gradient bar */}
+              <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-[#0066cc] to-[#6600cc] transform scale-y-0 origin-top transition-transform duration-300 group-hover:scale-y-100" />
+
+              <div className="text-[1.2rem] font-bold text-[#333] mb-2">
+                Extra Action
               </div>
-            </CardContent> */}
+              <p className="text-[#666] text-sm leading-relaxed">
+                Give User a Super Admin access
+              </p>
+            </motion.div>
+          </div>
         </motion.div>
       </motion.div>
 
@@ -720,7 +697,7 @@ function SuperAdminDashboard({ currentUser }) {
       </Dialog>
 
       {/* View all Organizations*/}
-      <Dialog
+      {/* <Dialog
         open={openDialog === "viewOrganizations"}
         onClose={handleCloseDialog}
         maxWidth="md"
@@ -728,14 +705,14 @@ function SuperAdminDashboard({ currentUser }) {
       >
         <DialogTitle>
           <div className="flex items-center gap-4">
-            {/* Back button */}
+            {/* Back button 
             <Tooltip title="Back to Dashboard">
               <IconButton onClick={() => navigate("/dashboard")}>
                 <ArrowLeftCircle className="w-7 h-7 text-blue-600 hover:text-purple-600 transition-colors" />
               </IconButton>
             </Tooltip>
 
-            {/* Title */}
+            {/* Title 
             <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center">
               All Organizations
             </h1>
@@ -746,7 +723,7 @@ function SuperAdminDashboard({ currentUser }) {
           {organizations.length > 0 ? (
             <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto">
               <table className="min-w-full text-sm text-left border-collapse">
-                {/* Table Head */}
+                {/* Table Head 
                 <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
                   <tr>
                     <th className="px-6 py-4">S. No.</th>
@@ -755,7 +732,7 @@ function SuperAdminDashboard({ currentUser }) {
                   </tr>
                 </thead>
 
-                {/* Table Body */}
+                {/* Table Body 
                 <tbody className="divide-y divide-gray-200">
                   {organizations.map((org, index) => (
                     <tr
@@ -780,7 +757,7 @@ function SuperAdminDashboard({ currentUser }) {
             Close
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* Super admin Role assignment to user Dialog */}
       <Dialog

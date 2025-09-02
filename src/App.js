@@ -24,6 +24,7 @@ import "react-toastify/dist/ReactToastify.css";
 import UsersTable from "./pages/allUsers";
 import AllProjects from "./pages/allProjects";
 import AllPlans from "./pages/allPlans";
+import AllOrganizations from "./pages/allOrganizations";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -76,6 +77,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/projects"
                   element={<AllProjects currentUser={currentUser} />}
+                />
+                <Route
+                  path="/organizations"
+                  element={<AllOrganizations currentUser={currentUser} />}
                 />
                 <Route
                   path="/projects/:projectId/plans"
