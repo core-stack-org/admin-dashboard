@@ -1,40 +1,28 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import {
-  Building2,
-  FolderKanban,
-  Users,
-  ShieldCheck,
-  UserCog,
-  Shield,
-  UserPlus,
-} from "lucide-react";
+import { Building2, ArrowLeftCircle, UserCog } from "lucide-react";
 
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  Typography,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Button,
-  FormControl,
   Checkbox,
   FormControlLabel,
-  MenuItem,
-  Select,
-  InputLabel,
+  Tooltip,
+  IconButton,
 } from "@mui/material";
 import { Badge } from "@mui/material";
 import Project from "./project.js";
 import { OrganizationForm } from "./organizationForm.jsx";
 import UserMappingForm from "./userMappingForm.jsx";
 import RoleAssignmentForm from "./roleAssignmentForm.jsx";
+import UserToProject from "./userToProject.jsx";
 import AddMember from "./addMember.jsx";
 import RegistrationForm from "./userRegistration.jsx";
 import ProjectDashboard from "./projectDashboard.js";
+import { useNavigate } from "react-router-dom";
 
 function SuperAdminDashboard({ currentUser }) {
   const [activeModal, setActiveModal] = useState(null);
@@ -53,6 +41,7 @@ function SuperAdminDashboard({ currentUser }) {
   const [selectedUser, setSelectedUser] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [statesList, setStatesList] = useState([]);
+  const navigate = useNavigate();
 
   const handleOpenDialog = (dialogName) => {
     setOpenDialog(dialogName);
@@ -209,16 +198,18 @@ function SuperAdminDashboard({ currentUser }) {
   };
 
   const handleViewOrganizations = () => {
-    handleOpenDialog("viewOrganizations");
+    navigate("/organizations");
   };
   const handleExtraAction = () => {
     handleOpenDialog("extraActions");
   };
   const handleViewProjects = () => {
-    handleOpenDialog("viewProjects");
+    // handleOpenDialog("viewProjects");
+    navigate("/projects");
   };
   const handleViewUsers = () => {
-    handleOpenDialog("viewUsers");
+    // handleOpenDialog("viewUsers");
+    navigate("/users");
   };
   const handleUserChange = (event) => {
     setSelectedUser(event.target.value);
@@ -283,7 +274,7 @@ function SuperAdminDashboard({ currentUser }) {
           />
 
           <h1
-            className="text-[3.5rem] font-black uppercase tracking-[2px] mb-4"
+            className="text-[3.5rem] font-black  tracking-[2px] mb-4"
             style={{
               background: "linear-gradient(45deg, #0066cc, #6600cc, #cc6600)",
               backgroundSize: "200% 200%",
@@ -293,7 +284,7 @@ function SuperAdminDashboard({ currentUser }) {
               animation: "gradientShift 3s ease-in-out infinite",
             }}
           >
-            Super Admin Dashboard
+            Super Administrator
           </h1>
 
           <p className="text-[1.2rem] text-gray-600 opacity-80">
@@ -467,7 +458,7 @@ function SuperAdminDashboard({ currentUser }) {
                 <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
                 <span className="text-[3rem] mb-4 relative z-10">👤</span>
                 <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
-                  Create User
+                  Register New User
                 </h3>
                 <p className="text-sm text-gray-600 relative z-10">
                   Register new application user
@@ -506,6 +497,22 @@ function SuperAdminDashboard({ currentUser }) {
                 </p>
               </div>
             </motion.div>
+            {/* Assign Project to user */}
+            <motion.div>
+              <div
+                onClick={() => handleOpenDialog("projectUSerAssignment")}
+                className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#ff9800] hover:shadow-[0_15px_30px_rgba(255,152,0,0.2)] min-h-[250px]"
+              >
+                <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
+                <span className="text-[3rem] mb-4 relative z-10">🛡️</span>
+                <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
+                  Assign Project to User
+                </h3>
+                <p className="text-sm text-gray-600 relative z-10">
+                  Define Projects for users
+                </p>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
 
@@ -521,11 +528,6 @@ function SuperAdminDashboard({ currentUser }) {
           >
             {[
               {
-                title: "View All Users",
-                desc: "Manage and review all system users.",
-                onClick: handleViewUsers,
-              },
-              {
                 title: "View All Organizations",
                 desc: "Access and manage registered organizations.",
                 onClick: handleViewOrganizations,
@@ -536,9 +538,9 @@ function SuperAdminDashboard({ currentUser }) {
                 onClick: handleViewProjects,
               },
               {
-                title: "Extra Action",
-                desc: "Give User a Super Admin access",
-                onClick: handleExtraAction,
+                title: "View All Users",
+                desc: "Manage and review all system users.",
+                onClick: handleViewUsers,
               },
             ].map(({ title, desc, onClick }, i) => (
               <motion.div
@@ -556,52 +558,34 @@ function SuperAdminDashboard({ currentUser }) {
               </motion.div>
             ))}
           </div>
-          {/* <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleViewUsers}
-                >
-                  <div className="font-medium text-lg">View All Users</div>
-                  <p className="text-sm text-muted-foreground">
-                    Manage and review all system users.
-                  </p>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleViewOrganizations}
-                >
-                  <div className="font-medium text-lg">
-                    View All Organizations
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Access and manage registered organizations.
-                  </p>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleViewProjects}
-                >
-                  <div className="font-medium text-lg">View All Projects</div>
-                  <p className="text-sm text-muted-foreground">
-                    Browse projects along with their organization names.
-                  </p>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="border rounded-lg p-4 bg-card cursor-pointer"
-                  onClick={handleExtraAction}
-                >
-                  <div className="font-medium text-lg">Extra Action</div>
-                  <p className="text-sm text-muted-foreground">
-                    Give User a Super Admin access
-                  </p>
-                </motion.div>
+        </motion.div>
+        <motion.div variants={itemVariants} className="mb-10">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+            System Actions
+          </h2>
+
+          <div
+            className="grid gap-8"
+            style={{
+              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            }}
+          >
+            <motion.div
+              onClick={handleExtraAction}
+              className="relative bg-white border border-[#e0e0e0] rounded-[15px] p-8 cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:border-[#0066cc] hover:shadow-[-10px_10px_30px_rgba(0,102,204,0.15)] group
+                 min-h-[160px] flex flex-col justify-center items-center text-center"
+            >
+              {/* Gradient bar */}
+              <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-[#0066cc] to-[#6600cc] transform scale-y-0 origin-top transition-transform duration-300 group-hover:scale-y-100" />
+
+              <div className="text-[1.2rem] font-bold text-[#333] mb-2">
+                Extra Action
               </div>
-            </CardContent> */}
+              <p className="text-[#666] text-sm leading-relaxed">
+                Give User a Super Admin access
+              </p>
+            </motion.div>
+          </div>
         </motion.div>
       </motion.div>
 
@@ -706,6 +690,24 @@ function SuperAdminDashboard({ currentUser }) {
         </DialogActions>
       </Dialog>
 
+      {/* Project assignment to USer Dialog */}
+      <Dialog
+        open={openDialog === "projectUSerAssignment"}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Assign Project to USer </DialogTitle>
+        <DialogContent>
+          <UserToProject onClose={handleCloseDialog} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="secondary">
+            Cancel
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* To create new users in the organization Dialog */}
       <Dialog
         open={openDialog === "createUser"}
@@ -729,96 +731,57 @@ function SuperAdminDashboard({ currentUser }) {
         </DialogActions>
       </Dialog>
 
-      {/* View all users*/}
-      <Dialog
-        open={openDialog === "viewUsers"}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>All Users</DialogTitle>
-        <DialogContent className="p-4 max-h-[500px] overflow-y-auto">
-          {users.length > 0 ? (
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">Name</th>
-                  <th className="border p-2">Username</th>
-                  <th className="border p-2">Email</th>
-                  <th className="border p-2">Contact</th>
-                  <th className="border p-2">Organization</th>
-                  <th className="border p-2">Status</th>
-                  <th className="border p-2">Roles</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => {
-                  // Extract group names
-                  let groupNames =
-                    user.groups?.map((group) => group.name) || [];
-
-                  // Add "Superadmin" if applicable
-                  if (user.is_superadmin) {
-                    groupNames.unshift("Superadmin");
-                  }
-
-                  return (
-                    <tr key={user.id} className="text-center border">
-                      <td className="border p-2">
-                        {user.first_name} {user.last_name}
-                      </td>
-                      <td className="border p-2">{user.username}</td>
-                      <td className="border p-2">{user.email}</td>
-                      <td className="border p-2">{user.contact_number}</td>
-                      <td className="border p-2">{user.organization_name}</td>
-                      <td className="border p-2">
-                        {user.is_active ? "Active" : "Inactive"}
-                      </td>
-                      <td className="border p-2">
-                        {groupNames.length > 0 ? groupNames.join(", ") : "None"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-500 text-center">No users found.</p>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* View all Organizations*/}
-      <Dialog
+      {/* <Dialog
         open={openDialog === "viewOrganizations"}
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
       >
-        <DialogTitle>All Organizations</DialogTitle>
+        <DialogTitle>
+          <div className="flex items-center gap-4">
+            {/* Back button 
+            <Tooltip title="Back to Dashboard">
+              <IconButton onClick={() => navigate("/dashboard")}>
+                <ArrowLeftCircle className="w-7 h-7 text-blue-600 hover:text-purple-600 transition-colors" />
+              </IconButton>
+            </Tooltip>
+
+            {/* Title 
+            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center">
+              All Organizations
+            </h1>
+          </div>
+        </DialogTitle>
+
         <DialogContent className="p-4 max-h-[500px] overflow-y-auto">
           {organizations.length > 0 ? (
-            <table className="min-w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border p-2">Organization Name</th>
-                  <th className="border p-2">Organization ID</th>
-                </tr>
-              </thead>
-              <tbody>
-                {organizations.map((org) => (
-                  <tr key={org.id} className="text-center border">
-                    <td className="border p-2">{org.name}</td>
-                    <td className="border p-2">{org.id}</td>
+            <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto">
+              <table className="min-w-full text-sm text-left border-collapse">
+                {/* Table Head 
+                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-4">S. No.</th>
+                    <th className="px-6 py-4">Organization Name</th>
+                    <th className="px-6 py-4">Organization ID</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                {/* Table Body 
+                <tbody className="divide-y divide-gray-200">
+                  {organizations.map((org, index) => (
+                    <tr
+                      key={org.id}
+                      className="hover:bg-gray-50 transition duration-200 text-gray-700"
+                    >
+                      <td className="px-6 py-4">{index + 1}</td>
+                      <td className="px-6 py-4 font-medium">{org.name}</td>
+                      <td className="px-6 py-4">{org.id}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="text-gray-500 text-center">No organizations found.</p>
           )}
@@ -829,48 +792,7 @@ function SuperAdminDashboard({ currentUser }) {
             Close
           </Button>
         </DialogActions>
-      </Dialog>
-
-      {/* View all Projects Dialog */}
-      <Dialog
-        open={openDialog === "viewProjects"}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{
-          paper: {
-            style: {
-              borderRadius: "12px",
-              padding: "0",
-            },
-          },
-        }}
-      >
-        {/* Dialog Header */}
-        <DialogTitle className="text-xl font-semibold bg-violet-600 text-white px-6 py-4">
-          View all Project
-        </DialogTitle>
-
-        {/* Dialog Body */}
-        <DialogContent dividers>
-          <div className="p-6">
-            <ProjectDashboard
-              onClose={handleCloseDialog}
-              currentUser={currentUser}
-            />
-          </div>
-        </DialogContent>
-
-        {/* Dialog Footer */}
-        <DialogActions>
-          <Button
-            onClick={handleCloseDialog}
-            className="text-gray-700 px-4 py-2 rounded-lg"
-          >
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
+      </Dialog> */}
 
       {/* Super admin Role assignment to user Dialog */}
       <Dialog

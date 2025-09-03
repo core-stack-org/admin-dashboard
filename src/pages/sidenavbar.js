@@ -238,11 +238,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         icon: <Eye size={20} />,
         label: "Preview Layers",
         href: "/previewLayers",
-      },
-      {
-        icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-        label: "Generate API Key",
-        href: "/generateApiKey",
       }
     );
   }

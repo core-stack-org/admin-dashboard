@@ -49,8 +49,9 @@ export function OrganizationForm({ onClose, loadOrganization }) {
         });
         loadOrganization();
         setTimeout(() => {
-          toast.dismiss(); // Dismiss all toasts before navigating
-        }, 5000);
+          toast.dismiss();
+          onClose();
+        }, 2000);
       } else {
         const errorData = await response.json();
         toast.error("Failed to create organization.");

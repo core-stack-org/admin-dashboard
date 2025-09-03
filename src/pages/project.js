@@ -4,12 +4,19 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const Project = ({ currentUser, closeModal, onClose, statesList }) => {
+  console.log(currentUser);
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [organization, setOrganization] = useState(null);
   const [userId, setUserId] = useState(null);
   const [projectAppType, setProjectAppType] = useState("");
   const [state, setState] = useState({ id: "", name: "" });
+  const [districtsList, setDistrictsList] = useState([]);
+  const [blocksList, setBlocksList] = useState([]);
+  const [district, setDistrict] = useState({ id: "", name: "" });
+  const [block, setBlock] = useState({ id: "", name: "" });
+  const [organizationsList, setOrganizationsList] = useState([]);
+
   const [needDesiltingPoint, setNeedDesiltingPoint] = useState(true);
 
   useEffect(() => {
@@ -18,6 +25,43 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
       setUserId(currentUser.user.id);
     }
   }, [currentUser]);
+
+  useEffect(() => {
+    if (currentUser?.user) {
+      setUserId(currentUser.user.id);
+
+      if (!currentUser.user.is_superadmin) {
+        // normal user → lock org
+        setOrganization(currentUser.user.organization);
+      } else {
+        // superadmin → fetch org list
+        loadOrganization();
+      }
+    }
+  }, [currentUser]);
+
+  const loadOrganization = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/auth/register/available_organizations/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+      const data = await response.json();
+      setOrganizationsList(data || []); // ✅ store org list
+    } catch (error) {
+      console.error("Error fetching organizations:", error);
+    }
+  };
+
+  const handleOrgChange = (e) => {
+    setOrganization(e.target.value);
+  };
 
   const handleStateChange = (event) => {
     const selectedValue = event.target.value;
@@ -29,6 +73,53 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
     const [state_id, state_name] = selectedValue.split("_");
     setState({ id: state_id, name: state_name });
   };
+
+  useEffect(() => {
+    if (state.id) {
+      fetchDistricts(state.id);
+    }
+  }, [state.id]);
+
+  const fetchDistricts = async (stateId) => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateId}/`
+      );
+      const data = await res.json();
+      setDistrictsList(data.districts || []);
+      return data.districts || [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
+
+  const fetchBlocks = async (districtId) => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtId}/`
+      );
+      const data = await res.json();
+      setBlocksList(data.blocks || []);
+      return data.blocks || [];
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  };
+
+  const handleDistrictChange = (e) => {
+    const [id, name] = e.target.value.split("_");
+    setDistrict({ id, name });
+    setBlock({ id: "", name: "" });
+    fetchBlocks(id);
+  };
+
+  const handleBlockChange = (e) => {
+    const [id, name] = e.target.value.split("_");
+    setBlock({ id, name });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -50,7 +141,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
       enabled: true, // Ensuring it's included
       created_by: userId,
       updated_by: userId,
-      organization: currentUser?.user?.organization,
+      organization: organization,
       ...(projectAppType === "waterbody" && {
         need_desilting_point: needDesiltingPoint,
       }),
@@ -89,7 +180,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <ToastContainer position="bottom-right" />
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden">
         {/* Header */}
         <div className="bg-violet-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Create Project</h2>
@@ -148,7 +239,6 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       onChange={(e) => setProjectDescription(e.target.value)}
                       className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
                       placeholder="Enter project description"
-                      required
                     />
                   </div>
 
@@ -172,9 +262,9 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       <option value="" disabled>
                         Select app type
                       </option>
-                      <option value="plantation">plantation</option>
-                      <option value="watershed">watershed</option>
-                      <option value="waterbody">waterbody rejuvenation</option>
+                      <option value="plantation">Plantations</option>
+                      <option value="watershed">Watershed Planning</option>
+                      <option value="waterbody">Waterbody Rejuvenation</option>
                     </select>
                   </div>
                   {projectAppType === "waterbody" && (
@@ -220,6 +310,81 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       ))}
                     </select>
                   </div>
+
+                  {/* District Dropdown */}
+
+                  <div className="mt-4">
+                    <label className="text-lg font-semibold mb-2 block">
+                      District:
+                    </label>
+                    <select
+                      value={
+                        district.id && district.name
+                          ? `${district.id}_${district.name}`
+                          : ""
+                      }
+                      onChange={handleDistrictChange}
+                      className="w-full px-4 py-3 border text-lg rounded-lg"
+                    >
+                      <option value="">Select District</option>
+                      {districtsList.map((dist) => (
+                        <option
+                          key={dist.district_census_code}
+                          value={`${dist.district_census_code}_${dist.district_name}`}
+                        >
+                          {dist.district_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Block Dropdown */}
+
+                  <div className="mt-4">
+                    <label className="text-lg font-semibold mb-2 block">
+                      Block:
+                    </label>
+                    <select
+                      value={
+                        block.id && block.name
+                          ? `${block.id}_${block.name}`
+                          : ""
+                      }
+                      onChange={handleBlockChange}
+                      className="w-full px-4 py-3 border text-lg rounded-lg"
+                    >
+                      <option value="">Select Block</option>
+                      {blocksList.map((blk) => (
+                        <option
+                          key={blk.block_code}
+                          value={`${blk.block_code}_${blk.block_name}`}
+                        >
+                          {blk.block_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {currentUser?.user?.is_superadmin && (
+                    <div>
+                      <label className="text-lg font-semibold mb-2 block">
+                        Organization:
+                      </label>
+                      <select
+                        value={organization || ""}
+                        onChange={handleOrgChange}
+                        className="w-full px-4 py-3 border text-lg rounded-lg"
+                        required
+                      >
+                        <option value="">Select Organization</option>
+                        {organizationsList.map((org) => (
+                          <option key={org.id} value={org.id}>
+                            {org.name} {/* ✅ show name, pass id */}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Submit Button */}
                   <div className="text-center">
