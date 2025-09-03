@@ -404,7 +404,7 @@ const AllProjects = ({ statesList }) => {
                         <td className="px-6 py-4 font-medium">{i + 1}</td>
                         <td className="px-6 py-4 font-medium">{p.name}</td>
                         <td className="px-6 py-4 font-medium">
-                          {p.app_type || "N/A"}
+                          {p.app_type_display || "N/A"}
                         </td>
                         <td className="px-6 py-4 font-medium">
                           {p.state_name}
@@ -471,6 +471,7 @@ const AllProjects = ({ statesList }) => {
                                       backgroundColor: "rgba(245,158,11,0.1)",
                                     },
                                   }}
+                                  onClick={handleDownloadGeoJSON}
                                 >
                                   <Download size={24} />
                                 </IconButton>
