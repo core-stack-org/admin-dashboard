@@ -30,6 +30,8 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import GenerateApiKeyPage from "../GenerateApiKeyPage.jsx";
+import AllProjects from "./allProjects.jsx";
+import { useNavigate } from "react-router-dom";
 
 const OrgAdminDashboard = ({ currentUser }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -55,6 +57,8 @@ const OrgAdminDashboard = ({ currentUser }) => {
   const [visibleCards, setVisibleCards] = useState(3);
   const [projects, setProjects] = useState([]);
   const [selectedProject, setSelectedProject] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const updateVisibleCards = () => {
@@ -141,6 +145,15 @@ const OrgAdminDashboard = ({ currentUser }) => {
     );
   };
   const handleOpenModal = async (type) => {
+    if (type === "listprojects") {
+      navigate("/projects");
+      return;
+    }
+    if (type === "members") {
+      navigate("/users");
+      return;
+    }
+
     setModalType(type);
     setIsModalOpen(true);
     setSelectedUser("");
@@ -158,9 +171,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
         // data = { data: res.api_keys };
       } else if (
         [
-          "members",
           "projects",
-          "listprojects",
           "assignproject",
           "addmember",
           "removeMember",
@@ -190,7 +201,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
   }, []);
 
   useEffect(() => {
-    // fetchUserApiKeys();
+    fetchUserApiKeys();
   }, []);
   const fetchUserApiKeys = async () => {
     const token = sessionStorage.getItem("accessToken");
@@ -720,10 +731,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   />
                 </div>
               )}
-              {modalType === "members" && (
+              {/* {modalType === "members" && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                   <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl mx-6 overflow-hidden">
-                    {/* Header */}
+                    {/* Header 
                     <div className="bg-indigo-700 text-white px-8 py-5 flex justify-between items-center">
                       <h2 className="text-2xl font-bold">Org Members</h2>
                       <button
@@ -747,7 +758,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
                       </button>
                     </div>
 
-                    {/* Body */}
+                    {/* Body 
                     <div className="p-6 overflow-auto max-h-[70vh]">
                       {users.length > 0 ? (
                         <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -811,21 +822,12 @@ const OrgAdminDashboard = ({ currentUser }) => {
                     </div>
                   </div>
                 </div>
-              )}
+              )} */}
               {modalType === "projects" && (
                 <div>
                   <Project
                     currentUser={currentUser}
                     closeModal={closeModal}
-                    statesList={statesList}
-                  />
-                </div>
-              )}
-              {modalType === "listprojects" && (
-                <div>
-                  <ProjectDashboard
-                    closeModal={closeModal}
-                    currentUser={currentUser}
                     statesList={statesList}
                   />
                 </div>

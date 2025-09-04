@@ -256,7 +256,7 @@ const AllPlans = () => {
     <div className="h-screen flex flex-col p-6 mt-16">
       <div className="pt-2 bg-white rounded-xl mt-2 flex items-center px-6">
         <Tooltip title="Back to Dashboard">
-          <IconButton onClick={() => navigate("/dashboard")}>
+          <IconButton onClick={() => navigate("/projects")}>
             <ArrowLeftCircle className="w-7 h-7 text-blue-600 hover:text-purple-600 transition-colors" />
           </IconButton>
         </Tooltip>
