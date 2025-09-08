@@ -31,7 +31,7 @@
             "api_url": "${config.layer_api_url_v1}/hydrology_fortnightly/",
             "show_Dates":true,
             "workspace":"mws_layers",
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "end":""
 
         },
@@ -39,7 +39,7 @@
             "api_url": "${config.layer_api_url_v1}/hydrology_annual/",
             "show_Dates":true,
             "workspace":"mws_layers",
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "end":""
 
         },
