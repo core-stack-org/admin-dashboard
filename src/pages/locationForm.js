@@ -193,7 +193,7 @@ const LocationFormComponent = ({ currentUser }) => {
 
     const token = sessionStorage.getItem("accessToken");
 
-    const apiUrl = `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`;
+    const apiUrl = `https://uat.core-stack.org/api/v1/${apiUrlSuffix}`;
     console.log(apiUrl);
 
     setIsLoading(true);
