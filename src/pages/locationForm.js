@@ -291,6 +291,7 @@ const LocationFormComponent = ({ currentUser }) => {
   useEffect(() => {
     const fetchGEEAccounts = async () => {
       const token = sessionStorage.getItem("accessToken");
+      console.log(token);
       try {
         const response = await fetch(
           `https://uat.core-stack.org/api/v1/geeaccounts/`,
@@ -532,11 +533,12 @@ const LocationFormComponent = ({ currentUser }) => {
             className="w-full px-4 py-3 border text-lg rounded-lg"
           >
             <option value="">Select GEE Account</option>
-            {geeAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
+            {Array.isArray(geeAccounts) &&
+              geeAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
           </select>
         </div>
 
