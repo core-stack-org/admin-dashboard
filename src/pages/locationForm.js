@@ -182,6 +182,37 @@ const LocationFormComponent = ({ currentUser }) => {
     setBlock({ id: id, name: block_name });
   };
 
+  useEffect(() => {
+    const fetchGEEAccounts = async () => {
+      const token = sessionStorage.getItem("accessToken");
+      console.log(token);
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/geeaccounts/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        console.log("GEEEEEEEE", data);
+        setGeeAccounts(data);
+      } catch (error) {
+        console.error("Error fetching GEE accounts:", error);
+      }
+    };
+
+    fetchGEEAccounts();
+  }, []);
+
+  const handleGEEAccountChange = (event) => {
+    setSelectedGEEAccount(event.target.value);
+  };
+
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
@@ -193,7 +224,7 @@ const LocationFormComponent = ({ currentUser }) => {
 
     const token = sessionStorage.getItem("accessToken");
 
-    const apiUrl = `https://uat.core-stack.org/api/v1/${apiUrlSuffix}`;
+    const apiUrl = `${process.env.REACT_APP_BASEURL}${apiUrlSuffix}`;
     console.log(apiUrl);
 
     setIsLoading(true);
@@ -287,37 +318,6 @@ const LocationFormComponent = ({ currentUser }) => {
       : dateRange.length === 2
       ? generateYears(dateRange[0], dateRange[1])
       : [];
-
-  useEffect(() => {
-    const fetchGEEAccounts = async () => {
-      const token = sessionStorage.getItem("accessToken");
-      console.log(token);
-      try {
-        const response = await fetch(
-          `https://uat.core-stack.org/api/v1/geeaccounts/`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "ngrok-skip-browser-warning": "420",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const data = await response.json();
-        console.log("GEEEEEEEE", data);
-        setGeeAccounts(data);
-      } catch (error) {
-        console.error("Error fetching GEE accounts:", error);
-      }
-    };
-
-    fetchGEEAccounts();
-  }, []);
-
-  const handleGEEAccountChange = (event) => {
-    setSelectedGEEAccount(event.target.value);
-  };
 
   return (
     <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-32">
