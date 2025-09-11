@@ -188,7 +188,7 @@ const LocationFormComponent = ({ currentUser }) => {
       console.log(token);
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/geeaccounts/`,
+          `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
           {
             method: "GET",
             headers: {
@@ -224,7 +224,7 @@ const LocationFormComponent = ({ currentUser }) => {
 
     const token = sessionStorage.getItem("accessToken");
 
-    const apiUrl = `${process.env.REACT_APP_BASEURL}${apiUrlSuffix}`;
+    const apiUrl = `${process.env.REACT_APP_BASEURL}api/v1/${apiUrlSuffix}`;
     console.log(apiUrl);
 
     setIsLoading(true);
