@@ -293,7 +293,7 @@ const LocationFormComponent = ({ currentUser }) => {
       const token = sessionStorage.getItem("accessToken");
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/geeaccounts/`,
+          `https://uat.core-stack.org/api/v1/api/v1/geeaccounts/`,
           {
             method: "GET",
             headers: {
