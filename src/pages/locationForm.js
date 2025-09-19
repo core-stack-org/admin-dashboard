@@ -22,6 +22,8 @@ const LocationFormComponent = ({ currentUser }) => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [districtsLoading, setDistrictsLoading] = useState(false);
   const [blocksLoading, setBlocksLoading] = useState(false);
+  const [geeAccounts, setGeeAccounts] = useState([]);
+  const [selectedGEEAccount, setSelectedGEEAccount] = useState("");
 
   const dateRange = layersData?.layers_json[layerName]?.date_range || [
     2017,
@@ -180,6 +182,37 @@ const LocationFormComponent = ({ currentUser }) => {
     setBlock({ id: id, name: block_name });
   };
 
+  useEffect(() => {
+    const fetchGEEAccounts = async () => {
+      const token = sessionStorage.getItem("accessToken");
+      console.log(token);
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        console.log("GEEEEEEEE", data);
+        setGeeAccounts(data);
+      } catch (error) {
+        console.error("Error fetching GEE accounts:", error);
+      }
+    };
+
+    fetchGEEAccounts();
+  }, []);
+
+  const handleGEEAccountChange = (event) => {
+    setSelectedGEEAccount(event.target.value);
+  };
+
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
@@ -191,7 +224,7 @@ const LocationFormComponent = ({ currentUser }) => {
 
     const token = sessionStorage.getItem("accessToken");
 
-    const apiUrl = `${process.env.REACT_APP_LAYER_API_URL_V1}/${apiUrlSuffix}`;
+    const apiUrl = `${process.env.REACT_APP_BASEURL}api/v1/${apiUrlSuffix}`;
     console.log(apiUrl);
 
     setIsLoading(true);
@@ -210,6 +243,7 @@ const LocationFormComponent = ({ currentUser }) => {
         formData.append("district", district.name);
         formData.append("block", block.name);
         formData.append("clart_file", selectedFile);
+        formData.append("gee_account_id", selectedGEEAccount);
 
         response = await fetch(apiUrl, {
           method: "POST",
@@ -224,6 +258,7 @@ const LocationFormComponent = ({ currentUser }) => {
           state: state.name,
           district: district.name,
           block: block.name,
+          gee_account_id: selectedGEEAccount,
         };
 
         if (layerName === "LULC Farm Boundaries" || layerName === "LULC V4") {
@@ -247,13 +282,6 @@ const LocationFormComponent = ({ currentUser }) => {
           },
           body: JSON.stringify(payload),
         });
-      }
-
-      if (response.status === 401) {
-        toast.error("Session expired. Please login again.");
-        sessionStorage.clear();
-        window.location.href = "/login";
-        return;
       }
 
       if (!response.ok) {
@@ -442,7 +470,6 @@ const LocationFormComponent = ({ currentUser }) => {
           </div>
         )}
 
-        {/* Year Fields */}
         {/* Start Year Dropdown */}
         {showDates && (
           <div>
@@ -494,6 +521,26 @@ const LocationFormComponent = ({ currentUser }) => {
             </select>
           </div>
         )}
+
+        {/* GEE Account Dropdown */}
+        <div>
+          <label className="text-lg font-semibold mb-2 block">
+            Select GEE Account:
+          </label>
+          <select
+            value={selectedGEEAccount}
+            onChange={handleGEEAccountChange}
+            className="w-full px-4 py-3 border text-lg rounded-lg"
+          >
+            <option value="">Select GEE Account</option>
+            {Array.isArray(geeAccounts) &&
+              geeAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
+          </select>
+        </div>
 
         {/* Submit Button */}
         <div className="text-center pt-8">
