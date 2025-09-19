@@ -18,6 +18,8 @@ import {
   ArrowLeftCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Vector as VectorSource } from "ol/source";
+import GeoJSON from "ol/format/GeoJSON";
 
 const AllProjects = ({ statesList }) => {
   const [projects, setProjects] = useState([]);
@@ -31,8 +33,15 @@ const AllProjects = ({ statesList }) => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedAppType, setSelectedAppType] = useState("");
   const [selectedOrganization, setSelectedOrganization] = useState("");
+  const [bbox, setBBox] = useState(null);
 
   const navigate = useNavigate();
+
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // fetch projects
   useEffect(() => {
@@ -152,6 +161,154 @@ const AllProjects = ({ statesList }) => {
     setAnchorEl(null);
   };
 
+  const handleViewGeoJSON = async (project) => {
+    const organizationName = project.organization_name;
+    const projectName = project.name;
+
+    const formattedOrganizationName = organizationName
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+    const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
+    console.log(formattedOrganizationName, formattedProjectName);
+
+    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
+
+    console.log(wfsurl);
+
+    let dynamicBbox = "";
+    try {
+      const response = await fetch(wfsurl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const adminLayer = await response.json();
+      console.log(adminLayer);
+
+      const vectorSource = new VectorSource({
+        features: new GeoJSON().readFeatures(adminLayer),
+      });
+      const extent = vectorSource.getExtent();
+
+      dynamicBbox =
+        extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
+      setBBox(extent);
+      console.log(dynamicBbox);
+      const layerName = `plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability`;
+
+      const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
+      window.open(geojsonViewUrl, "_blank");
+    } catch (error) {
+      console.error("Error generating GeoJSON view URL:", error);
+    }
+  };
+
+  const handleDownloadGeoJSON = async (project) => {
+    const organizationName = project.organization_name;
+    const projectName = project.name;
+    const formattedOrganizationName = organizationName
+      .replace(/\s+/g, "_")
+      .toLowerCase();
+    const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
+    const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
+
+    try {
+      const response = await fetch(geojsonUrl);
+      const contentType = response.headers.get("content-type");
+
+      if (!response.ok) throw new Error("Failed to fetch GeoJSON");
+
+      if (contentType && contentType.includes("text/xml")) {
+        console.warn("Received XML response instead of JSON.");
+        alert("Layer not available yet. Please check after some time.");
+        return;
+      }
+
+      const data = await response.json();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const fileName = `${formattedOrganizationName}_${formattedProjectName}_${timestamp}.geojson`;
+
+      const blob = new Blob([JSON.stringify(data)], {
+        type: "application/json",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading GeoJSON:", error);
+      alert("Something went wrong while downloading the file.");
+    }
+  };
+
+  const handleCompute = async (project) => {
+    if (!project) {
+      console.error("❌ No project selected.");
+      alert("Please select a project first.");
+      return;
+    }
+    const matchedProject = projects.find((p) => p.id === project.id);
+
+    if (!matchedProject) {
+      console.error("❌ Project not found in updated projects state.");
+      alert("Something went wrong. Please refresh and try again.");
+      return;
+    }
+    // Extract required fields
+    const { state, appTypes, id } = project;
+    const state_name = matchedProject.state_name; // ✅ Get the correct state name
+    const appTypeId = appTypes?.length > 0 ? appTypes[0].id : null;
+
+    if (!state_name || !matchedProject.id) {
+      console.error("❌ Missing required project details.");
+      alert("Project data is incomplete. Please check.");
+      return;
+    }
+
+    // Construct the formData object
+    const formData = {
+      project_id: matchedProject.id,
+      state: state_name, // ✅ Use state_name instead of state ID
+      start_year: 2017,
+      end_year: 2023,
+    };
+    try {
+      const token = sessionStorage.getItem("accessToken");
+
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/plantation_site_suitability/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      setToast({
+        open: true,
+        message:
+          "Task initiated successfully! Please wait to view the layer or download the Geojson.",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("❌ Error calling compute API:", error);
+      alert("Failed to compute. Please try again.");
+    }
+  };
+
   return (
     <Box>
       <div className="h-screen flex flex-col">
@@ -247,7 +404,7 @@ const AllProjects = ({ statesList }) => {
                         <td className="px-6 py-4 font-medium">{i + 1}</td>
                         <td className="px-6 py-4 font-medium">{p.name}</td>
                         <td className="px-6 py-4 font-medium">
-                          {p.app_type || "N/A"}
+                          {p.app_type_display || "N/A"}
                         </td>
                         <td className="px-6 py-4 font-medium">
                           {p.state_name}
@@ -274,12 +431,17 @@ const AllProjects = ({ statesList }) => {
                                 <IconButton
                                   size="small"
                                   sx={{
-                                    color: "#4f46e5", // Indigo
+                                    color: "#4f46e5",
                                     "&:hover": {
                                       color: "#4338ca",
                                       backgroundColor: "rgba(79,70,229,0.1)",
                                     },
                                   }}
+                                  onClick={() =>
+                                    navigate(`/projects/${p.id}/action`, {
+                                      state: { project: p },
+                                    })
+                                  }
                                 >
                                   <Edit2 size={24} />
                                 </IconButton>
@@ -294,6 +456,7 @@ const AllProjects = ({ statesList }) => {
                                       backgroundColor: "rgba(5,150,105,0.1)",
                                     },
                                   }}
+                                  onClick={() => handleViewGeoJSON(p)}
                                 >
                                   <Eye size={24} />
                                 </IconButton>
@@ -308,6 +471,7 @@ const AllProjects = ({ statesList }) => {
                                       backgroundColor: "rgba(245,158,11,0.1)",
                                     },
                                   }}
+                                  onClick={handleDownloadGeoJSON}
                                 >
                                   <Download size={24} />
                                 </IconButton>

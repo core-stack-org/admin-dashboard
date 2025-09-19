@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const UserToProject = ({ closeModal }) => {
+const UserToProject = ({ closeModal, onClose }) => {
   const [users, setUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
@@ -122,7 +122,10 @@ const UserToProject = ({ closeModal }) => {
         <div className="bg-fuchsia-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Assign Project Role to User</h2>
           <button
-            onClick={closeModal}
+            onClick={() => {
+              if (closeModal) closeModal();
+              if (onClose) onClose();
+            }}
             className="text-white hover:bg-fuchsia-700 rounded-full p-2 focus:outline-none"
           >
             <svg
