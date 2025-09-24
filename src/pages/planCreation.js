@@ -60,8 +60,17 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateId}/`
       );
       const data = await res.json();
-      setDistrictsList(data.districts || []);
-      return data.districts || [];
+      const activeDistricts = (data.districts || []).filter(
+        (d) => d.active_status === true
+      );
+
+      // Sort alphabetically by district_name
+      activeDistricts.sort((a, b) =>
+        a.district_name.localeCompare(b.district_name)
+      );
+
+      setDistrictsList(activeDistricts);
+      return activeDistricts;
     } catch (error) {
       console.error(error);
       return [];
@@ -74,8 +83,12 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtId}/`
       );
       const data = await res.json();
-      setBlocksList(data.blocks || []);
-      return data.blocks || [];
+      const activeBlocks = (data.blocks || [])
+        .filter((b) => b.active_status === true)
+        .sort((a, b) => a.block_name.localeCompare(b.block_name));
+
+      setBlocksList(activeBlocks);
+      return activeBlocks;
     } catch (error) {
       console.error(error);
       return [];
@@ -233,7 +246,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           {/* State */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              State
+              State <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -244,10 +257,9 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           </div>
 
           {/* District */}
-          {/* District */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              District
+              District <span className="text-red-500">*</span>
             </label>
             {isEditMode ? (
               <input
@@ -279,7 +291,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           {/* Block */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              Block
+              Block <span className="text-red-500">*</span>
             </label>
             {isEditMode ? (
               <input
@@ -309,7 +321,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           {/* Facilitator */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              Facilitator Name
+              Facilitator Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -323,21 +335,21 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           {/* Plan */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              Plan
+              Plan <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={plan}
               onChange={(e) => setPlan(e.target.value)}
               className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none"
-              placeholder="Enter Plan"
+              placeholder="Enter Plan  eg., (Plan_VillageName)"
             />
           </div>
 
           {/* Village */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              Village Name
+              Village Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -351,7 +363,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           {/* Gram Panchayat */}
           <div>
             <label className="block mb-2 text-sm font-medium text-gray-700">
-              Gram Panchayat
+              Gram Panchayat <span className="text-red-500">*</span>
             </label>
             <input
               type="text"

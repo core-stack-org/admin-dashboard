@@ -2,15 +2,19 @@ import React, { useState, useEffect } from "react";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 
-const Project = ({ currentUser, closeModal, onClose, statesList }) => {
-  console.log(currentUser);
+const Project = ({ currentUser }) => {
+  const navigate = useNavigate();
+
   const [projectName, setProjectName] = useState("");
   const [projectDescription, setProjectDescription] = useState("");
   const [organization, setOrganization] = useState(null);
   const [userId, setUserId] = useState(null);
   const [projectAppType, setProjectAppType] = useState("");
   const [state, setState] = useState({ id: "", name: "" });
+  const [statesList, setStatesList] = useState([]);
+
   const [districtsList, setDistrictsList] = useState([]);
   const [blocksList, setBlocksList] = useState([]);
   const [district, setDistrict] = useState({ id: "", name: "" });
@@ -18,6 +22,34 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   const [organizationsList, setOrganizationsList] = useState([]);
 
   const [needDesiltingPoint, setNeedDesiltingPoint] = useState(true);
+
+  useEffect(() => {
+    fetchStates();
+  }, []);
+
+  const fetchStates = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+      const data = await response.json();
+      const activeSortedStates = data.states
+        .filter((s) => s.active_status === true)
+        .sort((a, b) => a.state_name.localeCompare(b.state_name));
+
+      console.log(activeSortedStates);
+      setStatesList(activeSortedStates);
+    } catch (error) {
+      console.error("Error fetching states:", error);
+    }
+  };
 
   useEffect(() => {
     if (currentUser?.user?.organization) {
@@ -53,7 +85,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
         }
       );
       const data = await response.json();
-      setOrganizationsList(data || []); // ✅ store org list
+      setOrganizationsList(data || []);
     } catch (error) {
       console.error("Error fetching organizations:", error);
     }
@@ -86,8 +118,12 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
         `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateId}/`
       );
       const data = await res.json();
-      setDistrictsList(data.districts || []);
-      return data.districts || [];
+      const activeSortedDistricts = (data.districts || [])
+        .filter((d) => d.active_status === true)
+        .sort((a, b) => a.district_name.localeCompare(b.district_name));
+
+      setDistrictsList(activeSortedDistricts);
+      return activeSortedDistricts;
     } catch (error) {
       console.error(error);
       return [];
@@ -100,6 +136,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
         `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtId}/`
       );
       const data = await res.json();
+      console.log(data);
       setBlocksList(data.blocks || []);
       return data.blocks || [];
     } catch (error) {
@@ -168,8 +205,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
       sessionStorage.setItem("formData", JSON.stringify(formData));
       toast.success("Project created successfully");
       setTimeout(() => {
-        if (closeModal) closeModal();
-        if (onClose) onClose();
+        navigate("/projects");
       }, 2000);
     } catch (error) {
       console.error("Error submitting project:", error);
@@ -178,17 +214,14 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="p-6 max-w-3xl mx-auto mt-12">
       <ToastContainer position="bottom-right" />
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl mx-4 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xl w-full overflow-hidden">
         {/* Header */}
         <div className="bg-violet-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-semibold">Create Project</h2>
           <button
-            onClick={() => {
-              if (closeModal) closeModal();
-              if (onClose) onClose();
-            }}
+            onClick={() => navigate(-1)}
             className="text-white hover:bg-violet-700 rounded-full p-2 focus:outline-none"
           >
             <svg
@@ -217,14 +250,14 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                   {/* Project Name */}
                   <div className="w-full">
                     <label className="block text-lg font-medium mb-3">
-                      Project Name
+                      Project Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={projectName}
                       onChange={(e) => setProjectName(e.target.value)}
                       className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                      placeholder="Enter project name"
+                      placeholder="Enter project name eg., Gram Vaani Jamui (organization name District name)"
                       required
                     />
                   </div>
@@ -245,7 +278,8 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                   {/* Project App Type (Inside Form) */}
                   <div>
                     <label className="block text-lg font-medium mb-3">
-                      Select Project App Type
+                      Select Project App Type{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={projectAppType}
@@ -260,7 +294,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                       required
                     >
                       <option value="" disabled>
-                        Select app type
+                        Select app type <span className="text-red-500">*</span>
                       </option>
                       <option value="plantation">Plantations</option>
                       <option value="watershed">Watershed Planning</option>
@@ -288,7 +322,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
 
                   <div>
                     <label className="text-lg font-semibold mb-2 block">
-                      State:
+                      State: <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={
@@ -315,7 +349,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
 
                   <div className="mt-4">
                     <label className="text-lg font-semibold mb-2 block">
-                      District:
+                      District: <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={
@@ -342,7 +376,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
 
                   <div className="mt-4">
                     <label className="text-lg font-semibold mb-2 block">
-                      Block:
+                      Block: <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={
@@ -368,7 +402,7 @@ const Project = ({ currentUser, closeModal, onClose, statesList }) => {
                   {currentUser?.user?.is_superadmin && (
                     <div>
                       <label className="text-lg font-semibold mb-2 block">
-                        Organization:
+                        Organization: <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={organization || ""}
