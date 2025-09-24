@@ -146,7 +146,6 @@ const AddMember = ({
     }
 
     try {
-      // 1️⃣ Register user
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
         {
@@ -165,9 +164,9 @@ const AddMember = ({
 
       toast.success("User registered successfully!");
 
-      const newUserId = data.id; // 🔑 Get new user id from API
+      const newUserId = data.id;
 
-      // 2️⃣ Assign Role immediately
+      //  Assign Role immediately
       if (selectedRole) {
         const token = sessionStorage.getItem("accessToken");
         const roleRes = await fetch(
@@ -193,7 +192,7 @@ const AddMember = ({
       }
 
       // 3️⃣ Redirect after delay
-      setTimeout(() => navigate("/login"), 2500);
+      setTimeout(() => navigate("/dashboard"), 2500);
     } catch (error) {
       console.error("Error during registration:", error);
       toast.error("An error occurred.");

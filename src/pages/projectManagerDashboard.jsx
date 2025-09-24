@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -36,6 +37,7 @@ import PlanCreation from "./planCreation.js";
 import clsx from "clsx";
 
 const ProjectManagerDashboard = ({ currentUser }) => {
+  const navigate = useNavigate();
   const organizationName = currentUser?.user?.organization_name;
   const organizationId = currentUser?.user?.organization;
   const userName = currentUser?.user?.username;
@@ -533,7 +535,7 @@ const ProjectManagerDashboard = ({ currentUser }) => {
             whileHover="hover"
             whileTap="tap"
             className="cursor-pointer"
-            onClick={() => setIsUserDialogOpen(true)} // Change to your user dialog state if needed
+            onClick={() => navigate("/users")} // navigate to route
           >
             <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-blue-500 hover:shadow-[0_15px_30px_rgba(59,130,246,0.2)] min-h-[200px] z-10">
               {/* Background Hover Glow */}

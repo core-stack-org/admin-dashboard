@@ -504,7 +504,7 @@ function SuperAdminDashboard({ currentUser }) {
                 className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#ff9800] hover:shadow-[0_15px_30px_rgba(255,152,0,0.2)] min-h-[250px]"
               >
                 <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
-                <span className="text-[3rem] mb-4 relative z-10">🛡️</span>
+                <span className="text-[3rem] mb-4 relative z-10">👤🗂️</span>
                 <h3 className="text-[1.3rem] font-semibold text-gray-800 mb-2 relative z-10">
                   Assign Project to User
                 </h3>

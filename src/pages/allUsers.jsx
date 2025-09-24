@@ -12,7 +12,8 @@ import FilterListIcon from "@mui/icons-material/FilterList";
 import { ArrowLeftCircle, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const UsersTable = () => {
+const UsersTable = (currentUser) => {
+  console.log(currentUser);
   const [users, setUsers] = useState([]);
   const [selectedOrg, setSelectedOrg] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
@@ -28,19 +29,27 @@ const UsersTable = () => {
     try {
       setLoading(true);
       const token = sessionStorage.getItem("accessToken");
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/users/`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      let url = `${process.env.REACT_APP_BASEURL}api/v1/users/`;
+      // check if current user is project manager
+      const isProjectManager = currentUser?.user?.groups?.some(
+        (g) => g.name === "Project Manager"
       );
+
+      if (isProjectManager && currentUser.user?.project_details?.length > 0) {
+        const projectId = currentUser.user.project_details[0].id; // first assigned project
+        url = `${process.env.REACT_APP_BASEURL}api/v1/projects/${projectId}/users/`;
+      }
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "420",
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await response.json();
       setUsers(data || []);
+      console.log(data);
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
