@@ -154,7 +154,11 @@ const OrgAdminDashboard = ({ currentUser }) => {
       return;
     }
     if (type === "projects") {
-      navigate("/create-project"); // 👈 your new route
+      navigate("/create-project");
+      return;
+    }
+    if (type === "addmember") {
+      navigate("/create-user");
       return;
     }
 
@@ -609,12 +613,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-200 pb-2">
                   <span className="text-gray-600 font-medium">Email</span>
-                  <span className="text-gray-800 font-semibold">{email}</span>
+                  <span className="text-gray-800 font-semibold">
+                    {email || "NA"}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-200 pb-2">
                   <span className="text-gray-600 font-medium">Contact</span>
                   <span className="text-gray-900 font-semibold">
-                    {contact_number}
+                    {contact_number || "NA"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
@@ -836,16 +842,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   />
                 </div>
               )}{" "}
-              {modalType === "addmember" && (
-                <div>
-                  <AddMember
-                    closeModal={closeModal}
-                    currentUser={currentUser}
-                    isSuperAdmin={false}
-                    onUserCreated={fetchUsers}
-                  />
-                </div>
-              )}
               {modalType === "generateapikey" && (
                 <div>
                   <GenerateApiKeyPage

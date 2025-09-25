@@ -216,6 +216,23 @@ const LocationFormComponent = ({ currentUser }) => {
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
     setError(null);
+    if (!state.name) {
+      toast.error("Please select a state.");
+      return;
+    }
+    if (!district.name) {
+      toast.error("Please select a district.");
+      return;
+    }
+    if (!block.name) {
+      toast.error("Please select a block.");
+      return;
+    }
+
+    if (!selectedGEEAccount) {
+      toast.error("Please select GEE account.");
+      return;
+    }
     console.log(layerName);
     const selectedLayer = layersData.layers_json[layerName];
     console.log(selectedLayer);
