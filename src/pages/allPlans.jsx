@@ -34,6 +34,7 @@ const AllPlans = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  console.log(projectId);
 
   const normalizeName = (str) =>
     str
@@ -67,7 +68,7 @@ const AllPlans = () => {
       try {
         const token = sessionStorage.getItem("accessToken");
         const res = await fetch(
-          `${process.env.REACT_APP_BASEURL}api/v1/watershed/plans/`,
+          `${process.env.REACT_APP_BASEURL}api/v1/projects/${projectId}/watershed/plans/`,
           {
             headers: {
               "Content-Type": "application/json",
