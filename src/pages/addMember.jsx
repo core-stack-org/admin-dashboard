@@ -3,7 +3,6 @@ import { CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/core-stack logo.png";
 
 const AddMember = ({
   closeModal,
@@ -15,7 +14,6 @@ const AddMember = ({
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [selectedOption, setSelectedOption] = useState(null);
   const [showPasswordRules, setShowPasswordRules] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -42,7 +40,7 @@ const AddMember = ({
     if (currentUser?.user?.organization) {
       setFormData((prev) => ({
         ...prev,
-        organization: currentUser.user.organization, // Store ID only
+        organization: currentUser.user.organization,
       }));
     }
   }, [currentUser]);
@@ -146,7 +144,6 @@ const AddMember = ({
     }
 
     try {
-      // 1️⃣ Register user
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
         {
@@ -165,9 +162,8 @@ const AddMember = ({
 
       toast.success("User registered successfully!");
 
-      const newUserId = data.id; // 🔑 Get new user id from API
+      const newUserId = data.id;
 
-      // 2️⃣ Assign Role immediately
       if (selectedRole) {
         const token = sessionStorage.getItem("accessToken");
         const roleRes = await fetch(
@@ -192,7 +188,6 @@ const AddMember = ({
         }
       }
 
-      // 3️⃣ Redirect after delay
       setTimeout(() => navigate("/login"), 2500);
     } catch (error) {
       console.error("Error during registration:", error);
@@ -201,19 +196,18 @@ const AddMember = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="flex flex-col min-h-screen py-12">
       <ToastContainer position="bottom-right" />
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 overflow-hidden">
+
+      {/* Card Container */}
+      <div className="flex flex-col bg-white rounded-lg shadow-xl w-full max-w-4xl mx-auto my-6 overflow-hidden">
         {/* Header */}
-        <div className="bg-green-600 text-white px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">
-            Register User to an Organization{" "}
+        <div className="bg-green-600 text-white px-4 py-4 sm:px-6 sm:py-6 flex justify-between items-center">
+          <h2 className="text-lg sm:text-xl font-semibold">
+            Register User to an Organization
           </h2>
           <button
-            onClick={() => {
-              if (closeModal) closeModal();
-              if (onClose) onClose();
-            }}
+            onClick={() => navigate(-1)}
             className="text-white hover:bg-green-700 rounded-full p-2 focus:outline-none"
           >
             <svg
@@ -233,262 +227,203 @@ const AddMember = ({
           </button>
         </div>
 
-        {/* Body */}
-        <div className="p-6">
-          <div className="flex flex-col space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className=" mb-4">
-                <form onSubmit={handleSubmit} className="space-y-10">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="relative w-full">
-                      <input
-                        name="first_name"
-                        required
-                        value={formData.first_name}
-                        onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-6 pr-3 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
+        {/* Scrollable Body */}
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(100vh-120px)]">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative w-full">
+                <input
+                  name="first_name"
+                  required
+                  value={formData.first_name || ""}
+                  onChange={handleChange}
+                  className="w-full rounded border border-gray-300 pl-4 pr-3 py-3 sm:py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {!formData.first_name && (
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <span className="text-red-500">* </span>First Name
+                  </span>
+                )}
+                {errors.first_name && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.first_name}
+                  </p>
+                )}
+              </div>
 
-                      {/* Placeholder + red asterisk */}
-                      {!formData.first_name && (
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                          <span className="text-red-500"> * </span>
-                          Enter First Name
-                        </span>
-                      )}
-
-                      {errors.first_name && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.first_name}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="relative w-full">
-                      <input
-                        name="last_name"
-                        value={formData.last_name}
-                        onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-4 pr-8 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-
-                      {/* Custom placeholder with red asterisk */}
-                      {!formData.last_name && (
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                          <span className="text-red-500"> * </span>
-                          Enter Last Name
-                        </span>
-                      )}
-                      {errors.last_name && (
-                        <p className="text-red-500 text-sm">
-                          {errors.last_name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="relative w-full">
-                    <input
-                      name="username"
-                      value={formData.username}
-                      onChange={handleChange}
-                      className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    {!formData.username && (
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                        <span className="text-red-500"> * </span>
-                        Enter User Name
-                      </span>
-                    )}
-                    {errors.username && (
-                      <p className="text-red-500 text-sm">{errors.username}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <input
-                      name="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      autoComplete="off"
-                      placeholder="Enter valid email"
-                    />
-                    {errors.email && (
-                      <p className="text-red-500 text-sm">{errors.email}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <input
-                      name="contact_number"
-                      value={formData.contact_number || ""} // Ensure it's never undefined
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        // Allow only numbers (remove non-numeric characters)
-                        if (/^\d{0,10}$/.test(value)) {
-                          setFormData({ ...formData, contact_number: value });
-                        }
-                      }}
-                      className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="Enter 10-digit contact number"
-                    />
-                    {formData.contact_number?.length > 0 &&
-                      formData.contact_number.length !== 10 && (
-                        <p className="text-red-500 text-sm">
-                          Incorrect number. Must be 10 digits.
-                        </p>
-                      )}
-                  </div>
-                  {/* Organization */}
-                  <div className="relative w-full">
-                    {currentUser?.user?.is_superadmin ? (
-                      <select
-                        name="organization"
-                        value={formData.organization || ""}
-                        onChange={handleChange}
-                        className="w-full rounded border border-gray-300 pl-4 pr-10 py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="" disabled>
-                          * Select Organization
-                        </option>
-                        {organizations.map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        name="organization"
-                        value={currentUser?.user?.organization_name || ""}
-                        className="w-full rounded pl-10 pr-3 py-4 bg-gray-200 text-gray-700 focus:outline-none"
-                        readOnly
-                      />
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Password Field */}
-                    <div>
-                      <div className="relative">
-                        <input
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          onChange={handleChange}
-                          autoComplete="off"
-                          onFocus={() => setShowPasswordRules(true)}
-                          onBlur={() => setShowPasswordRules(false)} // ✅ Hide rules when moving to another field
-                          className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {!formData.password && (
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <span className="text-red-500"> * </span>
-                            Enter Password
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                        >
-                          {showPassword ? (
-                            <EyeOff size={20} />
-                          ) : (
-                            <Eye size={20} />
-                          )}
-                        </button>
-                      </div>
-                      {errors.password && (
-                        <p className="text-red-500 text-sm">
-                          {errors.password}
-                        </p>
-                      )}
-
-                      {/* Password Rules (Show on Focus) */}
-                      {showPasswordRules && (
-                        <div className="mt-2 p-2 bg-gray-100 border rounded-lg text-sm text-gray-700">
-                          <p className="font-medium">Password must include:</p>
-                          <ul className="list-disc ml-5">
-                            {passwordRequirements.map((rule, index) => (
-                              <li key={index}>{rule}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Confirm Password Field */}
-                    <div>
-                      <div className="relative">
-                        <input
-                          name="password_confirm"
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={formData.password_confirm}
-                          onChange={handleChange}
-                          className="w-full rounded border border-gray-300 pl-4 pr-3 py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                        {!formData.username && (
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <span className="text-red-500"> * </span>
-                            Confirm Password
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff size={20} />
-                          ) : (
-                            <Eye size={20} />
-                          )}
-                        </button>
-                      </div>
-                      {errors.password_confirm && (
-                        <p className="text-red-500 text-sm">
-                          {errors.password_confirm}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block font-medium mb-2">
-                      Assign Role
-                    </label>
-                    <select
-                      value={selectedRole}
-                      onChange={(e) => setSelectedRole(e.target.value)}
-                      className="w-full p-3 border rounded"
-                    >
-                      <option value="">Select Role</option>
-                      {userGroups.map((group) => (
-                        <option key={group.id} value={group.id}>
-                          {group.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex justify-center mt-6">
-                    <button
-                      type="submit"
-                      className="px-4 py-4 rounded-lg bg-green-500 text-white hover:bg-green-600 flex items-center"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-2" /> Submit
-                    </button>
-                  </div>
-                </form>
+              <div className="relative w-full">
+                <input
+                  name="last_name"
+                  value={formData.last_name || ""}
+                  onChange={handleChange}
+                  className="w-full rounded border border-gray-300 pl-4 pr-3 py-3 sm:py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                {!formData.last_name && (
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <span className="text-red-500">* </span>Last Name
+                  </span>
+                )}
+                {errors.last_name && (
+                  <p className="text-red-500 text-sm">{errors.last_name}</p>
+                )}
               </div>
             </div>
-          </div>
+
+            {/* Username */}
+            <div className="relative w-full">
+              <input
+                name="username"
+                value={formData.username || ""}
+                onChange={handleChange}
+                className="w-full rounded border border-gray-300 pl-4 pr-3 py-3 sm:py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {!formData.username && (
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                  <span className="text-red-500">* </span>Username
+                </span>
+              )}
+              {errors.username && (
+                <p className="text-red-500 text-sm">{errors.username}</p>
+              )}
+            </div>
+
+            {/* Email */}
+            <div>
+              <input
+                name="email"
+                type="email"
+                value={formData.email || ""}
+                onChange={handleChange}
+                className="w-full rounded border border-gray-300 pl-4 pr-3 py-3 sm:py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter valid email"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
+            </div>
+
+            {/* Contact */}
+            <div>
+              <input
+                name="contact_number"
+                value={formData.contact_number || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (/^\d{0,10}$/.test(value)) {
+                    setFormData({ ...formData, contact_number: value });
+                  }
+                }}
+                className="w-full rounded border border-gray-300 pl-4 pr-3 py-3 sm:py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter 10-digit contact number"
+              />
+              {formData.contact_number?.length > 0 &&
+                formData.contact_number.length !== 10 && (
+                  <p className="text-red-500 text-sm">
+                    Incorrect number. Must be 10 digits.
+                  </p>
+                )}
+            </div>
+
+            {/* Organization */}
+            <div className="relative w-full">
+              {currentUser?.user?.is_superadmin ? (
+                <select
+                  name="organization"
+                  value={formData.organization || ""}
+                  onChange={handleChange}
+                  className="w-full rounded border border-gray-300 pl-4 pr-10 py-3 sm:py-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="" disabled>
+                    * Select Organization
+                  </option>
+                  {organizations.map((org) => (
+                    <option key={org.id} value={org.id}>
+                      {org.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  name="organization"
+                  value={currentUser?.user?.organization_name || ""}
+                  className="w-full rounded pl-4 pr-3 py-3 sm:py-4 bg-gray-200 text-gray-700 focus:outline-none"
+                  readOnly
+                />
+              )}
+            </div>
+
+            {/* Password Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password || ""}
+                  onChange={handleChange}
+                  className="w-full rounded border border-gray-300 pl-4 pr-10 py-3 sm:py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <div className="relative">
+                <input
+                  name="password_confirm"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formData.password_confirm || ""}
+                  onChange={handleChange}
+                  className="w-full rounded border border-gray-300 pl-4 pr-10 py-3 sm:py-4 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Confirm Password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Role */}
+            <div>
+              <label className="block font-medium mb-2">Assign Role</label>
+              <select
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+                className="w-full p-3 border rounded"
+              >
+                <option value="">Select Role</option>
+                {userGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Submit */}
+            <div className="flex justify-center mt-6">
+              <button
+                type="submit"
+                className="px-4 py-3 rounded-lg bg-green-500 text-white hover:bg-green-600 flex items-center"
+              >
+                <CheckCircle2 className="w-4 h-4 mr-2" /> Submit
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

@@ -118,12 +118,17 @@ const Project = ({ currentUser }) => {
         `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateId}/`
       );
       const data = await res.json();
-      const activeSortedDistricts = (data.districts || [])
-        .filter((d) => d.active_status === true)
-        .sort((a, b) => a.district_name.localeCompare(b.district_name));
+      const activeDistricts = (data.districts || []).filter(
+        (d) => d.active_status === true
+      );
 
-      setDistrictsList(activeSortedDistricts);
-      return activeSortedDistricts;
+      // Sort alphabetically by district_name
+      activeDistricts.sort((a, b) =>
+        a.district_name.localeCompare(b.district_name)
+      );
+
+      setDistrictsList(activeDistricts);
+      return activeDistricts;
     } catch (error) {
       console.error(error);
       return [];
@@ -136,9 +141,12 @@ const Project = ({ currentUser }) => {
         `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtId}/`
       );
       const data = await res.json();
-      console.log(data);
-      setBlocksList(data.blocks || []);
-      return data.blocks || [];
+      const activeBlocks = (data.blocks || [])
+        .filter((b) => b.active_status === true)
+        .sort((a, b) => a.block_name.localeCompare(b.block_name));
+
+      setBlocksList(activeBlocks);
+      return activeBlocks;
     } catch (error) {
       console.error(error);
       return [];
@@ -214,226 +222,215 @@ const Project = ({ currentUser }) => {
   };
 
   return (
-    <div className="p-6 max-w-3xl mx-auto mt-12">
+    <div className="flex flex-col min-h-screen overflow-y-auto px-32 pt-24">
       <ToastContainer position="bottom-right" />
-      <div className="bg-white rounded-lg shadow-xl w-full overflow-hidden">
-        {/* Header */}
-        <div className="bg-violet-600 text-white px-6 py-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Create Project</h2>
-          <button
-            onClick={() => navigate(-1)}
-            className="text-white hover:bg-violet-700 rounded-full p-2 focus:outline-none"
+
+      {/* Header */}
+      <div className="bg-violet-600 text-white px-6 py-4 flex justify-between items-center rounded-t-lg">
+        <h2 className="text-xl font-semibold">Create Project</h2>
+        <button
+          onClick={() => navigate(-1)}
+          className="text-white hover:bg-violet-700 rounded-full p-2 focus:outline-none"
+        >
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      {/* Body */}
+      <div className="bg-white p-6 rounded-b-lg border border-gray-200 shadow-sm overflow-hidden">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Project Name */}
+          <div>
+            <label className="block text-lg font-medium mb-2">
+              Project Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="Enter project name eg., Gram Vaani Jamui (organization name District name)"
+              required
+            />
+          </div>
+
+          {/* Project Description */}
+          <div>
+            <label className="block text-lg font-medium mb-2">
+              Project Description
+            </label>
+            <textarea
+              value={projectDescription}
+              onChange={(e) => setProjectDescription(e.target.value)}
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              placeholder="Enter project description"
+            />
+          </div>
+
+          {/* Project App Type */}
+          <div>
+            <label className="block text-lg font-medium mb-2">
+              Select Project App Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={projectAppType}
+              onChange={(e) => {
+                const selectedType = e.target.value;
+                setProjectAppType(selectedType);
+                if (selectedType === "waterbody") {
+                  setNeedDesiltingPoint(true);
+                }
+              }}
+              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              required
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M6 18L18 6M6 6l12 12"
-              ></path>
-            </svg>
-          </button>
-        </div>
+              <option value="" disabled>
+                Select app type
+              </option>
+              <option value="plantation">Plantations</option>
+              <option value="watershed">Watershed Planning</option>
+              <option value="waterbody">Waterbody Rejuvenation</option>
+            </select>
+          </div>
 
-        {/* Body */}
-        <div className="p-6">
-          <div className="flex flex-col space-y-6">
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className=" mb-4">
-                <form onSubmit={handleSubmit} className="space-y-2">
-                  {/* Project Name */}
-                  <div className="w-full">
-                    <label className="block text-lg font-medium mb-3">
-                      Project Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={projectName}
-                      onChange={(e) => setProjectName(e.target.value)}
-                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                      placeholder="Enter project name eg., Gram Vaani Jamui (organization name District name)"
-                      required
-                    />
-                  </div>
+          {projectAppType === "waterbody" && (
+            <div className="flex items-center justify-between">
+              <label className="text-lg font-medium">
+                Need Desilting Point
+              </label>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={needDesiltingPoint}
+                  onChange={() => setNeedDesiltingPoint(!needDesiltingPoint)}
+                />
+                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-violet-600 relative">
+                  <div className="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition peer-checked:translate-x-full"></div>
+                </div>
+              </label>
+            </div>
+          )}
 
-                  {/* Project Description */}
-                  <div>
-                    <label className="block text-lg font-medium mb-3">
-                      Project Description
-                    </label>
-                    <textarea
-                      value={projectDescription}
-                      onChange={(e) => setProjectDescription(e.target.value)}
-                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                      placeholder="Enter project description"
-                    />
-                  </div>
+          {/* Location Dropdowns */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-lg font-medium mb-2">
+                State: <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={
+                  state.id && state.name ? `${state.id}_${state.name}` : ""
+                }
+                onChange={handleStateChange}
+                className="w-full px-4 py-3 border rounded-lg"
+              >
+                <option value="">Select State</option>
+                {statesList.map((state) => (
+                  <option
+                    key={state.state_census_code}
+                    value={`${state.state_census_code}_${state.state_name}`}
+                  >
+                    {state.state_name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                  {/* Project App Type (Inside Form) */}
-                  <div>
-                    <label className="block text-lg font-medium mb-3">
-                      Select Project App Type{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={projectAppType}
-                      onChange={(e) => {
-                        const selectedType = e.target.value;
-                        setProjectAppType(selectedType);
-                        if (selectedType === "waterbody") {
-                          setNeedDesiltingPoint(true);
-                        }
-                      }}
-                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                      required
-                    >
-                      <option value="" disabled>
-                        Select app type <span className="text-red-500">*</span>
-                      </option>
-                      <option value="plantation">Plantations</option>
-                      <option value="watershed">Watershed Planning</option>
-                      <option value="waterbody">Waterbody Rejuvenation</option>
-                    </select>
-                  </div>
-                  {projectAppType === "waterbody" && (
-                    <div className="flex items-center justify-between mt-4">
-                      <label className="text-lg font-medium">
-                        Need Desilting Point
-                      </label>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          className="sr-only peer"
-                          checked={needDesiltingPoint}
-                          onChange={() =>
-                            setNeedDesiltingPoint(!needDesiltingPoint)
-                          }
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-violet-500 rounded-full peer dark:bg-gray-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
-                      </label>
-                    </div>
-                  )}
+            <div>
+              <label className="block text-lg font-medium mb-2">
+                District: <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={
+                  district.id && district.name
+                    ? `${district.id}_${district.name}`
+                    : ""
+                }
+                onChange={handleDistrictChange}
+                className="w-full px-4 py-3 border rounded-lg"
+              >
+                <option value="">Select District</option>
+                {districtsList.map((dist) => (
+                  <option
+                    key={dist.id}
+                    value={`${dist.id}_${dist.district_name}`}
+                  >
+                    {dist.district_name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-                  <div>
-                    <label className="text-lg font-semibold mb-2 block">
-                      State: <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={
-                        state.id && state.name
-                          ? `${state.id}_${state.name}`
-                          : ""
-                      }
-                      onChange={handleStateChange}
-                      className="w-full px-4 py-3 border text-lg rounded-lg"
-                    >
-                      <option value="">Select State</option>
-                      {statesList.map((state) => (
-                        <option
-                          key={state.state_census_code}
-                          value={`${state.state_census_code}_${state.state_name}`}
-                        >
-                          {state.state_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* District Dropdown */}
-
-                  <div className="mt-4">
-                    <label className="text-lg font-semibold mb-2 block">
-                      District: <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={
-                        district.id && district.name
-                          ? `${district.id}_${district.name}`
-                          : ""
-                      }
-                      onChange={handleDistrictChange}
-                      className="w-full px-4 py-3 border text-lg rounded-lg"
-                    >
-                      <option value="">Select District</option>
-                      {districtsList.map((dist) => (
-                        <option
-                          key={dist.district_census_code}
-                          value={`${dist.district_census_code}_${dist.district_name}`}
-                        >
-                          {dist.district_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Block Dropdown */}
-
-                  <div className="mt-4">
-                    <label className="text-lg font-semibold mb-2 block">
-                      Block: <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={
-                        block.id && block.name
-                          ? `${block.id}_${block.name}`
-                          : ""
-                      }
-                      onChange={handleBlockChange}
-                      className="w-full px-4 py-3 border text-lg rounded-lg"
-                    >
-                      <option value="">Select Block</option>
-                      {blocksList.map((blk) => (
-                        <option
-                          key={blk.block_code}
-                          value={`${blk.block_code}_${blk.block_name}`}
-                        >
-                          {blk.block_name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {currentUser?.user?.is_superadmin && (
-                    <div>
-                      <label className="text-lg font-semibold mb-2 block">
-                        Organization: <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={organization || ""}
-                        onChange={handleOrgChange}
-                        className="w-full px-4 py-3 border text-lg rounded-lg"
-                        required
-                      >
-                        <option value="">Select Organization</option>
-                        {organizationsList.map((org) => (
-                          <option key={org.id} value={org.id}>
-                            {org.name} {/* ✅ show name, pass id */}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Submit Button */}
-                  <div className="text-center">
-                    <button
-                      type="submit"
-                      className="px-8 py-3 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition text-lg"
-                    >
-                      Submit
-                    </button>
-                  </div>
-                </form>
-              </div>
+            <div>
+              <label className="block text-lg font-medium mb-2">
+                Block: <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={
+                  block.id && block.name ? `${block.id}_${block.name}` : ""
+                }
+                onChange={handleBlockChange}
+                className="w-full px-4 py-3 border rounded-lg"
+              >
+                <option value="">Select Block</option>
+                {blocksList.map((blk) => (
+                  <option
+                    key={blk.block_code}
+                    value={`${blk.block_code}_${blk.block_name}`}
+                  >
+                    {blk.block_name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-        </div>
+
+          {/* Organization Dropdown for superadmin */}
+          {currentUser?.user?.is_superadmin && (
+            <div>
+              <label className="block text-lg font-medium mb-2">
+                Organization: <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={organization || ""}
+                onChange={handleOrgChange}
+                className="w-full px-4 py-3 border rounded-lg"
+                required
+              >
+                <option value="">Select Organization</option>
+                {organizationsList.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Submit */}
+          <div className="text-center">
+            <button
+              type="submit"
+              className="px-8 py-3 bg-violet-600 text-white rounded-md hover:bg-violet-700 transition text-lg"
+            >
+              Submit
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

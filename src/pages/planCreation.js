@@ -107,6 +107,21 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     setBlock({ id, name });
   };
 
+  const resetForm = () => {
+    setState({ id: "", name: "" });
+    setDistrict({ id: "", name: "" });
+    setBlock({ id: "", name: "" });
+    setFacilitatorName("");
+    setPlan("");
+    setVillageName("");
+    setGramPanchayat("");
+    setIsCompleted(false);
+    setIsDprGenerated(false);
+    setIsDprReviewed(false);
+    setIsDprApproved(false);
+    setShowConfirm(false);
+  };
+
   useEffect(() => {
     if (planId && statesList.length) {
       console.log("edit mode on", planId);
@@ -202,10 +217,24 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) throw new Error("Failed");
-      const savedPlan = await response.json();
+      // Parse the response **once**
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Show API error messages in toast
+        if (data.message && Array.isArray(data.message)) {
+          toast.error(data.message[0]);
+        } else {
+          toast.error("Error saving plan");
+        }
+        return;
+      }
+
+      // Success
       toast.success(planId ? "Plan updated!" : "Plan created!");
-      if (onPlanSaved) onPlanSaved(savedPlan);
+      setShowConfirm(false);
+      resetForm();
+      if (onPlanSaved) onPlanSaved(data);
       if (onClose) onClose();
     } catch (error) {
       console.error(error);

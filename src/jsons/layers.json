@@ -148,7 +148,7 @@
 
         },
        "Stream Order Vector": {
-            "api_url": "${config.layer_api_url_v1}/stream_order_vector/",
+            "api_url": "${config.layer_api_url_v1}/stream_order/",
             "show_Dates": false,
             "workspace":""
 

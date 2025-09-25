@@ -27,6 +27,7 @@ import AllPlans from "./pages/allPlans";
 import AllOrganizations from "./pages/allOrganizations";
 import PlantationActions from "./pages/plantationActions";
 import Project from "./pages/project";
+import AddMember from "./pages/addMember";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -87,6 +88,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/create-project"
                   element={<Project currentUser={currentUser} />}
+                />
+                <Route
+                  path="/create-user"
+                  element={<AddMember currentUser={currentUser} />}
                 />
                 <Route
                   path="/projects/:projectId/action"
