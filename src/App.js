@@ -26,6 +26,7 @@ import AllProjects from "./pages/allProjects";
 import AllPlans from "./pages/allPlans";
 import AllOrganizations from "./pages/allOrganizations";
 import PlantationActions from "./pages/plantationActions";
+import Project from "./pages/project";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -82,6 +83,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/organizations"
                   element={<AllOrganizations currentUser={currentUser} />}
+                />
+                <Route
+                  path="/create-project"
+                  element={<Project currentUser={currentUser} />}
                 />
                 <Route
                   path="/projects/:projectId/action"

@@ -153,6 +153,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
       navigate("/users");
       return;
     }
+    if (type === "projects") {
+      navigate("/create-project"); // 👈 your new route
+      return;
+    }
 
     setModalType(type);
     setIsModalOpen(true);
@@ -171,7 +175,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
         // data = { data: res.api_keys };
       } else if (
         [
-          "projects",
           "assignproject",
           "addmember",
           "removeMember",
@@ -823,15 +826,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   </div>
                 </div>
               )} */}
-              {modalType === "projects" && (
-                <div>
-                  <Project
-                    currentUser={currentUser}
-                    closeModal={closeModal}
-                    statesList={statesList}
-                  />
-                </div>
-              )}
               {modalType === "assignproject" && (
                 <div>
                   <AssignUserToProject
@@ -929,7 +923,8 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                       </option>
                                       {users.map((user) => (
                                         <option key={user.id} value={user.id}>
-                                          {user.username}
+                                          {user.username} ({user.first_name}{" "}
+                                          {user.last_name})
                                         </option>
                                       ))}
                                     </select>

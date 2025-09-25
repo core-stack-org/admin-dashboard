@@ -328,7 +328,7 @@ const AssignUserToProject = ({
                 </option>
                 {users.map((user) => (
                   <option key={user.id} value={user.id}>
-                    {user.username}
+                    {user.username} ({user.first_name} {user.last_name})
                   </option>
                 ))}
               </select>
