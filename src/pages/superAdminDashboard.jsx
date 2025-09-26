@@ -436,7 +436,7 @@ function SuperAdminDashboard({ currentUser }) {
             {/* Create Project */}
             <motion.div>
               <div
-                onClick={() => handleOpenDialog("project")}
+                onClick={() => navigate("/create-project")}
                 className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#9c27b0] hover:shadow-[0_15px_30px_rgba(156,39,176,0.2)] min-h-[250px]"
               >
                 <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
@@ -452,7 +452,7 @@ function SuperAdminDashboard({ currentUser }) {
             {/* Create User */}
             <motion.div>
               <div
-                onClick={() => handleOpenDialog("createUser")}
+                onClick={() => navigate("/create-user")}
                 className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-8 text-center cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4caf50] hover:shadow-[0_15px_30px_rgba(76,175,80,0.2)] min-h-[250px]"
               >
                 <div className="absolute top-1/2 left-1/2 w-0 h-0 bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] rounded-full transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500 group-hover:w-[300px] group-hover:h-[300px] z-0" />
@@ -609,48 +609,6 @@ function SuperAdminDashboard({ currentUser }) {
         </DialogActions>
       </Dialog>
 
-      {/* Project Dialog */}
-      <Dialog
-        open={openDialog === "project"}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-        slotProps={{
-          paper: {
-            style: {
-              borderRadius: "12px",
-              padding: "0",
-            },
-          },
-        }}
-      >
-        {/* Dialog Header */}
-        <DialogTitle className="text-xl font-semibold bg-violet-600 text-white px-6 py-4">
-          Create Project
-        </DialogTitle>
-
-        {/* Dialog Body */}
-        <DialogContent dividers>
-          <div className="p-6">
-            <Project
-              onClose={handleCloseDialog}
-              currentUser={currentUser}
-              statesList={statesList}
-            />
-          </div>
-        </DialogContent>
-
-        {/* Dialog Footer */}
-        <DialogActions>
-          <Button
-            onClick={handleCloseDialog}
-            className="text-gray-700 px-4 py-2 rounded-lg"
-          >
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
-
       {/* Map User to Organization Dialog */}
       <Dialog
         open={openDialog === "userMapping"}
@@ -700,29 +658,6 @@ function SuperAdminDashboard({ currentUser }) {
         <DialogTitle>Assign Project to USer </DialogTitle>
         <DialogContent>
           <UserToProject onClose={handleCloseDialog} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
-            Cancel
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* To create new users in the organization Dialog */}
-      <Dialog
-        open={openDialog === "createUser"}
-        onClose={handleCloseDialog}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Add User </DialogTitle>
-        <DialogContent>
-          <AddMember
-            onClose={handleCloseDialog}
-            currentUser={currentUser}
-            isSuperAdmin={true}
-            onUserCreated={loadUsers}
-          />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseDialog} color="secondary">
