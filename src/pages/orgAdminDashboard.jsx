@@ -853,7 +853,9 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                       </option>
                                       {groups.map((group) => (
                                         <option key={group.id} value={group.id}>
-                                          {group.name}
+                                          {group.name === "App User"
+                                            ? "Plan Editor"
+                                            : group.name}
                                         </option>
                                       ))}
                                     </select>

@@ -372,7 +372,7 @@ const AssignUserToProject = ({
                 </option>
                 {userRoles.map((group) => (
                   <option key={group.id} value={group.id}>
-                    {group.name}
+                    {group.name === "App User" ? "Plan Editor" : group.name}
                   </option>
                 ))}
               </select>
