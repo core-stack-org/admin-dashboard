@@ -328,7 +328,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       {/* Top Navbar */}
       <nav className="fixed top-0 left-64 right-0 bg-gray-800 text-white h-16 z-20">
         <div className="flex items-center h-full px-4 relative">
-          <h1 className="text-xl font-bold mx-auto">CoreStack Dashboard</h1>
+          <h1 className="text-xl font-bold mx-auto">CoRE stack dashboard</h1>
 
           <div className="relative mr-4">
             <button className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors">

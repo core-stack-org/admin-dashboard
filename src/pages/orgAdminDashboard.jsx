@@ -636,89 +636,90 @@ const OrgAdminDashboard = ({ currentUser }) => {
 
         {/* Organization Management Section */}
         <motion.div variants={itemVariants} className="mb-10">
-          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
-            Organization Management
-          </h2>
+          <div className="mb-4 mt-12">
+            <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+              User Management
+            </h2>
+          </div>
 
+          {/* User Management Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* View Button */}
+            {/* Add Member Button */}
             <motion.div
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
               className="cursor-pointer"
-              onClick={() => handleOpenModal("view")}
+              onClick={() => handleOpenModal("addmember")}
             >
-              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4285f4] hover:shadow-[0_15px_30px_rgba(66,133,244,0.2)] min-h-[200px] z-10">
-                {/* Smooth radial hover effect inside only */}
+              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-emerald-500 hover:shadow-[0_15px_30px_rgba(16,185,129,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
                 <div className="absolute inset-0 pointer-events-none z-0">
-                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                 </div>
 
-                {/* Card content stays above effect */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="bg-blue-500 p-2 rounded-full mb-2">
-                    <Eye className="h-5 w-5 text-white" />
+                  <div className="bg-green-500 p-3 rounded-full mb-2">
+                    <UserPlus className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                    View
+                    Add Member
                   </h3>
                   <p className="text-sm text-gray-600">
-                    View organization details
+                    Invite new users to your organization
                   </p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Update Button */}
+            {/* Assign Role Button */}
             <motion.div
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
               className="cursor-pointer"
-              onClick={() => handleOpenModal("update")}
+              onClick={() => handleOpenModal("assignrole")}
             >
-              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-teal-500 hover:shadow-[0_15px_30px_rgba(13,148,136,0.2)] min-h-[200px] z-10">
+              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-amber-500 hover:shadow-[0_15px_30px_rgba(251,191,36,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
                 <div className="absolute inset-0 pointer-events-none z-0">
-                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(13,148,136,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                  <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                 </div>
 
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="bg-teal-500 p-2 rounded-full mb-2">
-                    <Edit className="h-5 w-5 text-white" />
+                  <div className="bg-amber-500 p-3 rounded-full mb-2">
+                    <UserCog className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                    Update
+                    Assign Role
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Modify organization settings
+                    Manage user permissions and roles
                   </p>
                 </div>
               </div>
             </motion.div>
 
-            {/* Org Members Button */}
+            {/* Generate API Key Button */}
             <motion.div
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
               className="cursor-pointer"
-              onClick={() => handleOpenModal("members")}
+              onClick={() => handleOpenModal("generateapikey")}
             >
-              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-indigo-500 hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)] min-h-[200px] z-10">
+              <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-indigo-500 hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
                 <div className="absolute inset-0 pointer-events-none z-0">
                   <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                 </div>
 
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="bg-indigo-500 p-2 rounded-full mb-2">
-                    <Users className="h-5 w-5 text-white" />
+                  <div className="bg-indigo-500 p-3 rounded-full mb-2">
+                    <Plug className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                    Org Members
+                    Generate API Key
                   </h3>
                   <p className="text-sm text-gray-600">
-                    Manage organization members
+                    Create a secure key for API access
                   </p>
                 </div>
               </div>
@@ -740,98 +741,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   />
                 </div>
               )}
-              {/* {modalType === "members" && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                  <div className="bg-white rounded-lg shadow-2xl w-full max-w-5xl mx-6 overflow-hidden">
-                    {/* Header 
-                    <div className="bg-indigo-700 text-white px-8 py-5 flex justify-between items-center">
-                      <h2 className="text-2xl font-bold">Org Members</h2>
-                      <button
-                        onClick={closeModal}
-                        className="text-white hover:bg-indigo-800 rounded-full p-2 focus:outline-none"
-                      >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth="2"
-                            d="M6 18L18 6M6 6l12 12"
-                          ></path>
-                        </svg>
-                      </button>
-                    </div>
-
-                    {/* Body 
-                    <div className="p-6 overflow-auto max-h-[70vh]">
-                      {users.length > 0 ? (
-                        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                          <table className="w-full border-collapse">
-                            <thead>
-                              <tr className="bg-gray-200 text-md text-gray-800">
-                                <th className="py-3 px-4 text-left w-12">
-                                  S. No.
-                                </th>
-                                <th className="py-3 px-4 text-left">
-                                  Username
-                                </th>
-                                <th className="py-3 px-4 text-left">Name</th>
-                                <th className="py-3 px-4 text-left">Email</th>
-                                <th className="py-3 px-4 text-left">Roles</th>
-                                <th className="py-3 px-4 text-left">Project</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {users.map((user, index) => (
-                                <tr
-                                  key={user.id}
-                                  className="border-b border-gray-300 hover:bg-gray-100 transition"
-                                >
-                                  <td className="py-3 px-4 text-gray-700 text-center">
-                                    {index + 1}
-                                  </td>
-                                  <td className="py-3 px-4 font-semibold text-gray-900">
-                                    {user.username}
-                                  </td>
-                                  <td className="py-3 px-4 font-semibold text-gray-900">
-                                    {user.first_name} {user.last_name}
-                                  </td>
-                                  <td className="py-3 px-4 text-gray-700">
-                                    {user.email}
-                                  </td>
-                                  <td className="py-3 px-4 text-gray-700">
-                                    {user.groups.length > 0
-                                      ? user.groups
-                                          .map((group) => group.name)
-                                          .join(", ")
-                                      : "N/A"}
-                                  </td>
-                                  <td className="py-3 px-4 text-gray-700">
-                                    {user.project_details?.length > 0
-                                      ? user.project_details
-                                          .map((p) => p.project_name)
-                                          .join(", ")
-                                      : "N/A"}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      ) : (
-                        <p className="text-gray-600 text-center text-lg">
-                          No users found.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )} */}
               {modalType === "assignproject" && (
                 <div>
                   <AssignUserToProject
@@ -944,7 +853,9 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                       </option>
                                       {groups.map((group) => (
                                         <option key={group.id} value={group.id}>
-                                          {group.name}
+                                          {group.name === "App User"
+                                            ? "Plan Editor"
+                                            : group.name}
                                         </option>
                                       ))}
                                     </select>
@@ -1067,90 +978,89 @@ const OrgAdminDashboard = ({ currentUser }) => {
                 </div>
               </div>
 
-              <div className="mb-4 mt-12">
-                <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
-                  User Management
-                </h2>
-              </div>
+              <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+                Organization Management
+              </h2>
 
-              {/* User Management Section */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Add Member Button */}
+                {/* View Button */}
                 <motion.div
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                   className="cursor-pointer"
-                  onClick={() => handleOpenModal("addmember")}
+                  onClick={() => handleOpenModal("view")}
                 >
-                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-emerald-500 hover:shadow-[0_15px_30px_rgba(16,185,129,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4285f4] hover:shadow-[0_15px_30px_rgba(66,133,244,0.2)] min-h-[200px] z-10">
+                    {/* Smooth radial hover effect inside only */}
                     <div className="absolute inset-0 pointer-events-none z-0">
-                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                     </div>
 
+                    {/* Card content stays above effect */}
                     <div className="relative z-10 flex flex-col items-center">
-                      <div className="bg-green-500 p-3 rounded-full mb-2">
-                        <UserPlus className="h-5 w-5 text-white" />
+                      <div className="bg-blue-500 p-2 rounded-full mb-2">
+                        <Eye className="h-5 w-5 text-white" />
                       </div>
                       <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                        Add Member
+                        View
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Invite new users to your organization
+                        View organization details
                       </p>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Assign Role Button */}
+                {/* Update Button */}
                 <motion.div
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                   className="cursor-pointer"
-                  onClick={() => handleOpenModal("assignrole")}
+                  onClick={() => handleOpenModal("update")}
                 >
-                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-amber-500 hover:shadow-[0_15px_30px_rgba(251,191,36,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-teal-500 hover:shadow-[0_15px_30px_rgba(13,148,136,0.2)] min-h-[200px] z-10">
                     <div className="absolute inset-0 pointer-events-none z-0">
-                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(251,191,36,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(13,148,136,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                     </div>
 
                     <div className="relative z-10 flex flex-col items-center">
-                      <div className="bg-amber-500 p-3 rounded-full mb-2">
-                        <UserCog className="h-5 w-5 text-white" />
+                      <div className="bg-teal-500 p-2 rounded-full mb-2">
+                        <Edit className="h-5 w-5 text-white" />
                       </div>
                       <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                        Assign Role
+                        Update
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Manage user permissions and roles
+                        Modify organization settings
                       </p>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* Generate API Key Button */}
+                {/* Org Members Button */}
                 <motion.div
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                   className="cursor-pointer"
-                  onClick={() => handleOpenModal("generateapikey")}
+                  onClick={() => handleOpenModal("members")}
                 >
-                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-indigo-500 hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)] min-h-[180px] h-[180px] flex flex-col items-center justify-center">
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-indigo-500 hover:shadow-[0_15px_30px_rgba(99,102,241,0.2)] min-h-[200px] z-10">
                     <div className="absolute inset-0 pointer-events-none z-0">
                       <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                     </div>
 
                     <div className="relative z-10 flex flex-col items-center">
-                      <div className="bg-indigo-500 p-3 rounded-full mb-2">
-                        <Plug className="h-5 w-5 text-white" />
+                      <div className="bg-indigo-500 p-2 rounded-full mb-2">
+                        <Users className="h-5 w-5 text-white" />
                       </div>
                       <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                        Generate API Key
+                        Org Members
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Create a secure key for API access
+                        Manage organization members
                       </p>
                     </div>
                   </div>

@@ -30,6 +30,33 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const [isDprReviewed, setIsDprReviewed] = useState(false);
   const [isDprApproved, setIsDprApproved] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [users, setUsers] = useState([]);
+
+  const loadUsers = async () => {
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/users/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const data = await response.json();
+      setUsers(data || []);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
+    }
+  };
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -352,13 +379,19 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
             <label className="block mb-2 text-sm font-medium text-gray-700">
               Facilitator Name <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               value={facilitatorName}
               onChange={(e) => setFacilitatorName(e.target.value)}
               className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none"
-              placeholder="Enter Facilitator Name"
-            />
+            >
+              <option value="">Select Facilitator</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.username || user.name}>
+                  {user.username || user.name} ({user.first_name}{" "}
+                  {user.last_name})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Plan */}

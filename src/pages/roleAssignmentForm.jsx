@@ -206,7 +206,7 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
                   {userGroups.length > 0 ? (
                     userGroups.map((group) => (
                       <option key={group.id} value={group.id}>
-                        {group.name}
+                        {group.name === "App User" ? "Plan Editor" : group.name}
                       </option>
                     ))
                   ) : (
