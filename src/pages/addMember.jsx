@@ -127,7 +127,6 @@ const AddMember = ({
   const validate = () => {
     const newErrors = {};
     if (!formData.first_name) newErrors.first_name = "First name is required";
-    if (!formData.last_name) newErrors.last_name = "Last name is required";
     if (!formData.username) newErrors.username = "Username is required";
     if (formData.password !== formData.password_confirm) {
       newErrors.password_confirm = "Passwords do not match";
@@ -261,7 +260,7 @@ const AddMember = ({
                 />
                 {!formData.last_name && (
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                    <span className="text-red-500">* </span>Last Name
+                    Last Name
                   </span>
                 )}
                 {errors.last_name && (

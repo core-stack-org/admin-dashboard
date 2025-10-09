@@ -91,7 +91,12 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 />
                 <Route
                   path="/create-user"
-                  element={<AddMember currentUser={currentUser} />}
+                  element={
+                    <AddMember
+                      currentUser={currentUser}
+                      isSuperAdmin={currentUser?.user?.is_superadmin}
+                    />
+                  }
                 />
                 <Route
                   path="/projects/:projectId/action"
