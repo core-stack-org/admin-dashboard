@@ -68,13 +68,13 @@ const AllProjects = ({ statesList }) => {
 
         // fetch state names
         const statesResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`
+          `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
         );
         const statesData = await statesResponse.json();
 
         const stateMap = {};
         statesData.states.forEach((s) => {
-          stateMap[s.state_census_code] = s.state_name;
+          stateMap[s.id] = s.state_name;
         });
 
         // enrich projects

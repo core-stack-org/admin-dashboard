@@ -50,7 +50,7 @@ const AllPlans = () => {
       try {
         const token = sessionStorage.getItem("accessToken");
         const res = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+          `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const data = await res.json();
@@ -105,7 +105,7 @@ const AllPlans = () => {
     if (districtsCache[stateCode]) return;
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateCode}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateCode}/`,
         { headers: { "content-type": "application/json" } }
       );
       const data = await res.json();
@@ -135,15 +135,15 @@ const AllPlans = () => {
 
   // Resolve state name
   const getStateName = (stateCode) =>
-    statesList.find((s) => String(s.state_census_code) === String(stateCode))
-      ?.state_name || "Unknown State";
+    statesList.find((s) => String(s.id) === String(stateCode))?.state_name ||
+    "Unknown State";
 
   const fetchBlocks = async (districtCode) => {
     if (blocksCache[districtCode]) return; // already cached
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtCode}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtCode}/`,
         {
           method: "GET",
           headers: {

@@ -30,7 +30,7 @@ const Project = ({ currentUser }) => {
   const fetchStates = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
         {
           method: "GET",
           headers: {
@@ -115,7 +115,7 @@ const Project = ({ currentUser }) => {
   const fetchDistricts = async (stateId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`
       );
       const data = await res.json();
       const activeDistricts = (data.districts || []).filter(
@@ -138,7 +138,7 @@ const Project = ({ currentUser }) => {
   const fetchBlocks = async (districtId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`
       );
       const data = await res.json();
       const activeBlocks = (data.blocks || [])
@@ -341,8 +341,8 @@ const Project = ({ currentUser }) => {
                 <option value="">Select State</option>
                 {statesList.map((state) => (
                   <option
-                    key={state.state_census_code}
-                    value={`${state.state_census_code}_${state.state_name}`}
+                    key={state.id}
+                    value={`${state.id}_${state.state_name}`}
                   >
                     {state.state_name}
                   </option>
