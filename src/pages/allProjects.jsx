@@ -68,7 +68,14 @@ const AllProjects = ({ statesList }) => {
 
         // fetch state names
         const statesResponse = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
+          `${process.env.REACT_APP_BASEURL}api/v1/get_states/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+            },
+          }
         );
         const statesData = await statesResponse.json();
 

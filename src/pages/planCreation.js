@@ -64,7 +64,12 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         const token = sessionStorage.getItem("accessToken");
         const res = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "ngrok-skip-browser-warning": "420",
+            },
+          }
         );
         const data = await res.json();
         setStatesList(data.states || data.results || []);
@@ -84,7 +89,14 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const fetchDistricts = async (stateId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`
+        `${process.env.REACT_APP_BASEURL}api/v1/get_districts/${stateId}/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
       );
       const data = await res.json();
       const activeDistricts = (data.districts || []).filter(
@@ -95,7 +107,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       activeDistricts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-
+      console.log(activeDistricts);
       setDistrictsList(activeDistricts);
       return activeDistricts;
     } catch (error) {
@@ -107,7 +119,14 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const fetchBlocks = async (districtId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
       );
       const data = await res.json();
       const activeBlocks = (data.blocks || [])
@@ -123,10 +142,16 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   };
 
   const handleDistrictChange = (e) => {
-    const [id, name] = e.target.value.split("_");
-    setDistrict({ id, name });
+    const selectedId = e.target.value;
+    const selectedDistrict = districtsList.find(
+      (d) => String(d.id) === selectedId
+    );
+    setDistrict({
+      id: selectedId,
+      name: selectedDistrict?.district_name || "",
+    });
     setBlock({ id: "", name: "" });
-    fetchBlocks(id);
+    fetchBlocks(selectedId);
   };
 
   const handleBlockChange = (e) => {
@@ -325,17 +350,13 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
               />
             ) : (
               <select
-                value={
-                  district.id && district.name
-                    ? `${district.id}_${district.name}`
-                    : ""
-                }
+                value={district.id || ""}
                 onChange={handleDistrictChange}
-                className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none"
+                className="w-full px-4 py-2.5 border rounded-lg"
               >
                 <option value="">Select District</option>
                 {districtsList.map((d) => (
-                  <option key={d.id} value={`${d.id}_${d.district_name}`}>
+                  <option key={d.id} value={d.id}>
                     {d.district_name}
                   </option>
                 ))}

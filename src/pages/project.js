@@ -115,7 +115,14 @@ const Project = ({ currentUser }) => {
   const fetchDistricts = async (stateId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
       );
       const data = await res.json();
       const activeDistricts = (data.districts || []).filter(
@@ -138,7 +145,14 @@ const Project = ({ currentUser }) => {
   const fetchBlocks = async (districtId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
       );
       const data = await res.json();
       const activeBlocks = (data.blocks || [])
