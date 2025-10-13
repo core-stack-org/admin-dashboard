@@ -42,19 +42,142 @@ const PlantationActions = ({ currentUser }) => {
   const handleRemoveFile = (index) =>
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
 
-  const handleUploadKml = () =>
-    setToast({
-      open: true,
-      message: "Files uploaded successfully!",
-      severity: "success",
+  const handleUploadKml = async () => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      setToast({
+        open: true,
+        message: "No files selected!",
+        severity: "error",
+      });
+      return;
+    }
+
+    if (!project) {
+      setToast({
+        open: true,
+        message: "Please select a project before uploading KML files.",
+        severity: "warning",
+      });
+      return;
+    }
+
+    const formData = new FormData();
+
+    // Append files — handle single or multiple uploads gracefully
+    selectedFiles.forEach((file) => {
+      formData.append("files[]", file);
     });
 
-  const handleCompute = (proj) =>
+    try {
+      const token = sessionStorage.getItem("accessToken");
+
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/plantation/kml/`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Upload result:", result);
+
+      setToast({
+        open: true,
+        message:
+          "KML file uploaded successfully! It may take 5–10 minutes for processing before it becomes visible.",
+        severity: "success",
+      });
+
+      setSelectedFiles([]); // ✅ Clear selected files after successful upload
+    } catch (error) {
+      console.error("❌ Error uploading KML files:", error);
+      setToast({
+        open: true,
+        message: "Failed to upload KML file(s). Please try again.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleCompute = async (project) => {
+    if (!project) {
+      console.error("❌ No project selected.");
+      alert("Please select a project first.");
+      return;
+    }
+
+    // 🔹 Show immediate toast
     setToast({
       open: true,
-      message: `Processing KMLs for ${proj.name}`,
+      message: `Processing KMLs for ${project.name}`,
       severity: "info",
     });
+
+    const matchedProject = project;
+    const state_name = project?.state_name;
+    const appTypeId =
+      project?.appTypes?.length > 0 ? project.appTypes[0].id : null;
+
+    if (!state_name || !matchedProject.id) {
+      console.error("❌ Missing required project details.");
+      alert("Project data is incomplete. Please check.");
+      return;
+    }
+
+    const formData = {
+      project_id: matchedProject.id,
+      state: state_name,
+      start_year: 2017,
+      end_year: 2023,
+      gee_account_id: "1",
+    };
+
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/plantation_site_suitability/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log("✅ Compute API result:", result);
+
+      setToast({
+        open: true,
+        message:
+          "Task initiated successfully! Please wait to view the layer or download the GeoJSON.",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("❌ Error calling compute API:", error);
+      setToast({
+        open: true,
+        message: "Failed to compute. Please try again.",
+        severity: "error",
+      });
+    }
+  };
 
   return (
     <div>
@@ -75,10 +198,10 @@ const PlantationActions = ({ currentUser }) => {
           mt: 2,
           px: 3,
           py: 4,
-          border: "2px solid #e0e0e0", // subtle light gray border
-          borderRadius: 3, // rounded corners
-          boxShadow: "0 8px 20px rgba(0,0,0,0.05)", // soft shadow for depth
-          backgroundColor: "#ffffff", // white background
+          border: "2px solid #e0e0e0",
+          borderRadius: 3,
+          boxShadow: "0 8px 20px rgba(0,0,0,0.05)",
+          backgroundColor: "#ffffff",
         }}
       >
         {/* Header */}
