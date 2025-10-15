@@ -247,7 +247,7 @@ const PlantationActions = ({ currentUser }) => {
                   }}
                 >
                   <CloudUploadIcon sx={{ mr: 1 }} />
-                  Choose KML Files
+                  Choose KML File(s)
                 </Button>
               </label>
 
