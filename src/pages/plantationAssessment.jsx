@@ -517,7 +517,7 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  soil: e.target.value,
+                  Soil: e.target.value,
                 })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
