@@ -42,7 +42,16 @@ const climateOptions = {
     label: "Reference Evapotranspiration (mm/yr)",
     description:
       "This is the maximum of actual evapotranspiration based on current land-use, or actual projected evapotranspiration for the crop/tree to be planted.",
-    options: ["0-2", "2-4", "4-6", "6-8", "8-10", ">10"],
+    options: [
+      "<1000",
+      " 1000-1250",
+      "1250-1500",
+      "1500-2000",
+      "2000-2500",
+      "2500-2750",
+      "2750-3000",
+      ">3000",
+    ],
   },
 };
 
