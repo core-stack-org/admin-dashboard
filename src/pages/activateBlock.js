@@ -41,7 +41,14 @@ const ActivateBlock = () => {
   const fetchStates = async () => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`
+        `${process.env.REACT_APP_BASEURL}api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
       );
       const data = await res.json();
       const sorted = data.states.sort((a, b) =>
@@ -56,7 +63,7 @@ const ActivateBlock = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -78,7 +85,7 @@ const ActivateBlock = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -231,7 +238,7 @@ const ActivateBlock = () => {
   const getLocationOptions = () => {
     if (locationType === "State") {
       return statesList.map((s) => ({
-        id: s.state_census_code,
+        id: s.id,
         name: s.state_name,
         active_status: s.active_status,
       }));
@@ -240,7 +247,7 @@ const ActivateBlock = () => {
         id: d.id,
         name: d.district_name,
         active_status: d.active_status,
-        state_census_code: d.state_census_code,
+        id: d.id,
       }));
     } else if (locationType === "Block") {
       return blocksList.map((b) => ({
@@ -362,9 +369,7 @@ const ActivateBlock = () => {
           >
             <option value="">Select District</option>
             {districtsList
-              .filter(
-                (d) => d.state_census_code === selectedState.state_census_code
-              )
+              .filter((d) => d.id === selectedState.id)
               .map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.district_name}

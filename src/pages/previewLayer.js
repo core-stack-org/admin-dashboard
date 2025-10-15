@@ -30,7 +30,7 @@ const PreviewLayerComponent = () => {
   const fetchStates = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
         {
           method: "GET",
           headers: {
@@ -52,7 +52,7 @@ const PreviewLayerComponent = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -74,7 +74,7 @@ const PreviewLayerComponent = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {
@@ -201,10 +201,7 @@ const PreviewLayerComponent = () => {
           >
             <option value="">Select State</option>
             {statesList.map((state) => (
-              <option
-                key={state.state_census_code}
-                value={`${state.state_census_code}_${state.state_name}`}
-              >
+              <option key={state.id} value={`${state.id}_${state.state_name}`}>
                 {state.state_name}
               </option>
             ))}
