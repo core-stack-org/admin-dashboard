@@ -3,7 +3,7 @@ import { Snackbar, Alert } from "@mui/material";
 
 const climateOptions = {
   annualPrecipitation: {
-    label: "Annual Precipitation (mm)",
+    label: "Annual Precipitation (mm/yr)",
     options: [
       "<400",
       "400-600",
@@ -39,7 +39,7 @@ const climateOptions = {
     options: ["<0.05", "0.05-0.20", "0.20-0.50", "0.50-0.65", ">0.65"],
   },
   referenceEvapoTranspiration: {
-    label: "Reference Evapotranspiration (mm/day)",
+    label: "Reference Evapotranspiration (mm/yr)",
     description:
       "This is the maximum of actual evapotranspiration based on current land-use, or actual projected evapotranspiration for the crop/tree to be planted.",
     options: ["0-2", "2-4", "4-6", "6-8", "8-10", ">10"],
@@ -222,7 +222,7 @@ const topographyOptions = {
     options: ["0-5", "5-10", "10-15", "15-20", "20-25", "25-30", "30-44"],
   },
   aspect: {
-    label: "Aspect (Direction Facing)",
+    label: "Aspect (Direction)",
     options: [
       "North",
       "North-East",
@@ -415,10 +415,10 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
           <div className="mb-4 p-4 bg-gray-100 border-l-4 border-blue-500">
             <p className="text-sm text-gray-700">
               <strong>Climate Parameters:</strong> <br />
-              - Annual precipitation (mm) <br />
+              - Annual precipitation (mm/yr ) <br />
               - Mean annual temperature (°C) <br />
               - Global aridity index <br />
-              - Reference evapotranspiration (mm/day) <br />
+              - Reference evapotranspiration (mm/yr) <br />
               <br />
               For each parameter, please select the range of values which is
               ideal for the crop/tree to be planted. Choose as many options as
@@ -508,7 +508,7 @@ const PlantationAssessmentForm = ({ project, currentUser, closeModal }) => {
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  soil: { ...formData.Soil, Soil: e.target.value },
+                  soil: e.target.value,
                 })
               }
               className="w-full p-2 border rounded-lg border-gray-300"
