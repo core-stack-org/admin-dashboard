@@ -60,16 +60,23 @@ const AllProjects = ({ statesList }) => {
             },
           }
         );
+        console.log(
+          "API URL:",
+          `${process.env.REACT_APP_BASEURL}api/v1/projects/`
+        );
 
         if (!response.ok)
           throw new Error(`HTTP error! Status: ${response.status}`);
 
         const data = await response.json();
+        console.log("API data:", data);
 
         // fetch state names
         const statesResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`
+          `${process.env.REACT_APP_BASEURL}api/v1/get_states/`
         );
+
+        console.log(statesResponse);
         const statesData = await statesResponse.json();
 
         const stateMap = {};
@@ -111,7 +118,8 @@ const AllProjects = ({ statesList }) => {
     [projects]
   );
 
-  // apply filters
+  // apply filtersconsole.log("API URL:", `${process.env.REACT_APP_BASEURL}api/v1/projects/`);
+
   const filteredProjects = useMemo(() => {
     return projects.filter((p) => {
       return (
