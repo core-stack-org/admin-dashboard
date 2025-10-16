@@ -79,7 +79,6 @@ const PlantationActions = ({ currentUser }) => {
     // 🔹 Show immediate toast
     setToast({
       open: true,
-      message: `Processing KMLs for ${proj.name}`,
       message: `Processing KMLs for ${project.name}`,
       severity: "info",
     });
