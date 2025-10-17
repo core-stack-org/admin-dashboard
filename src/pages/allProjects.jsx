@@ -68,7 +68,7 @@ const AllProjects = ({ statesList }) => {
 
         // fetch state names
         const statesResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`
+          `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
         );
         const statesData = await statesResponse.json();
 
@@ -77,11 +77,15 @@ const AllProjects = ({ statesList }) => {
           stateMap[s.state_census_code] = s.state_name;
         });
 
-        // enrich projects
-        const updatedProjects = data.map((p) => ({
-          ...p,
-          state_name: stateMap[p.state] || "Unknown State",
-        }));
+        // enrich projects and sort by name
+        const updatedProjects = data
+          .map((p) => ({
+            ...p,
+            state_name: stateMap[p.state] || "Unknown State",
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        console.log(updatedProjects);
         setProjects(updatedProjects);
       } catch (err) {
         console.error("Error fetching projects:", err);

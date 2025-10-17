@@ -84,7 +84,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const fetchDistricts = async (stateId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${stateId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`
       );
       const data = await res.json();
       const activeDistricts = (data.districts || []).filter(
@@ -107,7 +107,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const fetchBlocks = async (districtId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${districtId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`
       );
       const data = await res.json();
       const activeBlocks = (data.blocks || [])
@@ -135,7 +135,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   };
 
   const resetForm = () => {
-    setState({ id: "", name: "" });
+    // setState({ id: "", name: "" });
     setDistrict({ id: "", name: "" });
     setBlock({ id: "", name: "" });
     setFacilitatorName("");
@@ -184,7 +184,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         id: data.state,
         name: stateNameFromList,
       });
-      // 2️⃣ Fetch districts for the state and set selechttps://767540400bbf.ngrok-free.app/api/v1/projects/4/watershed/plans/3/ted district
       const districts = await fetchDistricts(data.state);
       const districtName =
         districts.find((d) => String(d.id) === String(data.district))
