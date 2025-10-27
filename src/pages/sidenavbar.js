@@ -29,9 +29,9 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  console.log(currentuser);
+
   const role = currentuser?.user?.groups?.[0]?.name;
-  console.log("User Role:", role); // Output: "Administrator"
+  console.log("User Role:", role);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -67,30 +67,25 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     };
 
     try {
-      console.log(
-        "🚀 Attempting logout with current access token:",
-        accessToken
-      );
+      console.log("Attempting logout with current access token:", accessToken);
       let response = await logoutApiCall(accessToken, refreshToken);
 
       if (response.status === 401 || response.status === 403) {
-        console.warn("🔄 Access token expired, refreshing...");
+        console.warn("Access token expired, refreshing...");
         try {
-          const { access, refresh } = await refreshAccessToken(); // get both tokens
+          const { access, refresh } = await refreshAccessToken();
           sessionStorage.setItem("accessToken", access);
           sessionStorage.setItem("refreshToken", refresh);
           accessToken = access;
           refreshToken = refresh;
-          console.log("✅ New tokens set, retrying logout...");
           response = await logoutApiCall(accessToken, refreshToken);
         } catch (refreshError) {
-          console.error("❌ Token refresh failed during logout:", refreshError);
           throw refreshError;
         }
       }
 
       if (response.ok) {
-        toast.success("✅ Logged out successfully!");
+        toast.success("Logged out successfully!");
         sessionStorage.removeItem("accessToken");
         sessionStorage.removeItem("refreshToken");
         sessionStorage.removeItem("currentUser");
@@ -98,10 +93,10 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         navigate("/");
       } else {
         const errorData = await response.json();
-        console.error("❌ Logout failed:", errorData);
+        console.error("Logout failed:", errorData);
       }
     } catch (error) {
-      console.error("🔥 Error during logout:", error);
+      console.error("Error during logout:", error);
     }
   };
 
@@ -125,13 +120,13 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       sessionStorage.setItem("accessToken", data.access);
       sessionStorage.setItem("refreshToken", data.refresh);
 
-      console.log("✅ New tokens generated:", data.access, data.refresh);
+      console.log("New tokens generated:", data.access, data.refresh);
       return {
         access: data.access,
         refresh: data.refresh,
       };
     } catch (error) {
-      console.error("❌ Refresh token failed:", error);
+      console.error("Refresh token failed:", error);
       throw error;
     }
   };
@@ -210,11 +205,10 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     isSuperAdmin ||
     (userRoles.length > 0 &&
       !userRoles.some((role) => {
-        console.log("Checking role:", role); // Log each role in the user's groups
-        return restrictedRoles.includes(role.name || role); // If role is an object, check the 'name' property
+        console.log("Checking role:", role);
+        return restrictedRoles.includes(role.name || role);
       }));
 
-  console.log("showFullMenu:", showFullMenu);
   if (showFullMenu) {
     menuItems.push(
       {
@@ -222,11 +216,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Activate Location",
         href: "/activateBlock",
       },
-      // {
-      //   icon: <FontAwesomeIcon icon={faCogs} size="lg" />,
-      //   label: "Plan Creation",
-      //   href: "/planCreation",
-      // },
       {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
         label: "Generate Layers",
@@ -243,11 +232,10 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   }
 
   const handleLayerClick = (layerLabel) => {
-    const selectedLayerData = layersData.layers_json[layerLabel]; // Get the layer details
+    const selectedLayerData = layersData.layers_json[layerLabel];
     setSelectedLayer(selectedLayerData);
     setActiveItem(layerLabel);
 
-    // Navigate and send layer data via state
     navigate(`/generate-layers/${layerLabel.replace(/ /g, "-")}`, {
       state: {
         layerName: layerLabel,
