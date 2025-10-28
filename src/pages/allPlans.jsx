@@ -34,7 +34,6 @@ const AllPlans = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  console.log(projectId);
 
   const normalizeName = (str) =>
     str
@@ -113,7 +112,6 @@ const AllPlans = () => {
         ...d,
         district_name: normalizeName(d.district_name),
       }));
-      console.log(`Fetched districts for state ${stateCode}:`, districts); // 👈 debug
       setDistrictsCache((prev) => ({ ...prev, [stateCode]: districts }));
     } catch (err) {
       console.error(err);
@@ -123,10 +121,7 @@ const AllPlans = () => {
   // Resolve district name from cache
   const getDistrictName = (stateCode, districtCode) => {
     const districts = districtsCache[stateCode] || [];
-    console.log(
-      `Looking for district ${districtCode} in state ${stateCode}:`,
-      districts
-    ); // 👈 debug
+
     return (
       districts.find((d) => String(d.id) === String(districtCode))
         ?.district_name || "Unknown District"
@@ -159,7 +154,6 @@ const AllPlans = () => {
         block_name: normalizeName(b.block_name),
       }));
 
-      console.log(`Fetched blocks for district ${districtCode}:`, blocks); // debug
       setBlocksCache((prev) => ({ ...prev, [districtCode]: blocks }));
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -169,10 +163,7 @@ const AllPlans = () => {
   // Resolve block name from cache
   const getBlockName = (districtCode, blockCode) => {
     const blocks = blocksCache[districtCode] || [];
-    console.log(
-      `Looking for block ${blockCode} in district ${districtCode}:`,
-      blocks
-    ); // debug
+
     return (
       blocks.find((b) => String(b.id) === String(blockCode))?.block_name ||
       "Unknown Block"
