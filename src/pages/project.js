@@ -143,8 +143,8 @@ const Project = ({ currentUser }) => {
       const activeBlocks = (data.blocks || [])
         .filter((b) => b.active_status === true)
         .sort((a, b) => a.block_name.localeCompare(b.block_name));
-
       setBlocksList(activeBlocks);
+
       return activeBlocks;
     } catch (error) {
       console.error(error);
@@ -181,10 +181,8 @@ const Project = ({ currentUser }) => {
       name: projectName,
       description: projectDescription,
       state: parseInt(state.id),
-      district_id: district?.id ? parseInt(district) : null,
-      district_name: district?.name || "",
-      block_id: block?.id ? parseInt(block.id) : null,
-      block_name: block?.name || "",
+      district: district?.id ? parseInt(district.id) : null,
+      block: block?.id ? parseInt(block.id) : null,
       app_type: projectAppType,
       enabled: true, // Ensuring it's included
       created_by: userId,
@@ -194,7 +192,6 @@ const Project = ({ currentUser }) => {
         need_desilting_point: needDesiltingPoint,
       }),
     };
-
     try {
       const token = sessionStorage.getItem("accessToken");
 
@@ -391,10 +388,7 @@ const Project = ({ currentUser }) => {
               >
                 <option value="">Select Block</option>
                 {blocksList.map((blk) => (
-                  <option
-                    key={blk.block_code}
-                    value={`${blk.block_code}_${blk.block_name}`}
-                  >
+                  <option key={blk.id} value={`${blk.id}_${blk.block_name}`}>
                     {blk.block_name}
                   </option>
                 ))}

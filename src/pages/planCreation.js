@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
 import { Switch } from "@mui/material";
+import Select from "react-select";
 
 const PlanCreation = ({ onClose, onPlanSaved }) => {
   const location = useLocation();
@@ -20,16 +21,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     blockName,
   } = location.state || {};
 
-  console.log("Project Info:", {
-    projectName,
-    projectId,
-    stateName,
-    stateId,
-    districtId,
-    districtName,
-    blockId,
-    blockName,
-  });
   const [statesList, setStatesList] = useState([]);
   const [districtsList, setDistrictsList] = useState([]);
   const [blocksList, setBlocksList] = useState([]);
@@ -38,10 +29,13 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     name: stateName || "",
   });
   const [district, setDistrict] = useState({
-    id: districtId,
-    name: districtName,
+    id: districtId || "",
+    name: districtName || "",
   });
-  const [block, setBlock] = useState({ id: "", name: "" });
+  const [block, setBlock] = useState({
+    id: blockId || "",
+    name: blockName || "",
+  });
   const [facilitatorName, setFacilitatorName] = useState("");
   const [plan, setPlan] = useState("");
   const [villageName, setVillageName] = useState("");
@@ -69,7 +63,12 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         }
       );
       const data = await response.json();
-      setUsers(data || []);
+      if (Array.isArray(data)) {
+        const sortedUsers = data.sort((a, b) =>
+          a.first_name.localeCompare(b.first_name)
+        );
+        setUsers(sortedUsers);
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
@@ -103,6 +102,15 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     }
   }, [state.id]);
 
+  useEffect(() => {
+    if (districtId) {
+      setDistrict({ id: districtId, name: districtName || "" });
+      setBlock({ id: blockId, name: blockName || "" });
+
+      fetchBlocks(districtId);
+    }
+  }, [districtId]);
+
   const fetchDistricts = async (stateId) => {
     try {
       const res = await fetch(
@@ -117,7 +125,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       activeDistricts.sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-
       setDistrictsList(activeDistricts);
       return activeDistricts;
     } catch (error) {
@@ -173,7 +180,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
   useEffect(() => {
     if (planId && statesList.length) {
-      console.log("edit mode on", planId);
       setIsEditMode(true);
       fetchPlanDetails(planId);
     }
@@ -396,19 +402,62 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
             <label className="block mb-2 text-sm font-medium text-gray-700">
               Facilitator Name <span className="text-red-500">*</span>
             </label>
-            <select
-              value={facilitatorName}
-              onChange={(e) => setFacilitatorName(e.target.value)}
-              className="w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none"
-            >
-              <option value="">Select Facilitator</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.username || user.name}>
-                  {user.username || user.name} ({user.first_name}{" "}
-                  {user.last_name})
-                </option>
-              ))}
-            </select>
+            <Select
+              value={
+                facilitatorName
+                  ? {
+                      value: facilitatorName,
+                      label: users.find(
+                        (u) =>
+                          u.username === facilitatorName ||
+                          u.name === facilitatorName
+                      )
+                        ? `${facilitatorName} (${
+                            users.find(
+                              (u) =>
+                                u.username === facilitatorName ||
+                                u.name === facilitatorName
+                            )?.first_name || ""
+                          } ${
+                            users.find(
+                              (u) =>
+                                u.username === facilitatorName ||
+                                u.name === facilitatorName
+                            )?.last_name || ""
+                          })`
+                        : facilitatorName,
+                    }
+                  : null
+              }
+              onChange={(selected) =>
+                setFacilitatorName(selected ? selected.value : "")
+              }
+              options={users.map((user) => ({
+                value: user.username || user.name,
+                label: `${user.username || user.name} (${user.first_name} ${
+                  user.last_name
+                })`,
+              }))}
+              placeholder="Select Facilitator"
+              isClearable
+              className="w-full"
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  padding: "2px",
+                  borderRadius: "8px",
+                  borderColor: state.isFocused ? "#60A5FA" : "#E5E7EB",
+                  boxShadow: state.isFocused ? "0 0 0 2px #BFDBFE" : "none",
+                  "&:hover": {
+                    borderColor: "#60A5FA",
+                  },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  zIndex: 9999,
+                }),
+              }}
+            />
           </div>
 
           {/* Plan */}
