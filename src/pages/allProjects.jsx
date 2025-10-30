@@ -517,6 +517,10 @@ const AllProjects = ({ statesList }) => {
                                         projectId: p.id,
                                         stateName: p.state_name,
                                         stateId: p.state,
+                                        districtId: p.district,
+                                        districtName: p.district_name,
+                                        blockId: p.block_id,
+                                        blockName: p.block_name,
                                       },
                                     });
                                   }}

@@ -180,7 +180,11 @@ const Project = ({ currentUser }) => {
     const formData = {
       name: projectName,
       description: projectDescription,
-      state: parseInt(state.id), // Only state ID
+      state: parseInt(state.id),
+      district_id: district?.id ? parseInt(district) : null,
+      district_name: district?.name || "",
+      block_id: block?.id ? parseInt(block.id) : null,
+      block_name: block?.name || "",
       app_type: projectAppType,
       enabled: true, // Ensuring it's included
       created_by: userId,
