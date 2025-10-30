@@ -30,7 +30,7 @@ const PreviewLayerComponent = () => {
   const fetchStates = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
         {
           method: "GET",
           headers: {
@@ -52,7 +52,7 @@ const PreviewLayerComponent = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -74,7 +74,7 @@ const PreviewLayerComponent = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {

@@ -383,7 +383,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
   const fetchStates = async () => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
         {
           method: "GET",
           headers: {
