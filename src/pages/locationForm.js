@@ -5,7 +5,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { useLocation } from "react-router-dom";
 
 const LocationFormComponent = ({ currentUser }) => {
-  console.log(currentUser);
   const location = useLocation();
   const { layerName, showDates } = location.state || {};
 
@@ -40,8 +39,6 @@ const LocationFormComponent = ({ currentUser }) => {
       showYear: layersData.layers_json[key].show_year,
     };
   });
-
-  console.log(layersData.layers_json);
 
   useEffect(() => {
     fetchStates();
@@ -185,7 +182,6 @@ const LocationFormComponent = ({ currentUser }) => {
   useEffect(() => {
     const fetchGEEAccounts = async () => {
       const token = sessionStorage.getItem("accessToken");
-      console.log(token);
       try {
         const response = await fetch(
           `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
@@ -233,16 +229,12 @@ const LocationFormComponent = ({ currentUser }) => {
       toast.error("Please select GEE account.");
       return;
     }
-    console.log(layerName);
     const selectedLayer = layersData.layers_json[layerName];
-    console.log(selectedLayer);
     const apiUrlSuffix = selectedLayer.api_url.split("/").slice(-2).join("/");
-    console.log(apiUrlSuffix);
 
     const token = sessionStorage.getItem("accessToken");
 
     const apiUrl = `${process.env.REACT_APP_BASEURL}api/v1/${apiUrlSuffix}`;
-    console.log(apiUrl);
 
     setIsLoading(true);
 

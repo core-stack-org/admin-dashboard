@@ -18,8 +18,6 @@ import {
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faUserCog } from "@fortawesome/free-solid-svg-icons";
-import { Card, CardContent } from "@mui/material";
-import { Badge } from "@mui/material";
 import { Dialog } from "@headlessui/react";
 import Project from "../pages/project.js";
 import OrganizationDetails from "./modalDialog.jsx";
@@ -32,6 +30,7 @@ import { ToastContainer } from "react-toastify";
 import GenerateApiKeyPage from "../GenerateApiKeyPage.jsx";
 import AllProjects from "./allProjects.jsx";
 import { useNavigate } from "react-router-dom";
+import Select from "react-select";
 
 const OrgAdminDashboard = ({ currentUser }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -52,7 +51,7 @@ const OrgAdminDashboard = ({ currentUser }) => {
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [userRoles, setUserRoles] = useState([]);
-  const [groups, setGroups] = useState([]);
+  const [userGroups, setUserGroups] = useState([]);
   const [statesList, setStatesList] = useState([]);
   const [visibleCards, setVisibleCards] = useState(3);
   const [projects, setProjects] = useState([]);
@@ -204,10 +203,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
     fetchUserApiKeys();
   }, []);
   const fetchUserApiKeys = async () => {
@@ -278,6 +273,9 @@ const OrgAdminDashboard = ({ currentUser }) => {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
   const fetchUsers = async () => {
     try {
       const token = sessionStorage.getItem("accessToken");
@@ -294,10 +292,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
       );
 
       const usersData = await response.json();
+
       if (Array.isArray(usersData)) {
-        setUsers(usersData);
+        const sortedUsers = usersData.sort((a, b) =>
+          a.first_name.localeCompare(b.first_name)
+        );
+        setUsers(sortedUsers);
       } else if (usersData && Array.isArray(usersData.users)) {
-        setUsers(usersData.users); // If users are nested under 'users'
+        setUsers(usersData.users);
       } else {
         console.error("Unexpected users API response:", usersData);
       }
@@ -307,13 +309,14 @@ const OrgAdminDashboard = ({ currentUser }) => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    const fetchGroups = async () => {
+    const fetchUserGroups = async () => {
       try {
         const token = sessionStorage.getItem("accessToken");
+        if (!token) {
+          toast.error("Authentication token is missing.");
+          return;
+        }
+
         const response = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/groups/`,
           {
@@ -326,19 +329,24 @@ const OrgAdminDashboard = ({ currentUser }) => {
           }
         );
 
-        const groupData = await response.json();
-
-        if (Array.isArray(groupData)) {
-          setGroups(groupData); // Set groups properly
-        } else {
-          console.error("Unexpected groups API response:", groupData);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
         }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+          console.error("Unexpected API response format:", data);
+          return;
+        }
+
+        setUserGroups(data);
       } catch (error) {
-        console.error("Error fetching groups:", error);
+        console.error("Error fetching user groups:", error);
+        toast.error("Failed to load user groups.");
       }
     };
 
-    fetchGroups();
+    fetchUserGroups();
   }, []);
 
   const updateOrganizationDetails = async () => {
@@ -423,8 +431,8 @@ const OrgAdminDashboard = ({ currentUser }) => {
       if (response.ok) {
         toast.success("Role assigned successfully!", {
           onClose: () => {
-            fetchUsers(); // ✅ Refresh the org member list
-            closeModal(); // ✅ Close the modal
+            fetchUsers();
+            closeModal();
           },
         });
       } else {
@@ -566,10 +574,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
                     {organizationId}
                   </span>
                 </div>
-                {/* <div className="flex justify-between items-center">
-          <span className="text-gray-600 font-medium">Projects</span>
-          <span className="text-gray-900 font-bold">{projectCount}</span>
-        </div> */}
               </div>
             </div>
           </motion.div>
@@ -811,54 +815,113 @@ const OrgAdminDashboard = ({ currentUser }) => {
                                     <label className="block text-lg font-medium mb-3">
                                       User Name
                                     </label>
-                                    <select
-                                      value={selectedUser}
-                                      onChange={(e) => {
-                                        console.log(
-                                          "selected user",
-                                          e.target.value
-                                        );
-                                        setSelectedUser(e.target.value);
+                                    <Select
+                                      options={users.map((user) => ({
+                                        value: user.id,
+                                        label: `${user.username} (${user.first_name}  ${user.last_name})`,
+                                      }))}
+                                      value={
+                                        selectedUser
+                                          ? {
+                                              value: selectedUser,
+                                              label:
+                                                users.find(
+                                                  (u) => u.id === selectedUser
+                                                )?.username || "",
+                                            }
+                                          : null
+                                      }
+                                      onChange={(selectedOption) =>
+                                        setSelectedUser(
+                                          selectedOption
+                                            ? selectedOption.value
+                                            : ""
+                                        )
+                                      }
+                                      placeholder="Search or select a user..."
+                                      isSearchable
+                                      className="w-full text-lg"
+                                      menuPortalTarget={document.body}
+                                      styles={{
+                                        control: (base) => ({
+                                          ...base,
+                                          padding: "2px",
+                                          borderColor: "#d1d5db",
+                                          borderRadius: "0.5rem",
+                                          boxShadow: "none",
+                                          "&:hover": { borderColor: "#9ca3af" },
+                                        }),
+                                        menuPortal: (base) => ({
+                                          ...base,
+                                          zIndex: 99999,
+                                        }),
+                                        menu: (base) => ({
+                                          ...base,
+                                          zIndex: 99999,
+                                        }),
                                       }}
-                                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                                      required
-                                    >
-                                      <option value="" disabled>
-                                        Select a user
-                                      </option>
-                                      {users.map((user) => (
-                                        <option key={user.id} value={user.id}>
-                                          {user.username} ({user.first_name}{" "}
-                                          {user.last_name})
-                                        </option>
-                                      ))}
-                                    </select>
+                                    />
                                   </div>
 
                                   {/* Role Name */}
-                                  <div>
+                                  <div className="relative overflow-visible">
                                     <label className="block text-lg font-medium mb-3">
                                       Role Name
                                     </label>
-                                    <select
-                                      value={selectedRole}
-                                      onChange={(e) =>
-                                        setSelectedRole(e.target.value)
-                                      }
-                                      className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                                      required
-                                    >
-                                      <option value="" disabled>
-                                        Select role
-                                      </option>
-                                      {groups.map((group) => (
-                                        <option key={group.id} value={group.id}>
-                                          {group.name === "App User"
+                                    <Select
+                                      options={userGroups.map((group) => ({
+                                        value: group.id,
+                                        label:
+                                          group.name === "App User"
                                             ? "Plan Editor"
-                                            : group.name}
-                                        </option>
-                                      ))}
-                                    </select>
+                                            : group.name,
+                                      }))}
+                                      value={
+                                        selectedRole
+                                          ? {
+                                              value: selectedRole,
+                                              label:
+                                                userGroups.find(
+                                                  (g) => g.id === selectedRole
+                                                )?.name === "App User"
+                                                  ? "Plan Editor"
+                                                  : userGroups.find(
+                                                      (g) =>
+                                                        g.id === selectedRole
+                                                    )?.name || "",
+                                            }
+                                          : null
+                                      }
+                                      onChange={(selectedOption) =>
+                                        setSelectedRole(
+                                          selectedOption
+                                            ? selectedOption.value
+                                            : ""
+                                        )
+                                      }
+                                      placeholder="Search or select a role..."
+                                      isSearchable
+                                      className="w-full text-lg"
+                                      menuPortalTarget={document.body}
+                                      styles={{
+                                        control: (base) => ({
+                                          ...base,
+                                          padding: "2px",
+                                          borderColor: "#d1d5db",
+                                          borderRadius: "0.5rem",
+                                          boxShadow: "none",
+                                          "&:hover": { borderColor: "#9ca3af" },
+                                        }),
+                                        menuPortal: (base) => ({
+                                          ...base,
+                                          zIndex: 99999,
+                                        }),
+                                        menu: (base) => ({
+                                          ...base,
+                                          zIndex: 99999,
+                                        }),
+                                      }}
+                                    />
                                   </div>
 
                                   {/* Submit Button */}
@@ -908,9 +971,6 @@ const OrgAdminDashboard = ({ currentUser }) => {
                 Project Management
               </h2>
 
-              {/* Slider Container */}
-              {/* Slider Container */}
-              {/* Slider Container */}
               <div className="relative w-full mt-10">
                 {/* ◀ Left Arrow (outside) */}
                 <button
@@ -952,12 +1012,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
                         <div
                           className={`relative group bg-white border-2 border-transparent rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] ${action.hoverBorder} hover:shadow-[0_15px_30px_rgba(0,0,0,0.1)] min-h-[200px] h-[200px] max-w-[92%] mx-auto flex flex-col items-center justify-center my-10`}
                         >
-                          {/* Hover Ripple Effect */}
                           <div className="absolute inset-0 pointer-events-none z-0">
                             <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                           </div>
 
-                          {/* Card Content */}
                           <div className="relative z-10 flex flex-col items-center">
                             <div
                               className={`${action.iconBg} p-3 rounded-full mb-2`}
@@ -992,12 +1050,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
                   onClick={() => handleOpenModal("view")}
                 >
                   <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4285f4] hover:shadow-[0_15px_30px_rgba(66,133,244,0.2)] min-h-[200px] z-10">
-                    {/* Smooth radial hover effect inside only */}
                     <div className="absolute inset-0 pointer-events-none z-0">
                       <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
                     </div>
 
-                    {/* Card content stays above effect */}
                     <div className="relative z-10 flex flex-col items-center">
                       <div className="bg-blue-500 p-2 rounded-full mb-2">
                         <Eye className="h-5 w-5 text-white" />

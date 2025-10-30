@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Select from "react-select";
 
 const UserMappingForm = ({ closeModal, onClose }) => {
   const [users, setUsers] = useState([]);
@@ -12,10 +13,6 @@ const UserMappingForm = ({ closeModal, onClose }) => {
     loadUsers();
     loadOrganization();
   }, []);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -75,7 +72,9 @@ const UserMappingForm = ({ closeModal, onClose }) => {
       );
       const data = await response.json();
       if (Array.isArray(data)) {
-        setOrganizations(data);
+        const sortedorgs = data.sort((a, b) => a.name.localeCompare(b.name));
+
+        setOrganizations(sortedorgs);
       } else {
         console.error("Unexpected API response format:", data);
       }
@@ -109,8 +108,11 @@ const UserMappingForm = ({ closeModal, onClose }) => {
         console.error("Unexpected API response format:", data);
         return;
       }
+      const sortedUsers = data.sort((a, b) =>
+        a.first_name.localeCompare(b.first_name)
+      );
 
-      setUsers(data);
+      setUsers(sortedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       return [];
@@ -153,25 +155,52 @@ const UserMappingForm = ({ closeModal, onClose }) => {
           <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Select User */}
+
               <div>
                 <label className="block text-lg font-medium mb-3">
                   Select User
                 </label>
-                <select
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                  className="block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  style={{
-                    maxHeight: "50px",
+                <Select
+                  options={users.map((user) => ({
+                    value: user.id,
+                    label: `${user.username} (${user.first_name}  ${user.last_name})`,
+                  }))}
+                  value={
+                    selectedUser
+                      ? {
+                          value: selectedUser,
+                          label:
+                            users.find((u) => u.id === selectedUser)
+                              ?.username || "",
+                        }
+                      : null
+                  }
+                  onChange={(selectedOption) =>
+                    setSelectedUser(selectedOption ? selectedOption.value : "")
+                  }
+                  placeholder="Search or select a user..."
+                  isSearchable
+                  className="w-full text-lg"
+                  menuPortalTarget={document.body}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      padding: "2px",
+                      borderColor: "#d1d5db",
+                      borderRadius: "0.5rem",
+                      boxShadow: "none",
+                      "&:hover": { borderColor: "#9ca3af" },
+                    }),
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
                   }}
-                >
-                  <option value="">Select a user</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.username}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Select Organization */}
@@ -179,19 +208,50 @@ const UserMappingForm = ({ closeModal, onClose }) => {
                 <label className="block text-lg font-medium mb-3">
                   Select Organization
                 </label>
-
-                <select
-                  value={selectedOrganization}
-                  onChange={(e) => setSelectedOrganization(e.target.value)}
-                  className="block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                >
-                  <option value="">Select an organization</option>
-                  {organizations.map((org) => (
-                    <option key={org.id} value={org.id}>
-                      {org.name}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  options={organizations.map((org) => ({
+                    value: org.id,
+                    label: org.name,
+                  }))}
+                  value={
+                    selectedOrganization
+                      ? {
+                          value: selectedOrganization,
+                          label:
+                            organizations.find(
+                              (o) => o.id === selectedOrganization
+                            )?.name || "",
+                        }
+                      : null
+                  }
+                  onChange={(selectedOption) =>
+                    setSelectedOrganization(
+                      selectedOption ? selectedOption.value : ""
+                    )
+                  }
+                  placeholder="Search or select an organization..."
+                  isSearchable
+                  className="w-full text-lg"
+                  menuPortalTarget={document.body}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      padding: "2px",
+                      borderColor: "#d1d5db",
+                      borderRadius: "0.5rem",
+                      boxShadow: "none",
+                      "&:hover": { borderColor: "#9ca3af" },
+                    }),
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+                  }}
+                />
               </div>
 
               {/* Submit Button */}

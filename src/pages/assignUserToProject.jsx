@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Select from "react-select";
 
 const AssignUserToProject = ({
   currentUser,
@@ -15,8 +16,8 @@ const AssignUserToProject = ({
   const [selectedProject, setSelectedProject] = useState("");
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
-  const [userRoles, setUserRoles] = useState([]); // Stores roles for selected user
-  const [selectedRole, setSelectedRole] = useState(""); // Stores selected role
+  const [userRoles, setUserRoles] = useState([]);
+  const [selectedRole, setSelectedRole] = useState("");
   const [groups, setGroups] = useState([]);
   const [userProjectId, setUserProjectId] = useState(null);
 
@@ -46,7 +47,10 @@ const AssignUserToProject = ({
         );
 
         const data = await response.json();
-        setProjects(data);
+        const sortedProjects = data.sort((a, b) =>
+          a.name.localeCompare(b.name)
+        );
+        setProjects(sortedProjects);
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -74,7 +78,10 @@ const AssignUserToProject = ({
         const usersData = await response.json();
 
         if (Array.isArray(usersData)) {
-          setUsers(usersData);
+          const sortedUsers = usersData.sort((a, b) =>
+            a.first_name.localeCompare(b.first_name)
+          );
+          setUsers(sortedUsers);
         } else if (usersData && Array.isArray(usersData.users)) {
           setUsers(usersData.users);
         } else {
@@ -187,11 +194,11 @@ const AssignUserToProject = ({
       let body = {};
 
       if (isAssigned) {
-        method = "PATCH"; // or "PUT" depending on your API spec
+        method = "PATCH";
         apiUrl = `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProject}/users/${checkData[0].id}/`;
 
         body = {
-          group: selectedRole, // or array of groups depending on API
+          group: selectedRole,
         };
       } else {
         method = "POST";
@@ -224,7 +231,7 @@ const AssignUserToProject = ({
       onUserCreated();
       closeModal();
     } catch (err) {
-      console.error("❌ Error assigning/updating role:", err);
+      console.error("Error assigning/updating role:", err);
       toast.error("Something went wrong.");
     }
   };
@@ -317,21 +324,55 @@ const AssignUserToProject = ({
               <label className="block text-lg font-medium mb-3">
                 User Name
               </label>
-              <select
-                value={selectedUser}
-                onChange={handleUserChange}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+
+              <Select
+                options={users.map((user) => ({
+                  value: user.id,
+                  label: `${user.username} (${user.first_name || ""} ${
+                    user.last_name || ""
+                  })`,
+                }))}
+                value={
+                  selectedUser
+                    ? {
+                        value: selectedUser,
+                        label:
+                          users.find((u) => u.id === selectedUser)?.username ||
+                          "",
+                      }
+                    : null
+                }
+                onChange={(selectedOption) =>
+                  handleUserChange({
+                    target: {
+                      value: selectedOption ? selectedOption.value : "",
+                    },
+                  })
+                }
+                placeholder="Search or select a user..."
+                isSearchable
                 required
-              >
-                <option value="" disabled>
-                  Select a user
-                </option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.username} ({user.first_name} {user.last_name})
-                  </option>
-                ))}
-              </select>
+                className="w-full text-lg"
+                menuPortalTarget={document.body}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    padding: "2px",
+                    borderColor: "#d1d5db",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#9ca3af" },
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                }}
+              />
             </div>
 
             {/* Project Selection */}
@@ -339,21 +380,48 @@ const AssignUserToProject = ({
               <label className="block text-lg font-medium mb-3">
                 Project Name
               </label>
-              <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              <Select
+                options={projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                }))}
+                value={
+                  selectedProject
+                    ? {
+                        value: selectedProject,
+                        label:
+                          projects.find((p) => p.id === selectedProject)
+                            ?.name || "",
+                      }
+                    : null
+                }
+                onChange={(selectedOption) =>
+                  setSelectedProject(selectedOption ? selectedOption.value : "")
+                }
+                placeholder="Search or select a project..."
+                isSearchable
                 required
-              >
-                <option value="" disabled>
-                  Select a project
-                </option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+                className="w-full text-lg"
+                menuPortalTarget={document.body}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    padding: "2px",
+                    borderColor: "#d1d5db",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#9ca3af" },
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                }}
+              />
             </div>
 
             {/* Role Name */}
@@ -361,21 +429,52 @@ const AssignUserToProject = ({
               <label className="block text-lg font-medium mb-3">
                 Role Name
               </label>
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+
+              <Select
+                options={userRoles.map((group) => ({
+                  value: group.id,
+                  label: group.name === "App User" ? "Plan Editor" : group.name,
+                }))}
+                value={
+                  selectedRole
+                    ? {
+                        value: selectedRole,
+                        label:
+                          userRoles.find((r) => r.id === selectedRole)?.name ===
+                          "App User"
+                            ? "Plan Editor"
+                            : userRoles.find((r) => r.id === selectedRole)
+                                ?.name || "",
+                      }
+                    : null
+                }
+                onChange={(selectedOption) =>
+                  setSelectedRole(selectedOption ? selectedOption.value : "")
+                }
+                placeholder="Search or select a role..."
+                isSearchable
                 required
-              >
-                <option value="" disabled>
-                  Select role
-                </option>
-                {userRoles.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name === "App User" ? "Plan Editor" : group.name}
-                  </option>
-                ))}
-              </select>
+                className="w-full text-lg"
+                menuPortalTarget={document.body}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    padding: "2px",
+                    borderColor: "#d1d5db",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#9ca3af" },
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                }}
+              />
             </div>
 
             {/* Submit Button */}

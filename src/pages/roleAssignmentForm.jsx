@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Select from "react-select";
 
 const RoleAssignmentForm = ({ closeModal, onClose }) => {
   const [formData, setFormData] = useState({ userId: "", roleId: "" });
@@ -42,8 +43,11 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
         console.error("Unexpected API response format:", data);
         return;
       }
+      const sortedUsers = data.sort((a, b) =>
+        a.first_name.localeCompare(b.first_name)
+      );
 
-      setUsers(data);
+      setUsers(sortedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
       return [];
@@ -123,7 +127,7 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
         setTimeout(() => {
           if (closeModal) closeModal();
           if (onClose) onClose();
-        }, 2000); // Ensures toast is visible before closing
+        }, 2000);
       } else {
         toast.error(
           `Failed to assign role: ${data.message || "Unknown error"}`
@@ -175,21 +179,47 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
                 <label className="block text-lg font-medium mb-3">
                   User Name
                 </label>
-                <select
-                  value={selectedUser}
-                  onChange={(e) => setSelectedUser(e.target.value)}
-                  className="block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                  style={{
-                    maxHeight: "50px",
+                <Select
+                  options={users.map((user) => ({
+                    value: user.id,
+                    label: `${user.username} (${user.first_name}  ${user.last_name})`,
+                  }))}
+                  value={
+                    selectedUser
+                      ? {
+                          value: selectedUser,
+                          label:
+                            users.find((u) => u.id === selectedUser)
+                              ?.username || "",
+                        }
+                      : null
+                  }
+                  onChange={(selectedOption) =>
+                    setSelectedUser(selectedOption ? selectedOption.value : "")
+                  }
+                  placeholder="Search or select a user..."
+                  isSearchable
+                  className="w-full text-lg"
+                  menuPortalTarget={document.body}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      padding: "2px",
+                      borderColor: "#d1d5db",
+                      borderRadius: "0.5rem",
+                      boxShadow: "none",
+                      "&:hover": { borderColor: "#9ca3af" },
+                    }),
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
                   }}
-                >
-                  <option value="">Select a user</option>
-                  {users.map((user) => (
-                    <option key={user.id} value={user.id}>
-                      {user.username}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {/* Select Role */}
@@ -197,22 +227,51 @@ const RoleAssignmentForm = ({ closeModal, onClose }) => {
                 <label className="block text-lg font-medium mb-3">
                   Select Role
                 </label>
-                <select
-                  value={selectedRole}
-                  onChange={(e) => setSelectedRole(e.target.value)}
-                  className="block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
-                >
-                  <option value="">Select a Role</option>
-                  {userGroups.length > 0 ? (
-                    userGroups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name === "App User" ? "Plan Editor" : group.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option disabled>Loading roles...</option>
-                  )}
-                </select>
+                <Select
+                  options={userGroups.map((group) => ({
+                    value: group.id,
+                    label:
+                      group.name === "App User" ? "Plan Editor" : group.name,
+                  }))}
+                  value={
+                    selectedRole
+                      ? {
+                          value: selectedRole,
+                          label:
+                            userGroups.find((g) => g.id === selectedRole)
+                              ?.name === "App User"
+                              ? "Plan Editor"
+                              : userGroups.find((g) => g.id === selectedRole)
+                                  ?.name || "",
+                        }
+                      : null
+                  }
+                  onChange={(selectedOption) =>
+                    setSelectedRole(selectedOption ? selectedOption.value : "")
+                  }
+                  placeholder="Search or select a role..."
+                  isSearchable
+                  className="w-full text-lg"
+                  menuPortalTarget={document.body}
+                  styles={{
+                    control: (base) => ({
+                      ...base,
+                      padding: "2px",
+                      borderColor: "#d1d5db",
+                      borderRadius: "0.5rem",
+                      boxShadow: "none",
+                      "&:hover": { borderColor: "#9ca3af" },
+                    }),
+                    menuPortal: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+                    menu: (base) => ({
+                      ...base,
+                      zIndex: 99999,
+                    }),
+                  }}
+                />
               </div>
 
               {/* Submit Button */}
