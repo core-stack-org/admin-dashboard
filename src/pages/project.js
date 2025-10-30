@@ -44,7 +44,6 @@ const Project = ({ currentUser }) => {
         .filter((s) => s.active_status === true)
         .sort((a, b) => a.state_name.localeCompare(b.state_name));
 
-      console.log(activeSortedStates);
       setStatesList(activeSortedStates);
     } catch (error) {
       console.error("Error fetching states:", error);
@@ -352,7 +351,7 @@ const Project = ({ currentUser }) => {
 
             <div>
               <label className="block text-lg font-medium mb-2">
-                District: <span className="text-red-500">*</span>
+                District (Optional):
               </label>
               <select
                 value={
@@ -377,7 +376,7 @@ const Project = ({ currentUser }) => {
 
             <div>
               <label className="block text-lg font-medium mb-2">
-                Block: <span className="text-red-500">*</span>
+                Block (Optional):
               </label>
               <select
                 value={

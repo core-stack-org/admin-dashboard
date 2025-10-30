@@ -172,7 +172,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         }
       );
       const data = await res.json();
-      console.log("Plan state:", data.state, "States list:", statesList);
 
       const stateNameFromList =
         statesList.find(
@@ -180,10 +179,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         )?.state_name || "";
 
       setState({ id: data.state, name: stateNameFromList });
-      console.log("After setState:", {
-        id: data.state,
-        name: stateNameFromList,
-      });
+
       const districts = await fetchDistricts(data.state);
       const districtName =
         districts.find((d) => String(d.id) === String(data.district))

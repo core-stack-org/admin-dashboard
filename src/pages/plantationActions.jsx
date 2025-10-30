@@ -71,7 +71,7 @@ const PlantationActions = ({ currentUser }) => {
 
   const handleCompute = async (project) => {
     if (!project) {
-      console.error("❌ No project selected.");
+      console.error("No project selected.");
       alert("Please select a project first.");
       return;
     }
@@ -89,7 +89,7 @@ const PlantationActions = ({ currentUser }) => {
       project?.appTypes?.length > 0 ? project.appTypes[0].id : null;
 
     if (!state_name || !matchedProject.id) {
-      console.error("❌ Missing required project details.");
+      console.error("Missing required project details.");
       alert("Project data is incomplete. Please check.");
       return;
     }
@@ -122,7 +122,6 @@ const PlantationActions = ({ currentUser }) => {
       }
 
       const result = await response.json();
-      console.log("✅ Compute API result:", result);
 
       setToast({
         open: true,
@@ -131,7 +130,7 @@ const PlantationActions = ({ currentUser }) => {
         severity: "success",
       });
     } catch (error) {
-      console.error("❌ Error calling compute API:", error);
+      console.error("Error calling compute API:", error);
       setToast({
         open: true,
         message: "Failed to compute. Please try again.",
@@ -159,10 +158,10 @@ const PlantationActions = ({ currentUser }) => {
           mt: 2,
           px: 3,
           py: 4,
-          border: "2px solid #e0e0e0", // subtle light gray border
-          borderRadius: 3, // rounded corners
-          boxShadow: "0 8px 20px rgba(0,0,0,0.05)", // soft shadow for depth
-          backgroundColor: "#ffffff", // white background
+          border: "2px solid #e0e0e0",
+          borderRadius: 3,
+          boxShadow: "0 8px 20px rgba(0,0,0,0.05)",
+          backgroundColor: "#ffffff",
         }}
       >
         {/* Header */}

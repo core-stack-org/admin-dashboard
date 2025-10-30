@@ -170,7 +170,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         }
 
         const data = await response.json();
-        console.log(data);
+
         const statesResponse = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
           {
@@ -297,24 +297,24 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
 
   const handleCompute = async (project) => {
     if (!project) {
-      console.error("❌ No project selected.");
+      console.error("No project selected.");
       alert("Please select a project first.");
       return;
     }
     const matchedProject = projects.find((p) => p.id === project.id);
 
     if (!matchedProject) {
-      console.error("❌ Project not found in updated projects state.");
+      console.error("Project not found in updated projects state.");
       alert("Something went wrong. Please refresh and try again.");
       return;
     }
     // Extract required fields
     const { state, appTypes, id } = project;
-    const state_name = matchedProject.state_name; // ✅ Get the correct state name
+    const state_name = matchedProject.state_name;
     const appTypeId = appTypes?.length > 0 ? appTypes[0].id : null;
 
     if (!state_name || !matchedProject.id) {
-      console.error("❌ Missing required project details.");
+      console.error("Missing required project details.");
       alert("Project data is incomplete. Please check.");
       return;
     }
@@ -322,7 +322,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     // Construct the formData object
     const formData = {
       project_id: matchedProject.id,
-      state: state_name, // ✅ Use state_name instead of state ID
+      state: state_name,
       start_year: 2017,
       end_year: 2023,
     };
@@ -354,7 +354,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         severity: "success",
       });
     } catch (error) {
-      console.error("❌ Error calling compute API:", error);
+      console.error("Error calling compute API:", error);
       alert("Failed to compute. Please try again.");
     }
   };
@@ -372,11 +372,8 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       .replace(/\s+/g, "_")
       .toLowerCase();
     const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
-    console.log(formattedOrganizationName, formattedProjectName);
 
     const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
-
-    console.log(wfsurl);
 
     let dynamicBbox = "";
     try {
@@ -479,19 +476,14 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   };
 
   const handlePlanSaved = (savedPlan) => {
-    console.log("Saved Plan:", savedPlan); // Debugging line
     setPlans((prevPlans) => {
       const planExists = prevPlans.some((plan) => plan.id === savedPlan.id);
 
       if (planExists) {
-        console.log("Plan exists, updating:", savedPlan); // Debugging line
-        // Update the plan with the new data
         return prevPlans.map((plan) =>
           plan.id === savedPlan.id ? { ...plan, ...savedPlan } : plan
         );
       } else {
-        console.log("Plan doesn't exist, adding:", savedPlan); // Debugging line
-        // Add the new plan to the list
         return [...prevPlans, savedPlan];
       }
     });

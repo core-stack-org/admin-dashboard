@@ -76,7 +76,6 @@ const GenerateApiKeyPage = ({ currentUser }) => {
       );
 
       const data = await response.json();
-      console.log("Generate API Key Response:", data);
 
       if (!response.ok)
         throw new Error(data.detail || "Failed to generate key");
