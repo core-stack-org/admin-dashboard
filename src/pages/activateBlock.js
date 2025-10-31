@@ -41,7 +41,7 @@ const ActivateBlock = () => {
   const fetchStates = async () => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_states/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
       );
       const data = await res.json();
       const sorted = data.states.sort((a, b) =>
@@ -56,7 +56,7 @@ const ActivateBlock = () => {
   const fetchDistricts = async (selectedState) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_districts/${selectedState}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${selectedState}/`,
         {
           method: "GET",
           headers: {
@@ -78,7 +78,7 @@ const ActivateBlock = () => {
   const fetchBlocks = async (selectedDistrict) => {
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/v1/get_blocks/${selectedDistrict}/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${selectedDistrict}/`,
         {
           method: "GET",
           headers: {

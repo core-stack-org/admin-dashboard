@@ -172,7 +172,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         const data = await response.json();
 
         const statesResponse = await fetch(
-          `${process.env.REACT_APP_API_URL}/api/v1/get_states/`,
+          `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
           {
             method: "GET",
             headers: {

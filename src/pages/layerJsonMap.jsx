@@ -3,25 +3,18 @@ import layersData from "../jsons/layers.json";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
 
-const PreviewLayerComponent = () => {
-  const [layerNames, setLayerNames] = useState([]);
-  const [selectedLayer, setSelectedLayer] = useState("");
-  const [previewUrl, setPreviewUrl] = useState("");
-
+const LayerMapJsonComponent = () => {
   const [state, setState] = useState({ id: "", name: "" });
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [block, setBlock] = useState({ id: "", name: "" });
   const [statesList, setStatesList] = useState([]);
   const [districtsList, setDistrictsList] = useState([]);
   const [blocksList, setBlocksList] = useState([]);
-  const [bbox, setBBox] = useState(null);
-
-  useEffect(() => {
-    const layers = Object.keys(layersData.layers_json).map((key) =>
-      key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
-    );
-    setLayerNames(layers);
-  }, []);
+  const [mapType, setMapType] = useState("");
+  const [geeAccounts, setGeeAccounts] = useState([]);
+  const [selectedGEEAccount, setSelectedGEEAccount] = useState("");
+  const [startYear, setStartYear] = useState("");
+  const [endYear, setEndYear] = useState("");
 
   useEffect(() => {
     fetchStates();
@@ -131,65 +124,90 @@ const PreviewLayerComponent = () => {
     setBlock({ id: block_census_code, name: block_name });
   };
 
-  const handleLayerChange = (event) => {
-    setSelectedLayer(event.target.value);
+  useEffect(() => {
+    const fetchGEEAccounts = async () => {
+      const token = sessionStorage.getItem("accessToken");
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        console.log("GEEEEEEEE", data);
+        setGeeAccounts(data);
+      } catch (error) {
+        console.error("Error fetching GEE accounts:", error);
+      }
+    };
+
+    fetchGEEAccounts();
+  }, []);
+
+  const handleGEEAccountChange = (event) => {
+    setSelectedGEEAccount(event.target.value);
   };
 
-  const handlePreviewLayers = async () => {
-    if (!state.name || !district.name || !block.name || !selectedLayer) {
-      alert(
-        "Please select a state, district, block, and layer before previewing."
-      );
+  useEffect(() => {
+    if (mapType && mapType !== "map_1") {
+      setStartYear(2017);
+      setEndYear(2024);
+    } else {
+      setStartYear("");
+      setEndYear("");
+    }
+  }, [mapType]);
+
+  const handleGenerateJsonMapLayer = async () => {
+    if (!state.name || !district.name || !block.name) {
+      alert("Please select a state, district, and block to generate Excel.");
       return;
     }
+    const token = sessionStorage.getItem("accessToken");
 
-    const formattedDistrict = district.name.toLowerCase().replace(/ /g, "_");
-    const formattedBlock = block.name.toLowerCase().replace(/ /g, "_");
+    const payload = {
+      state: state.name,
+      district: district.name,
+      block: block.name,
+      map: mapType,
+      gee_account_id: selectedGEEAccount,
+      ...(mapType !== "map_1" && { start_year: startYear, end_year: endYear }),
+    };
 
-    const selectedLayerData = layersData.layers_json[selectedLayer];
-    if (!selectedLayerData) {
-      console.error("Layer data not found for selected layer:", selectedLayer);
-      return;
-    }
-
-    const { workspace, end } = selectedLayerData;
-
-    const dynamicEnd = end
-      ? end
-          .replace(/distname/g, formattedDistrict)
-          .replace(/blockname/g, formattedBlock)
-      : `${formattedDistrict}_${formattedBlock}`;
-
-    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3Acfpt_infoplantation_suitability&outputFormat=application%2Fjson`;
-    // const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&bbox=77.60057629388909%2C16.03395532759504%2C77.75345653355072%2C16.07371263198302&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-    let dynamicBbox = "";
     try {
-      const response = await fetch(wfsurl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/generate_layer_in_order/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      const adminLayer = await response.json();
+      if (!response.ok) throw new Error("Failed to generate layers");
 
-      const vectorSource = new VectorSource({
-        features: new GeoJSON().readFeatures(adminLayer),
-      });
-
-      const extent = vectorSource.getExtent();
-
-      dynamicBbox =
-        extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
-      setBBox(extent);
-    } catch (error) {}
-    const url = `${process.env.REACT_APP_IMAGE_LAYER_URL}/${workspace}/wms?service=WMS&version=1.1.0&request=GetMap&layers=${workspace}%3A${dynamicEnd}&bbox=${dynamicBbox}&width=768&height=431&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-
-    window.open(url, "_blank");
+      const data = await response.json();
+      alert("Layer generation started successfully!");
+      console.log("Response:", data);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong while generating the layers.");
+    }
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-12">
+    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-28">
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold">Preview Layer</h1>{" "}
+        <h1 className="text-2xl font-bold">Generate Layer Map Json</h1>{" "}
       </div>
       <form className="space-y-8">
         <div>
@@ -259,60 +277,89 @@ const PreviewLayerComponent = () => {
           </select>
         </div>
 
-        {/* Layer Dropdown */}
+        {/* GEE Account Dropdown */}
         <div>
           <label className="text-lg font-semibold mb-2 block">
-            Select Layer:
+            Select GEE Account:
           </label>
           <select
-            id="layer"
-            value={selectedLayer}
-            onChange={handleLayerChange}
+            value={selectedGEEAccount}
+            onChange={handleGEEAccountChange}
             className="w-full px-4 py-3 border text-lg rounded-lg"
-            disabled={!block.id} // Enable only if block is selected
           >
-            <option value="">-- Select Layer --</option>
-            {layerNames.map((layer, index) => (
-              <option key={index} value={layer}>
-                {layer}
-              </option>
-            ))}
+            <option value="">Select GEE Account</option>
+            {Array.isArray(geeAccounts) &&
+              geeAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                </option>
+              ))}
           </select>
         </div>
+
+        {/* Map Dropdown */}
+        <div>
+          <label className="text-lg font-semibold mb-2 block">Map Type:</label>
+          <select
+            value={mapType}
+            onChange={(e) => setMapType(e.target.value)}
+            className="w-full px-4 py-3 border text-lg rounded-lg"
+          >
+            <option value="">Select Map</option>
+            <option value="map_1">Map 1 - Tehsil-level Basic Layers</option>
+            <option value="map_2">Map 2 - Hydrology, LULC & Cropping</option>
+            <option value="map_3">Map 3 - Restoration & Terrain</option>
+            <option value="map_4">Map 4 - Tree Health & Drainage</option>
+          </select>
+        </div>
+
+        {/*  Year Fields */}
+        {mapType && mapType !== "map_1" && (
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <label className="text-lg font-semibold mb-2 block">
+                Start Year:
+              </label>
+              <input
+                type="number"
+                min="2000"
+                max="2100"
+                value={startYear || 2017}
+                onChange={(e) => setStartYear(e.target.value)}
+                placeholder="Enter start year"
+                className="w-full px-4 py-3 border text-lg rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="text-lg font-semibold mb-2 block">
+                End Year:
+              </label>
+              <input
+                type="number"
+                min="2000"
+                max="2100"
+                value={endYear || 2024}
+                onChange={(e) => setEndYear(e.target.value)}
+                placeholder="Enter end year"
+                className="w-full px-4 py-3 border text-lg rounded-lg"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Submit Button */}
         <div className="text-center">
           <button
             type="button"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            onClick={handlePreviewLayers}
+            onClick={handleGenerateJsonMapLayer}
           >
-            Preview
+            Generate Layer
           </button>
         </div>
       </form>
-      {/* {previewUrl && (
-        <div className="mt-4">
-          <iframe
-            src={previewUrl}
-            title="Layer Preview"
-            className="w-full h-96 border-none"
-            allow="cross-origin-isolated"
-          />
-        </div>
-      )} */}
-
-      {/* {previewUrl && (
-        <div className="mt-4">
-          <iframe
-            src={previewUrl}
-            title="Layer Preview"
-            style={{ width: "100%", height: "400px", border: "none" }}
-          ></iframe>
-        </div>
-      )} */}
     </div>
   );
 };
 
-export default PreviewLayerComponent;
+export default LayerMapJsonComponent;

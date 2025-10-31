@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "../assets/core-stack logo.png";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -16,6 +16,7 @@ const LoginPage = ({ setCurrentUser }) => {
   const [errors, setErrors] = useState({});
   const [loginErr, setLoginErr] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
@@ -39,7 +40,8 @@ const LoginPage = ({ setCurrentUser }) => {
     if (!validateForm()) {
       return;
     }
-
+    setLoading(true);
+    setLoginErr("");
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}api/v1/auth/login/`,
@@ -71,6 +73,8 @@ const LoginPage = ({ setCurrentUser }) => {
       }, 1000);
     } catch (err) {
       setLoginErr(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -155,9 +159,21 @@ const LoginPage = ({ setCurrentUser }) => {
 
           <button
             type="submit"
-            className="mt-4 w-full rounded bg-blue-600 py-2 px-4 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            disabled={loading}
+            className={`mt-4 w-full rounded py-2 px-4 text-white flex items-center justify-center gap-2 ${
+              loading
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            } focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}
           >
-            Sign in
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                Signing in...
+              </>
+            ) : (
+              "Sign in"
+            )}
           </button>
           {loginErr && (
             <p className="mt-4 text-sm text-red-500 text-center">{loginErr}</p>

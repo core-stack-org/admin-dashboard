@@ -66,7 +66,6 @@ const AllProjects = ({ statesList }) => {
 
         const data = await response.json();
 
-        // fetch state names
         const statesResponse = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
         );
@@ -517,6 +516,10 @@ const AllProjects = ({ statesList }) => {
                                         projectId: p.id,
                                         stateName: p.state_name,
                                         stateId: p.state,
+                                        districtId: p.district,
+                                        districtName: p.district_name,
+                                        blockId: p.block,
+                                        blockName: p.block_name,
                                       },
                                     });
                                   }}

@@ -28,6 +28,8 @@ import AllOrganizations from "./pages/allOrganizations";
 import PlantationActions from "./pages/plantationActions";
 import Project from "./pages/project";
 import AddMember from "./pages/addMember";
+import GenerateExcelComponent from "./pages/generateExcel";
+import LayerMapJsonComponent from "./pages/layerJsonMap";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -65,6 +67,15 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   element={<PlanCreation />}
                 />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
+                <Route
+                  path="/generateExcel"
+                  element={<GenerateExcelComponent />}
+                />
+                <Route
+                  path="/generateLayerJsonMap"
+                  element={<LayerMapJsonComponent />}
+                />
+
                 <Route
                   path="/plantationAssessment"
                   element={<PlantationAssessment isEmbedded={false} />}

@@ -5,8 +5,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTachometerAlt,
   faPlug,
-  faCogs,
+  faFileExcel,
   faLayerGroup,
+  faEye,
+  faMap,
 } from "@fortawesome/free-solid-svg-icons";
 import logo from "../assets/core-stack logo.png";
 import { useNavigate } from "react-router-dom";
@@ -29,9 +31,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-  const role = currentuser?.user?.groups?.[0]?.name;
-  console.log("User Role:", role);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -67,19 +66,19 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     };
 
     try {
-      console.log("Attempting logout with current access token:", accessToken);
       let response = await logoutApiCall(accessToken, refreshToken);
 
       if (response.status === 401 || response.status === 403) {
         console.warn("Access token expired, refreshing...");
         try {
-          const { access, refresh } = await refreshAccessToken();
+          const { access, refresh } = await refreshAccessToken(); // get both tokens
           sessionStorage.setItem("accessToken", access);
           sessionStorage.setItem("refreshToken", refresh);
           accessToken = access;
           refreshToken = refresh;
           response = await logoutApiCall(accessToken, refreshToken);
         } catch (refreshError) {
+          console.error(" Token refresh failed during logout:", refreshError);
           throw refreshError;
         }
       }
@@ -93,10 +92,10 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         navigate("/");
       } else {
         const errorData = await response.json();
-        console.error("Logout failed:", errorData);
+        console.error(" Logout failed:", errorData);
       }
     } catch (error) {
-      console.error("Error during logout:", error);
+      console.error(" Error during logout:", error);
     }
   };
 
@@ -120,7 +119,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       sessionStorage.setItem("accessToken", data.access);
       sessionStorage.setItem("refreshToken", data.refresh);
 
-      console.log("New tokens generated:", data.access, data.refresh);
       return {
         access: data.access,
         refresh: data.refresh,
@@ -162,8 +160,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
 
       const result = await response.json();
       toast.success("Password updated successfully!");
-      console.log("Password change response:", result);
-      // Clear and close modal on success
       setOldPassword("");
       setNewPassword("");
       setNewPasswordConfirm("");
@@ -205,7 +201,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     isSuperAdmin ||
     (userRoles.length > 0 &&
       !userRoles.some((role) => {
-        console.log("Checking role:", role);
         return restrictedRoles.includes(role.name || role);
       }));
 
@@ -217,25 +212,37 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         href: "/activateBlock",
       },
       {
+        icon: <FontAwesomeIcon icon={faFileExcel} size="lg" />,
+        label: "Generate Excel",
+        href: "/generateExcel",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faEye} size="lg" />,
+        label: "Preview Layers",
+        href: "/previewLayers",
+      },
+
+      {
+        icon: <FontAwesomeIcon icon={faMap} size="lg" />,
+        label: "Layer Json Map",
+        href: "/generateLayerJsonMap",
+      },
+      {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
         label: "Generate Layers",
         isSubmenu: true,
         layers: layers,
         href: "/locationForm",
-      },
-      {
-        icon: <Eye size={20} />,
-        label: "Preview Layers",
-        href: "/previewLayers",
       }
     );
   }
 
   const handleLayerClick = (layerLabel) => {
-    const selectedLayerData = layersData.layers_json[layerLabel];
+    const selectedLayerData = layersData.layers_json[layerLabel]; // Get the layer details
     setSelectedLayer(selectedLayerData);
     setActiveItem(layerLabel);
 
+    // Navigate and send layer data via state
     navigate(`/generate-layers/${layerLabel.replace(/ /g, "-")}`, {
       state: {
         layerName: layerLabel,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Select from "react-select";
 
 const UserToProject = ({ closeModal, onClose }) => {
   const [users, setUsers] = useState([]);
@@ -25,7 +26,12 @@ const UserToProject = ({ closeModal, onClose }) => {
           }
         );
         const data = await response.json();
-        if (Array.isArray(data)) setProjects(data);
+        if (Array.isArray(data)) {
+          const sortedProjects = data.sort((a, b) =>
+            a.name.localeCompare(b.name)
+          );
+          setProjects(sortedProjects);
+        }
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
@@ -50,10 +56,17 @@ const UserToProject = ({ closeModal, onClose }) => {
           }
         );
         const usersData = await response.json();
+
         if (Array.isArray(usersData)) {
-          setUsers(usersData);
+          const sortedUsers = usersData.sort((a, b) =>
+            a.first_name.localeCompare(b.first_name)
+          );
+          setUsers(sortedUsers);
         } else if (usersData && Array.isArray(usersData.users)) {
-          setUsers(usersData.users);
+          const sortedUsers = usersData.users.sort((a, b) =>
+            a.username.localeCompare(b.username)
+          );
+          setUsers(sortedUsers);
         } else {
           console.error("Unexpected users API response:", usersData);
         }
@@ -79,7 +92,7 @@ const UserToProject = ({ closeModal, onClose }) => {
       return;
     }
 
-    const groupId = user.groups[0].id; // first group of user
+    const groupId = user.groups[0].id;
 
     try {
       const token = sessionStorage.getItem("accessToken");
@@ -153,21 +166,47 @@ const UserToProject = ({ closeModal, onClose }) => {
               <label className="block text-lg font-medium mb-3">
                 User Name
               </label>
-              <select
-                value={selectedUser}
-                onChange={(e) => setSelectedUser(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
-                required
-              >
-                <option value="" disabled>
-                  Select a user
-                </option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.username} ({user.first_name} {user.last_name})
-                  </option>
-                ))}
-              </select>
+              <Select
+                options={users.map((user) => ({
+                  value: user.id,
+                  label: `${user.username} (${user.first_name}  ${user.last_name})`,
+                }))}
+                value={
+                  selectedUser
+                    ? {
+                        value: selectedUser,
+                        label:
+                          users.find((u) => u.id === selectedUser)?.username ||
+                          "",
+                      }
+                    : null
+                }
+                onChange={(selectedOption) =>
+                  setSelectedUser(selectedOption ? selectedOption.value : "")
+                }
+                placeholder="Search or select a user..."
+                isSearchable
+                className="w-full text-lg"
+                menuPortalTarget={document.body}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    padding: "2px",
+                    borderColor: "#d1d5db",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#9ca3af" },
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                }}
+              />
             </div>
 
             {/* Project Selection */}
@@ -175,21 +214,48 @@ const UserToProject = ({ closeModal, onClose }) => {
               <label className="block text-lg font-medium mb-3">
                 Project Name
               </label>
-              <select
-                value={selectedProject}
-                onChange={(e) => setSelectedProject(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
+              <Select
+                options={projects.map((project) => ({
+                  value: project.id,
+                  label: project.name,
+                }))}
+                value={
+                  selectedProject
+                    ? {
+                        value: selectedProject,
+                        label:
+                          projects.find((p) => p.id === selectedProject)
+                            ?.name || "",
+                      }
+                    : null
+                }
+                onChange={(selectedOption) =>
+                  setSelectedProject(selectedOption ? selectedOption.value : "")
+                }
+                placeholder="Search or select a project..."
+                isSearchable
                 required
-              >
-                <option value="" disabled>
-                  Select a project
-                </option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name}
-                  </option>
-                ))}
-              </select>
+                className="w-full text-lg"
+                menuPortalTarget={document.body}
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    padding: "2px",
+                    borderColor: "#d1d5db",
+                    borderRadius: "0.5rem",
+                    boxShadow: "none",
+                    "&:hover": { borderColor: "#9ca3af" },
+                  }),
+                  menuPortal: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                  menu: (base) => ({
+                    ...base,
+                    zIndex: 99999,
+                  }),
+                }}
+              />
             </div>
 
             {/* Submit Button */}
