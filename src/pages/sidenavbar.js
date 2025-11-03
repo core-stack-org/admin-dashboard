@@ -285,8 +285,14 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                           : "hover:bg-gray-700"
                       }`}
                     >
-                      <div className="w-8">{item.icon}</div>
-                      <span className="ml-3">{item.label}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          {item.icon}
+                        </div>
+                        <span className="text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </div>
                     </a>
                   ) : (
                     <button
@@ -299,8 +305,14 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                           : "hover:bg-gray-700"
                       }`}
                     >
-                      <div className="w-8">{item.icon}</div>
-                      <span className="ml-3">{item.label}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          {item.icon}
+                        </div>
+                        <span className="text-sm font-medium">
+                          {item.label}
+                        </span>
+                      </div>
                     </button>
                   )
                 ) : (
@@ -313,9 +325,17 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                           : "hover:bg-gray-700"
                       }`}
                     >
-                      <div className="w-8">{item.icon}</div>
-                      <span className="ml-3">{item.label}</span>
-                      <span className="ml-auto">{isLayerOpen ? "▲" : "▼"}</span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-5 h-5 flex items-center justify-center">
+                          {item.icon}
+                        </div>
+                        <span className="text-sm font-medium">
+                          {item.label}
+                        </span>
+                        <span className="ml-auto">
+                          {isLayerOpen ? "▲" : "▼"}
+                        </span>
+                      </div>
                     </button>
                     {/* Dynamically Render Layers */}
                     {isLayerOpen && layerNames.length > 0 && (
