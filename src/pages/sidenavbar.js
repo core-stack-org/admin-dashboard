@@ -6,6 +6,7 @@ import {
   faTachometerAlt,
   faPlug,
   faFileExcel,
+  faPlayCircle as faPlayCircleSolid,
   faLayerGroup,
   faEye,
   faMap,
@@ -195,6 +196,12 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       label: "Dashboard",
       href: "/dashboard",
     },
+    {
+      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+      label: "How to use",
+      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q&list=PLZ0pcz8ccRmI4rk-fjVOpxzJKMoY6-Jie&index=1",
+      external: true,
+    },
   ];
 
   const showFullMenu =
@@ -266,19 +273,36 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
             {menuItems.map((item, index) => (
               <li key={index}>
                 {!item.isSubmenu ? (
-                  <button
-                    onClick={() =>
-                      item.onClick ? item.onClick() : navigate(item.href)
-                    }
-                    className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
-                      activeItem === item.label
-                        ? "bg-gray-700"
-                        : "hover:bg-gray-700"
-                    }`}
-                  >
-                    <div className="w-8">{item.icon}</div>
-                    <span className="ml-3">{item.label}</span>
-                  </button>
+                  item.external ? (
+                    // External link (like YouTube)
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
+                        activeItem === item.label
+                          ? "bg-gray-700"
+                          : "hover:bg-gray-700"
+                      }`}
+                    >
+                      <div className="w-8">{item.icon}</div>
+                      <span className="ml-3">{item.label}</span>
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        item.onClick ? item.onClick() : navigate(item.href)
+                      }
+                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
+                        activeItem === item.label
+                          ? "bg-gray-700"
+                          : "hover:bg-gray-700"
+                      }`}
+                    >
+                      <div className="w-8">{item.icon}</div>
+                      <span className="ml-3">{item.label}</span>
+                    </button>
+                  )
                 ) : (
                   <div>
                     <button
