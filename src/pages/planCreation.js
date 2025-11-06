@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
@@ -36,7 +36,11 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     id: blockId || "",
     name: blockName || "",
   });
-  const [facilitatorName, setFacilitatorName] = useState("");
+  const [facilitator, setFacilitator] = useState({
+    username: "",
+    first_name: "",
+    last_name: "",
+  });
   const [plan, setPlan] = useState("");
   const [villageName, setVillageName] = useState("");
   const [gramPanchayat, setGramPanchayat] = useState("");
@@ -47,6 +51,9 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const [isDprApproved, setIsDprApproved] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [users, setUsers] = useState([]);
+  const selectRef = useRef(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [forceCloseMenu, setForceCloseMenu] = useState(false);
 
   const loadUsers = async () => {
     try {
@@ -62,18 +69,38 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           },
         }
       );
+
       const data = await response.json();
-      if (Array.isArray(data)) {
-        const sortedUsers = data.sort((a, b) =>
-          a.first_name.localeCompare(b.first_name)
-        );
-        setUsers(sortedUsers);
-      }
+
+      // ✅ Handle both array and paginated formats
+      const usersArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data.results)
+        ? data.results
+        : [];
+
+      // ✅ Sort alphabetically by first name, fallback to username
+      const sortedUsers = usersArray.sort((a, b) =>
+        (a.first_name || a.username || "").localeCompare(
+          b.first_name || b.username || ""
+        )
+      );
+
+      setUsers(sortedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
-    } finally {
     }
   };
+
+  const options = [
+    ...users.map((user) => ({
+      value: user.username || user.name,
+      label: `${user.username || user.name} (${user.first_name || ""} ${
+        user.last_name || ""
+      })`,
+    })),
+    { value: "others", label: "Others" },
+  ];
 
   useEffect(() => {
     loadUsers();
@@ -167,7 +194,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     // setState({ id: "", name: "" });
     setDistrict({ id: "", name: "" });
     setBlock({ id: "", name: "" });
-    setFacilitatorName("");
+    setFacilitator("");
     setPlan("");
     setVillageName("");
     setGramPanchayat("");
@@ -214,15 +241,15 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           ?.district_name || "";
       setDistrict({ id: data.district, name: districtName });
 
-      // 3️⃣ Fetch blocks for the district and set selected block
+      //  Fetch blocks for the district and set selected block
       const blocks = await fetchBlocks(data.district);
       const blockName =
         blocks.find((b) => String(b.id) === String(data.block))?.block_name ||
         "";
       setBlock({ id: data.block, name: blockName });
 
-      // 4️⃣ Set other fields
-      setFacilitatorName(data.facilitator_name || "");
+      //  Set other fields
+      setFacilitator(data.facilitator_name || "");
       setPlan(data.plan || "");
       setVillageName(data.village_name || "");
       setGramPanchayat(data.gram_panchayat || "");
@@ -243,7 +270,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       block: parseInt(block.id),
       village_name: villageName,
       gram_panchayat: gramPanchayat,
-      facilitator_name: facilitatorName,
+      facilitator_name: facilitator.first_name,
       enabled: true,
       is_completed: isCompleted,
       is_dpr_generated: isDprGenerated,
@@ -267,7 +294,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         body: JSON.stringify(payload),
       });
 
-      // Parse the response **once**
       const data = await response.json();
 
       if (!response.ok) {
@@ -402,7 +428,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
             <label className="block mb-2 text-sm font-medium text-gray-700">
               Facilitator Name <span className="text-red-500">*</span>
             </label>
-            <Select
+            {/* <Select
               value={
                 facilitatorName
                   ? {
@@ -457,7 +483,119 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
                   zIndex: 9999,
                 }),
               }}
+            /> */}
+            <Select
+              ref={selectRef}
+              menuIsOpen={forceCloseMenu ? false : menuOpen}
+              onMenuOpen={() => {
+                if (!forceCloseMenu) setMenuOpen(true);
+              }}
+              onMenuClose={() => setMenuOpen(false)}
+              value={
+                facilitator.username
+                  ? facilitator.username === "others"
+                    ? { value: "others", label: "Others" }
+                    : users.find(
+                        (u) =>
+                          u.username === facilitator.username ||
+                          u.name === facilitator.username
+                      )
+                    ? {
+                        value: facilitator.username,
+                        label: `${
+                          users.find(
+                            (u) =>
+                              u.username === facilitator.username ||
+                              u.name === facilitator.username
+                          ).username || facilitator.username
+                        }${
+                          facilitator.first_name || facilitator.last_name
+                            ? ` (${[
+                                facilitator.first_name,
+                                facilitator.last_name,
+                              ]
+                                .filter(Boolean)
+                                .join(" ")})`
+                            : ""
+                        }`,
+                      }
+                    : null
+                  : null
+              }
+              onChange={(selected) => {
+                if (!selected) {
+                  setFacilitator({
+                    username: "",
+                    first_name: "",
+                    last_name: "",
+                  });
+                  return;
+                }
+
+                if (selected.value === "others") {
+                  setFacilitator({
+                    username: "others",
+                    first_name: "",
+                    last_name: "",
+                  });
+                  setForceCloseMenu(true);
+                  setMenuOpen(false);
+                  setTimeout(() => {
+                    document
+                      .getElementById("custom-facilitator-input")
+                      ?.focus();
+                  }, 100);
+                  return;
+                }
+
+                const selectedUser = users.find(
+                  (u) =>
+                    u.username === selected.value || u.name === selected.value
+                );
+                if (selectedUser) {
+                  setFacilitator({
+                    username: selectedUser.username || selectedUser.name,
+                    first_name: selectedUser.first_name || "",
+                    last_name: selectedUser.last_name || "",
+                  });
+                }
+
+                setForceCloseMenu(false);
+              }}
+              options={options}
+              placeholder="Select Facilitator"
+              isClearable
+              isLoading={users.length === 0}
+              className="w-full"
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  padding: "2px",
+                  borderRadius: "8px",
+                  borderColor: state.isFocused ? "#60A5FA" : "#E5E7EB",
+                  boxShadow: state.isFocused ? "0 0 0 2px #BFDBFE" : "none",
+                  "&:hover": { borderColor: "#60A5FA" },
+                }),
+                menu: (base) => ({ ...base, zIndex: 9999 }),
+              }}
             />
+
+            {facilitator.username === "others" && (
+              <input
+                id="custom-facilitator-input"
+                type="text"
+                placeholder="Enter facilitator name"
+                className="mt-2 w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                value={facilitator.first_name}
+                onChange={(e) =>
+                  setFacilitator({
+                    username: "others",
+                    first_name: e.target.value,
+                    last_name: "",
+                  })
+                }
+              />
+            )}
           </div>
 
           {/* Plan */}
@@ -564,7 +702,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           <button
             onClick={(e) => {
               e.preventDefault();
-              setShowConfirm(true); // show confirm page instead of hitting API
+              setShowConfirm(true);
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl text-lg font-medium shadow-md transition-all"
           >
@@ -591,7 +729,16 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
                 <strong>Block:</strong> {block.name}
               </li>
               <li>
-                <strong>Facilitator:</strong> {facilitatorName}
+                <li>
+                  <strong>Facilitator:</strong>{" "}
+                  {facilitator.username === "others"
+                    ? facilitator.first_name || "N/A"
+                    : `${facilitator.first_name || ""} ${
+                        facilitator.last_name || ""
+                      }`.trim() ||
+                      facilitator.username ||
+                      "N/A"}
+                </li>
               </li>
               <li>
                 <strong>Plan:</strong> {plan}
@@ -631,7 +778,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
                 Cancel
               </button>
               <button
-                onClick={handlePlanCreation} // 🔥 API hit only after confirm
+                onClick={handlePlanCreation}
                 className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
               >
                 Confirm

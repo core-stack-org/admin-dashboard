@@ -306,10 +306,36 @@ const LayerMapJsonComponent = () => {
             className="w-full px-4 py-3 border text-lg rounded-lg"
           >
             <option value="">Select Map</option>
-            <option value="map_1">Map 1 - Tehsil-level Basic Layers</option>
-            <option value="map_2">Map 2 - Hydrology, LULC & Cropping</option>
-            <option value="map_3">Map 3 - Restoration & Terrain</option>
-            <option value="map_4">Map 4 - Tree Health & Drainage</option>
+            <option
+              value="map_1"
+              title="Covers Admin boundaries, NREGA, and MWS."
+            >
+              Map 1 - Tehsil-level Basic Layers
+            </option>
+            <option
+              value="map_2_1"
+              title="Covers hydrology(Fortnight and Annual)"
+            >
+              Map 2_1 - Hydrology(Fortnight and Annual)
+            </option>
+            <option
+              value="map_2_2"
+              title="Covers LULC with Vectorise LULC, Cropping Intensity, SWB, Drought, Drought Causality, Crop grid, Change detection and vectorise Change detection."
+            >
+              Map 2_2 - LULC & Cropping
+            </option>
+            <option
+              value="map_3"
+              title="Covers Restoration, Aquifer vector, Terrin raster, Terrain cluster, LULC on slope cluster and plain cluster. "
+            >
+              Map 3 - Restoration & Terrain
+            </option>
+            <option
+              value="map_4"
+              title="Covers SOGE vector, Stream order vector, drainage lines, CLART, Tree health ch raster and vector, Tree health ccd raster and vector, Tree health overall change raster and vector. "
+            >
+              Map 4 - Tree Health & Drainage
+            </option>
           </select>
         </div>
 

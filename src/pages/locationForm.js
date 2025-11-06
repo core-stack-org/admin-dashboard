@@ -195,7 +195,6 @@ const LocationFormComponent = ({ currentUser }) => {
           }
         );
         const data = await response.json();
-        console.log("GEEEEEEEE", data);
         setGeeAccounts(data);
       } catch (error) {
         console.error("Error fetching GEE accounts:", error);
