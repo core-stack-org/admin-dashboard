@@ -30,8 +30,6 @@ const LocationFormComponent = ({ currentUser }) => {
   ];
 
   const layers = Object.keys(layersData.layers_json).map((key) => {
-    console.log("Loaded Layers:", Object.keys(layersData.layers_json));
-
     const label = key
       .replace(/_/g, " ")
       .replace(/\b\w/g, (char) => char.toUpperCase());
@@ -197,7 +195,6 @@ const LocationFormComponent = ({ currentUser }) => {
           }
         );
         const data = await response.json();
-        console.log("GEEEEEEEE", data);
         setGeeAccounts(data);
       } catch (error) {
         console.error("Error fetching GEE accounts:", error);

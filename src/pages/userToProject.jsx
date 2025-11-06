@@ -66,7 +66,6 @@ const UserToProject = ({ closeModal, onClose }) => {
           const sortedUsers = usersData.users.sort((a, b) =>
             a.username.localeCompare(b.username)
           );
-          console.log(sortedUsers);
           setUsers(sortedUsers);
         } else {
           console.error("Unexpected users API response:", usersData);
@@ -86,7 +85,6 @@ const UserToProject = ({ closeModal, onClose }) => {
       toast.error("Please select both user and project.");
       return;
     }
-    console.log(selectedUser);
     const user = users.find((u) => u.id.toString() === selectedUser);
     if (!user || !user.groups || user.groups.length === 0) {
       toast.error("This user has no group assigned.");
