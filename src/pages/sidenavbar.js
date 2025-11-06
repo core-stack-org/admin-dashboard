@@ -10,7 +10,9 @@ import {
   faLayerGroup,
   faEye,
   faMap,
+  faListCheck,
 } from "@fortawesome/free-solid-svg-icons";
+
 import logo from "../assets/core-stack logo.png";
 import { useNavigate } from "react-router-dom";
 import layersData from "../jsons/layers.json";
@@ -233,6 +235,12 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         icon: <FontAwesomeIcon icon={faMap} size="lg" />,
         label: "Layer Json Map",
         href: "/generateLayerJsonMap",
+      },
+
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Layer Status",
+        href: "/layerStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,

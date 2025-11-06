@@ -30,6 +30,8 @@ import Project from "./pages/project";
 import AddMember from "./pages/addMember";
 import GenerateExcelComponent from "./pages/generateExcel";
 import LayerMapJsonComponent from "./pages/layerJsonMap";
+import LayerStatusComponent from "./pages/layerStatus";
+import LayerStatusDetails from "./pages/layerStatusDetails";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -74,6 +76,11 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/generateLayerJsonMap"
                   element={<LayerMapJsonComponent />}
+                />
+                <Route path="/layerStatus" element={<LayerStatusComponent />} />
+                <Route
+                  path="/layer-status-details"
+                  element={<LayerStatusDetails />}
                 />
 
                 <Route
