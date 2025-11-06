@@ -46,28 +46,28 @@
         "LULC": {
             "api_url": "${config.layer_api_url_v1}/lulc_v3/",
             "show_Dates": true,
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "workspace":"LULC_level_1"
 
         },
         "LULCXSlope": {
             "api_url": "${config.layer_api_url_v1}/terrain_lulc_slope_cluster/",
             "show_Dates": true,
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "workspace":"terrain_lulc"
 
         },
         "LULCXPlain": {
             "api_url": "${config.layer_api_url_v1}/terrain_lulc_plain_cluster/",
             "show_Dates": true,
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "workspace":"terrain_lulc"
 
         },
         "Crop Intensity": {
             "api_url": "${config.layer_api_url_v1}/generate_ci_layer/",
             "show_Dates": true,
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "workspace":"cropping_intensity",
             "end":"distname_blockname_intensity"
 
@@ -76,7 +76,7 @@
         "Surface Water Bodies": {
             "api_url": "${config.layer_api_url_v1}/generate_swb/",
             "show_Dates": true,
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "workspace":"water_bodies",
             "end":"surface_waterbodies_distname_blockname"
         },
@@ -119,7 +119,7 @@
         "Change Detection Raster": {
             "api_url": "${config.layer_api_url_v1}/change_detection/",
             "show_Dates": true,
-            "date_range":[2017,2023],
+            "date_range":[2017,2024],
             "workspace":"change_detection"
 
         }, 
@@ -138,13 +138,15 @@
      "Tree Health Raster": {
             "api_url": "${config.layer_api_url_v1}/tree_health_raster/",
             "show_Dates": true,
-            "workspace":""
+            "workspace":"",
+            "date_range":[2017,2022]
 
         },
      "Tree Health Vector": {
             "api_url": "${config.layer_api_url_v1}/tree_health_vector/",
             "show_Dates": true,
-            "workspace":""
+            "workspace":"",
+            "date_range":[2017,2022]
 
         },
        "Stream Order Vector": {
@@ -196,6 +198,11 @@
         }  ,
         "Merge SWB With Ponds": {
             "api_url": "${config.layer_api_url_v1}/merge_swb_ponds/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        "LCW": {
+            "api_url": "${config.layer_api_url_v1}/generate_lcw_data/ ",
             "show_Dates": false,
             "workspace":""
         }  ,
