@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 const LayerStatusDetails = () => {
   const location = useLocation();
@@ -8,6 +9,7 @@ const LayerStatusDetails = () => {
 
   const [layerData, setLayerData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortOrder, setSortOrder] = useState("asc");
 
   useEffect(() => {
     if (!stateName || !districtName || !blockName) return;
@@ -32,7 +34,7 @@ const LayerStatusDetails = () => {
         );
 
         const data = await response.json();
-        setLayerData(data.result); // 👈 directly use 'result' key
+        setLayerData(data.result);
       } catch (error) {
         console.error("Error fetching layer status:", error);
       } finally {
@@ -42,6 +44,21 @@ const LayerStatusDetails = () => {
 
     fetchLayerStatus();
   }, [stateName, districtName, blockName]);
+
+  const handleSort = () => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+  };
+
+  const getSortedData = () => {
+    if (!layerData) return [];
+    return Object.entries(layerData).sort(([, a], [, b]) => {
+      if (sortOrder === "asc") {
+        return b.status_code - a.status_code;
+      } else {
+        return a.status_code - b.status_code;
+      }
+    });
+  };
 
   if (!stateName || !districtName || !blockName) {
     return (
@@ -91,12 +108,24 @@ const LayerStatusDetails = () => {
                     Layer Name
                   </th>
                   <th className="px-6 py-3 text-left font-semibold border-b">
-                    Status
+                    <div className="flex items-center gap-2">
+                      Status
+                      <button
+                        onClick={handleSort}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        {sortOrder === "asc" ? (
+                          <ArrowDown size={16} />
+                        ) : (
+                          <ArrowUp size={16} />
+                        )}
+                      </button>
+                    </div>
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(layerData).map(([layerName, info]) => (
+                {getSortedData().map(([layerName, info]) => (
                   <tr key={layerName} className="hover:bg-gray-50">
                     <td className="px-6 py-3 border-b">{layerName}</td>
                     <td className="px-6 py-3 border-b">

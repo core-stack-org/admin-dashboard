@@ -685,6 +685,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     name: blockName || "",
   });
   const [facilitator, setFacilitator] = useState({
+    username: "",
     first_name: "",
     last_name: "",
   });
@@ -716,18 +717,38 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
           },
         }
       );
+
       const data = await response.json();
-      if (Array.isArray(data)) {
-        const sortedUsers = data.sort((a, b) =>
-          a.first_name.localeCompare(b.first_name)
-        );
-        setUsers(sortedUsers);
-      }
+
+      // ✅ Handle both array and paginated formats
+      const usersArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data.results)
+        ? data.results
+        : [];
+
+      // ✅ Sort alphabetically by first name, fallback to username
+      const sortedUsers = usersArray.sort((a, b) =>
+        (a.first_name || a.username || "").localeCompare(
+          b.first_name || b.username || ""
+        )
+      );
+
+      setUsers(sortedUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
-    } finally {
     }
   };
+
+  const options = [
+    ...users.map((user) => ({
+      value: user.username || user.name,
+      label: `${user.username || user.name} (${user.first_name || ""} ${
+        user.last_name || ""
+      })`,
+    })),
+    { value: "others", label: "Others" },
+  ];
 
   useEffect(() => {
     loadUsers();
@@ -897,14 +918,15 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       block: parseInt(block.id),
       village_name: villageName,
       gram_panchayat: gramPanchayat,
-      facilitator_first_name: facilitator.first_name,
-      facilitator_last_name: facilitator.last_name,
+      facilitator_name: facilitator.first_name,
       enabled: true,
       is_completed: isCompleted,
       is_dpr_generated: isDprGenerated,
       is_dpr_reviewed: isDprReviewed,
       is_dpr_approved: isDprApproved,
     };
+
+    console.log(payload);
 
     try {
       const url = planId
@@ -922,7 +944,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         body: JSON.stringify(payload),
       });
 
-      // Parse the response **once**
       const data = await response.json();
 
       if (!response.ok) {
@@ -1121,23 +1142,34 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
               }}
               onMenuClose={() => setMenuOpen(false)}
               value={
-                facilitator.username === "others"
-                  ? { value: "others", label: "Others" }
-                  : users.find(
-                      (u) =>
-                        u.username === facilitator.username ||
-                        u.name === facilitator.username
-                    )
-                  ? {
-                      value: facilitator.username,
-                      label: `${facilitator.username}${
-                        facilitator.first_name || facilitator.last_name
-                          ? ` (${[facilitator.first_name, facilitator.last_name]
-                              .filter(Boolean)
-                              .join(" ")})`
-                          : ""
-                      }`,
-                    }
+                facilitator.username
+                  ? facilitator.username === "others"
+                    ? { value: "others", label: "Others" }
+                    : users.find(
+                        (u) =>
+                          u.username === facilitator.username ||
+                          u.name === facilitator.username
+                      )
+                    ? {
+                        value: facilitator.username,
+                        label: `${
+                          users.find(
+                            (u) =>
+                              u.username === facilitator.username ||
+                              u.name === facilitator.username
+                          ).username || facilitator.username
+                        }${
+                          facilitator.first_name || facilitator.last_name
+                            ? ` (${[
+                                facilitator.first_name,
+                                facilitator.last_name,
+                              ]
+                                .filter(Boolean)
+                                .join(" ")})`
+                            : ""
+                        }`,
+                      }
+                    : null
                   : null
               }
               onChange={(selected) => {
@@ -1156,10 +1188,8 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
                     first_name: "",
                     last_name: "",
                   });
-
                   setForceCloseMenu(true);
                   setMenuOpen(false);
-
                   setTimeout(() => {
                     document
                       .getElementById("custom-facilitator-input")
@@ -1182,22 +1212,10 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
                 setForceCloseMenu(false);
               }}
-              options={[
-                ...users.map((user) => {
-                  const first = user.first_name || "";
-                  const last = user.last_name || "";
-                  const nameLabel = [first, last].filter(Boolean).join(" ");
-                  return {
-                    value: user.username || user.name,
-                    label: `${user.username || user.name}${
-                      nameLabel ? ` (${nameLabel})` : ""
-                    }`,
-                  };
-                }),
-                { value: "others", label: "Others" },
-              ]}
+              options={options}
               placeholder="Select Facilitator"
               isClearable
+              isLoading={users.length === 0}
               className="w-full"
               styles={{
                 control: (base, state) => ({
@@ -1361,7 +1379,16 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
                 <strong>Block:</strong> {block.name}
               </li>
               <li>
-                <strong>Facilitator:</strong> {facilitator}
+                <li>
+                  <strong>Facilitator:</strong>{" "}
+                  {facilitator.username === "others"
+                    ? facilitator.first_name || "N/A"
+                    : `${facilitator.first_name || ""} ${
+                        facilitator.last_name || ""
+                      }`.trim() ||
+                      facilitator.username ||
+                      "N/A"}
+                </li>
               </li>
               <li>
                 <strong>Plan:</strong> {plan}
