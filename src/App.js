@@ -32,6 +32,7 @@ import GenerateExcelComponent from "./pages/generateExcel";
 import LayerMapJsonComponent from "./pages/layerJsonMap";
 import LayerStatusComponent from "./pages/layerStatus";
 import LayerStatusDetails from "./pages/layerStatusDetails";
+import RequestLocationForm from "./pages/requestLocationForm";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -82,6 +83,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/layer-status-details"
                   element={<LayerStatusDetails />}
                 />
+                <Route path="/locationForm" element={<RequestLocationForm />} />
 
                 <Route
                   path="/plantationAssessment"

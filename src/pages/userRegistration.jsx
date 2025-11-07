@@ -145,7 +145,7 @@ const RegistrationForm = () => {
         if (response.ok) {
           toast.success("User registered successfully!");
           setTimeout(() => {
-            navigate("/login");
+            navigate("/dashboard");
           }, 2000);
           setFormData({
             username: "",
