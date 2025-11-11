@@ -11,6 +11,9 @@ import {
   faEye,
   faMap,
   faListCheck,
+  faLocationDot,
+  faMapMarkerAlt,
+  faLocationArrow,
 } from "@fortawesome/free-solid-svg-icons";
 
 import logo from "../assets/core-stack logo.png";
@@ -204,6 +207,12 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       href: "https://www.youtube.com/watch?v=t-7lTkakA9Q&list=PLZ0pcz8ccRmI4rk-fjVOpxzJKMoY6-Jie&index=1",
       external: true,
     },
+
+    {
+      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+      label: "Request data layers",
+      href: "/locationForm",
+    },
   ];
 
   const showFullMenu =
@@ -242,6 +251,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Layer Status",
         href: "/layerStatus",
       },
+
       {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
         label: "Generate Layers",

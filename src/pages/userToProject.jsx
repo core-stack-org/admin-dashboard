@@ -85,7 +85,8 @@ const UserToProject = ({ closeModal, onClose }) => {
       toast.error("Please select both user and project.");
       return;
     }
-    const user = users.find((u) => u.id.toString() === selectedUser);
+
+    const user = users.find((u) => String(u.id) === String(selectedUser));
     if (!user || !user.groups || user.groups.length === 0) {
       toast.error("This user has no group assigned.");
       return;
