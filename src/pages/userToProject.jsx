@@ -8,7 +8,7 @@ const UserToProject = ({ closeModal, onClose }) => {
   const [projects, setProjects] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
-  console.log(users);
+
   // Fetch projects
   useEffect(() => {
     const fetchProjects = async () => {
@@ -85,11 +85,8 @@ const UserToProject = ({ closeModal, onClose }) => {
       toast.error("Please select both user and project.");
       return;
     }
-    console.log("SelectedUser value:", selectedUser, typeof selectedUser);
-    console.log("Sample user id type:", users[0]?.id, typeof users[0]?.id);
 
     const user = users.find((u) => String(u.id) === String(selectedUser));
-    console.log("Selected User Data:", user);
     if (!user || !user.groups || user.groups.length === 0) {
       toast.error("This user has no group assigned.");
       return;
