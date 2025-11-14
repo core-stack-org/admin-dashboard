@@ -190,7 +190,6 @@ const AllProjects = ({ statesList }) => {
       dynamicBbox =
         extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
       setBBox(extent);
-      console.log(dynamicBbox);
       const layerName = `plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability`;
 
       const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;

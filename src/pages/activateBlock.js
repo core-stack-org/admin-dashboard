@@ -7,44 +7,40 @@ const ActivateBlock = () => {
   const [statesList, setStatesList] = useState([]);
   const [districtsList, setDistrictsList] = useState([]);
   const [blocksList, setBlocksList] = useState([]);
+
   const [selectedState, setSelectedState] = useState(null);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [selectedBlock, setSelectedBlock] = useState(null);
+
   const [selectedLocation, setSelectedLocation] = useState({
     id: "",
     name: "",
     active_status: null,
   });
-  const [actualLocationType, setActualLocationType] = useState("State");
-  const [selectedBlock, setSelectedBlock] = useState(null);
-  const [state, setState] = useState({ id: "", name: "" });
-  const [district, setDistrict] = useState({ id: "", name: "" });
-  const [block, setBlock] = useState({ id: "", name: "" });
 
-  useEffect(() => {
-    if (locationType === "State") fetchStates();
-    else if (locationType === "District") fetchDistricts();
-    else if (locationType === "Block") fetchBlocks();
+  // Helpers
+  const getSelectedLevel = () => {
+    if (selectedBlock) return "block";
+    if (selectedDistrict) return "district";
+    if (selectedState) return "state";
+    return null;
+  };
 
-    // Reset selections on locationType change
-    setSelectedLocation({ id: "", name: "", active_status: null });
-    setSelectedState(null);
-    setSelectedDistrict(null);
-  }, [locationType]);
-
-  useEffect(() => {
-    // Fetch blocks only when the district is activated
-    if (selectedDistrict?.active_status) {
-      fetchBlocks(selectedDistrict.id);
-    }
-  }, [selectedDistrict]); // Re-run when selectedDistrict changes
-
+  // FETCH STATES
   const fetchStates = async () => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
       );
       const data = await res.json();
-      const sorted = data.states.sort((a, b) =>
+      const sorted = (data.states || []).sort((a, b) =>
         a.state_name.localeCompare(b.state_name)
       );
       setStatesList(sorted);
@@ -53,10 +49,12 @@ const ActivateBlock = () => {
     }
   };
 
-  const fetchDistricts = async (selectedState) => {
+  // FETCH DISTRICTS
+  const fetchDistricts = async (stateId) => {
+    if (!stateId) return;
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${selectedState}/`,
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`,
         {
           method: "GET",
           headers: {
@@ -65,20 +63,22 @@ const ActivateBlock = () => {
           },
         }
       );
-      const data = await response.json();
-      const sortedDistricts = data.districts.sort((a, b) =>
+      const data = await res.json();
+      const sorted = (data.districts || []).sort((a, b) =>
         a.district_name.localeCompare(b.district_name)
       );
-      setDistrictsList(sortedDistricts);
-    } catch (error) {
-      console.error("Error fetching districts:", error);
+      setDistrictsList(sorted);
+    } catch {
+      toast.error("Failed to load districts.");
     }
   };
 
-  const fetchBlocks = async (selectedDistrict) => {
+  // FETCH BLOCKS
+  const fetchBlocks = async (districtId) => {
+    if (!districtId) return;
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${selectedDistrict}/`,
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`,
         {
           method: "GET",
           headers: {
@@ -87,111 +87,126 @@ const ActivateBlock = () => {
           },
         }
       );
-      const data = await response.json();
-      const sortedBlocks = data.blocks.sort((a, b) =>
+      const data = await res.json();
+      const sorted = (data.blocks || []).sort((a, b) =>
         a.block_name.localeCompare(b.block_name)
       );
-      setBlocksList(sortedBlocks);
-    } catch (error) {
-      console.error("Error fetching blocks:", error);
+      setBlocksList(sorted);
+    } catch {
+      toast.error("Failed to load blocks.");
     }
   };
 
-  const handleStateChange = (event) => {
-    const selectedValue = event.target.value;
-    if (!selectedValue) {
-      setState({ id: "", name: "" });
-      return;
-    }
-
-    const [state_id, state_name] = selectedValue.split("_");
-    setState({ id: state_id, name: state_name });
+  // LOCATION TYPE CHANGE
+  useEffect(() => {
+    // reset selections on changing the top-level target (State/District/Block)
+    setSelectedLocation({ id: "", name: "", active_status: null });
+    setSelectedState(null);
+    setSelectedDistrict(null);
+    setSelectedBlock(null);
     setDistrictsList([]);
     setBlocksList([]);
-    fetchDistricts(state_id);
-  };
+    if (locationType) fetchStates();
+  }, [locationType]);
 
-  const handleDistrictChange = (event) => {
-    const selectedValue = event.target.value;
-    if (!selectedValue) {
-      setDistrict({ id: "", name: "" });
+  // HANDLE STATE CHANGE
+  const handleStateChange = (e) => {
+    const stateId = e.target.value;
+    if (!stateId) {
+      setSelectedState(null);
+      setSelectedLocation({ id: "", name: "", active_status: null });
+      setDistrictsList([]);
+      setBlocksList([]);
       return;
     }
 
-    const [id, district_name] = selectedValue.split("_");
-    setDistrict({ id: id, name: district_name });
-    setBlocksList([]);
-    fetchBlocks(id);
-  };
+    const selected = statesList.find(
+      (s) => String(s.state_census_code) === String(stateId)
+    );
+    if (!selected) return;
 
-  const handleBlockChange = (event) => {
-    const selectedValue = event.target.value;
-    if (!selectedValue) {
-      setBlock({ id: "", name: "" });
-      return;
-    }
-
-    const [id, block_name] = selectedValue.split("_");
-    setBlock({ id: id, name: block_name });
-  };
-
-  const handleActivate = async () => {
-    if (selectedLocation.active_status !== false) return;
-
-    const locationTypeToUse = selectedBlock
-      ? "block"
-      : selectedDistrict
-      ? "district"
-      : "state";
-
-    const requestBody = {
-      location_type: locationTypeToUse,
-      location_id: selectedLocation.id,
-      active: true,
+    const fixedState = {
+      id: selected.state_census_code,
+      name: selected.state_name,
+      active_status: selected.active_status === true,
     };
 
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/activate_location/`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestBody),
-        }
-      );
+    setSelectedState(fixedState);
+    setSelectedLocation(fixedState);
 
-      if (response.ok) {
-        toast.success(`${locationTypeToUse} activated successfully!`);
-        const updatedLocation = { ...selectedLocation, active_status: true };
-        setSelectedLocation(updatedLocation);
+    setSelectedDistrict(null);
+    setSelectedBlock(null);
+    setBlocksList([]);
 
-        if (locationTypeToUse === "state") {
-          setSelectedState(updatedLocation);
-          fetchDistricts(updatedLocation.id);
-        } else if (locationTypeToUse === "district") {
-          setSelectedDistrict(updatedLocation);
-          fetchBlocks(updatedLocation.id);
-        } else if (locationTypeToUse === "block") {
-          setSelectedBlock(updatedLocation);
-        }
-      } else {
-        toast.error("Failed to activate.");
-      }
-    } catch (error) {
-      console.error("Activation error:", error);
-      toast.error("Network error.");
+    // Only fetch districts if the state is active
+    if (fixedState.active_status) {
+      fetchDistricts(fixedState.id);
+    } else {
+      setDistrictsList([]); // ensure empty until activation
     }
   };
 
-  const handleDeactivate = async () => {
-    const { id, active_status } = selectedLocation;
-    if (active_status !== true) return;
+  // HANDLE DISTRICT CHANGE
+  const handleDistrictChange = (e) => {
+    const distId = e.target.value;
+    if (!distId) {
+      setSelectedDistrict(null);
+      // fallback selectedLocation should represent the most-specific selection
+      setSelectedLocation(
+        selectedState || { id: "", name: "", active_status: null }
+      );
+      setBlocksList([]);
+      return;
+    }
 
-    const locationTypeToUse = selectedBlock
-      ? "block"
-      : selectedDistrict
-      ? "district"
-      : "state";
+    const selected = districtsList.find((d) => String(d.id) === String(distId));
+    if (!selected) return;
+
+    const fixedDistrict = {
+      id: selected.id,
+      name: selected.district_name,
+      active_status: selected.active_status === true,
+    };
+
+    setSelectedDistrict(fixedDistrict);
+    setSelectedLocation(fixedDistrict);
+
+    setSelectedBlock(null);
+    fetchBlocks(fixedDistrict.id);
+  };
+
+  // HANDLE BLOCK CHANGE
+  const handleBlockChange = (e) => {
+    const blockId = e.target.value;
+    if (!blockId) {
+      setSelectedBlock(null);
+      setSelectedLocation(
+        selectedDistrict ||
+          selectedState || { id: "", name: "", active_status: null }
+      );
+      return;
+    }
+
+    const selected = blocksList.find((b) => String(b.id) === String(blockId));
+    if (!selected) return;
+
+    const fixedBlock = {
+      id: selected.id,
+      name: selected.block_name,
+      active_status: selected.active_status === true,
+    };
+
+    setSelectedBlock(fixedBlock);
+    setSelectedLocation(fixedBlock);
+  };
+
+  // ACTIVATE / DEACTIVATE
+  const updateStatus = async (active) => {
+    const selectedLevel = getSelectedLevel();
+    if (!selectedLevel) return toast.error("Please select a location first.");
+
+    const locId = selectedLocation.id;
+    if (!locId) return toast.error("Please select a location first.");
 
     try {
       const res = await fetch(
@@ -200,57 +215,68 @@ const ActivateBlock = () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            location_type: locationTypeToUse,
-            location_id: id,
-            active: false,
+            location_type: selectedLevel,
+            location_id: locId,
+            active,
           }),
         }
       );
 
-      if (res.ok) {
-        toast.success(`${locationTypeToUse} deactivated successfully!`);
-        const updatedLocation = { ...selectedLocation, active_status: false };
-        setSelectedLocation(updatedLocation);
-
-        if (locationTypeToUse === "state") {
-          setSelectedState(updatedLocation);
-        } else if (locationTypeToUse === "district") {
-          setSelectedDistrict(updatedLocation);
-        } else if (locationTypeToUse === "block") {
-          setSelectedBlock(updatedLocation);
-        }
-      } else {
-        toast.error("Failed to deactivate.");
+      if (!res.ok) {
+        let msg = "Failed to update status.";
+        try {
+          const err = await res.json();
+          if (err?.detail) msg = err.detail;
+        } catch (e) {}
+        return toast.error(msg);
       }
-    } catch (err) {
-      console.error("Deactivation error:", err);
+
+      toast.success(
+        `${selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} ${
+          active ? "activated" : "deactivated"
+        } successfully!`
+      );
+
+      setSelectedLocation((prev) => ({ ...prev, active_status: active }));
+
+      if (selectedLevel === "state") {
+        setSelectedState((prev) => ({
+          ...(prev || {}),
+          active_status: active,
+        }));
+      } else if (selectedLevel === "district") {
+        setSelectedDistrict((prev) => ({
+          ...(prev || {}),
+          active_status: active,
+        }));
+      } else if (selectedLevel === "block") {
+        setSelectedBlock((prev) => ({
+          ...(prev || {}),
+          active_status: active,
+        }));
+      }
+
+      // activated a state, load districts immediately for that state id
+      if (selectedLevel === "state" && active) {
+        fetchDistricts(locId);
+      }
+
+      // deactivated a state, clear district/block lists
+      if (selectedLevel === "state" && !active) {
+        setDistrictsList([]);
+        setBlocksList([]);
+        setSelectedDistrict(null);
+        setSelectedBlock(null);
+      }
+
+      //  deactivated a district, clear blocks
+      if (selectedLevel === "district" && !active) {
+        setBlocksList([]);
+        setSelectedBlock(null);
+      }
+    } catch {
       toast.error("Network error.");
     }
-  };
-
-  const getLocationOptions = () => {
-    if (locationType === "State") {
-      return statesList.map((s) => ({
-        id: s.state_census_code,
-        name: s.state_name,
-        active_status: s.active_status,
-      }));
-    } else if (locationType === "District") {
-      return districtsList.map((d) => ({
-        id: d.id,
-        name: d.district_name,
-        active_status: d.active_status,
-        state_census_code: d.state_census_code,
-      }));
-    } else if (locationType === "Block") {
-      return blocksList.map((b) => ({
-        id: b.id,
-        name: b.block_name,
-        active_status: b.active_status,
-        district_id: b.district_id,
-      }));
-    }
-    return [];
   };
 
   return (
@@ -260,11 +286,11 @@ const ActivateBlock = () => {
         Activate/Deactivate Location
       </h2>
 
-      {/* Location Type */}
+      {/* LOCATION TYPE */}
       <div className="mb-4">
-        <label className="block font-semibold mb-2">Location Type:</label>
+        <label className="font-semibold">Location Type:</label>
         <select
-          className="w-full p-3 border rounded"
+          className="w-full p-3 border rounded mt-2"
           value={locationType}
           onChange={(e) => setLocationType(e.target.value)}
         >
@@ -275,153 +301,107 @@ const ActivateBlock = () => {
         </select>
       </div>
 
-      {/* Primary Dropdown */}
-      {locationType && (
-        <div className="mb-6">
-          <label className="block font-semibold mb-2">
-            Select {locationType}:
-          </label>
+      {/* STATE DROPDOWN */}
+      {(locationType === "State" ||
+        locationType === "District" ||
+        locationType === "Block") && (
+        <div className="mb-4">
+          <label className="font-semibold">Select State:</label>
           <select
-            className="w-full p-3 border rounded"
-            value={selectedLocation.id}
-            onChange={(e) => {
-              handleStateChange(e);
-              const selected = getLocationOptions().find(
-                (item) => item.id === e.target.value
-              );
-              setSelectedLocation(
-                selected || { id: "", name: "", active_status: null }
-              );
-              setSelectedState(selected || null);
-              setSelectedDistrict(null);
-              setSelectedBlock(null);
-              setActualLocationType("State");
-            }}
-
-            // onChange={(e) => {
-            //   const selected = getLocationOptions().find(
-            //     (item) => item.id === e.target.value
-            //   );
-            //   setSelectedLocation(
-            //     selected || { id: "", name: "", active_status: null }
-            //   );
-
-            //   if (locationType === "State") {
-            //     setSelectedState(selected || null);
-            //     setSelectedDistrict(null);
-            //   }
-
-            //   if (locationType === "District") {
-            //     setSelectedDistrict(selected || null);
-            //   }
-            // }}
+            className="w-full p-3 border rounded mt-2"
+            value={selectedState?.id || ""}
+            onChange={handleStateChange}
           >
-            <option value="">Select {locationType}</option>
-            {getLocationOptions().map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
+            <option value="">Select State</option>
+            {statesList.map((s) => (
+              <option key={s.state_census_code} value={s.state_census_code}>
+                {s.state_name}
               </option>
             ))}
           </select>
         </div>
       )}
 
-      {/* Conditional Dropdowns */}
-      {selectedState?.active_status && (
-        <div className="mb-6">
-          <label className="block font-semibold mb-2">Select District:</label>
+      {/* DISTRICT DROPDOWN */}
+      {locationType !== "State" && selectedState && (
+        <div className="mb-4">
+          <label className="font-semibold">Select District:</label>
           <select
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded mt-2"
+            disabled={!selectedState.active_status}
             value={selectedDistrict?.id || ""}
-            onChange={(e) => {
-              handleDistrictChange(e);
-              const selected = districtsList.find(
-                (d) => String(d.id) === e.target.value
-              );
-              setSelectedLocation(
-                selected || { id: "", name: "", active_status: null }
-              );
-              setSelectedDistrict(selected || null);
-              setSelectedBlock(null);
-              setActualLocationType("District");
-            }}
-
-            // onChange={(e) => {
-            //   const selected = districtsList.find(
-            //     (d) => String(d.id) === e.target.value
-            //   );
-            //   setSelectedDistrict(selected || null);
-            //   setSelectedLocation(
-            //     selected || { id: "", name: "", active_status: null }
-            //   );
-
-            //   // if (selected?.id) {
-            //   //   fetchBlocks(selected.id); // <-- ADD THIS
-            //   // }
-            // }}
+            onChange={handleDistrictChange}
           >
-            <option value="">Select District</option>
-            {districtsList
-              .filter(
-                (d) => d.state_census_code === selectedState.state_census_code
-              )
-              .map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.district_name}
-                </option>
-              ))}
+            {!selectedState.active_status ? (
+              <option>Please activate state first</option>
+            ) : (
+              <>
+                <option value="">Select District</option>
+                {districtsList.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.district_name}
+                  </option>
+                ))}
+              </>
+            )}
           </select>
         </div>
       )}
-      {selectedDistrict?.active_status && (
-        <div className="mb-6">
-          <label className="block font-semibold mb-2">Select Block:</label>
+
+      {/* BLOCK DROPDOWN */}
+      {locationType === "Block" && selectedDistrict && (
+        <div className="mb-4">
+          <label className="font-semibold">Select Block:</label>
           <select
-            className="w-full p-3 border rounded"
+            className="w-full p-3 border rounded mt-2"
+            disabled={!selectedDistrict.active_status}
             value={selectedBlock?.id || ""}
-            onChange={(e) => {
-              handleBlockChange(e);
-              const selected = blocksList.find(
-                (b) => String(b.id) === e.target.value
-              );
-              setSelectedBlock(selected || null);
-              setSelectedLocation(
-                selected || { id: "", name: "", active_status: null }
-              );
-            }}
+            onChange={handleBlockChange}
           >
-            <option value="">Select Block</option>
-            {blocksList.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.block_name}
-              </option>
-            ))}
+            {!selectedDistrict.active_status ? (
+              <option>Please activate district first</option>
+            ) : (
+              <>
+                <option value="">Select Block</option>
+                {blocksList.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.block_name}
+                  </option>
+                ))}
+              </>
+            )}
           </select>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex justify-between">
+      {/* BUTTONS */}
+      <div className="flex justify-between mt-6">
         <button
+          onClick={() => updateStatus(true)}
+          disabled={
+            selectedLocation.active_status === true ||
+            selectedLocation.active_status === null
+          }
           className={`px-6 py-2 rounded text-white ${
             selectedLocation.active_status === false
               ? "bg-green-600 hover:bg-green-700"
               : "bg-green-300 cursor-not-allowed"
           }`}
-          disabled={selectedLocation.active_status !== false}
-          onClick={handleActivate}
         >
           Activate
         </button>
 
         <button
+          onClick={() => updateStatus(false)}
+          disabled={
+            selectedLocation.active_status === false ||
+            selectedLocation.active_status === null
+          }
           className={`px-6 py-2 rounded text-white ${
             selectedLocation.active_status === true
               ? "bg-red-600 hover:bg-red-700"
               : "bg-red-300 cursor-not-allowed"
           }`}
-          disabled={selectedLocation.active_status !== true}
-          onClick={handleDeactivate}
         >
           Deactivate
         </button>

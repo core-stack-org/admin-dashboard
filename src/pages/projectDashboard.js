@@ -211,7 +211,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   }, []);
 
   const handleCreateProject = () => {
-    console.log("Create Project clicked");
     setShowProjectForm(true);
   };
   if (showProjectForm) {
@@ -382,7 +381,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       const adminLayer = await response.json();
-      console.log(adminLayer);
 
       const vectorSource = new VectorSource({
         features: new GeoJSON().readFeatures(adminLayer),
@@ -392,7 +390,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       dynamicBbox =
         extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
       setBBox(extent);
-      console.log(dynamicBbox);
       const layerName = `plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability`;
 
       const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
@@ -445,9 +442,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     }
   };
 
-  const handleUploadExcel = () => {
-    console.log("Upload excel button clicked");
-  };
+  const handleUploadExcel = () => {};
 
   const handleViewPlan = async (project) => {
     setOpenDialog(true);
@@ -465,7 +460,6 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
       );
       if (!res.ok) throw new Error("Failed to fetch plans");
       const data = await res.json();
-      console.log(data);
       setPlans(Array.isArray(data) ? data : data.results || []);
     } catch (err) {
       console.error(err);
