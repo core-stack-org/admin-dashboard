@@ -46,6 +46,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     sessionStorage.getItem("activeItem") || "Dashboard"
   );
   const [layers, setLayers] = useState([]);
+
   useEffect(() => {
     const layers = Object.keys(layersData.layers_json).map((key) =>
       key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
@@ -234,11 +235,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Generate Excel",
         href: "/generateExcel",
       },
-      {
-        icon: <FontAwesomeIcon icon={faEye} size="lg" />,
-        label: "Preview Layers",
-        href: "/previewLayers",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faEye} size="lg" />,
+      //   label: "Preview Layers",
+      //   href: "/previewLayers",
+      // },
 
       {
         icon: <FontAwesomeIcon icon={faMap} size="lg" />,
@@ -267,7 +268,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     setSelectedLayer(selectedLayerData);
     setActiveItem(layerLabel);
 
-    // Navigate and send layer data via state
     navigate(`/generate-layers/${layerLabel.replace(/ /g, "-")}`, {
       state: {
         layerName: layerLabel,
@@ -292,7 +292,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
               <li key={index}>
                 {!item.isSubmenu ? (
                   item.external ? (
-                    // External link (like YouTube)
                     <a
                       href={item.href}
                       target="_blank"

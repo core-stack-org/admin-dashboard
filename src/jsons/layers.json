@@ -202,16 +202,38 @@
             "show_Dates": false,
             "workspace":""
         }  ,
-        "LCW": {
-            "api_url": "${config.layer_api_url_v1}/generate_lcw_data/ ",
-            "show_Dates": false,
-            "workspace":""
-        }  ,
+       
         "Generate Wells": {
             "api_url": "${config.layer_api_url_v1}/generate_wells/ ",
             "show_Dates": false,
             "workspace":""
-        }  
+        }, "LCW": {
+            "api_url": "${config.layer_api_url_v1}/generate_lcw_data/ ",
+            "show_Dates": false,
+            "workspace":""
+        }  ,
+        "AgroEcological Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_agroecological_data/ ",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "Factory CSR Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_factory_csr_data/ ",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "Green Credit Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_green_credit_data/",
+            "show_Dates": false,
+            "workspace":""
+        },
+        "Mining Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_mining_data/",
+            "show_Dates": false,
+            "workspace":""
+        }
+
+
     }
 }
 

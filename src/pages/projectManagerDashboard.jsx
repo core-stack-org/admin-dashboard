@@ -81,7 +81,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
       {
         title: "View Layer",
         description: "Visualize uploaded KML layers on the map",
-        onClick: () => console.log("View GeoJSON clicked"),
         iconColor: "bg-blue-500",
         icon: <Eye className="text-white h-5 w-5" />,
         hoverBorder: "hover:border-blue-500",
@@ -90,7 +89,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
       {
         title: "Download GeoJSON",
         description: "Export KML data as GeoJSON file",
-        onClick: () => console.log("Download GeoJSON clicked"),
         iconColor: "bg-green-600",
         icon: <Download className="text-white h-5 w-5" />,
         hoverBorder: "hover:border-green-500",
@@ -101,7 +99,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
       {
         title: "Upload Excel",
         description: "Import waterbody information via Excel",
-        onClick: () => setIsExcelDialogOpen(true),
         iconColor: "bg-violet-500",
         icon: <Upload className="text-white h-5 w-5" />,
         hoverBorder: "hover:border-violet-500",
@@ -121,7 +118,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
       {
         title: "View Plan",
         description: "Access submitted watershed plans",
-        onClick: () => console.log("View Plan clicked"),
         iconColor: "bg-purple-500",
         icon: <FileText className="text-white h-5 w-5" />,
         hoverBorder: "hover:border-purple-500",
@@ -130,7 +126,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
       {
         title: "Edit Plan",
         description: "Modify existing watershed plans",
-        onClick: () => console.log("Edit Plan clicked"),
         iconColor: "bg-orange-500",
         icon: <FilePenLine className="text-white h-5 w-5" />,
         hoverBorder: "hover:border-orange-500",
@@ -1061,7 +1056,6 @@ const ProjectManagerDashboard = ({ currentUser }) => {
             variant="contained"
             color="primary"
             onClick={() => {
-              console.log("Uploading Excel files:", selectedExcelFiles);
               setIsExcelDialogOpen(false);
             }}
             sx={{

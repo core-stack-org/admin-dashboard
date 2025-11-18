@@ -21,10 +21,10 @@ const LayerStatusComponent = () => {
         `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`
       );
       const data = await response.json();
-      const sortedStates = data.states.sort((a, b) =>
-        a.state_name.localeCompare(b.state_name)
-      );
-      setStatesList(sortedStates);
+      const activeStates = data.states
+        .filter((s) => s.active_status === true)
+        .sort((a, b) => a.state_name.localeCompare(b.state_name));
+      setStatesList(activeStates);
     } catch (error) {
       console.error("Error fetching states:", error);
     }
@@ -36,10 +36,11 @@ const LayerStatusComponent = () => {
         `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${selectedState}/`
       );
       const data = await response.json();
-      const sorted = data.districts.sort((a, b) =>
-        a.district_name.localeCompare(b.district_name)
-      );
-      setDistrictsList(sorted);
+      const activeDistricts = data.districts
+        .filter((d) => d.active_status === true)
+        .sort((a, b) => a.district_name.localeCompare(b.district_name));
+
+      setDistrictsList(activeDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
     }
@@ -51,10 +52,11 @@ const LayerStatusComponent = () => {
         `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${selectedDistrict}/`
       );
       const data = await response.json();
-      const sorted = data.blocks.sort((a, b) =>
-        a.block_name.localeCompare(b.block_name)
-      );
-      setBlocksList(sorted);
+      const activeBlocks = data.blocks
+        .filter((s) => s.active_status === true)
+        .sort((a, b) => a.block_name.localeCompare(b.block_name));
+
+      setBlocksList(activeBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
     }
@@ -102,7 +104,7 @@ const LayerStatusComponent = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-12">
+    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-36">
       <h1 className="text-2xl font-bold text-center mb-6">Layer Status</h1>
 
       <form className="space-y-8">

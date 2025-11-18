@@ -28,10 +28,10 @@ const GenerateExcelComponent = () => {
         }
       );
       const data = await response.json();
-      const sortedStates = data.states.sort((a, b) =>
-        a.state_name.localeCompare(b.state_name)
-      );
-      setStatesList(sortedStates);
+      const activeStates = data.states
+        .filter((s) => s.active_status === true)
+        .sort((a, b) => a.state_name.localeCompare(b.state_name));
+      setStatesList(activeStates);
     } catch (error) {
       console.error("Error fetching states:", error);
     }
@@ -50,10 +50,11 @@ const GenerateExcelComponent = () => {
         }
       );
       const data = await response.json();
-      const sortedDistricts = data.districts.sort((a, b) =>
-        a.district_name.localeCompare(b.district_name)
-      );
-      setDistrictsList(sortedDistricts);
+      const activeDistricts = data.districts
+        .filter((d) => d.active_status === true)
+        .sort((a, b) => a.district_name.localeCompare(b.district_name));
+
+      setDistrictsList(activeDistricts);
     } catch (error) {
       console.error("Error fetching districts:", error);
     }
@@ -72,10 +73,11 @@ const GenerateExcelComponent = () => {
         }
       );
       const data = await response.json();
-      const sortedBlocks = data.blocks.sort((a, b) =>
-        a.block_name.localeCompare(b.block_name)
-      );
-      setBlocksList(sortedBlocks);
+      const activeBlocks = data.blocks
+        .filter((s) => s.active_status === true)
+        .sort((a, b) => a.block_name.localeCompare(b.block_name));
+
+      setBlocksList(activeBlocks);
     } catch (error) {
       console.error("Error fetching blocks:", error);
     }

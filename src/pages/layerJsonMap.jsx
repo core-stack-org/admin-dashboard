@@ -140,7 +140,6 @@ const LayerMapJsonComponent = () => {
           }
         );
         const data = await response.json();
-        console.log("GEEEEEEEE", data);
         setGeeAccounts(data);
       } catch (error) {
         console.error("Error fetching GEE accounts:", error);
@@ -197,7 +196,6 @@ const LayerMapJsonComponent = () => {
 
       const data = await response.json();
       alert("Layer generation started successfully!");
-      console.log("Response:", data);
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong while generating the layers.");
