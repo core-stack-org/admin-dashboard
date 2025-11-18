@@ -75,7 +75,7 @@ const LayerStatusDetails = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto mt-10 bg-white p-8">
+    <div className="max-w-7xl mx-auto mt-10 bg-white p-8">
       <div className="relative mb-6 mt-14">
         {/* Back Button */}
         <button
