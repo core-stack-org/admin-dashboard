@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowUp, ArrowDown, ArrowLeft } from "lucide-react";
 
 const LayerStatusDetails = () => {
   const location = useLocation();
@@ -75,10 +75,21 @@ const LayerStatusDetails = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 bg-white shadow-lg rounded-lg p-8">
-      <h1 className="text-2xl font-bold mb-6 text-center mt-4">
-        Layer Status Details
-      </h1>
+    <div className="max-w-7xl mx-auto mt-10 bg-white p-8">
+      <div className="relative mb-6 mt-14">
+        {/* Back Button */}
+        <button
+          onClick={() => navigate(-1)}
+          className="absolute left-1 top-1/2 -translate-y-1/2 flex items-center gap-1 
+               text-blue-600 hover:text-blue-800"
+        >
+          <ArrowLeft size={20} />
+          Back
+        </button>
+
+        {/* Centered Title */}
+        <h1 className="text-2xl font-bold text-center">Layer Status Details</h1>
+      </div>
 
       {/* State, District, Block info */}
       <div className="flex flex-wrap justify-center gap-8 mb-8 text-lg">
@@ -101,50 +112,99 @@ const LayerStatusDetails = () => {
       ) : (
         <>
           {layerData ? (
-            <table className="min-w-full border border-gray-300 rounded-lg overflow-hidden">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-6 py-3 text-left font-semibold border-b">
-                    Layer Name
-                  </th>
-                  <th className="px-6 py-3 text-left font-semibold border-b">
-                    <div className="flex items-center gap-2">
-                      Status
-                      <button
-                        onClick={handleSort}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        {sortOrder === "asc" ? (
-                          <ArrowDown size={16} />
-                        ) : (
-                          <ArrowUp size={16} />
-                        )}
-                      </button>
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {getSortedData().map(([layerName, info]) => (
-                  <tr key={layerName} className="hover:bg-gray-50">
-                    <td className="px-6 py-3 border-b">{layerName}</td>
-                    <td className="px-6 py-3 border-b">
-                      <span
-                        className={`font-semibold ${
-                          info.status_code === 200
-                            ? "text-green-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {info.status_code === 200
-                          ? "Available"
-                          : "Not Available"}
-                      </span>
-                    </td>
+            <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm mt-6">
+              <table className="min-w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-700 text-sm">
+                    <th className="px-6 py-4 font-semibold text-left">
+                      Workspace
+                    </th>
+                    <th className="px-6 py-4 font-semibold text-left">
+                      Layer Name
+                    </th>
+
+                    <th className="px-6 py-4 font-semibold text-left">
+                      <div className="flex items-center gap-2">
+                        Status
+                        <button
+                          onClick={handleSort}
+                          className="text-blue-600 hover:text-blue-800 transition"
+                        >
+                          {sortOrder === "asc" ? (
+                            <ArrowDown size={16} />
+                          ) : (
+                            <ArrowUp size={16} />
+                          )}
+                        </button>
+                      </div>
+                    </th>
+
+                    <th className="px-6 py-4 font-semibold text-left">
+                      Feature Count
+                    </th>
+                    <th className="px-6 py-4 font-semibold text-left">
+                      Start Date
+                    </th>
+                    <th className="px-6 py-4 font-semibold text-left">
+                      End Date
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+
+                <tbody className="text-sm text-gray-700">
+                  {getSortedData().map(([layerName, info], idx) => (
+                    <tr
+                      key={layerName}
+                      className={`transition hover:bg-gray-100 ${
+                        idx % 2 === 0 ? "bg-white" : "bg-gray-50"
+                      }`}
+                    >
+                      {/*Workspace */}
+                      <td className="px-6 py-4 border-t border-gray-200">
+                        {/* {layerName} */}
+                        {info.workspace}
+                      </td>
+
+                      {/* Layer Name */}
+                      <td className="px-6 py-4 border-t border-gray-200">
+                        {/* {layerName} */}
+                        {info.layer_name}
+                      </td>
+
+                      {/* Status Badge */}
+                      <td className="px-6 py-4 border-t border-gray-200">
+                        <span
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                            info.status_code === 200
+                              ? "bg-green-100 text-green-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {info.status_code === 200
+                            ? "Available"
+                            : "Not Available"}
+                        </span>
+                      </td>
+
+                      {/* Feature Count */}
+                      <td className="px-6 py-4 border-t border-gray-200">
+                        {info.totalFeature ?? "-"}
+                      </td>
+
+                      {/* Start Date */}
+                      <td className="px-6 py-4 border-t border-gray-200">
+                        {info.startDate ? info.startDate : "-"}
+                      </td>
+
+                      {/* End Date */}
+                      <td className="px-6 py-4 border-t border-gray-200">
+                        {info.endDate ? info.endDate : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <p className="text-center text-gray-600 mt-6">
               No layer data available.
