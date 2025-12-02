@@ -15,7 +15,7 @@ import PlanCreation from "./pages/planCreation";
 import PreviewLayers from "./pages/previewLayer";
 import LocationForm from "./pages/locationForm";
 import PlantationAssessment from "./pages/plantationAssessment";
-import GenerateApiKeyPage from "./GenerateApiKeyPage";
+import GenerateApiKeyPage from "./pages/GenerateApiKeyPage";
 import UserRegistration from "./pages/userRegistration";
 import SideNavbar from "./pages/sidenavbar";
 import { ToastContainer } from "react-toastify";
@@ -91,7 +91,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 />
                 <Route
                   path="/generateApiKey"
-                  element={<GenerateApiKeyPage currentUser={currentUser} />}
+                  element={<GenerateApiKeyPage currentUser={currentUser} isStandalone={true}/>}
                 />
                 <Route
                   path="/users"

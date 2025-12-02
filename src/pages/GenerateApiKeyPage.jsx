@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { Eye, Copy, Trash2 } from "lucide-react";
 
-const GenerateApiKeyPage = ({ currentUser }) => {
+const GenerateApiKeyPage = ({ currentUser,isStandalone = false }) => {
   const [keys, setKeys] = useState([]);
   const [generateLoading, setGenerateLoading] = useState(false);
   const [deactivateLoadingIndex, setDeactivateLoadingIndex] = useState(null);
@@ -155,7 +155,11 @@ const GenerateApiKeyPage = ({ currentUser }) => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto bg-white rounded shadow p-6">
+<div
+  className={`max-w-3xl mx-auto bg-white rounded shadow p-6 ${
+    isStandalone ? "mt-28" : ""
+  }`}
+>
       {/* Heading + Plus Button */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Manage API Key</h2>

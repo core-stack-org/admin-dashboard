@@ -318,19 +318,19 @@ const LayerMapJsonComponent = () => {
             </option>
             <option
               value="map_2_2"
-              title="Covers LULC with Vectorise LULC, Cropping Intensity, SWB, Drought, Drought Causality, Crop grid, Change detection and vectorise Change detection."
+              title="Covers LULC with Vectorise LULC, Cropping Intensity, Drought, Drought Causality, Crop grid, Change detection and vectorise Change detection."
             >
               Map 2_2 - LULC & Cropping
             </option>
             <option
               value="map_3"
-              title="Covers Restoration, Aquifer vector, Terrin raster, Terrain cluster, LULC on slope cluster and plain cluster. "
+              title="Covers SOGE, Stream Order, Restoration, Aquifer vector,Natural Depression, Distance to nearest Drainage line, Catchment Area, Slope %, LCW conflict, Agroecological, Factory CSR, Green Credits, Mining. "
             >
-              Map 3 - Restoration & Terrain
+              Map 3 - Restoration & SOGE
             </option>
             <option
               value="map_4"
-              title="Covers SOGE vector, Stream order vector, drainage lines, CLART, Tree health ch raster and vector, Tree health ccd raster and vector, Tree health overall change raster and vector. "
+              title="Drainage lines, CLART, Site Suitabilty, Terrin raster, Terrain cluster, LULC on slope cluster and plain cluster, Tree health ch raster and vector, Tree health ccd raster and vector, Tree health overall change raster and vector, SWB. "
             >
               Map 4 - Tree Health & Drainage
             </option>

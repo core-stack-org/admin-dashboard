@@ -22,7 +22,7 @@ const LayerStatusComponent = () => {
       );
       const data = await response.json();
       const activeStates = data.states
-        .filter((s) => s.active_status === true)
+        // .filter((s) => s.active_status === true)
         .sort((a, b) => a.state_name.localeCompare(b.state_name));
       setStatesList(activeStates);
     } catch (error) {
@@ -37,7 +37,7 @@ const LayerStatusComponent = () => {
       );
       const data = await response.json();
       const activeDistricts = data.districts
-        .filter((d) => d.active_status === true)
+        // .filter((d) => d.active_status === true)
         .sort((a, b) => a.district_name.localeCompare(b.district_name));
 
       setDistrictsList(activeDistricts);
@@ -53,7 +53,7 @@ const LayerStatusComponent = () => {
       );
       const data = await response.json();
       const activeBlocks = data.blocks
-        .filter((s) => s.active_status === true)
+        // .filter((s) => s.active_status === true)
         .sort((a, b) => a.block_name.localeCompare(b.block_name));
 
       setBlocksList(activeBlocks);

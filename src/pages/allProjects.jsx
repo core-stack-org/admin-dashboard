@@ -339,7 +339,7 @@ const AllProjects = ({ statesList }) => {
               </div>
             ) : (
               <table className="min-w-full text-md text-left border-collapse">
-                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
+                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
                   <tr>
                     <th className="px-6 py-4">S. No.</th>
                     <th className="px-6 py-4">Name</th>

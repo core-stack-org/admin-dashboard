@@ -27,7 +27,7 @@ import AddMember from "./addMember.jsx";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
-import GenerateApiKeyPage from "../GenerateApiKeyPage.jsx";
+import GenerateApiKeyPage from "./GenerateApiKeyPage.jsx";
 import AllProjects from "./allProjects.jsx";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
