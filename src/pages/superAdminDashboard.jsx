@@ -203,6 +203,9 @@ function SuperAdminDashboard({ currentUser }) {
   const handleExtraAction = () => {
     handleOpenDialog("extraActions");
   };
+  const handlegenerateAPIKey = () => {
+    navigate("/generateApiKey");
+  };
   const handleViewProjects = () => {
     // handleOpenDialog("viewProjects");
     navigate("/projects");
@@ -336,7 +339,7 @@ function SuperAdminDashboard({ currentUser }) {
                   </span>
                 </div>
                 <div className="flex justify-between items-center border-b border-gray-200 pb-2">
-                  <span className="text-gray-600 font-medium">System ID</span>
+                  <span className="text-gray-600 font-medium">Organization ID</span>
                   <span className="text-gray-800 font-bold">
                     {organizationId}
                   </span>
@@ -561,7 +564,7 @@ function SuperAdminDashboard({ currentUser }) {
         </motion.div>
         <motion.div variants={itemVariants} className="mb-10">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
-            System Actions
+            Users Actions
           </h2>
 
           <div
@@ -585,6 +588,22 @@ function SuperAdminDashboard({ currentUser }) {
                 Give User a Super Admin access
               </p>
             </motion.div>
+
+            <motion.div onClick={handlegenerateAPIKey}
+className="relative bg-white border border-[#e0e0e0] rounded-[15px] p-8 cursor-pointer transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:border-[#0066cc] hover:shadow-[-10px_10px_30px_rgba(0,102,204,0.15)] group
+                 min-h-[160px] flex flex-col justify-center items-center text-center"
+            >
+              {/* Gradient bar */}
+              <div className="absolute top-0 right-0 bottom-0 w-1 bg-gradient-to-b from-[#0066cc] to-[#6600cc] transform scale-y-0 origin-top transition-transform duration-300 group-hover:scale-y-100" />
+
+              <div className="text-[1.2rem] font-bold text-[#333] mb-2">
+                Generate API key
+              </div>
+              <p className="text-[#666] text-sm leading-relaxed">
+                Give User to generate API key access
+              </p>
+            </motion.div>
+
           </div>
         </motion.div>
       </motion.div>
@@ -666,69 +685,6 @@ function SuperAdminDashboard({ currentUser }) {
         </DialogActions>
       </Dialog>
 
-      {/* View all Organizations*/}
-      {/* <Dialog
-        open={openDialog === "viewOrganizations"}
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <div className="flex items-center gap-4">
-            {/* Back button 
-            <Tooltip title="Back to Dashboard">
-              <IconButton onClick={() => navigate("/dashboard")}>
-                <ArrowLeftCircle className="w-7 h-7 text-blue-600 hover:text-purple-600 transition-colors" />
-              </IconButton>
-            </Tooltip>
-
-            {/* Title 
-            <h1 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center">
-              All Organizations
-            </h1>
-          </div>
-        </DialogTitle>
-
-        <DialogContent className="p-4 max-h-[500px] overflow-y-auto">
-          {organizations.length > 0 ? (
-            <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto">
-              <table className="min-w-full text-sm text-left border-collapse">
-                {/* Table Head 
-                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
-                  <tr>
-                    <th className="px-6 py-4">S. No.</th>
-                    <th className="px-6 py-4">Organization Name</th>
-                    <th className="px-6 py-4">Organization ID</th>
-                  </tr>
-                </thead>
-
-                {/* Table Body 
-                <tbody className="divide-y divide-gray-200">
-                  {organizations.map((org, index) => (
-                    <tr
-                      key={org.id}
-                      className="hover:bg-gray-50 transition duration-200 text-gray-700"
-                    >
-                      <td className="px-6 py-4">{index + 1}</td>
-                      <td className="px-6 py-4 font-medium">{org.name}</td>
-                      <td className="px-6 py-4">{org.id}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p className="text-gray-500 text-center">No organizations found.</p>
-          )}
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={handleCloseDialog} color="secondary">
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
       {/* Super admin Role assignment to user Dialog */}
       <Dialog
         open={openDialog === "extraActions"}
@@ -775,14 +731,14 @@ function SuperAdminDashboard({ currentUser }) {
               className="bg-emerald-600 hover:bg-green-300 active:bg-emerald-800 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed"
               disabled={!selectedUser}
             >
-              ✅ Make Super Admin
+               Make Super Admin
             </Button>
 
             <Button
               onClick={handleCloseDialog}
               className="bg-red-100 hover:bg-red-200 active:bg-red-300 text-red-800 font-semibold px-6 py-3 rounded-lg shadow-md transition duration-300 ease-in-out"
             >
-              ❌ Cancel
+              Cancel
             </Button>
           </DialogActions>
         </DialogActions>

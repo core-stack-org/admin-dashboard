@@ -3,237 +3,257 @@
         "Admin Boundaries": {
             "api_url": "${config.layer_api_url_v1}/generate_block_layer/",
             "show_Dates": false,
-            "workspace":"panchayat_boundaries",
-            "end":""
+            "workspace": "panchayat_boundaries",
+            "end": ""
         },
         "NREGA Works": {
-            "api_url":"${config.layer_api_url_v1}/generate_nrega_layer/",
+            "api_url": "${config.layer_api_url_v1}/generate_nrega_layer/",
             "show_Dates": false,
-            "workspace":"nrega_assets",
-            "end":""
-
+            "workspace": "nrega_assets",
+            "end": ""
         },
         "Drainage": {
             "api_url": "${config.layer_api_url_v1}/generate_drainage_layer/",
             "show_Dates": false,
-            "workspace":"drainage",
-            "end":""
-
+            "workspace": "drainage",
+            "end": ""
         },
         "MWS": {
             "api_url": "${config.layer_api_url_v1}/generate_mws_layer/",
             "show_Dates": false,
-            "workspace":"mws_layers",
-            "end":""
-
+            "workspace": "mws_layers",
+            "end": ""
         },
-        "Hydrology Fortnight":{
+        "Hydrology Fortnight": {
             "api_url": "${config.layer_api_url_v1}/hydrology_fortnightly/",
-            "show_Dates":true,
-            "workspace":"mws_layers",
-            "date_range":[2017,2024],
-            "end":""
-
+            "show_Dates": true,
+            "workspace": "mws_layers",
+            "date_range": [
+                2017,
+                2024
+            ],
+            "end": ""
         },
-        "Hydrology Annual":{
+        "Hydrology Annual": {
             "api_url": "${config.layer_api_url_v1}/hydrology_annual/",
-            "show_Dates":true,
-            "workspace":"mws_layers",
-            "date_range":[2017,2024],
-            "end":""
-
+            "show_Dates": true,
+            "workspace": "mws_layers",
+            "date_range": [
+                2017,
+                2024
+            ],
+            "end": ""
         },
         "LULC": {
             "api_url": "${config.layer_api_url_v1}/lulc_v3/",
             "show_Dates": true,
-            "date_range":[2017,2024],
-            "workspace":"LULC_level_1"
-
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "LULC_level_1"
         },
         "LULCXSlope": {
             "api_url": "${config.layer_api_url_v1}/terrain_lulc_slope_cluster/",
             "show_Dates": true,
-            "date_range":[2017,2024],
-            "workspace":"terrain_lulc"
-
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "terrain_lulc"
         },
         "LULCXPlain": {
             "api_url": "${config.layer_api_url_v1}/terrain_lulc_plain_cluster/",
             "show_Dates": true,
-            "date_range":[2017,2024],
-            "workspace":"terrain_lulc"
-
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "terrain_lulc"
         },
         "Crop Intensity": {
             "api_url": "${config.layer_api_url_v1}/generate_ci_layer/",
             "show_Dates": true,
-            "date_range":[2017,2024],
-            "workspace":"cropping_intensity",
-            "end":"distname_blockname_intensity"
-
-
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "cropping_intensity",
+            "end": "distname_blockname_intensity"
         },
         "Surface Water Bodies": {
             "api_url": "${config.layer_api_url_v1}/generate_swb/",
             "show_Dates": true,
-            "date_range":[2017,2024],
-            "workspace":"water_bodies",
-            "end":"surface_waterbodies_distname_blockname"
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "water_bodies",
+            "end": "surface_waterbodies_distname_blockname"
         },
         "Cropping Drought": {
             "api_url": "${config.layer_api_url_v1}/generate_drought_layer/",
             "show_Dates": true,
-            "date_range":[2017,2022],
-            "workspace":"cropping_drought",
-            "end":"distname_blockname_drought"
-
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "cropping_drought",
+            "end": "distname_blockname_drought"
         },
         "Terrain Vector": {
             "api_url": "${config.layer_api_url_v1}/generate_terrain_descriptor/",
             "show_Dates": false,
-            "workspace":"terrain",
-            "end":"_cluster"
-
+            "workspace": "terrain",
+            "end": "_cluster"
         },
         "Terrain Raster": {
             "api_url": "${config.layer_api_url_v1}/generate_terrain_raster/",
             "show_Dates": false,
-            "workspace":"terrain",
-            "end":"_raster"
-
+            "workspace": "terrain",
+            "end": "_raster"
         },
         "Crop Grid": {
             "api_url": "${config.layer_api_url_v1}/crop_grid/",
             "show_Dates": false,
-            "workspace":"crop_grid_layers",
-            "end":"_grid"
-
+            "workspace": "crop_grid_layers",
+            "end": "_grid"
         },
         "CLART": {
             "api_url": "${config.layer_api_url_v1}/generate_clart/",
             "show_Dates": false,
-            "workspace":"clart",
-            "end":"distname_blockname_clart"
-
+            "workspace": "clart",
+            "end": "distname_blockname_clart"
         },
         "Change Detection Raster": {
             "api_url": "${config.layer_api_url_v1}/change_detection/",
             "show_Dates": true,
-            "date_range":[2017,2024],
-            "workspace":"change_detection"
-
-        }, 
+            "date_range": [
+                2017,
+                2024
+            ],
+            "workspace": "change_detection"
+        },
         "Change Detection Vector": {
             "api_url": "${config.layer_api_url_v1}/change_detection_vector/",
             "show_Dates": false,
-            "workspace":""
-
-        }, 
+            "workspace": ""
+        },
         "Drought Causality": {
             "api_url": "${config.layer_api_url_v1}/mws_drought_causality/",
             "show_Dates": true,
-            "workspace":"" 
-
+            "workspace": ""
         },
-     "Tree Health Raster": {
+        "Tree Health Raster": {
             "api_url": "${config.layer_api_url_v1}/tree_health_raster/",
             "show_Dates": true,
-            "workspace":"",
-            "date_range":[2017,2022]
-
+            "workspace": "",
+            "date_range": [
+                2017,
+                2022
+            ]
         },
-     "Tree Health Vector": {
+        "Tree Health Vector": {
             "api_url": "${config.layer_api_url_v1}/tree_health_vector/",
             "show_Dates": true,
-            "workspace":"",
-            "date_range":[2017,2022]
-
+            "workspace": "",
+            "date_range": [
+                2017,
+                2022
+            ]
         },
-       "Stream Order": {
+        "Stream Order": {
             "api_url": "${config.layer_api_url_v1}/stream_order/",
             "show_Dates": false,
-            "workspace":""
-
+            "workspace": ""
         },
         "LULC Vector": {
             "api_url": "${config.layer_api_url_v1}/lulc_vector/",
             "show_Dates": true,
-            "workspace":"",
-            "date_range":[2017,2024]
-
+            "workspace": "",
+            "date_range": [
+                2017,
+                2024
+            ]
         },
         "Restoration": {
             "api_url": "${config.layer_api_url_v1}/restoration_opportunity/",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
         },
         "Aquifer": {
             "api_url": "${config.layer_api_url_v1}/aquifer_vector/ ",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
         },
         "SOGE": {
             "api_url": "${config.layer_api_url_v1}/soge_vector/ ",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
         },
         "FES CLART": {
             "api_url": "${config.layer_api_url_v1}/fes_clart_layer/ ",
             "show_Dates": false,
-            "workspace":""
-        }  ,  
+            "workspace": ""
+        },
         "LULC Farm Boundaries": {
             "api_url": "${config.layer_api_url_v1}/lulc_farm_boundary/ ",
             "show_Dates": true,
-            "workspace":""
-        }  ,
+            "workspace": ""
+        },
         "LULC V4": {
             "api_url": "${config.layer_api_url_v1}/lulc_v4/ ",
             "show_Dates": true,
-            "workspace":""
-        }  ,
+            "workspace": ""
+        },
         "Generate Farm Ponds": {
             "api_url": "${config.layer_api_url_v1}/generate_ponds/ ",
             "show_Dates": false,
-            "workspace":""
-        }  ,
+            "workspace": ""
+        },
         "Merge SWB With Ponds": {
             "api_url": "${config.layer_api_url_v1}/merge_swb_ponds/ ",
             "show_Dates": false,
-            "workspace":""
-        }  ,
-       
+            "workspace": ""
+        },
         "Generate Wells": {
             "api_url": "${config.layer_api_url_v1}/generate_wells/ ",
             "show_Dates": false,
-            "workspace":""
-        }, "LCW": {
+            "workspace": ""
+        },
+        "LCW": {
             "api_url": "${config.layer_api_url_v1}/generate_lcw_data/ ",
             "show_Dates": false,
-            "workspace":""
-        }  ,
+            "workspace": ""
+        },
         "AgroEcological Data": {
             "api_url": "${config.layer_api_url_v1}/generate_agroecological_data/ ",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
         },
         "Factory CSR Data": {
             "api_url": "${config.layer_api_url_v1}/generate_factory_csr_data/ ",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
         },
         "Green Credit Data": {
             "api_url": "${config.layer_api_url_v1}/generate_green_credit_data/",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
         },
         "Mining Data": {
             "api_url": "${config.layer_api_url_v1}/generate_mining_data/",
             "show_Dates": false,
-            "workspace":""
+            "workspace": ""
+        },
+        "Plantation Site Suitability": {
+            "api_url": "${config.layer_api_url_v1}/plantation_site_suitability/",
+            "show_Dates": true,
+            "workspace": "",
+            "date_range": [
+                2017,
+                2024
+            ]
         }
-
-
     }
 }
-

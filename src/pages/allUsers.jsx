@@ -138,7 +138,7 @@ const UsersTable = () => {
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-2">
           <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto h-full">
             {loading ? (
               <div className="flex justify-center items-center h-full">
@@ -147,7 +147,7 @@ const UsersTable = () => {
             ) : (
               <table className="min-w-full text-md text-left border-collapse">
                 {/* Table Head */}
-                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
+                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
                   <tr>
                     <th className="px-6 py-4">S. no.</th>
                     <th className="px-6 py-4">Name</th>
@@ -431,26 +431,26 @@ const UsersTable = () => {
                           key={user.id}
                           className="hover:bg-gray-50 transition duration-200 text-gray-700"
                         >
-                          <td className="px-6 py-4">{index + 1}</td>
-                          <td className="px-6 py-4 font-medium">
+                          <td className="px-3 py-3">{index + 1}</td>
+                          <td className="px-3 py-3 font-medium">
                             {user.first_name || user.last_name
                               ? `${user.first_name || ""} ${
                                   user.last_name || ""
                                 }`.trim()
                               : "N/A"}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2">
                             {user.username || "N/A"}
                           </td>
-                          <td className="px-6 py-4">{user.email || "N/A"}</td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2">{user.email || "N/A"}</td>
+                          <td className="px-3 py-2">
                             {user.contact_number || "N/A"}
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2">
                             {user.organization_name || "N/A"}
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2">
                             {user.project_details &&
                             user.project_details.length > 0
                               ? user.project_details
@@ -459,7 +459,7 @@ const UsersTable = () => {
                               : "N/A"}
                           </td>
 
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2">
                             <span
                               className={`px-3 py-1 rounded-full text-xs font-semibold ${
                                 user.is_active
@@ -470,7 +470,7 @@ const UsersTable = () => {
                               {user.is_active ? "Active" : "Inactive"}
                             </span>
                           </td>
-                          <td className="px-6 py-4">
+                          <td className="px-3 py-2">
                             {groupNames.length > 0
                               ? groupNames.join(", ")
                               : "N/A"}

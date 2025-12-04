@@ -57,6 +57,10 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
   const [loadingPlans, setLoadingPlans] = useState(false);
   const [openPlanDialog, setOpenPlanDialog] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [selectedExcel, setSelectedExcel] = useState(null);
+  const [selectedExcelFiles, setSelectedExcelFiles] = useState({});
+
+
   const isSuperAdmin = currentUser?.user?.is_superadmin;
   const navigate = useNavigate();
 
@@ -442,8 +446,69 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     }
   };
 
-  const handleUploadExcel = () => {};
+  const handleUploadExcel = async (project) => {
+    const files = selectedExcelFiles[project.id];
+  
+    if (!files || files.length === 0) {
+      setToast({
+        open: true,
+        message: "No Excel file selected!",
+        severity: "error",
+      });
+      return;
+    }
+  
+    const formData = new FormData();
+  
+    if (files.length > 1) {
+      files.forEach((file) => formData.append("files[]", file));
+    } else {
+      formData.append("file", files[0]);
+    }
+  
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${project.id}/waterrejuvenation/excel/`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "420",
+          },
+        }
+      );
+  
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText);
+      }
+  
+      setToast({
+        open: true,
+        message: "Excel uploaded successfully!",
+        severity: "success",
+      });
+  
+      setSelectedExcelFiles((prev) => ({ ...prev, [project.id]: [] }));
+    } catch (error) {
+      setToast({
+        open: true,
+        message: "Failed to upload Excel!",
+        severity: "error",
+      });
+    }
+  };
 
+  const handleRemoveExcelFile = (projectId, index) => {
+    setSelectedExcelFiles((prev) => ({
+      ...prev,
+      [projectId]: prev[projectId].filter((_, i) => i !== index),
+    }));
+  };
+  
+  
   const handleViewPlan = async (project) => {
     setOpenDialog(true);
     setLoadingPlans(true);
@@ -497,16 +562,23 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
     navigate("/planCreation", { state: { project, planId: null } });
   };
 
-  const handleExcelSelect = (event) => {
+  const handleExcelSelect = (event, project) => {
     const files = Array.from(event.target.files);
-    const validFiles = files.filter((file) => file.name.endsWith(".xlsx"));
-
-    if (validFiles.length > 0) {
-      setSelectedFiles((prevFiles) => [...prevFiles, ...validFiles]);
-    } else {
-      alert("Please upload valid xls files.");
+    const validFiles = files.filter(
+      (file) => file.name.endsWith(".xlsx") || file.name.endsWith(".xls")
+    );
+  
+    if (validFiles.length === 0) {
+      alert("Please upload valid Excel files (.xlsx or .xls)");
+      return;
     }
+  
+    setSelectedExcelFiles((prev) => ({
+      ...prev,
+      [project.id]: validFiles, 
+    }));
   };
+  
 
   const renderProjectTasks = (project) => {
     if (project.app_type === "plantation") {
@@ -809,87 +881,84 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                       </label>
                                     </Tooltip>
 
-                                    {selectedFiles.length > 0 && (
-                                      <Box
-                                        sx={{
-                                          width: "100%",
-                                          backgroundColor: "#f9f9f9",
-                                          p: 2,
-                                          borderRadius: "8px",
-                                          boxShadow:
-                                            "inset 0 0 5px rgba(0,0,0,0.1)",
-                                        }}
-                                      >
-                                        {selectedFiles.map((file, index) => (
-                                          <Box
-                                            key={index}
-                                            sx={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              justifyContent: "space-between",
-                                              padding: "6px 12px",
-                                              borderRadius: "6px",
-                                              mb: 1,
-                                              backgroundColor: "#fff",
-                                              "&:hover": {
-                                                backgroundColor: "#f0f0f0",
-                                              },
-                                            }}
-                                          >
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                overflow: "hidden",
-                                                flex: 1,
-                                              }}
-                                            >
-                                              <FolderIcon
-                                                sx={{ color: "#ffa000" }}
-                                              />
-                                              <Tooltip title={file.name}>
-                                                <Typography
-                                                  variant="body2"
-                                                  noWrap
-                                                  sx={{
-                                                    maxWidth:
-                                                      "calc(100% - 40px)", // account for icon & delete
-                                                    fontSize: "14px",
-                                                  }}
-                                                >
-                                                  {file.name}
-                                                </Typography>
-                                              </Tooltip>
-                                            </Box>
-                                            <IconButton
-                                              onClick={() =>
-                                                handleRemoveFile(index)
-                                              }
-                                              size="small"
-                                              color="error"
-                                            >
-                                              <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                          </Box>
-                                        ))}
-                                        <Button
-                                          variant="contained"
-                                          color="primary"
-                                          fullWidth
-                                          sx={{
-                                            mt: 2,
-                                            py: 1.5,
-                                            fontWeight: 600,
-                                            borderRadius: "8px",
-                                            textTransform: "none",
-                                          }}
-                                          onClick={handleUploadExcel}
-                                        >
-                                          Upload
-                                        </Button>
-                                      </Box>
-                                    )}
+                                    {selectedExcelFiles[project.id]?.length > 0 && (
+  <Box
+    sx={{
+      width: "100%",
+      backgroundColor: "#f9f9f9",
+      p: 2,
+      borderRadius: "8px",
+      boxShadow: "inset 0 0 5px rgba(0,0,0,0.1)",
+    }}
+  >
+    {selectedExcelFiles[project.id].map((file, index) => (
+      <Box
+        key={index}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "6px 12px",
+          borderRadius: "6px",
+          mb: 1,
+          backgroundColor: "#fff",
+          "&:hover": {
+            backgroundColor: "#f0f0f0",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            overflow: "hidden",
+            flex: 1,
+          }}
+        >
+          <FolderIcon sx={{ color: "#ffa000" }} />
+          <Tooltip title={file.name}>
+            <Typography
+              variant="body2"
+              noWrap
+              sx={{
+                maxWidth: "calc(100% - 40px)",
+                fontSize: "14px",
+              }}
+            >
+              {file.name}
+            </Typography>
+          </Tooltip>
+        </Box>
+
+        <IconButton
+          onClick={() => handleRemoveExcelFile(project.id, index)}
+          size="small"
+          color="error"
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+    ))}
+
+    <Button
+      variant="contained"
+      color="primary"
+      fullWidth
+      sx={{
+        mt: 2,
+        py: 1.5,
+        fontWeight: 600,
+        borderRadius: "8px",
+        textTransform: "none",
+      }}
+      onClick={() => handleUploadExcel(project)}
+    >
+      Upload
+    </Button>
+  </Box>
+)}
+
                                   </Box>
                                 ) : project.app_type === "watershed" ? (
                                   <div className="flex items-center gap-2">
