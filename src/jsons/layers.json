@@ -278,6 +278,11 @@
             "api_url": "${config.layer_api_url_v1}/generate_slope_percentage/",
             "show_Dates": false,
             "workspace": ""
+        },
+        "ZOI": {
+            "api_url": "${config.layer_api_url_v1}/generate_zoi_data/",
+            "show_Dates": false,
+            "workspace": ""
         }
     }
 }
