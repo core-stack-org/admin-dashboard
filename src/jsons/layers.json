@@ -142,7 +142,11 @@
         "Drought Causality": {
             "api_url": "${config.layer_api_url_v1}/mws_drought_causality/",
             "show_Dates": true,
-            "workspace": ""
+            "workspace": "",
+            "date_range": [
+                2017,
+                2024
+            ]
         },
         "Tree Health Raster": {
             "api_url": "${config.layer_api_url_v1}/tree_health_raster/",
