@@ -222,27 +222,27 @@
             "workspace": ""
         },
         "LCW": {
-            "api_url": "${config.layer_api_url_v1}/generate_lcw_data/ ",
+            "api_url": "${config.layer_api_url_v1}/generate_lcw/ ",
             "show_Dates": false,
             "workspace": ""
         },
-        "AgroEcological Data": {
-            "api_url": "${config.layer_api_url_v1}/generate_agroecological_data/ ",
+        "AgroEcological": {
+            "api_url": "${config.layer_api_url_v1}/generate_agroecological/ ",
             "show_Dates": false,
             "workspace": ""
         },
-        "Factory CSR Data": {
-            "api_url": "${config.layer_api_url_v1}/generate_factory_csr_data/ ",
+        "Factory CSR": {
+            "api_url": "${config.layer_api_url_v1}/generate_factory_csr/ ",
             "show_Dates": false,
             "workspace": ""
         },
-        "Green Credit Data": {
-            "api_url": "${config.layer_api_url_v1}/generate_green_credit_data/",
+        "Green Credit": {
+            "api_url": "${config.layer_api_url_v1}/generate_green_credit/",
             "show_Dates": false,
             "workspace": ""
         },
-        "Mining Data": {
-            "api_url": "${config.layer_api_url_v1}/generate_mining_data/",
+        "Mining": {
+            "api_url": "${config.layer_api_url_v1}/generate_mining/",
             "show_Dates": false,
             "workspace": ""
         },
@@ -254,6 +254,26 @@
                 2017,
                 2024
             ]
+        },
+        "Natural Depression": {
+            "api_url": "${config.layer_api_url_v1}/generate_natural_depression/",
+            "show_Dates": false,
+            "workspace": ""
+        },
+        "Distance nearest DL": {
+            "api_url": "${config.layer_api_url_v1}/generate_distance_nearest_DL/",
+            "show_Dates": false,
+            "workspace": ""
+        },
+        "Catchment Area Singleflow": {
+            "api_url": "${config.layer_api_url_v1}/generate_catchment_area_singleflow/",
+            "show_Dates": false,
+            "workspace": ""
+        },
+        "Slope Percentage": {
+            "api_url": "${config.layer_api_url_v1}/generate_slope_percentage/",
+            "show_Dates": false,
+            "workspace": ""
         }
     }
 }
