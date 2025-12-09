@@ -136,7 +136,11 @@
         },
         "Change Detection Vector": {
             "api_url": "${config.layer_api_url_v1}/change_detection_vector/",
-            "show_Dates": false,
+            "show_Dates": true,
+            "date_range": [
+                2017,
+                2024
+            ],
             "workspace": ""
         },
         "Drought Causality": {
