@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
 
-const AllProjects = ({ statesList }) => {
+const AllProjects = ({ statesList,currentUser }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +36,9 @@ const AllProjects = ({ statesList }) => {
   const [bbox, setBBox] = useState(null);
 
   const navigate = useNavigate();
+  console.log(currentUser.user)
+  const isSuperAdmin = currentUser?.user?.is_superadmin;
+
 
   const [toast, setToast] = useState({
     open: false,
@@ -476,7 +479,7 @@ const AllProjects = ({ statesList }) => {
                             </>
                           )}
                           {/* Waterbody */}
-                          {p.app_type === "waterbody" && (
+                          {p.app_type === "waterbody" && isSuperAdmin && (
                             <>
                               <Tooltip title="Upload Excel">
                                 <IconButton
