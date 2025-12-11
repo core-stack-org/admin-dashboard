@@ -132,254 +132,318 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
     return Object.values(flat).join(" ").toLowerCase().includes(searchTerm.toLowerCase());
   });
   
-
-  const tableStyle = { borderCollapse: "collapse", width: "100%" };
   const thTdStyle = { border: "1px solid #e5e7eb", padding: "8px 10px", whiteSpace: "nowrap", textAlign: "left" };
 
   return (
-    <div className="p-10" style={{ overflowX: "hidden" }}>
-      <h1 className="text-2xl font-bold mb-5">Moderation Dashboard</h1>
+    <div className="p-10 mt-16" >
+      <div className="w-full flex justify-center sticky top-0 z-50 bg-white py-4">
+        <h1 className="text-2xl font-bold">Moderation Dashboard</h1>
+      </div>
+
   
       {/* =================== Control Panel =================== */}
-      <div style={{ position: "sticky", top: 0, background: "#fff", zIndex: 10, paddingBottom: 15 }}>
-        {/* Project */}
-        <label className="font-semibold">Select Project</label>
-        <select className="border p-2 w-full mt-1 mb-3" onChange={handleProjectChange} value={selectedProject}>
-          <option value="">-- Choose Project --</option>
-          {projects?.map((p, i) => (
-            <option key={i} value={p.id || p.project_id}>{p.project_name || p.name}</option>
-          ))}
-        </select>
-  
-        {/* Plan */}
-        <label className="font-semibold">Select Plan</label>
-        <select
-          className="border p-2 w-full mt-1 mb-3"
-          value={selectedPlan}
-          onChange={(e) => { setSelectedPlan(e.target.value); setSubmissions([]); }}
-        >
-          <option value="">-- Choose Plan --</option>
-          {plans?.map(plan => <option key={plan.plan_id} value={plan.plan_id}>{plan.plan}</option>)}
-        </select>
-  
-        {/* Form */}
-        <label className="font-semibold">Select Form</label>
-        <select
-          className="border p-2 w-full mt-1 mb-3"
-          value={selectedForm}
-          onChange={(e) => { setSelectedForm(e.target.value); setSubmissions([]); }}
-        >
-          <option value="">-- Choose Form --</option>
-          {forms?.map((form, i) => (
-            <option key={i} value={form.name}>{form.name}</option>
-          ))}
-        </select>
-  
-        <button
-          onClick={() => fetchSubmissions(1)}
-          disabled={!selectedPlan || !selectedForm}
-          className="bg-blue-600 text-white px-4 py-2 rounded disabled:bg-gray-400"
-        >
-          Load Submissions
-        </button>
-      </div>
-      {/* ===== Search & Column Filter Bar ===== */}
-<div className="flex flex-wrap gap-3 items-center bg-white py-3 px-2 sticky top-[90px] z-20 border-b">
+      <div  className="bg-white shadow-md border rounded-lg p-10"
+        style={{
+          zIndex: 10,
+          maxWidth: "600px",
+          minHeight:"350px",
+          margin: "6px auto",
+          paddingBottom: 15,
+        }}
+>
 
-{/* Search box */}
-<input
-  type="text"
-  placeholder="Search..."
-  value={searchTerm}
-  onChange={(e) => setSearchTerm(e.target.value)}
-  className="border px-3 py-2 rounded w-60"
-/>
-</div>
+  {/* Project */}
+  <div className="grid grid-cols-3 gap-6 items-center mb-6">
+    <label className="font-semibold col-span-1 text-gray-700">
+      Select Project
+    </label>
+
+    <select
+      className="border p-3 col-span-2 rounded-md"
+      onChange={handleProjectChange}
+      value={selectedProject}
+    >
+      <option value="">-- Choose Project --</option>
+      {projects?.map((p, i) => (
+        <option key={i} value={p.id || p.project_id}>
+          {p.project_name || p.name}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Plan */}
+  <div className="grid grid-cols-3 gap-6 items-center mb-6">
+    <label className="font-semibold col-span-1 text-gray-700">
+      Select Plan
+    </label>
+
+    <select
+      className="border p-3 col-span-2 rounded-md"
+      value={selectedPlan}
+      onChange={(e) => {
+        setSelectedPlan(e.target.value);
+        setSubmissions([]);
+      }}
+    >
+      <option value="">-- Choose Plan --</option>
+      {plans?.map((plan) => (
+        <option key={plan.plan_id} value={plan.plan_id}>
+          {plan.plan}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Form */}
+  <div className="grid grid-cols-3 gap-6 items-center mb-8">
+    <label className="font-semibold col-span-1 text-gray-700">
+      Select Form
+    </label>
+
+    <select
+      className="border p-3 col-span-2 rounded-md"
+      value={selectedForm}
+      onChange={(e) => {
+        setSelectedForm(e.target.value);
+        setSubmissions([]);
+      }}
+    >
+      <option value="">-- Choose Form --</option>
+      {forms?.map((form, i) => (
+        <option key={i} value={form.name}>
+          {form.name}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  {/* Button */}
+  <div className="text-center">
+    <button
+      onClick={() => fetchSubmissions(1)}
+      disabled={!selectedPlan || !selectedForm}
+      className="bg-blue-600 text-white px-6 py-3 rounded-md disabled:bg-gray-400"
+    >
+      Load Submissions
+    </button>
+  </div>
+      </div>
+
+      {/* ===== Search & Column Filter Bar ===== */}
+      {submissions.length > 0 && (
+          <div className="flex justify-end gap-3 items-center bg-white py-3 px-2 top-[90px] z-20 border-b text-right">
+
+          {/* Search box */}
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="border px-3 py-2 rounded w-60"
+          />
+          </div>
+      )}
   
       {/* =================== TABLE =================== */}
       {submissions.length > 0 && (
-        <div style={{
-          width: "100%",
-          maxHeight: "65vh",
-          overflowY: "auto",
-          overflowX: "auto",
-          border: "1px solid #e5e7eb",
-          borderRadius: 6,
-          marginTop: 20,
-          padding: 10,
-          background: "white"
-        }}>
-          <table style={{ width: "max-content", borderCollapse: "collapse" }}>
-            {/* ===================== TABLE HEADER ===================== */}
-<thead
-  style={{
-    position: "sticky",
-    top: 0,
-    background: "#f3f4f6",
-    zIndex: 5,
-  }}
->
-  <tr>
-    {showActions && <th style={thTdStyle}>Actions</th>}
+        <div className="overflow-x-auto mt-10">
+          <div style={{
+                maxHeight: "65vh",
+                overflowY: "auto",
+                border: "1px solid #e5e7eb",
+                borderRadius: 6,
+                padding: 10,
+                background: "white",
+                width:"1500px"
+              }}>
+            <table style={{ width: "10%", borderCollapse: "collapse" }}>
+              {/* ===================== TABLE HEADER ===================== */}
+              <thead
+                style={{
+                  top: 0,
+                  background: "#f3f4f6",
+                  zIndex: 5,
+                }}
+              >
+                <tr>
+      {showActions &&   <th style={{
+                                ...thTdStyle,
+                                position: "sticky",
+                                left: 0,
+                                zIndex: 20,
+                                background: "#f3f4f6",
+                              }}>
+                            Actions
+                        </th>}
 
-    {Object.keys(flattenObject(submissions[0]))?.map(
-      (key) =>
-        key !== "uuid" &&
-        visibleColumns.includes(key) && (
-          <th key={key} style={thTdStyle}>
-            {key}
-          </th>
-        )
-    )}
-  </tr>
-</thead>
+      {Object.keys(flattenObject(submissions[0]))?.map(
+        (key) =>
+          key !== "uuid" &&
+          visibleColumns.includes(key) && (
+            <th key={key} style={thTdStyle}>
+              {key}
+            </th>
+          )
+      )}
+    </tr>
+  </thead>
 
 
 
-{/* ===================== TABLE BODY ===================== */}
-<tbody>
-  {filteredRows.map((row, idx) => {
-    const flat = flattenObject(row);
-    const rowId = row.uuid;
+  {/* ===================== TABLE BODY ===================== */}
+  <tbody>
+    {filteredRows.map((row, idx) => {
+      const flat = flattenObject(row);
+      const rowId = row.uuid;
 
-    return (
-      <tr key={idx} style={{ background: idx % 2 ? "#fff" : "#fbfbfb" }}>
-        
-        {/* =================== ACTIONS COLUMN =================== */}
-        {showActions && (
-          <td style={{ ...thTdStyle, verticalAlign: "middle" }}>
-            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-              
-              {/* ---- EDIT MODE ---- */}
-              {editingRowUuid === rowId ? (
-                <>
-                  {/* Save */}
-                  <Check
-                    size={18}
-                    className="text-green-600 cursor-pointer"
-                    onClick={async () => {
-                      try {
-                        const response = await fetch(
-                          `${process.env.REACT_APP_BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/modify/`,
-                          {
-                            method: "PUT",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-                            },
-                            body: JSON.stringify(editedRowData),
-                          }
-                        );
-
-                        const data = await response.json();
-                        if (data.success) {
-                          alert("Saved successfully!");
-                          fetchSubmissions(page);
-                          setEditingRowUuid(null);
-                        } else {
-                          alert("Save failed");
-                        }
-                      } catch {
-                        alert("Server error");
-                      }
-                    }}
-                  />
-
-                  {/* Cancel */}
-                  <X
-                    size={18}
-                    className="text-gray-600 cursor-pointer"
-                    onClick={() => setEditingRowUuid(null)}
-                  />
-                </>
-              ) : (
-                <>
-                  {/* ---- VIEW MODE ---- */}
-
-                  {/* Edit — allowed for Admin + Moderator */}
-                  {(isAdmin || isModerator) && (
-                    <Pencil
+      return (
+        <tr key={idx} style={{ background: idx % 2 ? "#fff" : "#fbfbfb" }}>
+          
+          {/* =================== ACTIONS COLUMN =================== */}
+          {showActions && (
+            <td style={{
+                    ...thTdStyle,
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 15,
+                    background: "#fff",
+                    verticalAlign: "middle",
+                  }}
+                >
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                
+                {/* ---- EDIT MODE ---- */}
+                {editingRowUuid === rowId ? (
+                  <>
+                    {/* Save */}
+                    <Check
                       size={18}
-                      className="text-blue-600 cursor-pointer"
-                      onClick={() => {
-                        setEditingRowUuid(row.uuid);
-                        setEditedRowData({ ...flat });
-                      }}
-                    />
-                  )}
-
-                  {/* Delete — only Admin */}
-                  {isAdmin && (
-                    <Trash2
-                      size={18}
-                      className="text-red-600 cursor-pointer"
+                      className="text-green-600 cursor-pointer"
                       onClick={async () => {
-                        if (!window.confirm("Delete this submission?")) return;
-
                         try {
                           const response = await fetch(
-                            `${process.env.REACT_APP_BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/delete/`,
+                            `${process.env.REACT_APP_BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/modify/`,
                             {
-                              method: "DELETE",
+                              method: "PUT",
                               headers: {
+                                "Content-Type": "application/json",
                                 Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
                               },
+                              body: JSON.stringify(editedRowData),
                             }
                           );
 
                           const data = await response.json();
                           if (data.success) {
-                            alert("Deleted!");
-                            setSubmissions((prev) =>
-                              prev.filter((item) => item.uuid !== row.uuid)
-                            );
+                            alert("Saved successfully!");
+                            fetchSubmissions(page);
+                            setEditingRowUuid(null);
+                          } else {
+                            alert("Save failed");
                           }
                         } catch {
                           alert("Server error");
                         }
                       }}
                     />
-                  )}
-                </>
-              )}
-            </div>
-          </td>
-        )}
 
-        {/* =================== DATA CELLS =================== */}
-        {Object.keys(flat).map((key) => {
-          if (key === "uuid") return null; // prevent UUID column
-          if (!visibleColumns.includes(key)) return null;
+                    {/* Cancel */}
+                    <X
+                      size={18}
+                      className="text-gray-600 cursor-pointer"
+                      onClick={() => setEditingRowUuid(null)}
+                    />
+                  </>
+                ) : (
+                  <>
+                    {/* ---- VIEW MODE ---- */}
 
-          return (
-            <td key={key} style={thTdStyle}>
-              {editingRowUuid === rowId ? (
-                <input
-                  type="text"
-                  value={editedRowData[key] ?? ""}
-                  onChange={(e) =>
-                    setEditedRowData((prev) => ({
-                      ...prev,
-                      [key]: e.target.value,
-                    }))
-                  }
-                  className="border p-1 w-full"
-                />
-              ) : (
-                flat[key] ?? "-"
-              )}
+                    {/* Edit — allowed for Admin + Moderator */}
+                    {(isAdmin || isModerator) && (
+                      <Pencil
+                        size={18}
+                        className="text-blue-600 cursor-pointer"
+                        onClick={() => {
+                          setEditingRowUuid(row.uuid);
+                          setEditedRowData({ ...flat });
+                        }}
+                      />
+                    )}
+
+                    {/* Delete — only Admin */}
+                    {isAdmin && (
+                      <Trash2
+                        size={18}
+                        className="text-red-600 cursor-pointer"
+                        onClick={async () => {
+                          if (!window.confirm("Delete this submission?")) return;
+
+                          try {
+                            const response = await fetch(
+                              `${process.env.REACT_APP_BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/delete/`,
+                              {
+                                method: "DELETE",
+                                headers: {
+                                  Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+                                },
+                              }
+                            );
+
+                            const data = await response.json();
+                            if (data.success) {
+                              alert("Deleted!");
+                              setSubmissions((prev) =>
+                                prev.filter((item) => item.uuid !== row.uuid)
+                              );
+                            }
+                          } catch {
+                            alert("Server error");
+                          }
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+              </div>
             </td>
-          );
-        })}
-      </tr>
-    );
-  })}
-</tbody>
+          )}
+
+          {/* =================== DATA CELLS =================== */}
+          {Object.keys(flat).map((key) => {
+            if (key === "uuid") return null; // prevent UUID column
+            if (!visibleColumns.includes(key)) return null;
+
+            return (
+              <td key={key} style={thTdStyle}>
+                {editingRowUuid === rowId ? (
+                  <input
+                    type="text"
+                    value={editedRowData[key] ?? ""}
+                    onChange={(e) =>
+                      setEditedRowData((prev) => ({
+                        ...prev,
+                        [key]: e.target.value,
+                      }))
+                    }
+                    className="border p-1 w-full"
+                  />
+                ) : (
+                  flat[key] ?? "-"
+                )}
+              </td>
+            );
+          })}
+        </tr>
+      );
+    })}
+  </tbody>
 
 
 
 
-          </table>
+            </table>
+          </div>
         </div>
       )}
   
