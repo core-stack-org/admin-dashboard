@@ -303,6 +303,7 @@ const Project = ({ currentUser }) => {
               <option value="plantation">Plantations</option>
               <option value="watershed">Watershed Planning</option>
               <option value="waterbody">Waterbody Rejuvenation</option>
+              <option value="community_engagement">Community Engagement</option>
             </select>
           </div>
 
