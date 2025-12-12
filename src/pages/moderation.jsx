@@ -46,6 +46,20 @@ console.log("User:", user);
 console.log("Groups:", groups);
 console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", showActions);
 
+const formColumnMap = {
+  well: ["beneficiary_settlement", "block_name", "owner", "households_benefitted", "caste_uses", "is_functional", "need_maintenance", "plan_name", "status_re"],
+  settlement: ["settlement_name", "status_re", "block_name", "number_of_households", "largest_caste", "smallest_caste", "settlement_status", "plan_name","nrega_job_aware", "nrega_job_applied", "nrega_job_card", "nrega_without_job_card", "nrega_work_days", "nrega_past_work", "nrega_raise_demand", "nrega_demand", "nrega_issues", "nrega_community" ],
+  waterbody: ["block_name", "beneficiary_settlement", "beneficiary_contact", "who_manages", "specify_other_manager", "owner", "caste_who_uses", "household_benefitted", "water_structure_type", "water_structure_other", "identified_by", "need_maintenance", "plan_name", "status_re"],
+  groundwater:["beneficiary_settlement", "block_name", "work_type", "plan_name", "status_re"],
+  agri:["beneficiary_settlement","block_name", "work_type", "plan_name", "status_re", ],
+  livelihood:["beneficiary_settlement", "block_name","beneficiary_contact","livestock_development", "fisheries", "common_asset", "plan_name", "status_re"],
+  crop:["beneficiary_settlement","irrigation_source", "land_classification", "cropping_patterns_kharif","cropping_patterns_rabi","cropping_patterns_zaid", "agri_productivity", "plan_name", "status_re"],
+  agri_maint:["plan_name", "status_re"],
+  gw_maint:["plan_name", "status_re"],
+  swb_maint:["plan_name", "status_re"],
+  swb_rs_maint:["plan_name", "status_re"]
+};
+
   // Flatten nested object helper
   const flattenObject = (obj, prefix = "") => {
     return Object.keys(obj || {}).reduce((acc, key) => {
@@ -121,11 +135,29 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
       .catch(err => console.log("Submission Fetch Error", err));
   };
 
+  // useEffect(() => {
+  //   if (submissions.length > 0) {
+  //     setVisibleColumns(Object.keys(flattenObject(submissions[0])).filter(c => c !== "uuid"));
+  //   }
+  // }, [submissions]);
+
   useEffect(() => {
     if (submissions.length > 0) {
-      setVisibleColumns(Object.keys(flattenObject(submissions[0])).filter(c => c !== "uuid"));
+      const allColumns = Object.keys(flattenObject(submissions[0])).filter(
+        c => c !== "uuid"
+      );
+  
+      // If form has custom mapping → use it
+      if (formColumnMap[selectedForm]) {
+        setVisibleColumns(
+          allColumns.filter(col => formColumnMap[selectedForm].includes(col))
+        );
+      } else {
+        // default → show all
+        setVisibleColumns(allColumns);
+      }
     }
-  }, [submissions]);
+  }, [submissions, selectedForm]);
   
 
   const filteredRows = submissions.filter(row => {
