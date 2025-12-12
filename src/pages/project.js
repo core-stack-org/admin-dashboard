@@ -194,9 +194,10 @@ const Project = ({ currentUser }) => {
     };
     try {
       const token = sessionStorage.getItem("accessToken");
+      const apiPath =  projectAppType === "community_engagement" ? "api/v1/create_community/" : "api/v1/projects/";
 
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/`,
+        `${process.env.REACT_APP_BASEURL}${apiPath}`,
         {
           method: "POST",
           headers: {
