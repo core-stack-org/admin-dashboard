@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Pencil, Trash2, Check, X } from "lucide-react";
+import { positions } from "@mui/system";
 
 const Moderation = () => {
   const [projects, setProjects] = useState([]);
@@ -136,7 +137,7 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
 
   return (
     <div className="p-10 mt-16" >
-      <div className="w-full flex justify-center sticky top-0 z-50 bg-white py-4">
+      <div className="w-full flex justify-center top-0 z-50 bg-white py-4">
         <h1 className="text-2xl font-bold">Moderation Dashboard</h1>
       </div>
 
@@ -248,16 +249,19 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
       {/* =================== TABLE =================== */}
       {submissions.length > 0 && (
         <div className="overflow-x-auto mt-10">
-          <div style={{
-                maxHeight: "65vh",
-                overflowY: "auto",
-                border: "1px solid #e5e7eb",
-                borderRadius: 6,
-                padding: 10,
-                background: "white",
-                width:"1500px"
-              }}>
-            <table style={{ width: "10%", borderCollapse: "collapse" }}>
+      <div
+          style={{
+            maxHeight: "65vh",
+            width: "100%",              
+            maxWidth: "1500px",         
+            overflow: "auto",         
+            border: "1px solid #e5e7eb",
+            borderRadius: 6,
+            padding: 10,
+            background: "white",
+          }}
+        >
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
               {/* ===================== TABLE HEADER ===================== */}
               <thead
                 style={{
@@ -269,7 +273,6 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
                 <tr>
       {showActions &&   <th style={{
                                 ...thTdStyle,
-                                position: "sticky",
                                 left: 0,
                                 zIndex: 20,
                                 background: "#f3f4f6",
@@ -304,7 +307,6 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
           {showActions && (
             <td style={{
                     ...thTdStyle,
-                    position: "sticky",
                     left: 0,
                     zIndex: 15,
                     background: "#fff",
@@ -449,7 +451,7 @@ console.log("isAdmin:", isAdmin, "isModerator:", isModerator, "showActions:", sh
   
       {/* =================== Pagination =================== */}
       {submissions.length > 0 && (
-        <div className="flex justify-center gap-2 mt-4 flex-wrap sticky bottom-0 bg-white py-3 z-10">
+        <div className="flex justify-center gap-2 mt-4 flex-wrap bottom-0 bg-white py-3 z-10">
           <button disabled={page === 1} onClick={() => fetchSubmissions(page - 1)} className="px-3 py-1 border rounded">
             Prev
           </button>
