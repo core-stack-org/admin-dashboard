@@ -7,7 +7,12 @@ import {
   TextField,
   MenuItem,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Button,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete"; // ✅ FIX
 import FilterListIcon from "@mui/icons-material/FilterList";
 import {
   Edit2,
@@ -34,6 +39,10 @@ const AllProjects = ({ statesList,currentUser }) => {
   const [selectedAppType, setSelectedAppType] = useState("");
   const [selectedOrganization, setSelectedOrganization] = useState("");
   const [bbox, setBBox] = useState(null);
+  const [openCEDialog, setOpenCEDialog] = useState(false);
+  const [selectedCEProject, setSelectedCEProject] = useState(null);
+  const [selectedCEFiles, setSelectedCEFiles] = useState([]);
+
 
   const navigate = useNavigate();
   console.log(currentUser.user)
@@ -309,6 +318,65 @@ const AllProjects = ({ statesList,currentUser }) => {
     }
   };
 
+  const handleOpenCE = (project) => {
+    setSelectedCEProject(project);
+    setSelectedCEFiles([]);
+    setOpenCEDialog(true);
+  };
+
+  const handleCEFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const valid = files.filter(f => f.name.endsWith(".csv"));
+  
+    if (!valid.length) return alert("Please upload valid CSV files");
+  
+    setSelectedCEFiles(valid);
+  };
+  
+  const handleRemoveCEFile = (index) => {
+    setSelectedCEFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const handleUploadCE = async () => {
+    if (selectedCEFiles.length === 0) {
+      return alert("Please select CSV files first");
+    }
+  
+    const formData = new FormData();
+    selectedCEFiles.forEach((f) => formData.append("files[]", f));
+    formData.append("project_id", selectedCEProject.id);
+  
+    try {
+      const token = sessionStorage.getItem("accessToken");
+  
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/map_users_to_community/`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+  
+      if (!res.ok) throw new Error("Upload failed");
+  
+      setToast({
+        open: true,
+        message: "Members uploaded successfully!",
+        severity: "success",
+      });
+
+      setOpenCEDialog(false);
+    } catch (err) {
+      setToast({
+        open: true,
+        message: "Failed to upload members!",
+        severity: "error",
+      });
+    }
+  };
+  
+
   return (
     <Box>
       <div className="h-screen flex flex-col">
@@ -554,7 +622,23 @@ const AllProjects = ({ statesList,currentUser }) => {
                             </>
                           )}
                           {/* Community Engagement */}
-                          {p.app_type === "community_engagement" && <></>}
+                          {p.app_type === "community_engagement" && (
+                              <Tooltip title="Manage Community Engagement">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#0ea5e9", // Sky blue
+                                    "&:hover": {
+                                      color: "#0284c7",
+                                      backgroundColor: "rgba(14,165,233,0.1)",
+                                    },
+                                  }}
+                                  onClick={() => handleOpenCE(p)}
+                                >
+                                  <Upload size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                         </td>
                       </tr>
                     ))
@@ -676,6 +760,67 @@ const AllProjects = ({ statesList,currentUser }) => {
               ))}
         </Box>
       </Popover>
+
+      <Dialog
+  open={openCEDialog}
+  onClose={() => setOpenCEDialog(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    Manage Community – {selectedCEProject?.name}
+  </DialogTitle>
+
+  <DialogContent>
+    <Box display="flex" flexDirection="column" gap={2}>
+
+      {/* File Input */}
+      <input
+        id="ce-upload"
+        type="file"
+        accept=".csv"
+        multiple
+        hidden
+        onChange={handleCEFileSelect}
+      />
+      <label htmlFor="ce-upload">
+        <Box
+          className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50"
+        >
+          Select CSV Files
+        </Box>
+      </label>
+
+      {/* Selected Files */}
+      {selectedCEFiles.length > 0 && (
+        <Box className="bg-gray-100 p-3 rounded-lg">
+          {selectedCEFiles.map((f, i) => (
+            <Box
+              key={i}
+              className="flex justify-between items-center p-2 border-b last:border-none"
+            >
+              {f.name}
+              <IconButton size="small" color="error" onClick={() => handleRemoveCEFile(i)}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        disabled={selectedCEFiles.length === 0}
+        onClick={handleUploadCE}
+      >
+        Upload Members
+      </Button>
+    </Box>
+  </DialogContent>
+</Dialog>
+
     </Box>
   );
 };
