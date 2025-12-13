@@ -265,10 +265,20 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     
     if (formColumnMap[selectedForm]) {
       const configuredColumns = formColumnMap[selectedForm];
-      return allColumns.filter(col => {
-        const lastPart = col.split('.').pop();
-        return configuredColumns.includes(col) || configuredColumns.includes(lastPart);
-      });
+      const result = [];
+      
+      for (const configField of configuredColumns) {
+        const matchingColumn = allColumns.find(col => {
+          const lastPart = col.split('.').pop();
+          return col === configField || lastPart === configField;
+        });
+        
+        if (matchingColumn) {
+          result.push(matchingColumn);
+        }
+      }
+      
+      return result;
     }
     
     return allColumns.slice(0, 5);
