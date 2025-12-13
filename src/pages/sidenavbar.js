@@ -193,12 +193,26 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     setIsDropdownOpen(false);
   };
 
-  const restrictedRoles = ["Administrator", "Project Manager", "App User"];
 
-  const isSuperAdmin = currentuser.user.is_superadmin;
-  const userRoles = currentuser.user.groups || [];
+// ROLE CHECKS
+const isSuperAdmin = currentuser?.user?.is_superadmin === true;
 
-  const menuItems = [
+const userRoles = currentuser?.user?.groups?.map(r => r.name) || [];
+
+const isAdministrator =
+  userRoles.includes("Administrator") || userRoles.includes("Org Admin");
+
+const isAppUser = userRoles.includes("App User");
+const isModerator = userRoles.includes("Moderator");
+
+
+
+// Always visible to ALL users
+let menuItems = [];
+
+// SUPERADMIN → SHOW ALL
+if (isSuperAdmin) {
+  menuItems = [
     {
       icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
       label: "Dashboard",
@@ -210,7 +224,60 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       href: "https://www.youtube.com/watch?v=t-7lTkakA9Q&list=PLZ0pcz8ccRmI4rk-fjVOpxzJKMoY6-Jie&index=1",
       external: true,
     },
+    {
+      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+      label: "Request data layers",
+      href: "/locationForm",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+      label: "Moderation Dashboard",
+      href: "/moderation",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
+      label: "Activate Location",
+      href: "/activateBlock",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faFileExcel} size="lg" />,
+      label: "Generate Excel",
+      href: "/generateExcel",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faMap} size="lg" />,
+      label: "Layer Json Map",
+      href: "/generateLayerJsonMap",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+      label: "Layer Status",
+      href: "/layerStatus",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
+      label: "Generate Layers",
+      isSubmenu: true,
+      layers: layers,
+      href: "/locationForm",
+    },
+  ];
+}
 
+// ADMINISTRATOR / ORG ADMIN
+else if (isAdministrator) {
+  menuItems = [
+    {
+      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+      label: "Dashboard",
+      href: "/dashboard",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+      label: "How to use",
+      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+      external: true,
+    },
     {
       icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
       label: "Request data layers",
@@ -222,53 +289,147 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       href: "/moderation",
     },
   ];
+}
 
-  const showFullMenu =
-    isSuperAdmin ||
-    (userRoles.length > 0 &&
-      !userRoles.some((role) => {
-        return restrictedRoles.includes(role.name || role);
-      }));
+// MODERATOR (NO DASHBOARD)
+else if (isModerator) {
+  menuItems = [
+    {
+      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+      label: "Moderation Dashboard",
+      href: "/moderation",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+      label: "How to use",
+      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+      external: true,
+    },
+    {
+      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+      label: "Request data layers",
+      href: "/locationForm",
+    }
+  ];
+}
 
-  if (showFullMenu) {
-    menuItems.push(
-      {
-        icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
-        label: "Activate Location",
-        href: "/activateBlock",
-      },
-      {
-        icon: <FontAwesomeIcon icon={faFileExcel} size="lg" />,
-        label: "Generate Excel",
-        href: "/generateExcel",
-      },
-      // {
-      //   icon: <FontAwesomeIcon icon={faEye} size="lg" />,
-      //   label: "Preview Layers",
-      //   href: "/previewLayers",
-      // },
+// APP USER
+else if (isAppUser) {
+  menuItems = [
+    {
+      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+      label: "Dashboard",
+      href: "/dashboard",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+      label: "How to use",
+      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+      external: true,
+    },
+    {
+      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+      label: "Request data layers",
+      href: "/locationForm",
+    },
+  ];
+}
 
-      {
-        icon: <FontAwesomeIcon icon={faMap} size="lg" />,
-        label: "Layer Json Map",
-        href: "/generateLayerJsonMap",
-      },
+// DEFAULT (fallback)
+else {
+  menuItems = [
+    {
+      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+      label: "Dashboard",
+      href: "/dashboard",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+      label: "How to use",
+      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+      external: true,
+    },
+    {
+      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+      label: "Request data layers",
+      href: "/locationForm",
+    },
+  ];
+}
 
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Layer Status",
-        href: "/layerStatus",
-      },
 
-      {
-        icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
-        label: "Generate Layers",
-        isSubmenu: true,
-        layers: layers,
-        href: "/locationForm",
-      }
-    );
-  }
+
+  // const menuItems = [
+  //   {
+  //     icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+  //     label: "Dashboard",
+  //     href: "/dashboard",
+  //   },
+  //   {
+  //     icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+  //     label: "How to use",
+  //     href: "https://www.youtube.com/watch?v=t-7lTkakA9Q&list=PLZ0pcz8ccRmI4rk-fjVOpxzJKMoY6-Jie&index=1",
+  //     external: true,
+  //   },
+
+  //   {
+  //     icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+  //     label: "Request data layers",
+  //     href: "/locationForm",
+  //   },
+  //   {
+  //     icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+  //     label: "Moderation Dashboard",
+  //     href: "/moderation",
+  //   },
+  // ];
+
+  // const showFullMenu =
+  //   isSuperAdmin ||
+  //   (userRoles.length > 0 &&
+  //     !userRoles.some((role) => {
+  //       return restrictedRoles.includes(role.name || role);
+  //     }));
+
+  // if (showFullMenu) {
+  //   menuItems.push(
+  //     {
+  //       icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
+  //       label: "Activate Location",
+  //       href: "/activateBlock",
+  //     },
+  //     {
+  //       icon: <FontAwesomeIcon icon={faFileExcel} size="lg" />,
+  //       label: "Generate Excel",
+  //       href: "/generateExcel",
+  //     },
+  //     // {
+  //     //   icon: <FontAwesomeIcon icon={faEye} size="lg" />,
+  //     //   label: "Preview Layers",
+  //     //   href: "/previewLayers",
+  //     // },
+
+  //     {
+  //       icon: <FontAwesomeIcon icon={faMap} size="lg" />,
+  //       label: "Layer Json Map",
+  //       href: "/generateLayerJsonMap",
+  //     },
+
+  //     {
+  //       icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+  //       label: "Layer Status",
+  //       href: "/layerStatus",
+  //     },
+
+  //     {
+  //       icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
+  //       label: "Generate Layers",
+  //       isSubmenu: true,
+  //       layers: layers,
+  //       href: "/locationForm",
+  //     }
+  //   );
+  // }
 
   const handleLayerClick = (layerLabel) => {
     const selectedLayerData = layersData.layers_json[layerLabel]; // Get the layer details

@@ -1,8 +1,9 @@
-import React from "react";
+import React,{useEffect} from "react";
 import SuperAdminDashboard from "./superAdminDashboard.jsx";
 import OrgAdminDashboard from "./orgAdminDashboard.jsx";
 import ProjectManagerDashboard from "./projectManagerDashboard.jsx";
 import AppUserDashboard from "./appUserDashboard.js";
+import Moderation from "./moderation.jsx";
 
 const Dashboard = ({ currentUser }) => {
   const getHighestPriorityRole = () => {
@@ -18,6 +19,7 @@ const Dashboard = ({ currentUser }) => {
       "Administrator",
       "Project Manager",
       "App User",
+      "Moderator"
     ];
 
     for (const role of priorityOrder) {
@@ -29,6 +31,13 @@ const Dashboard = ({ currentUser }) => {
     // If no known roles found, fallback to App User
     return "App User";
   };
+  const highestRole = getHighestPriorityRole();
+
+  // useEffect(() => {
+  //   if (highestRole === "Moderator") {
+  //     navigate("/moderation", { replace: true });
+  //   }
+  // }, [highestRole, navigate]);
 
   const renderContent = () => {
     const highestRole = getHighestPriorityRole();
@@ -42,6 +51,8 @@ const Dashboard = ({ currentUser }) => {
         return <OrgAdminDashboard currentUser={currentUser} />;
       case "Project Manager":
         return <ProjectManagerDashboard currentUser={currentUser} />;
+        case "Moderator":
+          return <Moderation currentUser={currentUser}/>;
       case "App User":
       default:
         return <AppUserDashboard currentUser={currentUser} />;
