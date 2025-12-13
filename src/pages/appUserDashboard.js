@@ -118,8 +118,20 @@ export default function AppUserDashboard() {
         App User Dashboard
       </motion.h1>
 
+      <div className="w-full flex justify-center mt-10">
+  <div className="bg-white shadow-md border border-gray-200 rounded-xl p-6 max-w-xl text-center">
+    <p className="text-lg font-semibold text-gray-800">
+      Access Restricted
+    </p>
+    <p className="text-gray-600 mt-2">
+      You do not currently have rights to access this dashboard.
+      Please contact your administrator or wait until permissions are assigned.
+    </p>
+  </div>
+</div>
+
       {/* Select App Type */}
-      <div className="w-64 mt-10">
+      {/* <div className="w-64 mt-10">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Select App Type
         </label>
@@ -135,10 +147,10 @@ export default function AppUserDashboard() {
             </option>
           ))}
         </select>
-      </div>
+      </div> */}
 
       {/* Available Roles */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
@@ -175,15 +187,14 @@ export default function AppUserDashboard() {
             </ul>
           </CardContent>
         </Card>
-      </motion.div>
+      </motion.div> */}
 
-      {/* Bottom Sheet for KML Upload */}
-      {activeRole === "Upload KMLs" && (
+      {/* {activeRole === "Upload KMLs" && (
         <div
           className="fixed bottom-20 bg-white shadow-lg p-4 border-t transition-transform duration-300"
           style={{
-            width: "786px", // Match Available Roles width
-            left: "57%", // Center horizontally
+            width: "786px", 
+            left: "57%", 
             transform: "translateX(-50%)", // Keep it centered
             borderRadius: "12px",
             padding: "16px",
@@ -195,7 +206,6 @@ export default function AppUserDashboard() {
           </h3>
 
           <div className="flex flex-col items-center space-y-3 mt-1">
-            {/* File Input */}
             <label htmlFor="kml-upload" className="w-full">
               <input
                 id="kml-upload"
@@ -222,7 +232,6 @@ export default function AppUserDashboard() {
               </Button>
             </label>
 
-            {/* Display Selected Files */}
             {selectedFiles.length > 0 && (
               <div className="w-full bg-gray-100 p-2 rounded-lg text-center">
                 {selectedFiles.map((file, index) => (
@@ -244,7 +253,6 @@ export default function AppUserDashboard() {
               </div>
             )}
 
-            {/* Upload Button */}
             <Button
               variant="contained"
               color="primary"
@@ -261,7 +269,6 @@ export default function AppUserDashboard() {
               Upload
             </Button>
 
-            {/* Close Button */}
             <Button
               variant="contained"
               color="secondary"
@@ -273,10 +280,10 @@ export default function AppUserDashboard() {
             </Button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Snackbar for Upload Messages */}
-      <Snackbar
+      {/* <Snackbar
         open={toast.open}
         autoHideDuration={6000}
         onClose={handleCloseToast}
@@ -292,7 +299,7 @@ export default function AppUserDashboard() {
         >
           {toast.message}
         </Alert>
-      </Snackbar>
+      </Snackbar> */}
     </div>
   );
 }

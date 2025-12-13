@@ -33,6 +33,7 @@ import LayerMapJsonComponent from "./pages/layerJsonMap";
 import LayerStatusComponent from "./pages/layerStatus";
 import LayerStatusDetails from "./pages/layerStatusDetails";
 import RequestLocationForm from "./pages/requestLocationForm";
+import Moderation from "./pages/moderation";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -130,6 +131,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/generate-layers/:layerName"
                   element={<LocationForm currentUser={currentUser} />}
                 />
+                <Route path="/moderation" element={<Moderation />} />
               </>
             ) : (
               <Route path="*" element={<Navigate to="/" replace />} />

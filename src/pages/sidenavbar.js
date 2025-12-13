@@ -14,6 +14,7 @@ import {
   faLocationDot,
   faMapMarkerAlt,
   faLocationArrow,
+  faShieldAlt
 } from "@fortawesome/free-solid-svg-icons";
 
 import logo from "../assets/core-stack logo.png";
@@ -37,6 +38,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -213,6 +215,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
       label: "Request data layers",
       href: "/locationForm",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+      label: "Moderation Dashboard",
+      href: "/moderation",
     },
   ];
 
