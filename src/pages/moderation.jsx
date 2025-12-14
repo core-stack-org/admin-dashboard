@@ -185,7 +185,50 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     const lastPart = parts[parts.length - 1];
     return lastPart.replace(/_/g, " ");
   };
+
+  const formatValue = (key, value) => {
+    if (isTimestampField(key)) {
+      return formatToIST(value);
+    }
+    
+    const lastPart = key.split('.').pop();
+    if ((lastPart === 'coordinates' || lastPart.includes('coordinate')) && Array.isArray(value)) {
+      return value.join(', ');
+    }
+    
+    return value ?? "-";
+  };
+
+  const isMetadataField = (key) => {
+    const metadataPatterns = [
+      '__id',
+      '__system',
+      'meta',
+      'deviceid',
+      'start',
+      'end',
+      'today',
+      'user_latlon',
+      'formVersion',
+      'reviewState',
+      'submitterId',
+      'submitterName',
+      'attachmentsPresent',
+      'attachmentsExpected',
+      'edits',
+      'status',
+      'deviceId',
+      'deletedAt',
+      'updatedAt',
+    ];
+    
+    const lastPart = key.split('.').pop();
+    return metadataPatterns.some(pattern => 
+      key.includes(pattern) || lastPart === pattern
+    );
+  };
   
+  const [showMetadata, setShowMetadata] = useState({});
   const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -202,18 +245,266 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const isModerator = groups.some(g => g.name === "Moderator");
   const showActions = isAdmin || isModerator;
 
+  // const formColumnMap = {
+  //   Well: ["submission_time","well_id","plan_id","beneficiary_settlement", "block_name", "owner", "Beneficiary_name","need_maintenance", "coordinates", "select_one_change_water_quality", ""],
+  //   Settlement: ["submission_time","Settlements_id","plan_id","settlement_name", "block_name", "settlement_status","coordinates", "number_households", "settlement_electricity", "distance_settlement_block"],
+  //   Waterbody: ["submission_time", "waterbody_id","plan_id","beneficiary_settlement", "beneficiary_contact", "owner","Beneficiary_name","block_name", "coordinates", "households_benefited"],
+  //   Groundwater: ["submission_time", "recharge_structure_id","plan_id","beneficiary_settlement", "work_type",  "block_name", "coordinates",],
+  //   Agri: ["submission_time", "beneficiary_settlement", "work_type", "block_name", "status_re"],
+  //   Livelihood: ["submission_time", "beneficiary_settlement", "beneficiary_contact", "livestock_development", "block_name"],
+  //   Crop: ["submission_time", "beneficiary_settlement", "cropping_patterns_zaid", "cropping_patterns_kharif", "cropping_patterns_rabi"],
+  //   "Agri Maintenance" :["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
+  //   "GroundWater Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
+  //   "Surface Water Body Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
+  //   "Surface Water Body Recharge Structure Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
+  // };
+
+  const fieldDisplayNames = {
+    // Common fields
+    submission_time: "Submission Time",
+    submissionDate: "Submission Date",
+    plan_name: "Plan Name",
+    plan_id: "Plan ID",
+    block_name: "Block Name",
+    coordinates: "Coordinates",
+    
+    // Settlement fields
+    Settlements_name: "Settlement Name",
+    settlement_name: "Settlement Name",
+    Settlements_id: "Settlement ID",
+    number_households: "Total Households",
+    settlement_electricity: "Electricity Available",
+    road_connected: "Road Connected",
+    count_general: "General Caste Count",
+    count_sc: "SC Count",
+    count_st: "ST Count",
+    count_obc: "OBC Count",
+    distance_settlement: "Distance to Main Road (km)",
+    distance_settlement_block: "Distance to Block (km)",
+    BPL_households: "BPL Households",
+    
+    // Well fields
+    well_id: "Well ID",
+    Beneficiary_name: "Beneficiary Name",
+    beneficiary_settlement: "Beneficiary Settlement",
+    ben_father: "Father's/Guardian Name",
+    select_one_owns: "Ownership",
+    households_benefited: "Households Benefited",
+    select_multiple_caste_use: "Castes Using",
+    select_one_well_type: "Well Type",
+    is_maintenance_required: "Maintenance Required",
+    Is_water_from_well_used: "Well Water Used",
+    select_one_well_used: "Well Usage Type",
+    
+    // Waterbody fields
+    waterbodies_id: "Waterbody ID",
+    select_one_water_structure: "Water Structure Type",
+    select_one_manages: "Managed By",
+    select_one_maintenance: "Maintenance Status",
+    age_water_structure: "Structure Age",
+    select_multiple_uses_structure: "Structure Uses",
+    Beneficiary_contact_number: "Beneficiary Contact",
+    
+    // Groundwater & Agri fields
+    work_id: "Work ID",
+    TYPE_OF_WORK_ID: "Type of Work",
+    TYPE_OF_WORK: "Work Type",
+    Beneficiary_Name: "Beneficiary Name",
+    Beneficiary_Contact_Number: "Beneficiary Contact",
+    demand_type: "Demand Type",
+    demand_type_irrigation: "Demand Type",
+    khasra: "Khasra Number",
+    gender: "Gender",
+    select_gender: "Gender",
+    
+    // Agri/Irrigation specific
+    select_one_cropping_pattern: "Cropping Pattern",
+    select_multiple_cropping_kharif: "Kharif Crops",
+    select_multiple_cropping_Rabi: "Rabi Crops",
+    select_multiple_cropping_Zaid: "Zaid Crops",
+    
+    // Crop fields
+    crop_Grid_id: "Crop Grid ID",
+    select_one_classified: "Land Classification",
+    select_one_practice: "Cropping Practice",
+    select_multiple_widgets: "Irrigation Source",
+    select_one_productivity: "Productivity Status",
+    soil_degraded: "Soil Degraded",
+    total_area_cultivation_kharif: "Kharif Area (acres)",
+    total_area_cultivation_Rabi: "Rabi Area (acres)",
+    total_area_cultivation_Zaid: "Zaid Area (acres)",
+    
+    // Livelihood fields
+    ben_plantation: "Beneficiary (Plantation)",
+    crop_name: "Crop/Plant Name",
+    crop_area: "Crop Area",
+    ben_livestock: "Beneficiary (Livestock)",
+    ben_fisheries: "Beneficiary (Fisheries)",
+    is_demand_fisheries: "Fisheries Demand",
+    is_demand_livestock: "Livestock Demand",
+    
+    // Maintenance forms
+    corresponding_work_id: "Original Work ID",
+    select_one_irrigation_structure: "Irrigation Structure",
+    select_one_recharge_structure: "Recharge Structure",
+    select_one_check_dam: "Check Dam Issue",
+    select_one_farm_pond: "Farm Pond Issue",
+    select_one_community_pond: "Community Pond Issue",
+    select_one_percolation_tank: "Percolation Tank Issue",
+    select_one_well: "Well Issue",
+    select_one_canal: "Canal Issue",
+    select_one_farm_bund: "Farm Bund Issue",
+    
+    // Other common fields
+    user_latlon: "User Location",
+    deviceid: "Device ID",
+    text_record: "Text Notes",
+    image_widget: "Image",
+  };
+  
   const formColumnMap = {
-    Well: ["submission_time","beneficiary_settlement", "block_name", "owner", "need_maintenance"],
-    Settlement: ["submission_time","settlement_name", "block_name", "plan_name", "settlement_status",],
-    Waterbody: ["submission_time", "beneficiary_settlement", "beneficiary_contact", "owner","block_name", ],
-    Groundwater: ["submission_time", "beneficiary_settlement", "work_type",  "block_name", "status_re"],
-    Agri: ["submission_time", "beneficiary_settlement", "work_type", "block_name", "status_re"],
-    Livelihood: ["submission_time", "beneficiary_settlement", "beneficiary_contact", "livestock_development", "block_name"],
-    Crop: ["submission_time", "beneficiary_settlement", "cropping_patterns_zaid", "cropping_patterns_kharif", "cropping_patterns_rabi"],
-    "Agri Maintenance" :["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-    "GroundWater Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-    "Surface Water Body Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-    "Surface Water Body Recharge Structure Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
+    Settlement: [
+      "submissionDate",
+      "Settlements_name",
+      "Settlements_id",
+      "block_name",
+      "plan_name",
+      "number_households",
+      "settlement_electricity",
+      "road_connected",
+      "count_st",
+      "coordinates"
+    ],
+    
+    Well: [
+      "submissionDate",
+      "well_id",
+      "Beneficiary_name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "select_one_owns",
+      "households_benefited",
+      "select_one_well_type",
+      "is_maintenance_required"
+    ],
+    
+    Waterbody: [
+      "submissionDate",
+      "waterbodies_id",
+      "Beneficiary_name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "select_one_water_structure",
+      "select_one_owns",
+      "households_benefited",
+      "select_one_maintenance"
+    ],
+    
+    Groundwater: [
+      "submissionDate",
+      "work_id",
+      "TYPE_OF_WORK_ID",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "demand_type",
+      "khasra",
+      "Beneficiary_Name",
+      "coordinates"
+    ],
+    
+    Agri: [
+      "submissionDate",
+      "work_id",
+      "TYPE_OF_WORK_ID",
+      "Beneficiary_Name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "demand_type_irrigation",
+      "khasra",
+      "select_one_cropping_pattern"
+    ],
+    
+    Livelihood: [
+      "submissionDate",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "ben_plantation",
+      "crop_name",
+      "crop_area",
+      "is_demand_fisheries",
+      "is_demand_livestock",
+      "coordinates"
+    ],
+    
+    Crop: [
+      "submissionDate",
+      "crop_Grid_id",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "select_one_classified",
+      "select_one_practice",
+      "select_multiple_cropping_kharif",
+      "total_area_cultivation_kharif",
+      "select_one_productivity"
+    ],
+    
+    "Agri Maintenance": [
+      "submissionDate",
+      "work_id",
+      "Beneficiary_Name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "corresponding_work_id",
+      "select_one_irrigation_structure",
+      "demand_type",
+      "coordinates"
+    ],
+    
+    "GroundWater Maintenance": [
+      "submissionDate",
+      "work_id",
+      "Beneficiary_Name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "TYPE_OF_WORK",
+      "corresponding_work_id",
+      "demand_type",
+      "select_one_check_dam"
+    ],
+    
+    "Surface Water Body Maintenance": [
+      "submissionDate",
+      "work_id",
+      "Beneficiary_Name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "corresponding_work_id",
+      "select_one_recharge_structure",
+      "demand_type",
+      "coordinates"
+    ],
+    
+    "Surface Water Body Recharge Structure Maintenance": [
+      "submissionDate",
+      "work_id",
+      "Beneficiary_Name",
+      "beneficiary_settlement",
+      "block_name",
+      "plan_name",
+      "TYPE_OF_WORK",
+      "corresponding_work_id",
+      "select_one_community_pond",
+      "coordinates"
+    ],
   };
 
   const flattenObject = (obj, prefix = "") => {
@@ -425,25 +716,42 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
               : 'border-gray-200 bg-white'
           }`}
         >
-          {!isExpanded && (
+      
+      
+      {!isExpanded && (
   <div className="flex items-center justify-between hover:bg-gray-50">
     <div 
       onClick={() => toggleExpand(row.uuid)}
       className="flex-1 p-4 cursor-pointer"
     >
+      {/* Submission Time Header */}
+      {/* <div className="mb-3 pb-2 border-b border-gray-200">
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="font-semibold">Submitted:</span>
+          <span className="text-gray-800">{formatToIST(row.submission_time)}</span>
+        </div>
+      </div> */}
       
       {/* Existing columns */}
       <div className="grid grid-cols-5 gap-4">
-      {visibleColumns.map((key) => (
-  <div key={key} className="overflow-hidden">
-    <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-      {formatColumnName(key)}
-    </div>
-    <div className="text-gray-800 font-medium truncate">
-      {isTimestampField(key) ? formatToIST(flat[key]) : (flat[key] ?? "-")}
-    </div>
-  </div>
-))}
+        {visibleColumns.map((key) => {
+          const lastPart = key.split('.').pop();
+          const isCoordinate = lastPart === 'coordinates' || lastPart.includes('coordinate');
+          
+          return (
+            <div key={key} className="overflow-hidden">
+              <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+                {formatColumnName(key)}
+              </div>
+              <div className={`text-gray-800 font-medium ${isCoordinate ? 'break-all' : 'truncate'}`}>
+                {formatValue(key, flat[key])}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
     
@@ -496,33 +804,73 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       </div>
     </div>
     
+    {/* Regular Fields */}
     <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-  {Object.keys(flat).filter(k => k !== "uuid").map((key) => (
-    <div key={key} className="mb-3">
-      <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
-        {formatColumnName(key)}
-      </div>
-      {isEditing ? (
-        <input
-          type="text"
-          value={isTimestampField(key) ? formatToIST(editedRowData[key]) : (editedRowData[key] ?? "")}
-          onChange={(e) =>
-            setEditedRowData((prev) => ({
-              ...prev,
-              [key]: e.target.value,
-            }))
-          }
-          className="w-full border-2 border-gray-200 p-2 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
-          disabled={isTimestampField(key)}
-        />
-      ) : (
-        <div className="text-gray-800 font-medium bg-white p-2 rounded border border-gray-200">
-          {isTimestampField(key) ? formatToIST(flat[key]) : (flat[key] ?? "-")}
-        </div>
-      )}
+      {Object.keys(flat)
+        .filter(k => k !== "uuid" && !isMetadataField(k))
+        .map((key) => (
+          <div key={key} className="mb-3">
+            <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+              {formatColumnName(key)}
+            </div>
+            {isEditing ? (
+              <input
+                type="text"
+                value={formatValue(key, editedRowData[key])}
+                onChange={(e) =>
+                  setEditedRowData((prev) => ({
+                    ...prev,
+                    [key]: e.target.value,
+                  }))
+                }
+                className="w-full border-2 border-gray-200 p-2 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
+                disabled={isTimestampField(key)}
+              />
+            ) : (
+              <div className="text-gray-800 font-medium bg-white p-2 rounded border border-gray-200 break-all">
+                {formatValue(key, flat[key])}
+              </div>
+            )}
+          </div>
+        ))}
     </div>
-  ))}
-</div>
+
+    {/* Metadata Section */}
+    {Object.keys(flat).some(k => isMetadataField(k)) && !isEditing && (
+      <div className="mt-6 pt-4 border-t-2 border-gray-300">
+        <button
+          onClick={() => setShowMetadata(prev => ({ ...prev, [row.uuid]: !prev[row.uuid] }))}
+          className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-semibold transition"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Other Information</span>
+          {showMetadata[row.uuid] ? (
+            <ChevronUp size={18} />
+          ) : (
+            <ChevronDown size={18} />
+          )}
+        </button>
+        
+        {showMetadata[row.uuid] && (
+          <div className="mt-4 grid grid-cols-3 gap-4 bg-gray-100 p-4 rounded-lg max-h-64 overflow-y-auto">
+            {Object.keys(flat)
+              .filter(k => isMetadataField(k))
+              .map((key) => (
+                <div key={key} className="mb-3">
+                  <div className="text-xs font-semibold text-gray-600 uppercase mb-2">
+                    {formatColumnName(key)}
+                  </div>
+                  <div className="text-gray-700 text-sm font-mono bg-white p-2 rounded border border-gray-300 break-all">
+                    {formatValue(key, flat[key])}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+    )}
 
     {showActions && (
       <div className="mt-6 pt-4 border-t border-gray-300 flex gap-3">
