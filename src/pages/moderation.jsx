@@ -365,8 +365,8 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const formColumnMap = {
     Settlement: [
       "submissionDate",
-      "Settlements_name",
-      "Settlements_id",
+      "settlement_name",      // Changed: lowercase to match DB field
+      "settlement_id",        // Changed: lowercase to match DB field  
       "block_name",
       "plan_name",
       "number_households",
@@ -382,9 +382,9 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "select_one_owns",
-      "households_benefited",
+      "coordinates",
       "select_one_well_type",
       "is_maintenance_required"
     ],
@@ -395,10 +395,10 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "select_one_water_structure",
       "select_one_owns",
-      "households_benefited",
+      "coordinates",
       "select_one_maintenance"
     ],
     
@@ -408,9 +408,9 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "TYPE_OF_WORK_ID",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "demand_type",
-      "khasra",
+      "coordinates",
       "Beneficiary_Name",
       "coordinates"
     ],
@@ -422,9 +422,9 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_Name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "demand_type_irrigation",
-      "khasra",
+      "coordinates",
       "select_one_cropping_pattern"
     ],
     
@@ -432,7 +432,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "submissionDate",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "ben_plantation",
       "crop_name",
       "crop_area",
@@ -446,12 +446,12 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "crop_Grid_id",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "select_one_classified",
       "select_one_practice",
       "select_multiple_cropping_kharif",
       "total_area_cultivation_kharif",
-      "select_one_productivity"
+      "coordinates"
     ],
     
     "Agri Maintenance": [
@@ -460,7 +460,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_Name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "corresponding_work_id",
       "select_one_irrigation_structure",
       "demand_type",
@@ -473,9 +473,9 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_Name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "TYPE_OF_WORK",
-      "corresponding_work_id",
+      "coordinates",
       "demand_type",
       "select_one_check_dam"
     ],
@@ -486,8 +486,8 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_Name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
-      "corresponding_work_id",
+      "plan_id",
+      "coordinates",
       "select_one_recharge_structure",
       "demand_type",
       "coordinates"
@@ -499,7 +499,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       "Beneficiary_Name",
       "beneficiary_settlement",
       "block_name",
-      "plan_name",
+      "plan_id",
       "TYPE_OF_WORK",
       "corresponding_work_id",
       "select_one_community_pond",
@@ -520,31 +520,36 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     }, {});
   };
 
-  const fetchSubmissions = (pg = 1) => {
+  const fetchSubmissions = async (pg = 1) => {
     if (!selectedForm || !selectedPlan) return;
     const token = sessionStorage.getItem("accessToken");
-    fetch(`${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/?page=${pg}`,
-      { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-    )
-      .then(res => res.json())
-      .then(data => {
-        const sortedData = (data.data || []).sort((a, b) => {
-          const flatA = flattenObject(a);
-          const flatB = flattenObject(b);
-          
-          const timeKeyA = Object.keys(flatA).find(k => isTimestampField(k));
-          const timeKeyB = Object.keys(flatB).find(k => isTimestampField(k));
-          
-          const dateA = new Date(flatA[timeKeyA] || 0);
-          const dateB = new Date(flatB[timeKeyB] || 0);
-          
-          return dateB - dateA;
-        });
-        setSubmissions(sortedData);
-        setPage(data.page || pg);
-        setTotalPages(data.total_pages || 1);
-      })
-      .catch(err => console.log("Submission Fetch Error", err));
+    
+    try {
+      const res = await fetch(
+        `${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/?page=${pg}`,
+        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      
+      const sortedData = (data.data || []).sort((a, b) => {
+        const flatA = flattenObject(a);
+        const flatB = flattenObject(b);
+        
+        const timeKeyA = Object.keys(flatA).find(k => isTimestampField(k));
+        const timeKeyB = Object.keys(flatB).find(k => isTimestampField(k));
+        
+        const dateA = new Date(flatA[timeKeyA] || 0);
+        const dateB = new Date(flatB[timeKeyB] || 0);
+        
+        return dateB - dateA;
+      });
+      
+      setSubmissions(sortedData);
+      setPage(data.page || pg);
+      setTotalPages(data.total_pages || 1);
+    } catch (err) {
+      console.log("Submission Fetch Error", err);
+    }
   };
 
   useEffect(() => {
@@ -559,10 +564,28 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       const result = [];
       
       for (const configField of configuredColumns) {
-        const matchingColumn = allColumns.find(col => {
-          const lastPart = col.split('.').pop();
-          return col === configField || lastPart === configField;
-        });
+        let matchingColumn = null;
+        
+        // Priority 1: Exact full path match
+        matchingColumn = allColumns.find(col => col === configField);
+        
+        if (!matchingColumn) {
+          // Priority 2: Find all columns where last part matches
+          const candidates = allColumns.filter(col => {
+            const lastPart = col.split('.').pop();
+            return lastPart === configField;
+          });
+          
+          if (candidates.length === 1) {
+            matchingColumn = candidates[0];
+          } else if (candidates.length > 1) {
+            // CHANGED: Prefer root-level fields (shortest path) because they get updated
+            // Root-level fields are the database fields that get updated on edit
+            matchingColumn = candidates.reduce((shortest, current) => 
+              current.split('.').length < shortest.split('.').length ? current : shortest
+            );
+          }
+        }
         
         if (matchingColumn) {
           result.push(matchingColumn);
@@ -611,8 +634,30 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     }
   };
 
+  const unflattenObject = (flat) => {
+    const result = {};
+    
+    for (const key in flat) {
+      const keys = key.split('.');
+      let current = result;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) {
+          current[keys[i]] = {};
+        }
+        current = current[keys[i]];
+      }
+      
+      current[keys[keys.length - 1]] = flat[key];
+    }
+    
+    return result;
+  };
+
   const handleSave = async (row) => {
     try {
+      const unflattenedData = unflattenObject(editedRowData);
+      
       const response = await fetch(
         `${BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/modify/`,
         {
@@ -621,20 +666,26 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             "Content-Type": "application/json",
             Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
           },
-          body: JSON.stringify(editedRowData),
+          body: JSON.stringify(unflattenedData),
         }
       );
       const data = await response.json();
       if (data.success) {
         alert("Saved successfully!");
         setEditedSubmissions(prev => new Set([...prev, row.uuid]));
-        fetchSubmissions(page);
+        
+        // Close editing mode BEFORE fetching
         setEditingRowUuid(null);
         setExpandedCards(prev => ({ ...prev, [row.uuid]: false }));
+        
+        // Fetch new data
+        await fetchSubmissions(page);
+        
       } else {
         alert("Save failed");
       }
-    } catch {
+    } catch (error) {
+      console.error("Save error:", error);
       alert("Server error");
     }
   };
@@ -707,6 +758,20 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       const isEditing = editingRowUuid === row.uuid;
       const isEditedCard = editedSubmissions.has(row.uuid);
 
+      if (selectedForm === "Settlement" && flat["settlement_id"] === "99d20b7a5b") {
+        console.log("=== RENDERING ROW ===");
+        console.log("UUID:", row.uuid);
+        console.log("isExpanded:", isExpanded);
+        console.log("settlement_name (root):", flat["settlement_name"]);
+        console.log("Settlements_name (nested):", flat["data_settlement.Settlements_name"]);
+        console.log("settlement_id:", flat["settlement_id"]);
+        console.log("Settlements_id (nested):", flat["data_settlement.Settlements_id"]);
+        console.log("visibleColumns:", visibleColumns);
+        visibleColumns.forEach(key => {
+          console.log(`  Column: ${key} = "${flat[key]}"`);
+        });
+      }
+
       return (
         <div 
           key={row.uuid} 
@@ -737,22 +802,28 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       
       {/* Existing columns */}
       <div className="grid grid-cols-5 gap-4">
-        {visibleColumns.map((key) => {
-          const lastPart = key.split('.').pop();
-          const isCoordinate = lastPart === 'coordinates' || lastPart.includes('coordinate');
-          
-          return (
-            <div key={key} className="overflow-hidden">
-              <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-                {formatColumnName(key)}
-              </div>
-              <div className={`text-gray-800 font-medium ${isCoordinate ? 'break-all' : 'truncate'}`}>
-                {formatValue(key, flat[key])}
-              </div>
-            </div>
-          );
-        })}
+  {visibleColumns.map((key) => {
+    const lastPart = key.split('.').pop();
+    const isCoordinate = lastPart === 'coordinates' || lastPart.includes('coordinate');
+    const value = formatValue(key, flat[key]);
+    
+    // Debug for settlement with ID 99d20b7a5b
+    if (selectedForm === "Settlement" && flat["settlement_id"] === "99d20b7a5b") {
+      console.log(`COLLAPSED RENDER: key=${key}, flat[key]="${flat[key]}", value="${value}"`);
+    }
+    
+    return (
+      <div key={key} className="overflow-hidden">
+        <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
+          {formatColumnName(key)}
+        </div>
+        <div className={`text-gray-800 font-medium ${isCoordinate ? 'break-all' : 'truncate'}`}>
+          {value}
+        </div>
       </div>
+    );
+  })}
+</div>
     </div>
     
     {showActions && (
