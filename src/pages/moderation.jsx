@@ -243,267 +243,289 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const groups = Array.isArray(user.groups) ? user.groups : [];
   const isAdmin = groups.some(g => g.name === "Administrator");
   const isModerator = groups.some(g => g.name === "Moderator");
-  const showActions = isAdmin || isModerator;
-
-  // const formColumnMap = {
-  //   Well: ["submission_time","well_id","plan_id","beneficiary_settlement", "block_name", "owner", "Beneficiary_name","need_maintenance", "coordinates", "select_one_change_water_quality", ""],
-  //   Settlement: ["submission_time","Settlements_id","plan_id","settlement_name", "block_name", "settlement_status","coordinates", "number_households", "settlement_electricity", "distance_settlement_block"],
-  //   Waterbody: ["submission_time", "waterbody_id","plan_id","beneficiary_settlement", "beneficiary_contact", "owner","Beneficiary_name","block_name", "coordinates", "households_benefited"],
-  //   Groundwater: ["submission_time", "recharge_structure_id","plan_id","beneficiary_settlement", "work_type",  "block_name", "coordinates",],
-  //   Agri: ["submission_time", "beneficiary_settlement", "work_type", "block_name", "status_re"],
-  //   Livelihood: ["submission_time", "beneficiary_settlement", "beneficiary_contact", "livestock_development", "block_name"],
-  //   Crop: ["submission_time", "beneficiary_settlement", "cropping_patterns_zaid", "cropping_patterns_kharif", "cropping_patterns_rabi"],
-  //   "Agri Maintenance" :["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-  //   "GroundWater Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-  //   "Surface Water Body Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-  //   "Surface Water Body Recharge Structure Maintenance":["submissionDate","Beneficiary_Name","beneficiary_settlement", "Beneficiary_Contact_Number", "ben_father"],
-  // };
-
-  const fieldDisplayNames = {
-    // Common fields
-    submission_time: "Submission Time",
-    submissionDate: "Submission Date",
-    plan_name: "Plan Name",
-    plan_id: "Plan ID",
-    block_name: "Block Name",
-    coordinates: "Coordinates",
-    
-    // Settlement fields
-    Settlements_name: "Settlement Name",
-    settlement_name: "Settlement Name",
-    Settlements_id: "Settlement ID",
-    number_households: "Total Households",
-    settlement_electricity: "Electricity Available",
-    road_connected: "Road Connected",
-    count_general: "General Caste Count",
-    count_sc: "SC Count",
-    count_st: "ST Count",
-    count_obc: "OBC Count",
-    distance_settlement: "Distance to Main Road (km)",
-    distance_settlement_block: "Distance to Block (km)",
-    BPL_households: "BPL Households",
-    
-    // Well fields
-    well_id: "Well ID",
-    Beneficiary_name: "Beneficiary Name",
-    beneficiary_settlement: "Beneficiary Settlement",
-    ben_father: "Father's/Guardian Name",
-    select_one_owns: "Ownership",
-    households_benefited: "Households Benefited",
-    select_multiple_caste_use: "Castes Using",
-    select_one_well_type: "Well Type",
-    is_maintenance_required: "Maintenance Required",
-    Is_water_from_well_used: "Well Water Used",
-    select_one_well_used: "Well Usage Type",
-    
-    // Waterbody fields
-    waterbodies_id: "Waterbody ID",
-    select_one_water_structure: "Water Structure Type",
-    select_one_manages: "Managed By",
-    select_one_maintenance: "Maintenance Status",
-    age_water_structure: "Structure Age",
-    select_multiple_uses_structure: "Structure Uses",
-    Beneficiary_contact_number: "Beneficiary Contact",
-    
-    // Groundwater & Agri fields
-    work_id: "Work ID",
-    TYPE_OF_WORK_ID: "Type of Work",
-    TYPE_OF_WORK: "Work Type",
-    Beneficiary_Name: "Beneficiary Name",
-    Beneficiary_Contact_Number: "Beneficiary Contact",
-    demand_type: "Demand Type",
-    demand_type_irrigation: "Demand Type",
-    khasra: "Khasra Number",
-    gender: "Gender",
-    select_gender: "Gender",
-    
-    // Agri/Irrigation specific
-    select_one_cropping_pattern: "Cropping Pattern",
-    select_multiple_cropping_kharif: "Kharif Crops",
-    select_multiple_cropping_Rabi: "Rabi Crops",
-    select_multiple_cropping_Zaid: "Zaid Crops",
-    
-    // Crop fields
-    crop_Grid_id: "Crop Grid ID",
-    select_one_classified: "Land Classification",
-    select_one_practice: "Cropping Practice",
-    select_multiple_widgets: "Irrigation Source",
-    select_one_productivity: "Productivity Status",
-    soil_degraded: "Soil Degraded",
-    total_area_cultivation_kharif: "Kharif Area (acres)",
-    total_area_cultivation_Rabi: "Rabi Area (acres)",
-    total_area_cultivation_Zaid: "Zaid Area (acres)",
-    
-    // Livelihood fields
-    ben_plantation: "Beneficiary (Plantation)",
-    crop_name: "Crop/Plant Name",
-    crop_area: "Crop Area",
-    ben_livestock: "Beneficiary (Livestock)",
-    ben_fisheries: "Beneficiary (Fisheries)",
-    is_demand_fisheries: "Fisheries Demand",
-    is_demand_livestock: "Livestock Demand",
-    
-    // Maintenance forms
-    corresponding_work_id: "Original Work ID",
-    select_one_irrigation_structure: "Irrigation Structure",
-    select_one_recharge_structure: "Recharge Structure",
-    select_one_check_dam: "Check Dam Issue",
-    select_one_farm_pond: "Farm Pond Issue",
-    select_one_community_pond: "Community Pond Issue",
-    select_one_percolation_tank: "Percolation Tank Issue",
-    select_one_well: "Well Issue",
-    select_one_canal: "Canal Issue",
-    select_one_farm_bund: "Farm Bund Issue",
-    
-    // Other common fields
-    user_latlon: "User Location",
-    deviceid: "Device ID",
-    text_record: "Text Notes",
-    image_widget: "Image",
-  };
+  const [currentUser, setCurrentUser] = useState(() => {
+    return JSON.parse(sessionStorage.getItem("currentUser"));
+  });
+  const isSuperAdmin = currentUser.user.is_superadmin;
   
-  const formColumnMap = {
+  const showActions = isAdmin || isModerator || isSuperAdmin;
+  
+  const formFieldConfig = {
     Settlement: [
-      "submissionDate",
-      "settlement_name",      // Changed: lowercase to match DB field
-      "settlement_id",        // Changed: lowercase to match DB field  
-      "block_name",
-      "plan_name",
-      "number_households",
-      "settlement_electricity",
-      "road_connected",
-      "count_st",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Settlements_name", displayName: "Settlement Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "Settlements_id", displayName: "Settlement ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "number_households", displayName: "Total Number of Households", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "settlement_electricity", displayName: "Electricity Available", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "road_connected", displayName: "Road Connected to Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "count_obc", displayName: "Number of OBC Households", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "count_st", displayName: "Number of ST Households", showInCollapsed: true, showInExpanded: true, editable: true },
+
+      // Expanded view only fields
+      { field: "count_sc", displayName: "Number of SC Households", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "count_general", displayName: "Number of General Caste Households", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "BPL_households", displayName: "BPL Households", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "distance_settlement", displayName: "Distance to Main Road (km)", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "distance_settlement_block", displayName: "Distance to Block (km)", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "big_farmers", displayName: "Big Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "small_farmers", displayName: "Small Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "medium_farmers", displayName: "Medium Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "landless_farmers", displayName: "Landless Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "marginal_farmers", displayName: "Marginal Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Bail", displayName: "OX (Bail)", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Goats", displayName: "Goats", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Sheep", displayName: "Sheep", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Cattle", displayName: "Cattle", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Piggery", displayName: "Piggery", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Poultry", displayName: "Poultry", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "NREGA_work_days", displayName: "Narega Work Days", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "NREGA_have_job_card", displayName: "Households Have Narega Job Card", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Households_BPL_cards", displayName: "Households Have BPL Card", showInCollapsed: false, showInExpanded: true, editable: true },
     ],
     
     Well: [
-      "submissionDate",
-      "well_id",
-      "Beneficiary_name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "select_one_owns",
-      "coordinates",
-      "select_one_well_type",
-      "is_maintenance_required"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "well_id", displayName: "Well ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Beneficiary_name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_owns", displayName: "Ownership", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "households_benefited", displayName: "Households Benefited", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_well_type", displayName: "Well Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "is_maintenance_required", displayName: "Maintenance Required", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+
+      
+      // Expanded view only
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Beneficiary_contact_number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_caste_use", displayName: "Castes Using", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Is_water_from_well_used", displayName: "Well Water Used", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_well_used", displayName: "Well Usage Type", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "repairs_type", displayName: "what Repair Requires", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_change_observed", displayName: "Is there any changes in water Observed", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_change_water_quality", displayName: "Is there any changes in water Quality", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_pollutants_groundwater", displayName: "Is there any Pollutants in Groundwater", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_water_structure_near_you", displayName: "Is there any Water Structure Near you", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_Functional_Non_functional", displayName: "Is the Well Functional", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_year", displayName: "Till Which Month Water Available", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_scheme", displayName: "Under Which Scheme it is Built", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_caste_use", displayName: "Which Caste Use this ", showInCollapsed: false, showInExpanded: true, editable: true },
+
+
     ],
-    
+     
     Waterbody: [
-      "submissionDate",
-      "waterbodies_id",
-      "Beneficiary_name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "select_one_water_structure",
-      "select_one_owns",
-      "coordinates",
-      "select_one_maintenance"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "waterbodies_id", displayName: "Waterbody ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Beneficiary_name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_water_structure", displayName: "Water Structure Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_owns", displayName: "Ownership", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "households_benefited", displayName: "Households Benefited", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_maintenance", displayName: "Maintenance Status", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+
+      
+      // Expanded view only
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Beneficiary_contact_number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_manages", displayName: "Managed By", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "age_water_structure", displayName: "Waterbody Age", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_uses_structure", displayName: "Structure Uses", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "text_one_manages", displayName: "Who manages", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_bunding", displayName: "What Type of Repair", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "select_one_scheme", displayName: "Through Which Scheme it Repair", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "select_one_manages", displayName: "Who Manages ", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_check_dam", displayName: "Repair of Checkdam ", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_farm_bund", displayName: "Repair of Farmbund ", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_farm_bund", displayName: "Repair of Farmbund ", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_soakage_pits", displayName: "Repair of Soakage Pits ", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_recharge_pits", displayName: "Repair of Recharge Pits ", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_rock_fill_dam", displayName: "Repair of RockFillDam", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_stone_bunding", displayName: "Repair of Stone Bunding", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_community_pond", displayName: "Repair of Commmunity  Pond", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "select_multiple_caste_use", displayName: "Which Cast Use", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_diversion_drains", displayName: "Repair of Diversion Drains", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_large_water_body", displayName: "Repair of Large Water Body", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_model5_structure", displayName: "Repair of Model5 Structure", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_percolation_tank", displayName: "Repair of Percolation Tank", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "Repair_of_30_40_model_structure", displayName: "Repair of 30*40 Model Structure", showInCollapsed: false, showInExpanded: true, editable: false },
+
     ],
     
     Groundwater: [
-      "submissionDate",
-      "work_id",
-      "TYPE_OF_WORK_ID",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "demand_type",
-      "coordinates",
-      "Beneficiary_Name",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "select_gender", displayName: "Gender", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      
+      // Expanded view only
+      { field: "khasra", displayName: "Khasra Number", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Depth_17", displayName: "Bunding Depth", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Width_17", displayName: "Bunding width", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Height_17", displayName: "Bunding Height", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Width_1", displayName: "Check_dam Width", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Height_1", displayName: "Check_dam Height", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Length_1", displayName: "Check_dam Length", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Depth_6", displayName: "SokagePits Depth ", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Width_6", displayName: "SokagePpits Width", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Depth_5", displayName: "RechargePits Depth", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Width_5", displayName: "RechargePits Width", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "Length_5", displayName: "RechargePits Length", showInCollapsed: false, showInExpanded: true, editable: true },
+
+
     ],
     
     Agri: [
-      "submissionDate",
-      "work_id",
-      "TYPE_OF_WORK_ID",
-      "Beneficiary_Name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "demand_type_irrigation",
-      "coordinates",
-      "select_one_cropping_pattern"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "TYPE_OF_WORK_ID", displayName: "Type of Work", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "demand_type_irrigation", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "khasra", displayName: "Khasra Number", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_cropping_pattern", displayName: "Cropping Pattern", showInCollapsed: true, showInExpanded: true, editable: true },
+      
+      // Expanded view only
+      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "gender", displayName: "Gender", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_cropping_kharif", displayName: "Kharif Crops", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_cropping_Rabi", displayName: "Rabi Crops", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_cropping_Zaid", displayName: "Zaid Crops", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: false, showInExpanded: true, editable: false },
     ],
     
     Livelihood: [
-      "submissionDate",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "ben_plantation",
-      "crop_name",
-      "crop_area",
-      "is_demand_fisheries",
-      "is_demand_livestock",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "ben_livestock", displayName: "Benificiary name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "ben_plantation", displayName: "Beneficiary (Plantation)", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "crop_name", displayName: "Crop/Plant Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "crop_area", displayName: "Crop Area", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "is_demand_fisheries", displayName: "Fisheries Demand", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "is_demand_livestock", displayName: "Livestock Demand", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+      
+      // Expanded view only
+      { field: "ben_livestock", displayName: "Beneficiary (Livestock)", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "ben_fisheries", displayName: "Beneficiary (Fisheries)", showInCollapsed: false, showInExpanded: true, editable: true },
     ],
     
     Crop: [
-      "submissionDate",
-      "crop_Grid_id",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "select_one_classified",
-      "select_one_practice",
-      "select_multiple_cropping_kharif",
-      "total_area_cultivation_kharif",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "crop_Grid_id", displayName: "Crop Grid ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "select_one_classified", displayName: "Land Classification", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_practice", displayName: "Cropping Practice", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_multiple_cropping_kharif", displayName: "Kharif Crops", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "total_area_cultivation_kharif", displayName: "Kharif Area (acres)", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_productivity", displayName: "Productivity Status", showInCollapsed: true, showInExpanded: true, editable: true },
+      
+      // Expanded view only
+      { field: "total_area_cultivation_Rabi", displayName: "Rabi Area (acres)", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "total_area_cultivation_Zaid", displayName: "Zaid Area (acres)", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_cropping_Rabi", displayName: "Rabi Crops", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_cropping_Zaid", displayName: "Zaid Crops", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "soil_degraded", displayName: "Soil Degraded", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_multiple_widgets", displayName: "Irrigation Source", showInCollapsed: false, showInExpanded: true, editable: true },
     ],
     
     "Agri Maintenance": [
-      "submissionDate",
-      "work_id",
-      "Beneficiary_Name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "corresponding_work_id",
-      "select_one_irrigation_structure",
-      "demand_type",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "select_one_irrigation_structure", displayName: "Irrigation Structure", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+      
+      // Expanded view only
+      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_well", displayName: "Well Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_canal", displayName: "Canal Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_farm_pond", displayName: "Farm Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_community_pond", displayName: "Community Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_farm_bund", displayName: "Farm Bund Issue", showInCollapsed: false, showInExpanded: true, editable: true },
     ],
     
     "GroundWater Maintenance": [
-      "submissionDate",
-      "work_id",
-      "Beneficiary_Name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "TYPE_OF_WORK",
-      "coordinates",
-      "demand_type",
-      "select_one_check_dam"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "TYPE_OF_WORK", displayName: "Work Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "select_one_check_dam", displayName: "Check Dam Issue", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+      
+      // Expanded view only
+      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_gender", displayName: "Gender", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: false, showInExpanded: true, editable: false },
+      { field: "select_one_farm_pond", displayName: "Farm Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_rock_fill_dam", displayName: "Rock Fill Dam Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_community_pond", displayName: "Community Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_one_percolation_tank", displayName: "Percolation Tank Issue", showInCollapsed: false, showInExpanded: true, editable: true },
     ],
     
     "Surface Water Body Maintenance": [
-      "submissionDate",
-      "work_id",
-      "Beneficiary_Name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "coordinates",
-      "select_one_recharge_structure",
-      "demand_type",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "select_one_recharge_structure", displayName: "Recharge Structure", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
+      
+      // Expanded view only
+      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "select_gender", displayName: "Gender", showInCollapsed: false, showInExpanded: true, editable: true },
     ],
     
     "Surface Water Body Recharge Structure Maintenance": [
-      "submissionDate",
-      "work_id",
-      "Beneficiary_Name",
-      "beneficiary_settlement",
-      "block_name",
-      "plan_id",
-      "TYPE_OF_WORK",
-      "corresponding_work_id",
-      "select_one_community_pond",
-      "coordinates"
+      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "TYPE_OF_WORK", displayName: "Work Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
+      { field: "select_one_community_pond", displayName: "Community Pond Issue", showInCollapsed: true, showInExpanded: true, editable: true },
+      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
+      
+      // Expanded view only
+      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
+      { field: "coordinates", displayName: "Coordinates", showInCollapsed: false, showInExpanded: true, editable: false },
     ],
   };
 
@@ -556,47 +578,6 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     fetchSubmissions(1);
   }, []);
 
-  const getVisibleColumns = (flat) => {
-    const allColumns = Object.keys(flat).filter(c => c !== "uuid");
-    
-    if (formColumnMap[selectedForm]) {
-      const configuredColumns = formColumnMap[selectedForm];
-      const result = [];
-      
-      for (const configField of configuredColumns) {
-        let matchingColumn = null;
-        
-        // Priority 1: Exact full path match
-        matchingColumn = allColumns.find(col => col === configField);
-        
-        if (!matchingColumn) {
-          // Priority 2: Find all columns where last part matches
-          const candidates = allColumns.filter(col => {
-            const lastPart = col.split('.').pop();
-            return lastPart === configField;
-          });
-          
-          if (candidates.length === 1) {
-            matchingColumn = candidates[0];
-          } else if (candidates.length > 1) {
-            // CHANGED: Prefer root-level fields (shortest path) because they get updated
-            // Root-level fields are the database fields that get updated on edit
-            matchingColumn = candidates.reduce((shortest, current) => 
-              current.split('.').length < shortest.split('.').length ? current : shortest
-            );
-          }
-        }
-        
-        if (matchingColumn) {
-          result.push(matchingColumn);
-        }
-      }
-      
-      return result;
-    }
-    
-    return allColumns.slice(0, 5);
-  };
 
   const filteredRows = submissions.filter(row => {
     const flat = flattenObject(row);
@@ -690,38 +671,126 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     }
   };
 
+  // Get visible columns for collapsed view
+const getVisibleColumnsForCollapsed = (flat) => {
+  if (!formFieldConfig[selectedForm]) return [];
+  
+  return formFieldConfig[selectedForm]
+    .filter(config => config.showInCollapsed)
+    .map(config => {
+      // Try exact match first
+      if (flat.hasOwnProperty(config.field)) {
+        return config.field;
+      }
+      
+      // Try finding by last part of key
+      const matchingKey = Object.keys(flat).find(key => {
+        const lastPart = key.split('.').pop();
+        return lastPart === config.field;
+      });
+      
+      return matchingKey;
+    })
+    .filter(Boolean); // Remove nulls
+};
+
+// Get visible fields for expanded view
+const getVisibleFieldsForExpanded = (flat) => {
+  if (!formFieldConfig[selectedForm]) return [];
+  
+  const configFields = formFieldConfig[selectedForm]
+    .filter(config => config.showInExpanded)
+    .map(config => {
+      // Try exact match first
+      if (flat.hasOwnProperty(config.field)) {
+        return { key: config.field, config };
+      }
+      
+      // Try finding by last part of key
+      const matchingKey = Object.keys(flat).find(key => {
+        const lastPart = key.split('.').pop();
+        return lastPart === config.field;
+      });
+      
+      return matchingKey ? { key: matchingKey, config } : null;
+    })
+    .filter(Boolean);
+  
+  return configFields;
+};
+
+// Check if a field is editable
+const isFieldEditable = (key) => {
+  if (!formFieldConfig[selectedForm]) return true;
+  
+  const lastPart = key.split('.').pop();
+  const fieldConfig = formFieldConfig[selectedForm].find(
+    config => config.field === lastPart || config.field === key
+  );
+  
+  return fieldConfig ? fieldConfig.editable : true;
+};
+
+// Get display name for a field
+const getDisplayName = (key) => {
+  if (!formFieldConfig[selectedForm]) return formatColumnName(key);
+  
+  const lastPart = key.split('.').pop();
+  const fieldConfig = formFieldConfig[selectedForm].find(
+    config => config.field === lastPart || config.field === key
+  );
+  
+  return fieldConfig ? fieldConfig.displayName : formatColumnName(key);
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex justify-between items-center gap-4 mb-4 mt-14">
-          {/* Left: Go to Plan Button */}
-          <button
-            onClick={onBack}
-            className="px-6 py-3 bg-white border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition font-semibold shadow-md"
-          >
-            ← Go to Plan
-          </button>
+ {/* Header */}
+ <div className="max-w-7xl mx-auto mb-6">
+  <div className="flex justify-between items-center gap-6 mb-4 mt-14">
+    {/* Left: Go to Plan Button */}
+    <button
+      onClick={onBack}
+      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold shadow-md whitespace-nowrap flex items-center gap-2"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      Go to Plan
+    </button>
 
-          {/* Center: Plan Name */}
-          <div className="flex-1 text-center">
-            <div className="inline-block bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg shadow-lg">
-              <div className="text-sm font-medium opacity-90">Current Plan</div>
-              <div className="text-xl font-bold">{selectedPlanName || "Plan"}</div>
-            </div>
-          </div>
-
-          {/* Right: Search */}
-          <input
-            type="text"
-            placeholder="Search..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-64 border-2 border-gray-200 px-4 py-3 rounded-lg focus:border-blue-500 focus:outline-none shadow-md"
-          />
-        </div>
+    {/* Center: Plan Info */}
+    <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <div>
+        <div className="text-xs text-blue-600 font-medium">Current Plan</div>
+        <div className="text-sm font-bold text-gray-800 whitespace-nowrap">{selectedPlanName || "Plan"}</div>
       </div>
+    </div>
 
+    {/* Center: Form Info */}
+    <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200">
+      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <div>
+        <div className="text-xs text-purple-600 font-medium">Current Form</div>
+        <div className="text-sm font-bold text-gray-800 whitespace-nowrap">{selectedForm || "Form"}</div>
+      </div>
+    </div>
+
+    {/* Right: Search */}
+    <input
+      type="text"
+      placeholder="Search submissions..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      className="w-72 border-2 border-gray-300 px-4 py-2.5 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition"
+    />
+  </div>
+</div>
       {/* Rows/Cards Container */}
       <div className="max-w-7xl mx-auto space-y-4">
   {filteredRows.length === 0 ? (
@@ -753,7 +822,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   ) : (
     filteredRows.map((row) => {
       const flat = flattenObject(row);
-      const visibleColumns = getVisibleColumns(flat);
+      const visibleColumns = getVisibleColumnsForCollapsed(flat);
       const isExpanded = expandedCards[row.uuid] || editingRowUuid === row.uuid;
       const isEditing = editingRowUuid === row.uuid;
       const isEditedCard = editedSubmissions.has(row.uuid);
@@ -802,20 +871,15 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       
       {/* Existing columns */}
       <div className="grid grid-cols-5 gap-4">
-  {visibleColumns.map((key) => {
+  {getVisibleColumnsForCollapsed(flat).map((key) => {
     const lastPart = key.split('.').pop();
     const isCoordinate = lastPart === 'coordinates' || lastPart.includes('coordinate');
     const value = formatValue(key, flat[key]);
     
-    // Debug for settlement with ID 99d20b7a5b
-    if (selectedForm === "Settlement" && flat["settlement_id"] === "99d20b7a5b") {
-      console.log(`COLLAPSED RENDER: key=${key}, flat[key]="${flat[key]}", value="${value}"`);
-    }
-    
     return (
       <div key={key} className="overflow-hidden">
         <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-          {formatColumnName(key)}
+          {getDisplayName(key)}
         </div>
         <div className={`text-gray-800 font-medium ${isCoordinate ? 'break-all' : 'truncate'}`}>
           {value}
@@ -828,7 +892,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     
     {showActions && (
       <div className="flex gap-2 mr-4">
-        {(isAdmin || isModerator) && (
+        {(isAdmin || isModerator || isSuperAdmin) && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -841,7 +905,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             <Pencil size={16} /> Edit
           </button>
         )}
-        {isAdmin && (
+        {(isAdmin ||  isSuperAdmin)&& (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -877,34 +941,32 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     
     {/* Regular Fields */}
     <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-      {Object.keys(flat)
-        .filter(k => k !== "uuid" && !isMetadataField(k))
-        .map((key) => (
-          <div key={key} className="mb-3">
-            <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
-              {formatColumnName(key)}
-            </div>
-            {isEditing ? (
-              <input
-                type="text"
-                value={formatValue(key, editedRowData[key])}
-                onChange={(e) =>
-                  setEditedRowData((prev) => ({
-                    ...prev,
-                    [key]: e.target.value,
-                  }))
-                }
-                className="w-full border-2 border-gray-200 p-2 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
-                disabled={isTimestampField(key)}
-              />
-            ) : (
-              <div className="text-gray-800 font-medium bg-white p-2 rounded border border-gray-200 break-all">
-                {formatValue(key, flat[key])}
-              </div>
-            )}
-          </div>
-        ))}
+  {getVisibleFieldsForExpanded(flat).map(({ key, config }) => (
+    <div key={key} className="mb-3">
+      <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+        {config.displayName}
+      </div>
+      {isEditing ? (
+        <input
+          type="text"
+          value={formatValue(key, editedRowData[key])}
+          onChange={(e) =>
+            setEditedRowData((prev) => ({
+              ...prev,
+              [key]: e.target.value,
+            }))
+          }
+          className="w-full border-2 border-gray-200 p-2 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
+          disabled={!config.editable}
+        />
+      ) : (
+        <div className="text-gray-800 font-medium bg-white p-2 rounded border border-gray-200 break-all">
+          {formatValue(key, flat[key])}
+        </div>
+      )}
     </div>
+  ))}
+</div>
 
     {/* Metadata Section */}
     {Object.keys(flat).some(k => isMetadataField(k)) && !isEditing && (
@@ -962,7 +1024,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             >
               <X size={18} /> Cancel
             </button>
-            {isAdmin && (
+            {(isAdmin || isSuperAdmin)&& (
               <button
                 onClick={() => handleDelete(row)}
                 className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold flex items-center gap-2 transition ml-auto"
