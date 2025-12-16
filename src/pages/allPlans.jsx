@@ -263,7 +263,7 @@ const AllPlans = () => {
         <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto h-full">
           {plans.length > 0 ? (
             <table className="min-w-full text-sm text-left border-collapse">
-              <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black sticky top-0 z-10">
+              <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
                 <tr>
                   <th className="px-6 py-4">S. no.</th>
                   <th className="px-6 py-4">Plan Name</th>
