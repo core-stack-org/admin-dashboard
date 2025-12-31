@@ -42,6 +42,11 @@ const AllProjects = ({ statesList,currentUser }) => {
   const [openCEDialog, setOpenCEDialog] = useState(false);
   const [selectedCEProject, setSelectedCEProject] = useState(null);
   const [selectedCEFiles, setSelectedCEFiles] = useState([]);
+  // Waterbody Excel Upload
+const [openWBDialog, setOpenWBDialog] = useState(false);
+const [selectedWBProject, setSelectedWBProject] = useState(null);
+const [selectedWBFiles, setSelectedWBFiles] = useState([]);
+
 
 
   const navigate = useNavigate();
@@ -375,6 +380,73 @@ const AllProjects = ({ statesList,currentUser }) => {
       });
     }
   };
+
+  const handleOpenWB = (project) => {
+    setSelectedWBProject(project);
+    setSelectedWBFiles([]);
+    setOpenWBDialog(true);
+  };
+  
+  const handleWBFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const valid = files.filter(
+      (f) => f.name.endsWith(".xlsx") || f.name.endsWith(".xls")
+    );
+  
+    if (!valid.length) {
+      alert("Please upload valid Excel files (.xls / .xlsx)");
+      return;
+    }
+  
+    setSelectedWBFiles(valid);
+  };
+  
+  const handleRemoveWBFile = (index) => {
+    setSelectedWBFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+  
+  const handleUploadWB = async () => {
+    if (!selectedWBFiles.length) {
+      alert("Please select Excel files first");
+      return;
+    }
+  
+    const formData = new FormData();
+    selectedWBFiles.forEach((f) => formData.append("files[]", f));
+    formData.append("project_id", selectedWBProject.id);
+  
+    try {
+      const token = sessionStorage.getItem("accessToken");
+  
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/upload_waterbody_excel/`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
+  
+      if (!res.ok) throw new Error("Upload failed");
+  
+      setToast({
+        open: true,
+        message: "Excel uploaded successfully!",
+        severity: "success",
+      });
+  
+      setOpenWBDialog(false);
+    } catch (err) {
+      setToast({
+        open: true,
+        message: "Failed to upload Excel!",
+        severity: "error",
+      });
+    }
+  };
+  
   
 
   return (
@@ -548,23 +620,23 @@ const AllProjects = ({ statesList,currentUser }) => {
                           )}
                           {/* Waterbody */}
                           {p.app_type === "waterbody" && isSuperAdmin && (
-                            <>
-                              <Tooltip title="Upload Excel">
-                                <IconButton
-                                  size="small"
-                                  sx={{
-                                    color: "#2563eb", // Blue
-                                    "&:hover": {
-                                      color: "#1d4ed8",
-                                      backgroundColor: "rgba(37,99,235,0.1)",
-                                    },
-                                  }}
-                                >
-                                  <Upload size={24} />
-                                </IconButton>
-                              </Tooltip>
-                            </>
+                            <Tooltip title="Upload Excel">
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  color: "#2563eb",
+                                  "&:hover": {
+                                    color: "#1d4ed8",
+                                    backgroundColor: "rgba(37,99,235,0.1)",
+                                  },
+                                }}
+                                onClick={() => handleOpenWB(p)}
+                              >
+                                <Upload size={24} />
+                              </IconButton>
+                            </Tooltip>
                           )}
+
 
                           {/* Watershed */}
                           {p.app_type === "watershed" && (
@@ -820,6 +892,71 @@ const AllProjects = ({ statesList,currentUser }) => {
     </Box>
   </DialogContent>
 </Dialog>
+
+<Dialog
+  open={openWBDialog}
+  onClose={() => setOpenWBDialog(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    Upload Waterbody Excel – {selectedWBProject?.name}
+  </DialogTitle>
+
+  <DialogContent>
+    <Box display="flex" flexDirection="column" gap={2}>
+
+      {/* File Input */}
+      <input
+        id="wb-upload"
+        type="file"
+        accept=".xls,.xlsx"
+        multiple
+        hidden
+        onChange={handleWBFileSelect}
+      />
+
+      <label htmlFor="wb-upload">
+        <Box className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50">
+          Select Excel Files
+        </Box>
+      </label>
+
+      {/* Selected Files */}
+      {selectedWBFiles.length > 0 && (
+        <Box className="bg-gray-100 p-3 rounded-lg">
+          {selectedWBFiles.map((f, i) => (
+            <Box
+              key={i}
+              className="flex justify-between items-center p-2 border-b last:border-none"
+            >
+              {f.name}
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleRemoveWBFile(i)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        disabled={selectedWBFiles.length === 0}
+        onClick={handleUploadWB}
+      >
+        Upload Excel
+      </Button>
+
+    </Box>
+  </DialogContent>
+</Dialog>
+
 
     </Box>
   );
