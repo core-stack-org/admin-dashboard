@@ -1,99 +1,148 @@
 import React, { useEffect, useState } from "react";
-import { Pencil, Trash2, Check, X, ChevronDown, ChevronUp } from "lucide-react";
+import { Trash2, ChevronLeft, Search, Calendar, User } from "lucide-react";
+import { Model } from "survey-core";
+import { Survey } from "survey-react-ui";
+import "survey-core/survey-core.min.css";
 
-// Page 1: Selection Form
-const SelectionPage = ({ onLoadSubmissions, initialProject = "", initialPlan = "", initialForm = "" }) => {
-  const BASEURL = "https://geoserver.core-stack.org/";
-  
+import {
+  BASEURL,
+  FORM_TEMPLATES,
+  CARD_DISPLAY_FIELDS,
+} from "./moderation/constants";
+
+const SelectionPage = ({
+  onLoadSubmissions,
+  initialProject = "",
+  initialPlan = "",
+  initialForm = "",
+}) => {
   const [projects, setProjects] = useState([]);
   const [plans, setPlans] = useState([]);
   const [forms, setForms] = useState([]);
-  const [selectedProject, setSelectedProject] = useState(initialProject);
-  const [selectedPlan, setSelectedPlan] = useState(initialPlan);
-  const [selectedForm, setSelectedForm] = useState(initialForm);
+
+  const [selectedProject, setSelectedProject] =
+    useState(initialProject);
+  const [selectedPlan, setSelectedPlan] =
+    useState(initialPlan);
+  const [selectedForm, setSelectedForm] =
+    useState(initialForm);
+
+  const token = sessionStorage.getItem("accessToken");
+
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 
   useEffect(() => {
-    const token = sessionStorage.getItem("accessToken");
-    fetch(`${BASEURL}api/v1/projects`, {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setProjects(data.data || data.projects || data))
-      .catch(err => console.log("Project Fetch Error", err));
+    fetch(`${BASEURL}api/v1/projects`, { headers })
+      .then((res) => res.json())
+      .then((data) =>
+        setProjects(data.data || data.projects || data)
+      )
+      .catch((err) =>
+        console.log("Project Fetch Error", err)
+      );
   }, []);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("accessToken");
-    fetch(`${BASEURL}api/v1/forms`, {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => setForms(data.forms || []))
-      .catch(err => console.log("Forms Fetch Error", err));
+    fetch(`${BASEURL}api/v1/forms`, { headers })
+      .then((res) => res.json())
+      .then((data) => setForms(data.forms || []))
+      .catch((err) =>
+        console.log("Forms Fetch Error", err)
+      );
   }, []);
 
   useEffect(() => {
-    if (initialProject) {
-      const token = sessionStorage.getItem("accessToken");
-      fetch(`${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`, {
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+    if (!initialProject) return;
+
+    fetch(
+      `${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`,
+      { headers }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const rawPlans =
+          data?.data || data?.plans || data || [];
+        setPlans(formatPlansForDropdown(rawPlans));
       })
-        .then(res => res.json())
-        .then(data => {
-          const formatted = (data.data || data.plans || data).map(p => ({
-            plan_id: p.id || p.plan_id,
-            plan: p.plan
-          }));
-          setPlans(formatted);
-        })
-        .catch(err => console.log("Plan Fetch Error", err));
-    }
+      .catch((err) => {
+        console.error("Plan Fetch Error", err);
+        setPlans([]);
+      });
   }, [initialProject]);
+
+  const formatPlansForDropdown = (rawPlans = []) =>
+    rawPlans.map((p) => ({
+      plan_id: p.id || p.plan_id,
+      plan: p.plan,
+      facilitator_name: p.facilitator_name || "",
+      year: p.created_at
+        ? new Date(p.created_at).getFullYear()
+        : "",
+    }));
 
   const handleProjectChange = (e) => {
     const id = e.target.value;
+
     setSelectedProject(id);
     setSelectedPlan("");
+    setPlans([]);
 
-    const token = sessionStorage.getItem("accessToken");
-    fetch(`${BASEURL}api/v1/projects/${id}/watershed/plans/`, {
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        const formatted = (data.data || data.plans || data).map(p => ({
-          plan_id: p.id || p.plan_id,
-          plan: p.plan
-        }));
-        setPlans(formatted);
+    if (!id) return;
+
+    fetch(
+      `${BASEURL}api/v1/projects/${id}/watershed/plans/`,
+      { headers }
+    )
+      .then((res) => res.json())
+      .then((data) => {
+        const rawPlans =
+          data?.data || data?.plans || data || [];
+        setPlans(formatPlansForDropdown(rawPlans));
       })
-      .catch(err => console.log("Plan Fetch Error", err));
+      .catch((err) => {
+        console.error("Plan Fetch Error", err);
+        setPlans([]);
+      });
   };
 
   const handleLoadSubmissions = () => {
-    if (selectedForm && selectedPlan) {
-      const planName = plans.find(p => p.plan_id === Number(selectedPlan))?.plan || "Unknown Plan";
-      onLoadSubmissions(selectedProject, selectedPlan, selectedForm, planName);
-    }
+    if (!selectedForm || !selectedPlan) return;
+
+    const planName =
+      plans.find(
+        (p) => p.plan_id === Number(selectedPlan)
+      )?.plan || "Unknown Plan";
+
+    onLoadSubmissions(
+      selectedProject,
+      selectedPlan,
+      selectedForm,
+      planName
+    );
   };
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Moderation Dashboard</h1>
-          <p className="text-gray-600">Select project, plan, and form to view submissions</p>
+          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight">
+            Moderation Dashboard
+          </h1>
+          <p className="text-slate-600 text-lg">
+            Select project, plan, and form to review Forms
+          </p>
         </div>
-
-        <div className="bg-white shadow-xl rounded-2xl p-8 border border-gray-100">
-          {/* Project Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+  
+        <div className="bg-white shadow-2xl rounded-3xl p-10 border border-slate-200">
+          <div className="mb-7">
+            <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Project
             </label>
             <select
-              className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-blue-500 focus:outline-none transition"
+              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
               onChange={handleProjectChange}
               value={selectedProject}
             >
@@ -105,14 +154,13 @@ const SelectionPage = ({ onLoadSubmissions, initialProject = "", initialPlan = "
               ))}
             </select>
           </div>
-
-          {/* Plan Selection */}
-          <div className="mb-6">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+  
+          <div className="mb-7">
+            <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Plan
             </label>
             <select
-              className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-blue-500 focus:outline-none transition"
+              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
               value={selectedPlan}
               onChange={(e) => setSelectedPlan(e.target.value)}
             >
@@ -120,53 +168,305 @@ const SelectionPage = ({ onLoadSubmissions, initialProject = "", initialPlan = "
               {plans?.map((plan) => (
                 <option key={plan.plan_id} value={plan.plan_id}>
                   {plan.plan}
+                  {(plan.year || plan.facilitator_name) && (
+                    <>
+                      {plan.year && ` (${plan.year})`}
+                      {plan.facilitator_name && ` – ${plan.facilitator_name}`}
+                    </>
+                  )}
                 </option>
               ))}
             </select>
           </div>
-
-          {/* Form Selection */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Select Form
             </label>
+  
             <select
               className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-blue-500 focus:outline-none transition"
               value={selectedForm}
               onChange={(e) => setSelectedForm(e.target.value)}
             >
               <option value="">-- Choose Form --</option>
-              {forms?.map((form, i) => (
-                <option key={i} value={form.name}>
-                  {form.name}
+  
+              {forms?.map((form) => (
+                <option key={form.form_id} value={form.name}>
+                  {form.display}
                 </option>
               ))}
             </select>
           </div>
-
-          {/* Load Button */}
           <button
             onClick={handleLoadSubmissions}
             disabled={!selectedPlan || !selectedForm}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-semibold disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed hover:from-blue-700 hover:to-purple-700 transition shadow-lg"
+            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            Load Submissions
+            Submit
           </button>
         </div>
       </div>
     </div>
-  );
+  );  
 };
 
-// Page 2: Card View
-const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) => {
-  const BASEURL = "https://geoserver.core-stack.org/"; // Replace with your actual base URL
+// Page 2: Form View with SurveyJS
+const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) => {
+  const [submissions, setSubmissions] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [surveyModel, setSurveyModel] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Check user permissions
+  const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+  const user = sessionUser.user || {};
+  const groups = Array.isArray(user.groups) ? user.groups : [];
+  const isAdmin = groups.some(g => g.name === "Administrator");
+  const isModerator = groups.some(g => g.name === "Moderator");
+  const isSuperAdmin = user.is_superadmin;
+  const showActions = isAdmin || isModerator || isSuperAdmin;
+
+  // Generic function to analyze form schema and identify field types
+  const analyzeFormSchema = (schema) => {
+    const fieldTypes = {};
+    
+    const analyzeElement = (element, parentName = '') => {
+      // Don't add parent name to the element's own name if element is already prefixed
+      const elementName = element.name.startsWith(parentName + '-') 
+        ? element.name 
+        : (parentName ? `${parentName}-${element.name}` : element.name);
+      
+      if (element.type === 'checkbox') {
+        fieldTypes[elementName] = 'checkbox';
+      } else if (element.type === 'radiogroup') {
+        fieldTypes[elementName] = 'radio';
+      } else if (element.type === 'multipletext') {
+        fieldTypes[elementName] = 'multipletext';
+      } else if (element.type === 'panel') {
+        // For panel elements, recursively analyze children
+        // But DON'T pass the parent name again since panel children already have it in their name
+        if (element.elements) {
+          element.elements.forEach(child => {
+            // Check if child name already contains parent prefix
+            if (child.name.includes('-')) {
+              analyzeElement(child, ''); // No parent prefix needed
+            } else {
+              analyzeElement(child, element.name); // Add parent prefix
+            }
+          });
+        }
+      }
+      
+      // Handle items in multipletext (like GPS coordinates)
+      if (element.items && Array.isArray(element.items)) {
+        fieldTypes[elementName] = 'multipletext';
+        element.items.forEach(item => {
+          fieldTypes[`${elementName}.${item.name}`] = 'multipletext_item';
+        });
+      }
+    };
+    
+    if (schema.pages) {
+      schema.pages.forEach(page => {
+        if (page.elements) {
+          page.elements.forEach(element => analyzeElement(element));
+        }
+      });
+    }
+    
+    return fieldTypes;
+  };
+
+  // Transform API data to SurveyJS format
+  const transformApiToSurvey = (submission, formSchema) => {
+    const fieldTypes = analyzeFormSchema(formSchema);
+    const transformedData = { ...submission };
+    
+    const processObject = (obj, parentKey = '') => {
+      Object.keys(obj).forEach(key => {
+        const value = obj[key];
+        const fullKey = parentKey ? `${parentKey}-${key}` : key;
+        
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+          // Special handling for GPS_point with coordinates (handle both typos)
+          if (key === 'GPS_point') {
+            // Check for both point_mapsappearance and point_mapappearance
+            const coordsObj = value.point_mapsappearance || value.point_mapappearance;
+            if (coordsObj?.coordinates) {
+              const coords = coordsObj.coordinates;
+              transformedData['GPS_point'] = {
+                longitude: coords[0],
+                latitude: coords[1]
+              };
+              return; // Skip further processing for this key
+            }
+          }
+          // Special handling for other coordinate structures
+          else if (value.latitude !== undefined && value.longitude !== undefined) {
+            transformedData[fullKey] = value;
+          }
+          // Handle nested objects (panels, multipletext, etc.)
+          else {
+            processObject(value, key);
+          }
+        } else {
+          // Handle checkbox and radio fields (space-separated strings to arrays for checkboxes)
+          if (typeof value === 'string' && value.trim().length > 0) {
+            const fieldType = fieldTypes[fullKey] || fieldTypes[key];
+            
+            // Convert space-separated strings to arrays for checkbox fields
+            if (fieldType === 'checkbox' && value.includes(' ')) {
+              transformedData[fullKey] = value.split(' ').filter(v => v.trim().length > 0);
+            } else {
+              // For radio and other fields, just pass the value as-is
+              transformedData[fullKey] = value;
+            }
+          } else if (value === null || value === undefined) {
+            transformedData[fullKey] = value;
+          } else {
+            transformedData[fullKey] = value;
+          }
+        }
+      });
+    };
+    
+    processObject(submission);
+    return transformedData;
+  };
+
+  // Transform SurveyJS data back to API format
+  const transformSurveyToApi = (surveyData, originalSubmission, formSchema) => {
+    const fieldTypes = analyzeFormSchema(formSchema);
+    const saveData = { ...surveyData };
+    const nestedData = {};
+    
+    Object.keys(saveData).forEach(key => {
+      if (key.includes('-')) {
+        const [parent, child] = key.split('-');
+        if (!nestedData[parent]) {
+          nestedData[parent] = {};
+        }
+        
+        const fieldType = fieldTypes[key];
+        const value = saveData[key];
+        
+        // Convert arrays back to space-separated strings for checkbox fields
+        if (Array.isArray(value) && fieldType === 'checkbox') {
+          nestedData[parent][child] = value.join(' ');
+        } else {
+          nestedData[parent][child] = value;
+        }
+        delete saveData[key];
+      }
+    });
+    
+    // Special handling for GPS_point - convert back to original structure
+    if (saveData.GPS_point && saveData.GPS_point.latitude && saveData.GPS_point.longitude) {
+      // Preserve original structure if it exists
+      const originalGPS = originalSubmission.GPS_point;
+      
+      if (originalGPS) {
+        // Check which property name was used in the original
+        const coordsKey = originalGPS.point_mapsappearance ? 'point_mapsappearance' : 'point_mapappearance';
+        
+        nestedData.GPS_point = {
+          ...originalGPS, // Preserve all original fields
+          [coordsKey]: {
+            type: "Point",
+            coordinates: [
+              parseFloat(saveData.GPS_point.longitude),
+              parseFloat(saveData.GPS_point.latitude)
+            ]
+          }
+        };
+      } else {
+        // Use simple structure if that's what was in the original
+        nestedData.GPS_point = saveData.GPS_point;
+      }
+      delete saveData.GPS_point;
+    }
+    
+    // Merge nested data back
+    Object.keys(nestedData).forEach(parent => {
+      saveData[parent] = nestedData[parent];
+    });
+    
+    return saveData;
+  };
+
+  // Helper function to get nested field value from submission
+  const getFieldValue = (submission, fieldKey) => {
+    // Try direct access first
+    if (submission[fieldKey] !== undefined && submission[fieldKey] !== null) {
+      return submission[fieldKey];
+    }
+    
+    // Handle nested objects like MNREGA_INFORMATION
+    if (fieldKey.includes('-')) {
+      const [parent, child] = fieldKey.split('-');
+      if (submission[parent] && submission[parent][child] !== undefined) {
+        return submission[parent][child];
+      }
+    }
+    
+    // Check in nested structures
+    const nestedPaths = [
+      `data.${fieldKey}`,
+      `data_settlement.${fieldKey}`,
+      `data_well.${fieldKey}`,
+      `data_waterbody.${fieldKey}`,
+      `GPS_point.point_mapsappearance.coordinates`,
+    ];
+    
+    for (const path of nestedPaths) {
+      const keys = path.split('.');
+      let value = submission;
+      let found = true;
+      
+      for (const key of keys) {
+        if (value && typeof value === 'object' && value[key] !== undefined) {
+          value = value[key];
+        } else {
+          found = false;
+          break;
+        }
+      }
+      
+      if (found && value !== null) {
+        // Handle coordinates specially
+        if (Array.isArray(value) && fieldKey === 'coordinates') {
+          return value.join(', ');
+        }
+        return value;
+      }
+    }
+    
+    return '-';
+  };
+
+  // Helper to get UUID from submission
+  const getSubmissionUUID = (submission) => {
+    // Try __id first (format: "uuid:xxxxx")
+    if (submission.__id) {
+      return submission.__id;
+    }
+    // Try meta.instanceID (format: "uuid:xxxxx")
+    if (submission.meta?.instanceID) {
+      return submission.meta.instanceID;
+    }
+    // Fallback to uuid field if it exists
+    if (submission.uuid) {
+      return submission.uuid;
+    }
+    return null;
+  };
 
   const formatToIST = (utcDate) => {
     if (!utcDate) return "-";
-    
     const date = new Date(utcDate);
-    
     const options = {
       timeZone: 'Asia/Kolkata',
       day: '2-digit',
@@ -176,370 +476,7 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       minute: '2-digit',
       hour12: true
     };
-    
     return date.toLocaleString('en-IN', options).replace(',', '') + ' IST';
-  };
-
-  const formatColumnName = (key) => {
-    const parts = key.split('.');
-    const lastPart = parts[parts.length - 1];
-    return lastPart.replace(/_/g, " ");
-  };
-
-  const formatValue = (key, value) => {
-    if (isTimestampField(key)) {
-      return formatToIST(value);
-    }
-    
-    const lastPart = key.split('.').pop();
-    if ((lastPart === 'coordinates' || lastPart.includes('coordinate')) && Array.isArray(value)) {
-      return value.join(', ');
-    }
-    
-    return value ?? "-";
-  };
-
-  const isMetadataField = (key) => {
-    const metadataPatterns = [
-      '__id',
-      '__system',
-      'meta',
-      'deviceid',
-      'start',
-      'end',
-      'today',
-      'user_latlon',
-      'formVersion',
-      'reviewState',
-      'submitterId',
-      'submitterName',
-      'attachmentsPresent',
-      'attachmentsExpected',
-      'edits',
-      'status',
-      'deviceId',
-      'deletedAt',
-      'updatedAt',
-    ];
-    
-    const lastPart = key.split('.').pop();
-    return metadataPatterns.some(pattern => 
-      key.includes(pattern) || lastPart === pattern
-    );
-  };
-  
-  const [showMetadata, setShowMetadata] = useState({});
-  const [submissions, setSubmissions] = useState([]);
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [expandedCards, setExpandedCards] = useState({});
-  const [editingRowUuid, setEditingRowUuid] = useState(null);
-  const [editedRowData, setEditedRowData] = useState({});
-  const [editedSubmissions, setEditedSubmissions] = useState(new Set());
-
-  const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
-  const user = sessionUser.user || {};
-  const groups = Array.isArray(user.groups) ? user.groups : [];
-  const isAdmin = groups.some(g => g.name === "Administrator");
-  const isModerator = groups.some(g => g.name === "Moderator");
-  const [currentUser, setCurrentUser] = useState(() => {
-    return JSON.parse(sessionStorage.getItem("currentUser"));
-  });
-  const isSuperAdmin = currentUser.user.is_superadmin;
-  
-  const showActions = isAdmin || isModerator || isSuperAdmin;
-  
-  const formFieldConfig = {
-    Settlement: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Settlements_name", displayName: "Settlement Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "Settlements_id", displayName: "Settlement ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "number_households", displayName: "Total Number of Households", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "settlement_electricity", displayName: "Electricity Available", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "road_connected", displayName: "Road Connected to Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "count_obc", displayName: "Number of OBC Households", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "count_st", displayName: "Number of ST Households", showInCollapsed: true, showInExpanded: true, editable: true },
-
-      // Expanded view only fields
-      { field: "count_sc", displayName: "Number of SC Households", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "count_general", displayName: "Number of General Caste Households", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "BPL_households", displayName: "BPL Households", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "distance_settlement", displayName: "Distance to Main Road (km)", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "distance_settlement_block", displayName: "Distance to Block (km)", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "big_farmers", displayName: "Big Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "small_farmers", displayName: "Small Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "medium_farmers", displayName: "Medium Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "landless_farmers", displayName: "Landless Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "marginal_farmers", displayName: "Marginal Farmers", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Bail", displayName: "OX (Bail)", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Goats", displayName: "Goats", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Sheep", displayName: "Sheep", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Cattle", displayName: "Cattle", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Piggery", displayName: "Piggery", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Poultry", displayName: "Poultry", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "NREGA_work_days", displayName: "Narega Work Days", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "NREGA_have_job_card", displayName: "Households Have Narega Job Card", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Households_BPL_cards", displayName: "Households Have BPL Card", showInCollapsed: false, showInExpanded: true, editable: true },
-    ],
-    
-    Well: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "well_id", displayName: "Well ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Beneficiary_name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_owns", displayName: "Ownership", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "households_benefited", displayName: "Households Benefited", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_well_type", displayName: "Well Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "is_maintenance_required", displayName: "Maintenance Required", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-
-      
-      // Expanded view only
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Beneficiary_contact_number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_caste_use", displayName: "Castes Using", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Is_water_from_well_used", displayName: "Well Water Used", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_well_used", displayName: "Well Usage Type", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "repairs_type", displayName: "what Repair Requires", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_change_observed", displayName: "Is there any changes in water Observed", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_change_water_quality", displayName: "Is there any changes in water Quality", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_pollutants_groundwater", displayName: "Is there any Pollutants in Groundwater", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_water_structure_near_you", displayName: "Is there any Water Structure Near you", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_Functional_Non_functional", displayName: "Is the Well Functional", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_year", displayName: "Till Which Month Water Available", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_scheme", displayName: "Under Which Scheme it is Built", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_caste_use", displayName: "Which Caste Use this ", showInCollapsed: false, showInExpanded: true, editable: true },
-
-
-    ],
-     
-    Waterbody: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "waterbodies_id", displayName: "Waterbody ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Beneficiary_name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_water_structure", displayName: "Water Structure Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_owns", displayName: "Ownership", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "households_benefited", displayName: "Households Benefited", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_maintenance", displayName: "Maintenance Status", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-
-      
-      // Expanded view only
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Beneficiary_contact_number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_manages", displayName: "Managed By", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "age_water_structure", displayName: "Waterbody Age", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_uses_structure", displayName: "Structure Uses", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "text_one_manages", displayName: "Who manages", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_bunding", displayName: "What Type of Repair", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "select_one_scheme", displayName: "Through Which Scheme it Repair", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "select_one_manages", displayName: "Who Manages ", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_check_dam", displayName: "Repair of Checkdam ", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_farm_bund", displayName: "Repair of Farmbund ", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_farm_bund", displayName: "Repair of Farmbund ", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_soakage_pits", displayName: "Repair of Soakage Pits ", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_recharge_pits", displayName: "Repair of Recharge Pits ", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_rock_fill_dam", displayName: "Repair of RockFillDam", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_stone_bunding", displayName: "Repair of Stone Bunding", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_community_pond", displayName: "Repair of Commmunity  Pond", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "select_multiple_caste_use", displayName: "Which Cast Use", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_diversion_drains", displayName: "Repair of Diversion Drains", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_large_water_body", displayName: "Repair of Large Water Body", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_model5_structure", displayName: "Repair of Model5 Structure", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_percolation_tank", displayName: "Repair of Percolation Tank", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "Repair_of_30_40_model_structure", displayName: "Repair of 30*40 Model Structure", showInCollapsed: false, showInExpanded: true, editable: false },
-
-    ],
-    
-    Groundwater: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "select_gender", displayName: "Gender", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      
-      // Expanded view only
-      { field: "khasra", displayName: "Khasra Number", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Depth_17", displayName: "Bunding Depth", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Width_17", displayName: "Bunding width", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Height_17", displayName: "Bunding Height", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Width_1", displayName: "Check_dam Width", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Height_1", displayName: "Check_dam Height", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Length_1", displayName: "Check_dam Length", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Depth_6", displayName: "SokagePits Depth ", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Width_6", displayName: "SokagePpits Width", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Depth_5", displayName: "RechargePits Depth", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Width_5", displayName: "RechargePits Width", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "Length_5", displayName: "RechargePits Length", showInCollapsed: false, showInExpanded: true, editable: true },
-
-
-    ],
-    
-    Agri: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "TYPE_OF_WORK_ID", displayName: "Type of Work", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "demand_type_irrigation", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "khasra", displayName: "Khasra Number", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_cropping_pattern", displayName: "Cropping Pattern", showInCollapsed: true, showInExpanded: true, editable: true },
-      
-      // Expanded view only
-      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "gender", displayName: "Gender", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_cropping_kharif", displayName: "Kharif Crops", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_cropping_Rabi", displayName: "Rabi Crops", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_cropping_Zaid", displayName: "Zaid Crops", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: false, showInExpanded: true, editable: false },
-    ],
-    
-    Livelihood: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "ben_livestock", displayName: "Benificiary name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "ben_plantation", displayName: "Beneficiary (Plantation)", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "crop_name", displayName: "Crop/Plant Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "crop_area", displayName: "Crop Area", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "is_demand_fisheries", displayName: "Fisheries Demand", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "is_demand_livestock", displayName: "Livestock Demand", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-      
-      // Expanded view only
-      { field: "ben_livestock", displayName: "Beneficiary (Livestock)", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "ben_fisheries", displayName: "Beneficiary (Fisheries)", showInCollapsed: false, showInExpanded: true, editable: true },
-    ],
-    
-    Crop: [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "crop_Grid_id", displayName: "Crop Grid ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "select_one_classified", displayName: "Land Classification", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_practice", displayName: "Cropping Practice", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_multiple_cropping_kharif", displayName: "Kharif Crops", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "total_area_cultivation_kharif", displayName: "Kharif Area (acres)", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_productivity", displayName: "Productivity Status", showInCollapsed: true, showInExpanded: true, editable: true },
-      
-      // Expanded view only
-      { field: "total_area_cultivation_Rabi", displayName: "Rabi Area (acres)", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "total_area_cultivation_Zaid", displayName: "Zaid Area (acres)", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_cropping_Rabi", displayName: "Rabi Crops", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_cropping_Zaid", displayName: "Zaid Crops", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "soil_degraded", displayName: "Soil Degraded", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_multiple_widgets", displayName: "Irrigation Source", showInCollapsed: false, showInExpanded: true, editable: true },
-    ],
-    
-    "Agri Maintenance": [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "select_one_irrigation_structure", displayName: "Irrigation Structure", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-      
-      // Expanded view only
-      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_well", displayName: "Well Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_canal", displayName: "Canal Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_farm_pond", displayName: "Farm Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_community_pond", displayName: "Community Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_farm_bund", displayName: "Farm Bund Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-    ],
-    
-    "GroundWater Maintenance": [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "TYPE_OF_WORK", displayName: "Work Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "select_one_check_dam", displayName: "Check Dam Issue", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-      
-      // Expanded view only
-      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_gender", displayName: "Gender", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: false, showInExpanded: true, editable: false },
-      { field: "select_one_farm_pond", displayName: "Farm Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_rock_fill_dam", displayName: "Rock Fill Dam Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_community_pond", displayName: "Community Pond Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_one_percolation_tank", displayName: "Percolation Tank Issue", showInCollapsed: false, showInExpanded: true, editable: true },
-    ],
-    
-    "Surface Water Body Maintenance": [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "select_one_recharge_structure", displayName: "Recharge Structure", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: true, showInExpanded: true, editable: false },
-      
-      // Expanded view only
-      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "select_gender", displayName: "Gender", showInCollapsed: false, showInExpanded: true, editable: true },
-    ],
-    
-    "Surface Water Body Recharge Structure Maintenance": [
-      { field: "submissionDate", displayName: "Submission Date", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "work_id", displayName: "Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "Beneficiary_Name", displayName: "Beneficiary Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "beneficiary_settlement", displayName: "Beneficiary Settlement", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "block_name", displayName: "Block Name", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "plan_name", displayName: "Plan Name", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "TYPE_OF_WORK", displayName: "Work Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "corresponding_work_id", displayName: "Original Work ID", showInCollapsed: true, showInExpanded: true, editable: false },
-      { field: "select_one_community_pond", displayName: "Community Pond Issue", showInCollapsed: true, showInExpanded: true, editable: true },
-      { field: "demand_type", displayName: "Demand Type", showInCollapsed: true, showInExpanded: true, editable: true },
-      
-      // Expanded view only
-      { field: "Beneficiary_Contact_Number", displayName: "Beneficiary Contact", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "ben_father", displayName: "Father's/Guardian Name", showInCollapsed: false, showInExpanded: true, editable: true },
-      { field: "coordinates", displayName: "Coordinates", showInCollapsed: false, showInExpanded: true, editable: false },
-    ],
-  };
-
-  const flattenObject = (obj, prefix = "") => {
-    return Object.keys(obj || {}).reduce((acc, key) => {
-      const value = obj[key];
-      const newKey = prefix ? `${prefix}.${key}` : key;
-      if (value && typeof value === "object" && !Array.isArray(value)) {
-        Object.assign(acc, flattenObject(value, newKey));
-      } else {
-        acc[newKey] = value;
-      }
-      return acc;
-    }, {});
   };
 
   const fetchSubmissions = async (pg = 1) => {
@@ -554,15 +491,8 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       const data = await res.json();
       
       const sortedData = (data.data || []).sort((a, b) => {
-        const flatA = flattenObject(a);
-        const flatB = flattenObject(b);
-        
-        const timeKeyA = Object.keys(flatA).find(k => isTimestampField(k));
-        const timeKeyB = Object.keys(flatB).find(k => isTimestampField(k));
-        
-        const dateA = new Date(flatA[timeKeyA] || 0);
-        const dateB = new Date(flatB[timeKeyB] || 0);
-        
+        const dateA = new Date(a.submission_time || 0);
+        const dateB = new Date(b.submission_time || 0);
         return dateB - dateA;
       });
       
@@ -578,26 +508,100 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     fetchSubmissions(1);
   }, []);
 
-
-  const filteredRows = submissions.filter(row => {
-    const flat = flattenObject(row);
-    return Object.values(flat).join(" ").toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
-  const toggleExpand = (uuid) => {
-    setExpandedCards(prev => ({ ...prev, [uuid]: !prev[uuid] }));
+  const handleViewSubmission = (submission) => {
+    const formTemplate = FORM_TEMPLATES[selectedForm];
+    
+    if (!formTemplate) {
+      alert(`No template found for form: ${selectedForm}`);
+      return;
+    }
+    
+    setSelectedSubmission(submission);
+    setIsEditing(false);
+    
+    const model = new Model(formTemplate);
+    model.mode = "display"; // Read-only mode
+    
+    // Use generic transformation
+    const transformedData = transformApiToSurvey(submission, formTemplate);
+    
+    // Debug logging for checkbox fields
+    console.log('Original submission:', submission);
+    console.log('Transformed data:', transformedData);
+    console.log('Field types:', analyzeFormSchema(formTemplate));
+    
+    model.data = transformedData;
+    setSurveyModel(model);
   };
 
-  const isTimestampField = (key) => {
-    const lastPart = key.split('.').pop();
-    return lastPart === 'submission_time' || lastPart === 'submissionDate';
+  const handleEditSubmission = (submission) => {
+    const formTemplate = FORM_TEMPLATES[selectedForm];
+    
+    if (!formTemplate) {
+      alert(`No template found for form: ${selectedForm}`);
+      return;
+    }
+    
+    setSelectedSubmission(submission);
+    setIsEditing(true);
+    
+    const model = new Model(formTemplate);
+    
+    // Use generic transformation
+    const transformedData = transformApiToSurvey(submission, formTemplate);
+    model.data = transformedData;
+    
+    // Handle survey completion (save)
+    model.onComplete.add((sender) => {
+      // Transform back to API format
+      const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
+      const uuid = getSubmissionUUID(submission);
+      handleSaveSubmission(uuid, saveData);
+    });
+    
+    setSurveyModel(model);
   };
 
-  const handleDelete = async (row) => {
-    if (!window.confirm("Delete this submission?")) return;
+  const handleSaveSubmission = async (uuid, data) => {
     try {
       const response = await fetch(
-        `${BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/delete/`,
+        `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      const result = await response.json();
+      if (result.success) {
+        alert("Saved successfully!");
+        setSelectedSubmission(null);
+        setSurveyModel(null);
+        fetchSubmissions(page);
+      } else {
+        alert("Save failed");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      alert("Server error");
+    }
+  };
+
+  const handleDelete = async (submission) => {
+    if (!window.confirm("Delete this submission?")) return;
+    
+    const uuid = getSubmissionUUID(submission);
+    if (!uuid) {
+      alert("Could not find submission UUID");
+      return;
+    }
+    
+    try {
+      const response = await fetch(
+        `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/delete/`,
         {
           method: "DELETE",
           headers: {
@@ -608,484 +612,259 @@ const CardViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       const data = await response.json();
       if (data.success) {
         alert("Deleted!");
-        setSubmissions((prev) => prev.filter((item) => item.uuid !== row.uuid));
-      }
-    } catch {
-      alert("Server error");
-    }
-  };
-
-  const unflattenObject = (flat) => {
-    const result = {};
-    
-    for (const key in flat) {
-      const keys = key.split('.');
-      let current = result;
-      
-      for (let i = 0; i < keys.length - 1; i++) {
-        if (!current[keys[i]]) {
-          current[keys[i]] = {};
-        }
-        current = current[keys[i]];
-      }
-      
-      current[keys[keys.length - 1]] = flat[key];
-    }
-    
-    return result;
-  };
-
-  const handleSave = async (row) => {
-    try {
-      const unflattenedData = unflattenObject(editedRowData);
-      
-      const response = await fetch(
-        `${BASEURL}api/v1/submissions/${selectedForm}/${row.uuid}/modify/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify(unflattenedData),
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        alert("Saved successfully!");
-        setEditedSubmissions(prev => new Set([...prev, row.uuid]));
-        
-        // Close editing mode BEFORE fetching
-        setEditingRowUuid(null);
-        setExpandedCards(prev => ({ ...prev, [row.uuid]: false }));
-        
-        // Fetch new data
-        await fetchSubmissions(page);
-        
-      } else {
-        alert("Save failed");
+        setSubmissions((prev) => prev.filter((item) => getSubmissionUUID(item) !== uuid));
       }
     } catch (error) {
-      console.error("Save error:", error);
+      console.error("Delete error:", error);
       alert("Server error");
     }
   };
 
-  // Get visible columns for collapsed view
-const getVisibleColumnsForCollapsed = (flat) => {
-  if (!formFieldConfig[selectedForm]) return [];
-  
-  return formFieldConfig[selectedForm]
-    .filter(config => config.showInCollapsed)
-    .map(config => {
-      // Try exact match first
-      if (flat.hasOwnProperty(config.field)) {
-        return config.field;
-      }
-      
-      // Try finding by last part of key
-      const matchingKey = Object.keys(flat).find(key => {
-        const lastPart = key.split('.').pop();
-        return lastPart === config.field;
-      });
-      
-      return matchingKey;
-    })
-    .filter(Boolean); // Remove nulls
-};
-
-// Get visible fields for expanded view
-const getVisibleFieldsForExpanded = (flat) => {
-  if (!formFieldConfig[selectedForm]) return [];
-  
-  const configFields = formFieldConfig[selectedForm]
-    .filter(config => config.showInExpanded)
-    .map(config => {
-      // Try exact match first
-      if (flat.hasOwnProperty(config.field)) {
-        return { key: config.field, config };
-      }
-      
-      // Try finding by last part of key
-      const matchingKey = Object.keys(flat).find(key => {
-        const lastPart = key.split('.').pop();
-        return lastPart === config.field;
-      });
-      
-      return matchingKey ? { key: matchingKey, config } : null;
-    })
-    .filter(Boolean);
-  
-  return configFields;
-};
-
-// Check if a field is editable
-const isFieldEditable = (key) => {
-  if (!formFieldConfig[selectedForm]) return true;
-  
-  const lastPart = key.split('.').pop();
-  const fieldConfig = formFieldConfig[selectedForm].find(
-    config => config.field === lastPart || config.field === key
-  );
-  
-  return fieldConfig ? fieldConfig.editable : true;
-};
-
-// Get display name for a field
-const getDisplayName = (key) => {
-  if (!formFieldConfig[selectedForm]) return formatColumnName(key);
-  
-  const lastPart = key.split('.').pop();
-  const fieldConfig = formFieldConfig[selectedForm].find(
-    config => config.field === lastPart || config.field === key
-  );
-  
-  return fieldConfig ? fieldConfig.displayName : formatColumnName(key);
-};
+  const filteredSubmissions = submissions.filter(sub => {
+    const searchString = JSON.stringify(sub).toLowerCase();
+    return searchString.includes(searchTerm.toLowerCase());
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 p-6">
- {/* Header */}
- <div className="max-w-7xl mx-auto mb-6">
-  <div className="flex justify-between items-center gap-6 mb-4 mt-14">
-    {/* Left: Go to Plan Button */}
-    <button
-      onClick={onBack}
-      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold shadow-md whitespace-nowrap flex items-center gap-2"
-    >
-      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-      </svg>
-      Go to Plan
-    </button>
-
-    {/* Center: Plan Info */}
-    <div className="flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
-      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      <div>
-        <div className="text-xs text-blue-600 font-medium">Current Plan</div>
-        <div className="text-sm font-bold text-gray-800 whitespace-nowrap">{selectedPlanName || "Plan"}</div>
-      </div>
-    </div>
-
-    {/* Center: Form Info */}
-    <div className="flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg border border-purple-200">
-      <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-      <div>
-        <div className="text-xs text-purple-600 font-medium">Current Form</div>
-        <div className="text-sm font-bold text-gray-800 whitespace-nowrap">{selectedForm || "Form"}</div>
-      </div>
-    </div>
-
-    {/* Right: Search */}
-    <input
-      type="text"
-      placeholder="Search submissions..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-      className="w-72 border-2 border-gray-300 px-4 py-2.5 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none transition"
-    />
-  </div>
-</div>
-      {/* Rows/Cards Container */}
-      <div className="max-w-7xl mx-auto space-y-4">
-  {filteredRows.length === 0 ? (
-    <div className="bg-white rounded-lg shadow-md border-2 border-gray-200 p-12 text-center">
-      <div className="text-gray-400 mb-4">
-        <svg
-          className="w-24 h-24 mx-auto"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
-      </div>
-      <h3 className="text-xl font-semibold text-gray-700 mb-2">
-        No Submissions Found
-      </h3>
-      <p className="text-gray-500">
-        {searchTerm
-          ? "No submissions match your search criteria. Try adjusting your search."
-          : "There are no submissions available for this form."}
-      </p>
-    </div>
-  ) : (
-    filteredRows.map((row) => {
-      const flat = flattenObject(row);
-      const visibleColumns = getVisibleColumnsForCollapsed(flat);
-      const isExpanded = expandedCards[row.uuid] || editingRowUuid === row.uuid;
-      const isEditing = editingRowUuid === row.uuid;
-      const isEditedCard = editedSubmissions.has(row.uuid);
-
-      if (selectedForm === "Settlement" && flat["settlement_id"] === "99d20b7a5b") {
-        console.log("=== RENDERING ROW ===");
-        console.log("UUID:", row.uuid);
-        console.log("isExpanded:", isExpanded);
-        console.log("settlement_name (root):", flat["settlement_name"]);
-        console.log("Settlements_name (nested):", flat["data_settlement.Settlements_name"]);
-        console.log("settlement_id:", flat["settlement_id"]);
-        console.log("Settlements_id (nested):", flat["data_settlement.Settlements_id"]);
-        console.log("visibleColumns:", visibleColumns);
-        visibleColumns.forEach(key => {
-          console.log(`  Column: ${key} = "${flat[key]}"`);
-        });
-      }
-
-      return (
-        <div 
-          key={row.uuid} 
-          className={`rounded-lg shadow-md border-2 overflow-hidden transition-all ${
-            isEditedCard 
-              ? 'border-green-400 bg-green-50' 
-              : 'border-gray-200 bg-white'
-          }`}
-        >
-      
-      
-      {!isExpanded && (
-  <div className="flex items-center justify-between hover:bg-gray-50">
-    <div 
-      onClick={() => toggleExpand(row.uuid)}
-      className="flex-1 p-4 cursor-pointer"
-    >
-      {/* Submission Time Header */}
-      {/* <div className="mb-3 pb-2 border-b border-gray-200">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="font-semibold">Submitted:</span>
-          <span className="text-gray-800">{formatToIST(row.submission_time)}</span>
-        </div>
-      </div> */}
-      
-      {/* Existing columns */}
-      <div className="grid grid-cols-5 gap-4">
-  {getVisibleColumnsForCollapsed(flat).map((key) => {
-    const lastPart = key.split('.').pop();
-    const isCoordinate = lastPart === 'coordinates' || lastPart.includes('coordinate');
-    const value = formatValue(key, flat[key]);
-    
-    return (
-      <div key={key} className="overflow-hidden">
-        <div className="text-xs font-semibold text-gray-500 uppercase mb-1">
-          {getDisplayName(key)}
-        </div>
-        <div className={`text-gray-800 font-medium ${isCoordinate ? 'break-all' : 'truncate'}`}>
-          {value}
-        </div>
-      </div>
-    );
-  })}
-</div>
-    </div>
-    
-    {showActions && (
-      <div className="flex gap-2 mr-4">
-        {(isAdmin || isModerator || isSuperAdmin) && (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto mb-6 mt-8">
+        <div className="flex items-center justify-between gap-4 mb-6">
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditingRowUuid(row.uuid);
-              setEditedRowData({ ...flat });
-              setExpandedCards(prev => ({ ...prev, [row.uuid]: true }));
-            }}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold flex items-center gap-2 transition"
+            onClick={onBack}
+            className="px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-md hover:shadow-lg flex items-center gap-2"
           >
-            <Pencil size={16} /> Edit
+            <ChevronLeft size={20} />
+            Back to Selection
           </button>
-        )}
-        {(isAdmin ||  isSuperAdmin)&& (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row);
-            }}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold flex items-center gap-2 transition"
-          >
-            <Trash2 size={16} /> Delete
-          </button>
-        )}
+  
+          <div className="flex gap-4">
+            <div className="bg-white px-6 py-3 rounded-xl border-2 border-indigo-200 shadow-md">
+              <div className="text-xs text-indigo-600 font-bold uppercase mb-1">
+                Plan
+              </div>
+              <div className="text-sm font-black text-slate-900">
+                {selectedPlanName}
+              </div>
+            </div>
+  
+            <div className="bg-white px-6 py-3 rounded-xl border-2 border-blue-200 shadow-md">
+              <div className="text-xs text-blue-600 font-bold uppercase mb-1">
+                Form
+              </div>
+              <div className="text-sm font-black text-slate-900">
+                {selectedForm}
+              </div>
+            </div>
+          </div>
+  
+          <div className="relative">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              size={20}
+            />
+            <input
+              type="text"
+              placeholder="Search submissions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 pr-4 py-3 w-80 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+            />
+          </div>
+        </div>
       </div>
-    )}
-    
-    {isEditedCard && (
-      <span className="mr-4 bg-green-500 text-white text-xs px-3 py-1 rounded-full font-semibold">
-        ✓ Edited
-      </span>
-    )}
-  </div>
-)}
-          {isExpanded && (
-  <div className={`p-6 ${isEditedCard ? 'bg-green-50' : 'bg-gray-50'}`}>
-    {/* Submission Time in Expanded View */}
-    <div className="mb-4 pb-4 border-b-2 border-gray-300">
-      <div className="flex items-center gap-2 text-base text-gray-700">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span className="font-bold">Submitted:</span>
-        <span className="text-gray-900 font-semibold">{formatToIST(row.submission_time)}</span>
-      </div>
-    </div>
-    
-    {/* Regular Fields */}
-    <div className="grid grid-cols-3 gap-4 max-h-96 overflow-y-auto">
-  {getVisibleFieldsForExpanded(flat).map(({ key, config }) => (
-    <div key={key} className="mb-3">
-      <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
-        {config.displayName}
-      </div>
-      {isEditing ? (
-        <input
-          type="text"
-          value={formatValue(key, editedRowData[key])}
-          onChange={(e) =>
-            setEditedRowData((prev) => ({
-              ...prev,
-              [key]: e.target.value,
-            }))
-          }
-          className="w-full border-2 border-gray-200 p-2 rounded-lg focus:border-blue-500 focus:outline-none bg-white"
-          disabled={!config.editable}
-        />
-      ) : (
-        <div className="text-gray-800 font-medium bg-white p-2 rounded border border-gray-200 break-all">
-          {formatValue(key, flat[key])}
+  
+      {/* Modal for viewing/editing submission */}
+      {selectedSubmission && surveyModel && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black">
+                  {isEditing ? "Edit Submission" : "View Submission"}
+                </h2>
+                <p className="text-indigo-100 text-sm mt-1">
+                  Submitted:{" "}
+                  {formatToIST(
+                    selectedSubmission.__system?.submissionDate ||
+                      selectedSubmission.submission_time,
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedSubmission(null);
+                  setSurveyModel(null);
+                }}
+                className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+  
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <Survey model={surveyModel} />
+            </div>
+          </div>
         </div>
       )}
-    </div>
-  ))}
-</div>
-
-    {/* Metadata Section */}
-    {Object.keys(flat).some(k => isMetadataField(k)) && !isEditing && (
-      <div className="mt-6 pt-4 border-t-2 border-gray-300">
-        <button
-          onClick={() => setShowMetadata(prev => ({ ...prev, [row.uuid]: !prev[row.uuid] }))}
-          className="flex items-center gap-2 text-gray-700 hover:text-blue-600 font-semibold transition"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Other Information</span>
-          {showMetadata[row.uuid] ? (
-            <ChevronUp size={18} />
-          ) : (
-            <ChevronDown size={18} />
-          )}
-        </button>
-        
-        {showMetadata[row.uuid] && (
-          <div className="mt-4 grid grid-cols-3 gap-4 bg-gray-100 p-4 rounded-lg max-h-64 overflow-y-auto">
-            {Object.keys(flat)
-              .filter(k => isMetadataField(k))
-              .map((key) => (
-                <div key={key} className="mb-3">
-                  <div className="text-xs font-semibold text-gray-600 uppercase mb-2">
-                    {formatColumnName(key)}
-                  </div>
-                  <div className="text-gray-700 text-sm font-mono bg-white p-2 rounded border border-gray-300 break-all">
-                    {formatValue(key, flat[key])}
+  
+      {/* Submissions List */}
+      <div className="max-w-7xl mx-auto">
+        {filteredSubmissions.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-16 text-center">
+            <div className="text-slate-300 mb-6">
+              <svg
+                className="w-32 h-32 mx-auto"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-black text-slate-700 mb-3">
+              No Submissions Found
+            </h3>
+            <p className="text-slate-500 text-lg">
+              {searchTerm
+                ? "No submissions match your search."
+                : "No submissions available."}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredSubmissions.map((submission) => {
+              const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
+              const uuid = getSubmissionUUID(submission);
+  
+              return (
+                <div
+                  key={uuid}
+                  className="bg-white rounded-2xl shadow-lg border-2 border-slate-200 p-6 hover:shadow-xl transition-all"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      {/* Submission Time - Always shown first */}
+                      <div className="mb-4 pb-4 border-b border-slate-200">
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <Calendar size={16} className="text-indigo-600" />
+                          <span className="font-semibold">Submitted:</span>
+                          <span className="text-slate-900 font-bold">
+                            {formatToIST(
+                              submission.__system?.submissionDate ||
+                                submission.submission_time,
+                            )}
+                          </span>
+                        </div>
+                      </div>
+  
+                      {/* Dynamic fields based on form type */}
+                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        {displayFields.map((field) => (
+                          <div key={field.key}>
+                            <div className="text-xs font-bold text-slate-500 uppercase mb-1">
+                              {field.label}
+                            </div>
+                            <div className="text-sm font-bold text-slate-900 truncate">
+                              {getFieldValue(submission, field.key)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+  
+                    {/* Action buttons */}
+                    <div className="flex flex-col gap-2 ml-6">
+                      <button
+                        onClick={() => handleViewSubmission(submission)}
+                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                      >
+                        View
+                      </button>
+  
+                      {showActions && (
+                        <>
+                          <button
+                            onClick={() => handleEditSubmission(submission)}
+                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                          >
+                            Edit
+                          </button>
+  
+                          {(isAdmin || isSuperAdmin) && (
+                            <button
+                              onClick={() => handleDelete(submission)}
+                              className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              ))}
+              );
+            })}
+          </div>
+        )}
+  
+        {/* Pagination */}
+        {submissions.length > 0 && totalPages > 1 && (
+          <div className="flex justify-center gap-2 mt-8">
+            <button
+              disabled={page === 1}
+              onClick={() => fetchSubmissions(page - 1)}
+              className="px-5 py-2.5 bg-white border-2 border-slate-300 rounded-xl disabled:opacity-50 hover:bg-slate-50 font-bold transition-all shadow-md"
+            >
+              Previous
+            </button>
+  
+            {[...Array(totalPages)].map((_, i) => (
+              <button
+                key={i}
+                onClick={() => fetchSubmissions(i + 1)}
+                className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${
+                  page === i + 1
+                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+                    : "bg-white border-2 border-slate-300 hover:bg-slate-50"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+  
+            <button
+              disabled={page === totalPages}
+              onClick={() => fetchSubmissions(page + 1)}
+              className="px-5 py-2.5 bg-white border-2 border-slate-300 rounded-xl disabled:opacity-50 hover:bg-slate-50 font-bold transition-all shadow-md"
+            >
+              Next
+            </button>
           </div>
         )}
       </div>
-    )}
-
-    {showActions && (
-      <div className="mt-6 pt-4 border-t border-gray-300 flex gap-3">
-        {isEditing ? (
-          <>
-            <button
-              onClick={() => handleSave(row)}
-              className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold flex items-center gap-2 transition"
-            >
-              <Check size={18} /> Save
-            </button>
-            <button
-              onClick={() => {
-                setEditingRowUuid(null);
-                setExpandedCards(prev => ({ ...prev, [row.uuid]: false }));
-              }}
-              className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-semibold flex items-center gap-2 transition"
-            >
-              <X size={18} /> Cancel
-            </button>
-            {(isAdmin || isSuperAdmin)&& (
-              <button
-                onClick={() => handleDelete(row)}
-                className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold flex items-center gap-2 transition ml-auto"
-              >
-                <Trash2 size={18} /> Delete
-              </button>
-            )}
-          </>
-        ) : (
-          <button
-            onClick={() => toggleExpand(row.uuid)}
-            className="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-semibold text-gray-700 flex items-center gap-2 transition"
-          >
-            <ChevronUp size={18} /> Collapse
-          </button>
-        )}
-      </div>
-    )}
-  </div>
-)}
-        </div>
-      );
-    })
-  )}
-</div>
-      {/* Pagination */}
-      {submissions.length > 0 && (
-        <div className="max-w-7xl mx-auto flex justify-center gap-2 mt-8 flex-wrap">
-          <button
-            disabled={page === 1}
-            onClick={() => fetchSubmissions(page - 1)}
-            className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50 font-semibold"
-          >
-            Prev
-          </button>
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => fetchSubmissions(i + 1)}
-              className={`px-4 py-2 rounded-lg font-semibold ${
-                page === i + 1
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                  : "bg-white border-2 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-          <button
-            disabled={page === totalPages}
-            onClick={() => fetchSubmissions(page + 1)}
-            className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg disabled:opacity-50 hover:bg-gray-50 font-semibold"
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
-  );
+  );  
 };
-
 
 // Main Component
 const Moderation = () => {
@@ -1100,7 +879,7 @@ const Moderation = () => {
     setSelectedPlan(plan);
     setSelectedForm(form);
     setSelectedPlanName(planName);
-    setCurrentPage("cards");
+    setCurrentPage("forms");
   };
 
   const handleBack = () => {
@@ -1115,7 +894,7 @@ const Moderation = () => {
       initialForm={selectedForm}
     />
   ) : (
-    <CardViewPage
+    <FormViewPage
       selectedForm={selectedForm}
       selectedPlan={selectedPlan}
       selectedPlanName={selectedPlanName}

@@ -1,0 +1,502 @@
+{
+  "title": "Propose Maintenance On Existing Water Recharge Structures",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Water Structure Maintenance Proposal Submitted Successfully!</h3>",
+  "loadingHtml": "<h3>Loading Water Structure Maintenance Form...</h3>",
+  "pages": [
+    {
+      "name": "water_structure_maintenance_page",
+      "elements": [
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "demand_type",
+          "title": "Type of demand",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Individual_demand",
+              "text": "Individual Demand"
+            },
+            {
+              "value": "Community_demand",
+              "text": "Community Demand"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Name",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's Name",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_gender",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Gender",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "female",
+              "text": "Female"
+            },
+            {
+              "value": "male",
+              "text": "Male"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "ben_father",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's father's name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Contact_Number",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's Contact Number",
+          "validators": [
+            {
+              "type": "regex",
+              "text": "Enter a phone number (format: 9876543210)",
+              "regex": "^(?:(?:\\+?91[-\\s]?)|0)?[6-9]\\d{9}$"
+            }
+          ],
+          "inputType": "tel",
+          "placeholder": "9876543210"
+        },
+        {
+          "type": "radiogroup",
+          "name": "past_repair",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Any past repair or maintenance work done on this structure?",
+          "isRequired": true,
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_recharge_structure",
+          "title": "Select the visible repairs or maintenance issues for the recharge structures?",
+          "isRequired": true,
+          "choices": [
+            "Check dam",
+            "Percolation tank",
+            "Earthen gully plug",
+            "Drainage/soakage channels",
+            "Recharge pits",
+            "Soakage pits",
+            "Trench cum bund network",
+            "Continuous contour trenches (CCT)",
+            "Staggered Contour trenches(SCT)",
+            "Water absorption trenches(WAT)",
+            "Loose boulder structure",
+            "Rock fill dam",
+            "Stone bunding",
+            "Diversion drains",
+            "Bunding:Contour bunds/ graded bunds",
+            "5% Model structure",
+            "30-40 Model structure"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_check_dam",
+          "visibleIf": "{select_one_recharge_structure} = 'Check dam'",
+          "title": "Repair of check dam",
+          "choices": [
+            "Erosion on the check dam",
+            "Sediment accumulated in the check dam",
+            "Structural damage on the check dam",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_check_dam_other",
+          "visibleIf": "{select_one_check_dam} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_percolation_tank",
+          "visibleIf": "{select_one_recharge_structure} = 'Percolation tank'",
+          "title": "Repair of Percolation tank",
+          "choices": [
+            "Sediment accumulation reducing infiltration capacity",
+            "Breach in embankments",
+            "Erosion on tank bund or inlet/outlet",
+            "Vegetation growth blocking water entry",
+            "Damage to spillway or outlet structure",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_percolation_tank_other",
+          "visibleIf": "{select_one_percolation_tank} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_earthen_gully_plug",
+          "visibleIf": "{select_one_recharge_structure} = 'Earthen gully plug'",
+          "title": "Repair of earthen gully plug",
+          "choices": [
+            "Breaches in the earthen structure",
+            "Erosion at the base or sides",
+            "Loss of compactness in the soil structure",
+            "Vegetation growth on the plug",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_earthen_gully_plug_other",
+          "visibleIf": "{select_one_earthen_gully_plug} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_drainage_soakage_channels",
+          "visibleIf": "{select_one_recharge_structure} = 'Rock fill dam'",
+          "title": "Repair of drainage/soakage channels",
+          "choices": [
+            "Blockages due to sediment or debris",
+            "Erosion along the channel sides",
+            "Collapsed sections of the channel",
+            "Vegetation overgrowth reducing flow efficiency",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_drainage_soakage_channels_other",
+          "visibleIf": "{select_one_drainage_soakage_channels} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_recharge_pits",
+          "visibleIf": "{select_one_recharge_structure} = 'Recharge pits'",
+          "title": "Repair of recharge pits",
+          "choices": [
+            "Sediment accumulation blocking infiltration",
+            "Cracks or damages in the lining",
+            "Blockages in filters or gravel layers",
+            "Vegetation or debris obstructing the pit",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_recharge_pits_other",
+          "visibleIf": "{select_one_recharge_pits} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_sokage_pits",
+          "visibleIf": "{select_one_recharge_structure} = 'Soakage pits'",
+          "title": "Repair of sokage pits",
+          "choices": [
+            "Sediment clogging reducing infiltration rate",
+            "Damage to pit walls or filters",
+            "Vegetation obstructing flow into the pit",
+            "Water pooling due to improper drainage",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_sokage_pits_other",
+          "visibleIf": "{select_one_sokage_pits} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_trench_cum_bund_network",
+          "visibleIf": "{select_one_recharge_structure} = 'Trench cum bund network'",
+          "title": "Repair of trench cum bund network",
+          "choices": [
+            "Sediments in trench",
+            "Water leakage in Bund due to breach",
+            "Erosion on bund",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_trench_cum_bund_network_other",
+          "visibleIf": "{select_one_trench_cum_bund_network} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_continuous_contour_trenches",
+          "visibleIf": "{select_one_recharge_structure} = 'Continuous contour trenches (CCT)'",
+          "title": "Repair of continuous contour trenches (CCT)",
+          "choices": [
+            "Sediments filling trenches reducing capacity",
+            "Erosion of trench edges",
+            "Vegetation growth obstructing water infiltration",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_continuous_contour_trenches_other",
+          "visibleIf": "{select_one_continuous_contour_trenches} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_staggered_contour_trenches",
+          "visibleIf": "{select_one_recharge_structure} = 'Staggered Contour trenches(SCT)'",
+          "title": "Repair of staggered Contour trenches (SCT)",
+          "choices": [
+            "Sediments in trenches reducing infiltration",
+            "Erosion of trench edges or sides",
+            "Poor alignment reducing effectiveness",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_staggered_contour_trenches_other",
+          "visibleIf": "{select_one_staggered_contour_trenches} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_water_absorption_trenches",
+          "visibleIf": "{select_one_recharge_structure} = 'Water absorption trenches(WAT)'",
+          "title": "Repair of water absorption trenches (WAT)",
+          "choices": [
+            "Sediment clogging the trenches",
+            "Erosion along trench edges",
+            "Vegetation obstructing flow into the trench",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_water_absorption_trenches_other",
+          "visibleIf": "{select_one_water_absorption_trenches} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_loose_boulder_structure",
+          "visibleIf": "{select_one_recharge_structure} = 'Loose boulder structure'",
+          "title": "Repair of loose boulder structure",
+          "choices": [
+            "Dislodged boulders",
+            "Grouting",
+            "Erosion around boulder structure",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_loose_boulder_structure_other",
+          "visibleIf": "{select_one_loose_boulder_structure} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_rock_fill_dam",
+          "visibleIf": "{select_one_recharge_structure} = 'Rock fill dam'",
+          "title": "Repair of rock fill dam",
+          "choices": [
+            "Sediment accumulation reducing water storage",
+            "Dislodged or loose rocks",
+            "Erosion around or under the dam structure",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_rock_fill_dam_other",
+          "visibleIf": "{select_one_rock_fill_dam} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_stone_bunding",
+          "visibleIf": "{select_one_recharge_structure} = 'Stone bunding'",
+          "title": "Repair of stone bunding",
+          "choices": [
+            "Dislodged stones reducing structure stability",
+            "Sediment buildup behind the bund",
+            "Erosion along the bund edges",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_stone_bunding_other",
+          "visibleIf": "{select_one_stone_bunding} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_diversion_drains",
+          "visibleIf": "{select_one_recharge_structure} = 'Diversion drains'",
+          "title": "Repair of diversion drains",
+          "choices": [
+            "Blockages due to sediment or debris",
+            "Erosion along the drain edges",
+            "Collapsed or damaged drain sections",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_diversion_drains_other",
+          "visibleIf": "{select_one_diversion_drains} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_bunding",
+          "visibleIf": "{select_one_recharge_structure} = 'Bunding:Contour bunds/ graded bunds'",
+          "title": "Repair of bunding:Contour bunds/ graded bunds",
+          "choices": [
+            {
+              "value": "Dislodged boulders",
+              "text": "Sediment accumulation reducing water retention or obstructing flow"
+            },
+            {
+              "value": "Grouting",
+              "text": "Cracks, breaches, or damage to the bund structure"
+            },
+            {
+              "value": "Erosion around boulder structure",
+              "text": "Erosion along bund edges, slopes, or base"
+            },
+            "Improper alignment or grading disrupting water distribution",
+            "Vegetative growth weakening bund stability",
+            "Weakening of the structure due to seepage or heavy rainfall",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_bunding_other",
+          "visibleIf": "{select_one_bunding} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_model5_structure",
+          "visibleIf": "{select_one_recharge_structure} = '5% Model structure'",
+          "title": "Repair of 5% Model structure",
+          "choices": [
+            "Sediment accumulation reducing capacity",
+            "Breaches or leaks in the embankment",
+            "Erosion on sides or base",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_model5_structure_other",
+          "visibleIf": "{select_one_model5_structure} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_Model30_40_structure",
+          "visibleIf": "{select_one_recharge_structure} = '30-40 Model structure'",
+          "title": "Repair of 30-40 Model structure",
+          "choices": [
+            "Sediment accumulation",
+            "Breaches in bunding or structure walls",
+            "Erosion along trenches or bunds",
+            "Other"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_model30_40_structure_other",
+          "visibleIf": "{select_one_Model30_40_structure} = 'Other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "html",
+          "name": "form_submission_note",
+          "html": "<div style='background-color: #ffebee; border: 1px solid #f44336; padding: 10px; margin: 10px 0; border-radius: 4px;'><span style='color: #f44336; font-weight: bold;'>DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span></div>"
+        },
+        {
+          "type": "multipletext",
+          "name": "GPS_point",
+          "title": "GPS point of the marked area",
+          "isRequired": true,
+          "readOnly": true,
+          "items": [
+            {
+              "name": "latitude",
+              "title": "Latitude (x.y °)"
+            },
+            {
+              "name": "longitude",
+              "title": "Longitude (x.y °)"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "block_name",
+          "title": "Block name",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_id",
+          "title": "Plan ID",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_name",
+          "title": "Plan name",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "corresponding_work_id",
+          "title": "Corresponding Work ID",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "work_id",
+          "title": "Work ID",
+          "defaultValue": "AUTO-GENERATED",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "user_latlon",
+          "title": "Current location of the user",
+          "readOnly": true
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

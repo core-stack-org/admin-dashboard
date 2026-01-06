@@ -1,0 +1,64 @@
+{
+  "title": "Groundwater Analysis",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Groundwater Analysis Form Submitted Successfully!</h3>",
+  "loadingHtml": "<h3>Loading Groundwater Analysis Form...</h3>",
+  "pages": [
+    {
+      "name": "groundwater_analysis_page",
+      "elements": [
+        {
+          "type": "html",
+          "name": "form_description",
+          "html": "<p><strong>Please fill out the feedback form as per your past experiences and observations for this micro watershed</strong></p>"
+        },
+        {
+          "type": "panel",
+          "name": "water_table_open_wells",
+          "title": "Depth to water observed in open wells or dug wells (in feet)",
+          "elements": [
+            {
+              "type": "text",
+              "name": "open_wells_present",
+              "title": "Present",
+              "inputType": "number"
+            },
+            {
+              "type": "text",
+              "name": "open_wells_five_years_back",
+              "title": "Five years back",
+              "inputType": "number"
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "water_table_borewells",
+          "title": "Depth to water observed in borewells or tube wells (in Feet)",
+          "elements": [
+            {
+              "type": "text",
+              "name": "borewells_present",
+              "title": "Present",
+              "inputType": "number"
+            },
+            {
+              "type": "text",
+              "name": "borewells_five_years_back",
+              "title": "Five years back",
+              "inputType": "number"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "village_name",
+          "title": "Are certain parts of the village more affected by groundwater depletion? If Yes, specify village name",
+          "placeholder": "Enter village name if applicable"
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

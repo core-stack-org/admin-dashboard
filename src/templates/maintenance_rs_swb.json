@@ -1,0 +1,262 @@
+{
+  "title": "Propose Maintenance of Remotely Sensed Water Structure",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Water Structure Maintenance proposal has been recorded!</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "demand_type",
+          "title": "Type of demand",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Community_demand",
+              "text": "Community Demand"
+            },
+            {
+              "value": "Individual_demand",
+              "text": "Individual Demand"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Name",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's Name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "ben_father",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's father's name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Contact_Number",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary Contact Number",
+          "validators": [
+            {
+              "type": "regex",
+              "text": "Enter a phone number (format: 9876543210)",
+              "regex": "^(?:(?:\\+?91[-\\s]?)|0)?[6-9]\\d{9}$"
+            }
+          ],
+          "inputType": "tel"
+        },
+        {
+          "type": "radiogroup",
+          "name": "TYPE_OF_WORK",
+          "title": "Select the type of surface water structure repair work",
+          "isRequired": true,
+          "choices": [
+            "Farm pond",
+            "Community Pond",
+            "Large water body",
+            "Canal",
+            "Check dam",
+            "Percolation tank",
+            "Rock fill dam",
+            "Loose boulder structure",
+            "5% Model structure",
+            "30-40 Model structure"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_farm_pond",
+          "visibleIf": "{TYPE_OF_WORK} = 'Farm pond'",
+          "title": "Repair of farm pond",
+          "choices": [
+            "Removal of accumulated sediments",
+            "Repairing cracks or damage in embankments",
+            "Controlling seepage or leaks in the pond bed",
+            "Erosion control on embankments",
+            "Addressing excessive aquatic vegetation growth"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_community_pond",
+          "visibleIf": "{TYPE_OF_WORK} = 'Community Pond'",
+          "title": "Repair of community Pond",
+          "choices": [
+            "Removal of accumulated sediments",
+            "Shoreline erosion control",
+            "Repairing cracks or damage in embankments",
+            "Controlling excessive aquatic vegetation growth",
+            "Repair or cleaning of inlet/outlet structures"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_repair_large_water_body",
+          "visibleIf": "{TYPE_OF_WORK} = 'Large water body'",
+          "title": "Repair of large water body",
+          "choices": [
+            "Removal of accumulated sediments",
+            {
+              "value": "Shoreline Erosion Control",
+              "text": "Shoreline erosion control"
+            },
+            "Dam Repairs",
+            "Controlling excessive growth of aquatic vegetation"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_repair_canal",
+          "visibleIf": "{TYPE_OF_WORK} = 'Canal'",
+          "title": "Repair of canal",
+          "choices": [
+            "Stabilizing canal banks to prevent erosion",
+            "Lining Repairs",
+            "Desilting",
+            "Structural repairs"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_check_dam",
+          "visibleIf": "{TYPE_OF_WORK} = 'Check dam'",
+          "title": "Repair of check dam",
+          "choices": [
+            "Erosion on the check dam",
+            "Sediment accumulated in the check dam",
+            "Structural damage on the check dam"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_percolation_tank",
+          "visibleIf": "{TYPE_OF_WORK} = 'Percolation tank'",
+          "title": "Repair of Percolation tank",
+          "choices": [
+            "Sediment accumulation reducing infiltration capacity",
+            "Breach in embankments",
+            "Erosion on tank bund or inlet/outlet",
+            "Vegetation growth blocking water entry",
+            "Damage to spillway or outlet structure"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_rock_fill_dam",
+          "visibleIf": "{TYPE_OF_WORK} = 'Rock fill dam'",
+          "title": "Repair of rock fill dam",
+          "choices": [
+            "Sediment accumulation reducing water storage",
+            "Dislodged or loose rocks",
+            "Erosion around or under the dam structure"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_loose_boulder_structure",
+          "visibleIf": "{TYPE_OF_WORK} = 'Loose boulder structure'",
+          "title": "Repair of loose boulder structure",
+          "choices": [
+            "Dislodged boulders",
+            "Grouting",
+            "Erosion around boulder structure"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_model5_structure",
+          "visibleIf": "{TYPE_OF_WORK} = '5% Model structure'",
+          "title": "Repair of 5% Model structure",
+          "choices": [
+            "Sediment accumulation reducing capacity",
+            "Breaches or leaks in the embankment",
+            "Erosion on sides or base"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_Model30_40_structure",
+          "visibleIf": "{TYPE_OF_WORK} = '30-40 Model structure'",
+          "title": "Repair of 30-40 Model structure",
+          "choices": [
+            "Sediment accumulation",
+            "Breaches in bunding or structure walls",
+            "Erosion along trenches or bunds"
+          ]
+        },
+        {
+          "type": "html",
+          "name": "pm_swb_rs_note_1",
+          "html": "<span style=\"font-size: large; font-weight: bold; color:red;\">DO NOT MODIFY ANYTHING BEYOND THIS POINT</span>"
+        },
+        {
+          "type": "multipletext",
+          "name": "GPS_point",
+          "title": "GPS point of the marked area",
+          "description": "Takes a GPS point from the marker you placed in the application",
+          "isRequired": true,
+          "items": [
+            {
+              "name": "latitude",
+              "title": "Latitude (x.y °)"
+            },
+            {
+              "name": "longitude",
+              "title": "Longitude (x.y °)"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "block_name",
+          "title": "Block name",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_id",
+          "title": "Plan ID",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_name",
+          "title": "Plan name",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "corresponding_work_id",
+          "title": "Corresponding Work ID",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "user_latlon",
+          "title": "Current location of the user",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "work_id",
+          "title": "Work ID",
+          "readOnly": true
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}
