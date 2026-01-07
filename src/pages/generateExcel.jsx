@@ -129,7 +129,7 @@ const GenerateExcelComponent = () => {
 
     try {
       const url = new URL(
-        `${process.env.REACT_APP_BASEURL}/api/v1/download_excel_layer`
+        `${process.env.REACT_APP_BASEURL}/api/v1/generate_stats_excel_file/`
       );
 
       url.searchParams.append("state", state.name);
