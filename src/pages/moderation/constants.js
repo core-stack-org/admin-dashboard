@@ -10,9 +10,9 @@ import AgriForm from "../../templates/irrigation_work.json";
 import AgriMaintenanceForm from "../../templates/maintenance_irr.json";
 import GroundwaterMaintenanceForm from "../../templates/maintenance_recharge_st.json";
 import WaterStructureMaintenanceForm from "../../templates/maintenance_water_structures.json";
-import SWBRechargeMaintenanceForm from "../../templates/maintenance_rs_swb.json";
+import SWBRemotelySensedForm from "../../templates/maintenance_rs_swb.json";
 
-export const BASEURL = "http://127.0.0.1:8000/";
+export const BASEURL = `${process.env.REACT_APP_BASEURL}`;
 
 export const FORM_TEMPLATES = {
   Settlement: SettlementForm,
@@ -25,8 +25,8 @@ export const FORM_TEMPLATES = {
   "Agri Maintenance": AgriMaintenanceForm,
   "GroundWater Maintenance": GroundwaterMaintenanceForm,
   "Surface Water Body Maintenance": WaterStructureMaintenanceForm,
-  "Surface Water Body Recharge Structure Maintenance":
-    SWBRechargeMaintenanceForm,
+  "Surface Water Body Remotely Sensed Maintenance":
+    SWBRemotelySensedForm,
 };
 
 export const CARD_DISPLAY_FIELDS = {
@@ -205,7 +205,7 @@ export const CARD_DISPLAY_FIELDS = {
     },
   ],
 
-  "Surface Water Body Recharge Structure Maintenance": [
+  "Surface Water Body Remotely Sensed Maintenance": [
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
     {
