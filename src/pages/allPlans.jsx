@@ -130,7 +130,7 @@ const AllPlans = () => {
 
   // Resolve state name
   const getStateName = (stateCode) =>
-    statesList.find((s) => String(s.state_census_code) === String(stateCode))
+    statesList.find((s) => String(s.id) === String(stateCode))
       ?.state_name || "Unknown State";
 
   const fetchBlocks = async (districtCode) => {

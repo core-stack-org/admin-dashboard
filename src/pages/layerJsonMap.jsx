@@ -218,8 +218,8 @@ const LayerMapJsonComponent = () => {
             <option value="">Select State</option>
             {statesList.map((state) => (
               <option
-                key={state.state_census_code}
-                value={`${state.state_census_code}_${state.state_name}`}
+                key={state.id}
+                value={`${state.id}_${state.state_name}`}
               >
                 {state.state_name}
               </option>

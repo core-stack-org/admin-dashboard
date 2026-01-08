@@ -193,7 +193,7 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
         const statesData = await statesResponse.json();
         const stateMap = {};
         statesData.states.forEach((state) => {
-          stateMap[state.state_census_code] = state.state_name;
+          stateMap[state.id] = state.state_name;
         });
 
         // Add state_name to projects

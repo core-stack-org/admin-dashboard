@@ -118,8 +118,8 @@ const LayerStatusComponent = () => {
             <option value="">Select State</option>
             {statesList.map((s) => (
               <option
-                key={s.state_census_code}
-                value={`${s.state_census_code}_${s.state_name}`}
+                key={s.id}
+                value={`${s.id}_${s.state_name}`}
               >
                 {s.state_name}
               </option>

@@ -90,7 +90,7 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
 
         const stateMap = {};
         statesData.states.forEach((s) => {
-          stateMap[s.state_census_code] = s.state_name;
+          stateMap[s.id] = s.state_name;
         });
 
         // enrich projects and sort by name
