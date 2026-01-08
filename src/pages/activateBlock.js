@@ -121,12 +121,12 @@ const ActivateBlock = () => {
     }
 
     const selected = statesList.find(
-      (s) => String(s.state_census_code) === String(stateId)
+      (s) => String(s.id) === String(stateId)
     );
     if (!selected) return;
 
     const fixedState = {
-      id: selected.state_census_code,
+      id: selected.id,
       name: selected.state_name,
       active_status: selected.active_status === true,
     };
@@ -314,7 +314,7 @@ const ActivateBlock = () => {
           >
             <option value="">Select State</option>
             {statesList.map((s) => (
-              <option key={s.state_census_code} value={s.state_census_code}>
+              <option key={s.id} value={s.id}>
                 {s.state_name}
               </option>
             ))}

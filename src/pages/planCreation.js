@@ -230,7 +230,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
       const stateNameFromList =
         statesList.find(
-          (s) => String(s.state_census_code) === String(data.state)
+          (s) => String(s.id) === String(data.state)
         )?.state_name || "";
 
       setState({ id: data.state, name: stateNameFromList });

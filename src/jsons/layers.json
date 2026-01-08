@@ -287,6 +287,11 @@
             "api_url": "${config.layer_api_url_v1}/generate_zoi_data/",
             "show_Dates": false,
             "workspace": ""
+        },
+        "MWS Connectivity Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_mws_connectivity_data/",
+            "show_Dates": false,
+            "workspace": ""
         }
     }
 }
