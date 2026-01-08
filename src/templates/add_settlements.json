@@ -410,54 +410,6 @@
           "type": "text",
           "name": "Other_information",
           "title": "Any Other Information"
-        },
-        {
-          "type": "html",
-          "name": "sett_note_3",
-          "title": "",
-          "html": "<span style=\"font-size: large; font-weight: bold; color:red;\"> DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span>"
-        },
-        {
-          "type": "multipletext",
-          "name": "GPS_point",
-          "visible": true,
-          "title": "GPS point to be marked of the area",
-          "description": "Take a GPS point",
-          "isRequired": true,
-          "readOnly": true,
-          "items": [
-            {
-              "name": "latitude",
-              "title": "latitude (x.y °)"
-            },
-            {
-              "name": "longitude",
-              "title": "longitude (x.y °)"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "name": "block_name",
-          "title": "Block name",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "plan_id",
-          "title": "Plan ID",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "plan_name",
-          "title": "Plan name",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "user_latlon",
-          "title": "Current location of the user"
         }
       ]
     }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Trash2, ChevronLeft, Search, Calendar, User } from "lucide-react";
+import { Trash2, ChevronLeft, Search, Calendar, User, Filter } from "lucide-react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.min.css";
@@ -216,6 +216,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [moderationFilter, setModerationFilter] = useState("all"); // "all", "moderated", "not-moderated"
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [surveyModel, setSurveyModel] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -234,7 +235,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     const fieldTypes = {};
     
     const analyzeElement = (element, parentName = '') => {
-      // Don't add parent name to the element's own name if element is already prefixed
       const elementName = element.name.startsWith(parentName + '-') 
         ? element.name 
         : (parentName ? `${parentName}-${element.name}` : element.name);
@@ -246,21 +246,17 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       } else if (element.type === 'multipletext') {
         fieldTypes[elementName] = 'multipletext';
       } else if (element.type === 'panel') {
-        // For panel elements, recursively analyze children
-        // But DON'T pass the parent name again since panel children already have it in their name
         if (element.elements) {
           element.elements.forEach(child => {
-            // Check if child name already contains parent prefix
             if (child.name.includes('-')) {
-              analyzeElement(child, ''); // No parent prefix needed
+              analyzeElement(child, '');
             } else {
-              analyzeElement(child, element.name); // Add parent prefix
+              analyzeElement(child, element.name);
             }
           });
         }
       }
       
-      // Handle items in multipletext (like GPS coordinates)
       if (element.items && Array.isArray(element.items)) {
         fieldTypes[elementName] = 'multipletext';
         element.items.forEach(item => {
@@ -291,9 +287,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
         const fullKey = parentKey ? `${parentKey}-${key}` : key;
         
         if (value && typeof value === 'object' && !Array.isArray(value)) {
-          // Special handling for GPS_point with coordinates (handle both typos)
           if (key === 'GPS_point') {
-            // Check for both point_mapsappearance and point_mapappearance
             const coordsObj = value.point_mapsappearance || value.point_mapappearance;
             if (coordsObj?.coordinates) {
               const coords = coordsObj.coordinates;
@@ -301,27 +295,22 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
                 longitude: coords[0],
                 latitude: coords[1]
               };
-              return; // Skip further processing for this key
+              return;
             }
           }
-          // Special handling for other coordinate structures
           else if (value.latitude !== undefined && value.longitude !== undefined) {
             transformedData[fullKey] = value;
           }
-          // Handle nested objects (panels, multipletext, etc.)
           else {
             processObject(value, key);
           }
         } else {
-          // Handle checkbox and radio fields (space-separated strings to arrays for checkboxes)
           if (typeof value === 'string' && value.trim().length > 0) {
             const fieldType = fieldTypes[fullKey] || fieldTypes[key];
             
-            // Convert space-separated strings to arrays for checkbox fields
             if (fieldType === 'checkbox' && value.includes(' ')) {
               transformedData[fullKey] = value.split(' ').filter(v => v.trim().length > 0);
             } else {
-              // For radio and other fields, just pass the value as-is
               transformedData[fullKey] = value;
             }
           } else if (value === null || value === undefined) {
@@ -353,7 +342,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
         const fieldType = fieldTypes[key];
         const value = saveData[key];
         
-        // Convert arrays back to space-separated strings for checkbox fields
         if (Array.isArray(value) && fieldType === 'checkbox') {
           nestedData[parent][child] = value.join(' ');
         } else {
@@ -363,17 +351,14 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       }
     });
     
-    // Special handling for GPS_point - convert back to original structure
     if (saveData.GPS_point && saveData.GPS_point.latitude && saveData.GPS_point.longitude) {
-      // Preserve original structure if it exists
       const originalGPS = originalSubmission.GPS_point;
       
       if (originalGPS) {
-        // Check which property name was used in the original
         const coordsKey = originalGPS.point_mapsappearance ? 'point_mapsappearance' : 'point_mapappearance';
         
         nestedData.GPS_point = {
-          ...originalGPS, // Preserve all original fields
+          ...originalGPS,
           [coordsKey]: {
             type: "Point",
             coordinates: [
@@ -383,13 +368,11 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
           }
         };
       } else {
-        // Use simple structure if that's what was in the original
         nestedData.GPS_point = saveData.GPS_point;
       }
       delete saveData.GPS_point;
     }
     
-    // Merge nested data back
     Object.keys(nestedData).forEach(parent => {
       saveData[parent] = nestedData[parent];
     });
@@ -399,12 +382,10 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
 
   // Helper function to get nested field value from submission
   const getFieldValue = (submission, fieldKey) => {
-    // Try direct access first
     if (submission[fieldKey] !== undefined && submission[fieldKey] !== null) {
       return submission[fieldKey];
     }
     
-    // Handle nested objects like MNREGA_INFORMATION
     if (fieldKey.includes('-')) {
       const [parent, child] = fieldKey.split('-');
       if (submission[parent] && submission[parent][child] !== undefined) {
@@ -412,7 +393,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       }
     }
     
-    // Check in nested structures
     const nestedPaths = [
       `data.${fieldKey}`,
       `data_settlement.${fieldKey}`,
@@ -436,7 +416,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       }
       
       if (found && value !== null) {
-        // Handle coordinates specially
         if (Array.isArray(value) && fieldKey === 'coordinates') {
           return value.join(', ');
         }
@@ -449,15 +428,12 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
 
   // Helper to get UUID from submission
   const getSubmissionUUID = (submission) => {
-    // Try __id first (format: "uuid:xxxxx")
     if (submission.__id) {
       return submission.__id;
     }
-    // Try meta.instanceID (format: "uuid:xxxxx")
     if (submission.meta?.instanceID) {
       return submission.meta.instanceID;
     }
-    // Fallback to uuid field if it exists
     if (submission.uuid) {
       return submission.uuid;
     }
@@ -490,9 +466,20 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       );
       const data = await res.json();
       
-      const sortedData = (data.data || []).sort((a, b) => {
-        const dateA = new Date(a.submission_time || 0);
-        const dateB = new Date(b.submission_time || 0);
+      // Extract submissions from the new format: data is array of [submission, moderationFlag]
+      const submissionsWithFlags = (data.data || []).map(item => {
+        if (Array.isArray(item) && item.length === 2) {
+          return {
+            ...item[0],
+            _moderated: item[1]
+          };
+        }
+        return item;
+      });
+      
+      const sortedData = submissionsWithFlags.sort((a, b) => {
+        const dateA = new Date(a.submission_time || a.__system?.submissionDate || 0);
+        const dateB = new Date(b.submission_time || b.__system?.submissionDate || 0);
         return dateB - dateA;
       });
       
@@ -520,16 +507,9 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     setIsEditing(false);
     
     const model = new Model(formTemplate);
-    model.mode = "display"; // Read-only mode
+    model.mode = "display";
     
-    // Use generic transformation
     const transformedData = transformApiToSurvey(submission, formTemplate);
-    
-    // Debug logging for checkbox fields
-    console.log('Original submission:', submission);
-    console.log('Transformed data:', transformedData);
-    console.log('Field types:', analyzeFormSchema(formTemplate));
-    
     model.data = transformedData;
     setSurveyModel(model);
   };
@@ -547,13 +527,10 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     
     const model = new Model(formTemplate);
     
-    // Use generic transformation
     const transformedData = transformApiToSurvey(submission, formTemplate);
     model.data = transformedData;
     
-    // Handle survey completion (save)
     model.onComplete.add((sender) => {
-      // Transform back to API format
       const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
       const uuid = getSubmissionUUID(submission);
       handleSaveSubmission(uuid, saveData);
@@ -621,8 +598,19 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   };
 
   const filteredSubmissions = submissions.filter(sub => {
+    // Apply search filter
     const searchString = JSON.stringify(sub).toLowerCase();
-    return searchString.includes(searchTerm.toLowerCase());
+    const matchesSearch = searchString.includes(searchTerm.toLowerCase());
+    
+    // Apply moderation filter
+    let matchesModeration = true;
+    if (moderationFilter === "moderated") {
+      matchesModeration = sub._moderated === true;
+    } else if (moderationFilter === "not-moderated") {
+      matchesModeration = sub._moderated === false;
+    }
+    
+    return matchesSearch && matchesModeration;
   });
 
   return (
@@ -658,18 +646,37 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             </div>
           </div>
   
-          <div className="relative">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Search submissions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-12 pr-4 py-3 w-80 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
-            />
+          <div className="flex gap-3">
+            <div className="relative">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search submissions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-12 pr-4 py-3 w-80 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+              />
+            </div>
+
+            {/* Moderation Filter */}
+            <div className="relative">
+              <Filter
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+                size={20}
+              />
+              <select
+                value={moderationFilter}
+                onChange={(e) => setModerationFilter(e.target.value)}
+                className="pl-12 pr-4 py-3 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium appearance-none bg-white"
+              >
+                <option value="all">All Submissions</option>
+                <option value="moderated">Moderated</option>
+                <option value="not-moderated">Not Moderated</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
@@ -744,8 +751,8 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
               No Submissions Found
             </h3>
             <p className="text-slate-500 text-lg">
-              {searchTerm
-                ? "No submissions match your search."
+              {searchTerm || moderationFilter !== "all"
+                ? "No submissions match your filters."
                 : "No submissions available."}
             </p>
           </div>
@@ -754,15 +761,31 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             {filteredSubmissions.map((submission) => {
               const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
               const uuid = getSubmissionUUID(submission);
+              const isModerated = submission._moderated === true;
   
               return (
                 <div
                   key={uuid}
-                  className="bg-white rounded-2xl shadow-lg border-2 border-slate-200 p-6 hover:shadow-xl transition-all"
+                  className={`rounded-2xl shadow-lg border-2 p-6 hover:shadow-xl transition-all ${
+                    isModerated 
+                      ? 'bg-green-50 border-green-300' 
+                      : 'bg-amber-50 border-amber-300'
+                  }`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      {/* Submission Time - Always shown first */}
+                      {/* Moderation Status Badge */}
+                      <div className="mb-3">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                          isModerated 
+                            ? 'bg-green-200 text-green-800' 
+                            : 'bg-amber-200 text-amber-800'
+                        }`}>
+                          {isModerated ? '✓ Moderated' : '⚠ Not Moderated'}
+                        </span>
+                      </div>
+
+                      {/* Submission Time */}
                       <div className="mb-4 pb-4 border-b border-slate-200">
                         <div className="flex items-center gap-2 text-sm text-slate-600">
                           <Calendar size={16} className="text-indigo-600" />
