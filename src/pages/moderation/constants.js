@@ -12,7 +12,7 @@ import GroundwaterMaintenanceForm from "../../templates/maintenance_recharge_st.
 import WaterStructureMaintenanceForm from "../../templates/maintenance_water_structures.json";
 import SWBRemotelySensedForm from "../../templates/maintenance_rs_swb.json";
 
-export const BASEURL = `${process.env.REACT_APP_BASEURL}`;
+export const BASEURL = `${process.env.REACT_APP_LOCALURL}`;
 
 export const FORM_TEMPLATES = {
   Settlement: SettlementForm,
@@ -31,29 +31,25 @@ export const FORM_TEMPLATES = {
 
 export const CARD_DISPLAY_FIELDS = {
   Settlement: [
-    { key: "Settlements_name", label: "Settlement's name" },
     { key: "Settlements_id", label: "Settlement's ID" },
-    {
-      key: "road_connected",
-      label: "Is the settlement connected by road throughout the year?",
-    },
+    { key: "Settlements_name", label: "Settlement's name" },
     {
       key: "number_households",
       label: "How many households are there in this settlement?",
+    },
+    {
+        key: "farmer_family-marginal_farmers",
+        label: "Number of farmers with land < 2.5 acres",
     },
   ],
 
   Well: [
     {
-      key: "select_multiple_caste_use",
-      label: "Which caste groups use the well in this settlement?",
-    },
-    { key: "select_one_owns", label: "Who owns the well?" },
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
     },
     { key: "select_one_well_type", label: "Well Type" },
+    { key: "select_one_owns", label: "Who owns the well?" },
     {
       key: "Well_usage-is_maintenance_required",
       label: "Does the well require maintenance?",
@@ -62,57 +58,53 @@ export const CARD_DISPLAY_FIELDS = {
 
   Waterbody: [
     {
-      key: "select_multiple_caste_use",
-      label:
-        "Which caste groups uses the water structure in this settlement?",
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
     },
     {
-      key: "select_one_owns",
-      label: "Who owns the Water structure in this settlement?",
+        key: "select_one_water_structure",
+        label: "Type of water structure",
     },
     {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
+        key: "select_one_owns",
+        label: "Who owns the Water structure in this settlement?",
     },
     {
-      key: "select_one_water_structure",
-      label: "Type of water structure",
-    },
-    {
-      key: "select_one_maintenance",
-      label:
+    key: "select_one_maintenance",
+    label:
         "Does the water structure require repair maintenance?",
     },
   ],
 
   Crop: [
     {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+    },
+    {
+        key: "select_one_classified",
+        label: "What is this land classified as?",
+    },
+    {
       key: "select_one_practice",
       label:
         "Which cropping seasons do you practice in this settlement?",
     },
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
-    {
-      key: "select_one_classified",
-      label: "What is this land classified as?",
-    },
+    
   ],
 
   Groundwater: [
     {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+    },
+    { key: "demand_type", label: "Type of demand" },
+    { key: "Beneficiary_Name", label: "Beneficiary's Name" },
+    {
       key: "TYPE_OF_WORK_ID",
       label:
         "Select the work demand required for recharge in the settlement",
-    },
-    { key: "Beneficiary_Name", label: "Beneficiary's Name" },
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
-    { key: "demand_type", label: "Type of demand" },
+    },  
   ],
 
   Livelihood: [
@@ -150,26 +142,26 @@ export const CARD_DISPLAY_FIELDS = {
   ],
 
   Agri: [
+    {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+    },
     { key: "demand_type_irrigation", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary's Name" },
     {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
-    {
-      key: "TYPE_OF_WORK_ID",
-      label:
-        "Select the type of Irrigation work in this settlement",
+        key: "TYPE_OF_WORK_ID",
+        label:
+          "Select the type of Irrigation work in this settlement",
     },
   ],
 
   "Agri Maintenance": [
+    {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+    },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
     {
       key: "select_one_irrigation_structure",
       label:
@@ -178,12 +170,12 @@ export const CARD_DISPLAY_FIELDS = {
   ],
 
   "GroundWater Maintenance": [
-    { key: "demand_type", label: "Type of demand" },
-    { key: "Beneficiary_Name", label: "Beneficiary Name" },
     {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+      },
+      { key: "demand_type", label: "Type of demand" },
+    { key: "Beneficiary_Name", label: "Beneficiary Name" },
     {
       key: "select_one_recharge_structure",
       label:
@@ -192,12 +184,13 @@ export const CARD_DISPLAY_FIELDS = {
   ],
 
   "Surface Water Body Maintenance": [
+    {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+      },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
+    
     {
       key: "select_one_recharge_structure",
       label:
@@ -206,12 +199,12 @@ export const CARD_DISPLAY_FIELDS = {
   ],
 
   "Surface Water Body Remotely Sensed Maintenance": [
+    {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary's Settlement",
+    },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
     {
       key: "TYPE_OF_WORK",
       label:

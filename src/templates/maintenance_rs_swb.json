@@ -196,64 +196,6 @@
             "Breaches in bunding or structure walls",
             "Erosion along trenches or bunds"
           ]
-        },
-        {
-          "type": "html",
-          "name": "pm_swb_rs_note_1",
-          "html": "<span style=\"font-size: large; font-weight: bold; color:red;\">DO NOT MODIFY ANYTHING BEYOND THIS POINT</span>"
-        },
-        {
-          "type": "multipletext",
-          "name": "GPS_point",
-          "title": "GPS point of the marked area",
-          "description": "Takes a GPS point from the marker you placed in the application",
-          "isRequired": true,
-          "items": [
-            {
-              "name": "latitude",
-              "title": "Latitude (x.y °)"
-            },
-            {
-              "name": "longitude",
-              "title": "Longitude (x.y °)"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "name": "block_name",
-          "title": "Block name",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "plan_id",
-          "title": "Plan ID",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "plan_name",
-          "title": "Plan name",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "corresponding_work_id",
-          "title": "Corresponding Work ID",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "user_latlon",
-          "title": "Current location of the user",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "work_id",
-          "title": "Work ID",
-          "readOnly": true
         }
       ]
     }

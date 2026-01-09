@@ -250,37 +250,6 @@
             "Overgrazing",
             "Urbanization"
           ]
-        },
-        {
-          "type": "html",
-          "name": "crop_note_2",
-          "title": "",
-          "html": "<span style=\"font-size: large; font-weight: bold; color:red;\"> DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span>"
-        },
-        {
-          "type": "text",
-          "name": "block_name",
-          "title": "Block name"
-        },
-        {
-          "type": "text",
-          "name": "crop_Grid_id",
-          "title": "Crop Grid ID"
-        },
-        {
-          "type": "text",
-          "name": "plan_id",
-          "title": "Plan ID"
-        },
-        {
-          "type": "text",
-          "name": "plan_name",
-          "title": "Plan name"
-        },
-        {
-          "type": "text",
-          "name": "user_latlon",
-          "title": "Current location of the user"
         }
       ]
     }
