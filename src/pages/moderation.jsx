@@ -382,23 +382,39 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
 
   // Helper function to get nested field value from submission
   const getFieldValue = (submission, fieldKey) => {
-    if (submission[fieldKey] !== undefined && submission[fieldKey] !== null) {
-      return submission[fieldKey];
+    // Helper to check if a value is valid for display
+    const isValidValue = (val) => {
+      if (val === null || val === undefined || val === '') return false;
+      // Reject objects that aren't arrays (they're likely nested structures)
+      if (typeof val === 'object' && !Array.isArray(val)) return false;
+      // Reject very long numeric strings (likely coordinates or IDs that shouldn't be displayed)
+      if (typeof val === 'string' && /^\d+\.\d{10,}$/.test(val)) return false;
+      return true;
+    };
+
+    // Check direct access first
+    const directValue = submission[fieldKey];
+    if (isValidValue(directValue)) {
+      return directValue;
     }
     
+    // Handle nested objects with hyphen notation
     if (fieldKey.includes('-')) {
       const [parent, child] = fieldKey.split('-');
-      if (submission[parent] && submission[parent][child] !== undefined) {
-        return submission[parent][child];
+      if (submission[parent]) {
+        const nestedValue = submission[parent][child];
+        if (isValidValue(nestedValue)) {
+          return nestedValue;
+        }
       }
     }
     
+    // Try nested paths only for known data structures
     const nestedPaths = [
       `data.${fieldKey}`,
       `data_settlement.${fieldKey}`,
       `data_well.${fieldKey}`,
       `data_waterbody.${fieldKey}`,
-      `GPS_point.point_mapsappearance.coordinates`,
     ];
     
     for (const path of nestedPaths) {
@@ -415,8 +431,9 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
         }
       }
       
-      if (found && value !== null) {
-        if (Array.isArray(value) && fieldKey === 'coordinates') {
+      if (found && isValidValue(value)) {
+        // Handle coordinates specially
+        if (Array.isArray(value) && path.includes('coordinates')) {
           return value.join(', ');
         }
         return value;
