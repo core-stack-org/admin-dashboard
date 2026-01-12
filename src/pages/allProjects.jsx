@@ -412,14 +412,19 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
     }
   
     const formData = new FormData();
-    selectedWBFiles.forEach((f) => formData.append("files[]", f));
+    selectedWBFiles.forEach((f) => formData.append("files", f));
+    formData.append("gee_account_id", 1);
     formData.append("project_id", selectedWBProject.id);
+    formData.append("is_closest_wp", true);
+    formData.append("is_lulc_required", true);
+    formData.append("is_processing_required", true);
+   
   
     try {
       const token = sessionStorage.getItem("accessToken");
   
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/upload_waterbody_excel/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBProject.id}/waterrejuvenation/excel/`,
         {
           method: "POST",
           headers: {
