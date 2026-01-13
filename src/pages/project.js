@@ -178,15 +178,16 @@ const Project = ({ currentUser }) => {
     const formData = {
       name: projectName,
       description: projectDescription,
-      state: parseInt(state.id),
-      district: district?.id ? parseInt(district.id) : null,
-      block: block?.id ? parseInt(block.id) : null,
+      state_soi: parseInt(state.id),
+      district_soi: district?.id ? parseInt(district.id) : null,
+      tehsil_soi: block?.id ? parseInt(block.id) : null,
       app_type: projectAppType,
       enabled: true, // Ensuring it's included
       created_by: userId,
       updated_by: userId,
       organization: organization,
     };
+    
     try {
       const token = sessionStorage.getItem("accessToken");
       const apiPath =  projectAppType === "community_engagement" ? "api/v1/create_community/" : "api/v1/projects/";

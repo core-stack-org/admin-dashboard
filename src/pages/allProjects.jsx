@@ -90,18 +90,18 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
 
         const stateMap = {};
         statesData.states.forEach((s) => {
-          stateMap[s.id] = s.state_name;
+          stateMap[String(s.id)] = s.state_name;
         });
-
-        // enrich projects and sort by name
+        
         const updatedProjects = data
           .map((p) => ({
             ...p,
-            state_name: stateMap[p.state] || "Unknown State",
+            state_name: p.state_soi_name || p.state_name || stateMap[String(p.state)] || "Unknown State",
           }))
           .sort((a, b) => a.name.localeCompare(b.name));
-
+        
         setProjects(updatedProjects);
+        
       } catch (err) {
         console.error("Error fetching projects:", err);
       } finally {
@@ -661,10 +661,10 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                                       state: {
                                         projectName: p.name,
                                         projectId: p.id,
-                                        stateName: p.state_name,
-                                        stateId: p.state,
-                                        districtId: p.district,
-                                        districtName: p.district_name,
+                                        stateName: p.state_soi_name,
+                                        stateId: p.state_soi,
+                                        districtId: p.district_soi,
+                                        districtName: p.district_soi_name,
                                         blockId: p.block,
                                         blockName: p.block_name,
                                       },
