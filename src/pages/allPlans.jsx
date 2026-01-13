@@ -83,13 +83,12 @@ const AllPlans = () => {
         setPlans(projectPlans);
 
         // Preload districts for all states in plans
-        const statesToFetch = [...new Set(projectPlans.map((p) => p.state))];
+        const statesToFetch = [...new Set(projectPlans.map((p) => p.state_soi))];
+        const districtsToFetch = [...new Set(projectPlans.map((p) => p.district_soi))];
+        
         statesToFetch.forEach((stateCode) => fetchDistricts(stateCode));
-
-        const districtsToFetch = [
-          ...new Set(projectPlans.map((p) => p.district)),
-        ];
         districtsToFetch.forEach((districtCode) => fetchBlocks(districtCode));
+        
       } catch (err) {
         console.error(err);
       } finally {
@@ -289,12 +288,12 @@ const AllPlans = () => {
                     <td className="px-6 py-4 font-medium">
                       {plan.plan || "-"}
                     </td>
-                    <td className="px-6 py-4">{getStateName(plan.state)}</td>
+                    <td className="px-6 py-4">{getStateName(plan.state_soi)}</td>
                     <td className="px-6 py-4">
-                      {getDistrictName(plan.state, plan.district)}
+                      {getDistrictName(plan.state_soi, plan.district_soi)}
                     </td>
                     <td className="px-6 py-4">
-                      {getBlockName(plan.district, plan.block)}
+                      {getBlockName(plan.district_soi, plan.tehsil_soi)}
                     </td>
                     <td className="px-6 py-4">{plan.village_name || "-"}</td>
                     <td className="px-6 py-4">{plan.gram_panchayat || "-"}</td>

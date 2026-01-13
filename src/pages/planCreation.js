@@ -230,23 +230,23 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
       const stateNameFromList =
         statesList.find(
-          (s) => String(s.id) === String(data.state)
+          (s) => String(s.id) === String(data.state_soi)
         )?.state_name || "";
 
-      setState({ id: data.state, name: stateNameFromList });
+      setState({ id: data.state_soi, name: stateNameFromList });
 
-      const districts = await fetchDistricts(data.state);
+      const districts = await fetchDistricts(data.state_soi);
       const districtName =
-        districts.find((d) => String(d.id) === String(data.district))
+        districts.find((d) => String(d.id) === String(data.district_soi))
           ?.district_name || "";
-      setDistrict({ id: data.district, name: districtName });
+      setDistrict({ id: data.district_soi, name: districtName });
 
       //  Fetch blocks for the district and set selected block
-      const blocks = await fetchBlocks(data.district);
+      const blocks = await fetchBlocks(data.district_soi);
       const blockName =
-        blocks.find((b) => String(b.id) === String(data.block))?.block_name ||
+        blocks.find((b) => String(b.id) === String(data.tehsil_soi))?.block_name ||
         "";
-      setBlock({ id: data.block, name: blockName });
+      setBlock({ id: data.tehsil_soi, name: blockName });
 
       //  Set other fields
       setFacilitator(data.facilitator_name || "");
@@ -265,9 +265,9 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
     const payload = {
       plan,
-      state: parseInt(state.id),
-      district: parseInt(district.id),
-      block: parseInt(block.id),
+      state_soi: parseInt(state.id),
+      district_soi: parseInt(district.id),
+      tehsil_soi: parseInt(block.id),
       village_name: villageName,
       gram_panchayat: gramPanchayat,
       facilitator_name: facilitator.first_name,
