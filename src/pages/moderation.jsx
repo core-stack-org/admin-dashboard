@@ -1,14 +1,27 @@
-import React, { useEffect, useState } from "react";
-import { Trash2, ChevronLeft, Search, Calendar, User, Filter } from "lucide-react";
+import React, { useEffect, useState, useRef } from "react";
+import { Trash2, ChevronLeft, Search, Calendar, User, Filter, Map as MapIcon, Grid, Home, Droplet, Waves } from "lucide-react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.min.css";
+import Map from "ol/Map";
+import View from "ol/View";
+import TileLayer from "ol/layer/Tile";
+import XYZ from "ol/source/XYZ";
+import VectorLayer from "ol/layer/Vector";
+import VectorSource from "ol/source/Vector";
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
+import { Style, Circle, Fill, Stroke, Icon } from "ol/style";
+import Overlay from "ol/Overlay";
+import "ol/ol.css";
 
 import {
   BASEURL,
   FORM_TEMPLATES,
   CARD_DISPLAY_FIELDS,
+  ICONS
 } from "./moderation/constants";
+import { getDynamicMarkerIcon } from "./moderation/helper";
 
 const SelectionPage = ({
   onLoadSubmissions,
@@ -179,12 +192,12 @@ const SelectionPage = ({
             </select>
           </div>
           <div className="mb-8">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Form
             </label>
   
             <select
-              className="w-full border-2 border-gray-200 p-3 rounded-lg focus:border-blue-500 focus:outline-none transition"
+              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
               value={selectedForm}
               onChange={(e) => setSelectedForm(e.target.value)}
             >
@@ -216,10 +229,16 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  const [moderationFilter, setModerationFilter] = useState("all"); // "all", "moderated", "not-moderated"
+  const [moderationFilter, setModerationFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("card"); // "card" or "map"
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [surveyModel, setSurveyModel] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const mapElement = useRef(null);
+  const mapRef = useRef(null);
+  const vectorLayerRef = useRef(null);
+  const popupRef = useRef(null);
+  const overlayRef = useRef(null);
 
   // Check user permissions
   const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
@@ -229,6 +248,81 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const isModerator = groups.some(g => g.name === "Moderator");
   const isSuperAdmin = user.is_superadmin;
   const showActions = isAdmin || isModerator || isSuperAdmin;
+  const didFetchRef = useRef(false);
+
+  const reloadSubmissions = () => {
+    if (viewMode === "map") {
+      fetchSubmissions(1, "map");
+    } else {
+      fetchSubmissions(page, "card");
+    }
+  };
+  
+
+  // Extract coordinates from submission
+  const getCoordinates = (submission) => {
+    if (!submission?.GPS_point) return null;
+  
+    const gps = submission.GPS_point;
+  
+    // GeoJSON point (preferred & correct)
+    const geoPoint =
+      gps.point_mapappearance ||
+      gps.point_mapsappearance;
+  
+    if (
+      geoPoint &&
+      Array.isArray(geoPoint.coordinates) &&
+      geoPoint.coordinates.length === 2
+    ) {
+      const [lon, lat] = geoPoint.coordinates;
+  
+      if (!isNaN(lon) && !isNaN(lat)) {
+        return [lon, lat];
+      }
+    }
+  
+    // fallback (very rare, just in case)
+    if (gps.longitude && gps.latitude) {
+      return [
+        parseFloat(gps.longitude),
+        parseFloat(gps.latitude),
+      ];
+    }
+  
+    return null;
+  };
+  
+
+  
+  // Get marker icon based on form type and moderation status
+  const getMarkerIcon = (formType, isModerated) => {
+    // Determine which icon to use based on form name
+    let iconSrc = ICONS['Settlement']; 
+    
+    if (formType == "Settlement") {
+      iconSrc = ICONS['Settlement'];
+    } else if (formType == "Well") {
+      iconSrc = ICONS['Well'];
+    } else if (formType == "Waterbody"){
+      iconSrc = ICONS['Waterbody'];
+    } else if (formType == "Surface Water Body Remotely Sensed Maintenance"){
+      iconSrc = ICONS['Waterbody'];
+    } else if (formType == "Surface Water Body Maintenance"){
+      iconSrc = ICONS['Waterbody'];
+    } else if (formType.includes('Groundwater') || formType.includes('GroundWater Maintenance')) {
+      iconSrc = ICONS['Groundwater'];
+    } else if (formType == "Livelihood") {
+      iconSrc = ICONS['Livelihood'];
+    } else if (formType.includes('Agri') || formType.includes('Agri Maintenance')) {
+      iconSrc = ICONS['Agri'];
+    } else if (formType == "Crop"){
+      iconSrc = ICONS['Crop']
+    }
+    
+    return iconSrc;
+  };
+
 
   // Generic function to analyze form schema and identify field types
   const analyzeFormSchema = (schema) => {
@@ -472,45 +566,270 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     return date.toLocaleString('en-IN', options).replace(',', '') + ' IST';
   };
 
-  const fetchSubmissions = async (pg = 1) => {
+  const fetchSubmissions = async (pg = 1, mode = "card") => {
     if (!selectedForm || !selectedPlan) return;
+  
     const token = sessionStorage.getItem("accessToken");
-    
+  
+    const url =
+      mode === "map"
+        ? `${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/`
+        : `${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/?page=${pg}`;
+  
     try {
-      const res = await fetch(
-        `${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/?page=${pg}`,
-        { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-      );
-      const data = await res.json();
-      
-      // Extract submissions from the new format: data is array of [submission, moderationFlag]
-      const submissionsWithFlags = (data.data || []).map(item => {
-        if (Array.isArray(item) && item.length === 2) {
-          return {
-            ...item[0],
-            _moderated: item[1]
-          };
-        }
-        return item;
+      const res = await fetch(url, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
-      
+  
+      const data = await res.json();
+  
+      const submissionsWithFlags = (data.data || []).map(item =>
+        Array.isArray(item)
+          ? { ...item[0], _moderated: item[1] }
+          : item
+      );
+  
       const sortedData = submissionsWithFlags.sort((a, b) => {
         const dateA = new Date(a.submission_time || a.__system?.submissionDate || 0);
         const dateB = new Date(b.submission_time || b.__system?.submissionDate || 0);
         return dateB - dateA;
       });
-      
+  
       setSubmissions(sortedData);
-      setPage(data.page || pg);
-      setTotalPages(data.total_pages || 1);
+  
+      // pagination sirf card ke liye
+      if (mode === "card") {
+        setPage(data.page || pg);
+        setTotalPages(data.total_pages || 1);
+      } else {
+        setPage(1);
+        setTotalPages(1);
+      }
     } catch (err) {
       console.log("Submission Fetch Error", err);
     }
   };
+  
 
   useEffect(() => {
-    fetchSubmissions(1);
-  }, []);
+    if (viewMode === "map") {
+      fetchSubmissions(1, "map");
+    } else {
+      fetchSubmissions(page, "card");
+    }
+  }, [viewMode]);
+  
+
+  // Filter submissions - MOVED BEFORE useEffect hooks that use it
+  const filteredSubmissions = submissions.filter(sub => {
+    // Apply search filter
+    const searchString = JSON.stringify(sub).toLowerCase();
+    const matchesSearch = searchString.includes(searchTerm.toLowerCase());
+    
+    // Apply moderation filter
+    let matchesModeration = true;
+    if (moderationFilter === "moderated") {
+      matchesModeration = sub._moderated === true;
+    } else if (moderationFilter === "not-moderated") {
+      matchesModeration = sub._moderated === false;
+    }
+    
+    return matchesSearch && matchesModeration;
+  });
+
+  // Initialize map
+  useEffect(() => {
+    if (viewMode !== "map" || !mapElement.current || mapRef.current) return;
+
+    const baseLayer = new TileLayer({
+      source: new XYZ({
+        url: "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+      }),
+      zIndex: 0,
+    });
+
+    const view = new View({
+      projection: "EPSG:4326",
+      center: [80, 23.5],
+      zoom: 12,
+    });
+
+    const vectorSource = new VectorSource();
+    const vectorLayer = new VectorLayer({
+      source: vectorSource,
+      zIndex: 1,
+    });
+
+    const map = new Map({
+      target: mapElement.current,
+      view,
+      layers: [baseLayer, vectorLayer],
+    });
+
+    // Create popup overlay
+    const overlay = new Overlay({
+      element: popupRef.current,
+      positioning: "bottom-center",
+      stopEvent: false,
+      offset: [0, -10],
+    });
+    map.addOverlay(overlay);
+
+    mapRef.current = map;
+    vectorLayerRef.current = vectorLayer;
+    overlayRef.current = overlay;
+
+    // Click handler for markers
+    map.on("click", (evt) => {
+      const feature = map.forEachFeatureAtPixel(evt.pixel, (feature) => feature);
+      if (feature) {
+        const submission = feature.get("submission");
+        const coordinates = feature.getGeometry().getCoordinates();
+        
+        // Show popup
+        overlayRef.current.setPosition(coordinates);
+        
+        // You can customize what's shown in the popup
+        const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
+        let popupContent = '<div class="bg-white rounded-lg shadow-xl p-4 min-w-[280px] max-w-[350px]">';
+        popupContent += `<div class="font-bold text-lg mb-3 text-indigo-600 border-b border-slate-200 pb-2">Submission Details</div>`;
+        
+        displayFields.slice(0, 3).forEach(field => {
+          const value = getFieldValue(submission, field.key);
+          popupContent += `<div class="mb-2"><span class="text-xs text-slate-500 font-semibold">${field.label}:</span><br/><span class="text-sm text-slate-900">${value}</span></div>`;
+        });
+        
+        popupContent += `<div class="mt-4 pt-3 border-t border-slate-200 flex gap-2">`;
+        popupContent += `<button class="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all" onclick="window.viewSubmissionFromMap('${getSubmissionUUID(submission)}')">View</button>`;
+        
+        // Add Edit and Delete buttons if user has permissions
+        if (showActions) {
+          popupContent += `<button class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-all" onclick="window.editSubmissionFromMap('${getSubmissionUUID(submission)}')">Edit</button>`;
+          
+          if (isAdmin || isSuperAdmin) {
+            popupContent += `<button class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all" onclick="window.deleteSubmissionFromMap('${getSubmissionUUID(submission)}')">Delete</button>`;
+          }
+        }
+        
+        popupContent += `</div>`;
+        popupContent += '</div>';
+        
+        popupRef.current.innerHTML = popupContent;
+        popupRef.current.style.display = 'block';
+      } else {
+        popupRef.current.style.display = 'none';
+      }
+    });
+
+    // Close popup on map move
+    map.on("movestart", () => {
+      popupRef.current.style.display = 'none';
+    });
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.setTarget(null);
+        mapRef.current = null;
+      }
+    };
+  }, [viewMode]);
+
+  // Update markers when submissions change
+  useEffect(() => {
+    if (viewMode !== "map" || !vectorLayerRef.current) return;
+
+    const vectorSource = vectorLayerRef.current.getSource();
+    vectorSource.clear();
+
+    const features = [];
+    const validCoords = [];
+
+    filteredSubmissions.forEach(submission => {
+      const coords = getCoordinates(submission);
+      if (coords && coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+        const feature = new Feature({
+          geometry: new Point(coords),
+          submission: submission,
+        });
+
+        const isModerated = submission._moderated === true;
+        // const iconSrc = getMarkerIcon(selectedForm, isModerated);
+        const iconSrc = getDynamicMarkerIcon(selectedForm, submission);
+                
+        // icon ko alag se add karo (same as before)
+        feature.setStyle([
+          new Style({
+            image: new Circle({
+              radius: 22,
+              fill: new Fill({ color: 'rgba(255,255,255,0)' }),
+              stroke: new Stroke({
+                color: isModerated ? '#22c55e' : '#facc15',
+                width: 3,
+              }),
+            }),
+          }),
+          new Style({
+            image: new Icon({
+              src: `${iconSrc}#${submission.__id || Date.now()}`,
+              scale: 0.5,
+              anchor: [0.5, 0.5],
+              anchorXUnits: 'fraction',
+              anchorYUnits: 'fraction',
+            }),            
+          }),
+        ]);
+        
+
+        features.push(feature);
+        validCoords.push(coords);
+      }
+    });
+
+    vectorSource.addFeatures(features);
+
+    // Fit map to show all markers
+    if (validCoords.length > 0 && mapRef.current) {
+      const extent = vectorSource.getExtent();
+      mapRef.current.getView().fit(extent, {
+        padding: [50, 50, 50, 50],
+        maxZoom: 16,
+        duration: 1000,
+      });
+    }
+  }, [filteredSubmissions, viewMode, selectedForm]);
+
+  // Global function to view submission from map popup
+  useEffect(() => {
+    window.viewSubmissionFromMap = (uuid) => {
+      const submission = submissions.find(s => getSubmissionUUID(s) === uuid);
+      if (submission) {
+        handleViewSubmission(submission);
+      }
+    };
+    
+    window.editSubmissionFromMap = (uuid) => {
+      const submission = submissions.find(s => getSubmissionUUID(s) === uuid);
+      if (submission) {
+        handleEditSubmission(submission);
+      }
+    };
+    
+    window.deleteSubmissionFromMap = (uuid) => {
+      const submission = submissions.find(s => getSubmissionUUID(s) === uuid);
+      if (submission) {
+        handleDelete(submission);
+      }
+    };
+    
+    return () => {
+      delete window.viewSubmissionFromMap;
+      delete window.editSubmissionFromMap;
+      delete window.deleteSubmissionFromMap;
+    };
+  }, [submissions]);
 
   const handleViewSubmission = (submission) => {
     const formTemplate = FORM_TEMPLATES[selectedForm];
@@ -574,7 +893,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
         alert("Saved successfully!");
         setSelectedSubmission(null);
         setSurveyModel(null);
-        fetchSubmissions(page);
+        reloadSubmissions();
       } else {
         alert("Save failed");
       }
@@ -606,29 +925,13 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       const data = await response.json();
       if (data.success) {
         alert("Deleted!");
-        setSubmissions((prev) => prev.filter((item) => getSubmissionUUID(item) !== uuid));
+        reloadSubmissions();
       }
     } catch (error) {
       console.error("Delete error:", error);
       alert("Server error");
     }
   };
-
-  const filteredSubmissions = submissions.filter(sub => {
-    // Apply search filter
-    const searchString = JSON.stringify(sub).toLowerCase();
-    const matchesSearch = searchString.includes(searchTerm.toLowerCase());
-    
-    // Apply moderation filter
-    let matchesModeration = true;
-    if (moderationFilter === "moderated") {
-      matchesModeration = sub._moderated === true;
-    } else if (moderationFilter === "not-moderated") {
-      matchesModeration = sub._moderated === false;
-    }
-    
-    return matchesSearch && matchesModeration;
-  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
@@ -643,7 +946,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             Back to Selection
           </button>
   
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
             <div className="bg-white px-6 py-3 rounded-xl border-2 border-indigo-200 shadow-md">
               <div className="text-xs text-indigo-600 font-bold uppercase mb-1">
                 Plan
@@ -663,33 +966,59 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
             </div>
           </div>
   
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            {/* View Mode Toggle */}
+            <div className="flex bg-white border-2 border-slate-300 rounded-xl overflow-hidden shadow-md">
+              <button
+                onClick={() => setViewMode("card")}
+                className={`px-4 py-3 font-bold transition-all flex items-center gap-2 ${
+                  viewMode === "card"
+                    ? "bg-indigo-600 text-white"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <Grid size={18} />
+                Card
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`px-4 py-3 font-bold transition-all flex items-center gap-2 ${
+                  viewMode === "map"
+                    ? "bg-indigo-600 text-white"
+                    : "text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <MapIcon size={18} />
+                Map
+              </button>
+            </div>
+
             <div className="relative">
               <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                size={20}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
               />
               <input
                 type="text"
-                placeholder="Search submissions..."
+                placeholder="Search..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 pr-4 py-3 w-80 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+                className="pl-10 pr-4 py-3 w-48 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium text-sm"
               />
             </div>
 
             {/* Moderation Filter */}
             <div className="relative">
               <Filter
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-                size={20}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={18}
               />
               <select
                 value={moderationFilter}
                 onChange={(e) => setModerationFilter(e.target.value)}
-                className="pl-12 pr-4 py-3 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium appearance-none bg-white"
+                className="pl-10 pr-4 py-3 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium appearance-none bg-white text-sm"
               >
-                <option value="all">All Submissions</option>
+                <option value="all">All</option>
                 <option value="moderated">Moderated</option>
                 <option value="not-moderated">Not Moderated</option>
               </select>
@@ -745,130 +1074,192 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
         </div>
       )}
   
-      {/* Submissions List */}
+      {/* Map View or Card View */}
       <div className="max-w-7xl mx-auto">
-        {filteredSubmissions.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-16 text-center">
-            <div className="text-slate-300 mb-6">
-              <svg
-                className="w-32 h-32 mx-auto"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
+        {viewMode === "map" ? (
+          /* Map View */
+          <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 overflow-hidden">
+            {/* Map Stats Header */}
+            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b-2 border-slate-200 flex items-center justify-between">
+              <div className="flex gap-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-amber-400 border-2 border-amber-600"></div>
+                  <span className="text-sm font-bold text-slate-700">
+                    Not Moderated: {filteredSubmissions.filter(s => !s._moderated).length}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-green-400 border-2 border-green-600"></div>
+                  <span className="text-sm font-bold text-slate-700">
+                    Moderated: {filteredSubmissions.filter(s => s._moderated).length}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-indigo-600">
+                    Total: {filteredSubmissions.length} submissions
+                  </span>
+                </div>
+              </div>
             </div>
-            <h3 className="text-2xl font-black text-slate-700 mb-3">
-              No Submissions Found
-            </h3>
-            <p className="text-slate-500 text-lg">
-              {searchTerm || moderationFilter !== "all"
-                ? "No submissions match your filters."
-                : "No submissions available."}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredSubmissions.map((submission) => {
-              const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
-              const uuid = getSubmissionUUID(submission);
-              const isModerated = submission._moderated === true;
-  
-              return (
-                <div
-                  key={uuid}
-                  className={`rounded-2xl shadow-lg border-2 p-6 hover:shadow-xl transition-all ${
-                    isModerated 
-                      ? 'bg-green-50 border-green-300' 
-                      : 'bg-amber-50 border-amber-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      {/* Moderation Status Badge */}
-                      <div className="mb-3">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-                          isModerated 
-                            ? 'bg-green-200 text-green-800' 
-                            : 'bg-amber-200 text-amber-800'
-                        }`}>
-                          {isModerated ? '✓ Moderated' : '⚠ Not Moderated'}
-                        </span>
-                      </div>
 
-                      {/* Submission Time */}
-                      <div className="mb-4 pb-4 border-b border-slate-200">
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <Calendar size={16} className="text-indigo-600" />
-                          <span className="font-semibold">Submitted:</span>
-                          <span className="text-slate-900 font-bold">
-                            {formatToIST(
-                              submission.__system?.submissionDate ||
-                                submission.submission_time,
-                            )}
-                          </span>
-                        </div>
+            {/* Map Container */}
+            <div className="relative">
+              <div 
+                ref={mapElement} 
+                className="w-full h-[calc(100vh-280px)] min-h-[600px]"
+              />
+              {/* Popup container */}
+              <div ref={popupRef} style={{ display: 'none' }} />
+
+              {/* No submissions popup - small centered popup */}
+              {filteredSubmissions.length === 0 && (
+                <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-10">
+                  <div className="bg-white rounded-xl shadow-2xl border-2 border-slate-300 p-6 min-w-[320px]">
+                    <div className="text-center">
+                      <div className="bg-slate-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                        <MapIcon className="w-8 h-8 text-slate-400" />
                       </div>
-  
-                      {/* Dynamic fields based on form type */}
-                      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        {displayFields.map((field) => (
-                          <div key={field.key}>
-                            <div className="text-xs font-bold text-slate-500 uppercase mb-1">
-                              {field.label}
-                            </div>
-                            <div className="text-sm font-bold text-slate-900 truncate">
-                              {getFieldValue(submission, field.key)}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-  
-                    {/* Action buttons */}
-                    <div className="flex flex-col gap-2 ml-6">
-                      <button
-                        onClick={() => handleViewSubmission(submission)}
-                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
-                      >
-                        View
-                      </button>
-  
-                      {showActions && (
-                        <>
-                          <button
-                            onClick={() => handleEditSubmission(submission)}
-                            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
-                          >
-                            Edit
-                          </button>
-  
-                          {(isAdmin || isSuperAdmin) && (
-                            <button
-                              onClick={() => handleDelete(submission)}
-                              className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </>
-                      )}
+                      <h3 className="text-lg font-black text-slate-700 mb-2">
+                        No Submissions Found
+                      </h3>
+                      <p className="text-sm text-slate-500">
+                        {searchTerm || moderationFilter !== "all"
+                          ? "No submissions match your filters."
+                          : "No submissions available."}
+                      </p>
                     </div>
                   </div>
                 </div>
-              );
-            })}
+              )}
+            </div>
           </div>
+        ) : (
+          /* Card View */
+          <>
+            {filteredSubmissions.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-16 text-center">
+                <div className="text-slate-300 mb-6">
+                  <svg
+                    className="w-32 h-32 mx-auto"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black text-slate-700 mb-3">
+                  No Submissions Found
+                </h3>
+                <p className="text-slate-500 text-lg">
+                  {searchTerm || moderationFilter !== "all"
+                    ? "No submissions match your filters."
+                    : "No submissions available."}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredSubmissions.map((submission) => {
+                  const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
+                  const uuid = getSubmissionUUID(submission);
+                  const isModerated = submission._moderated === true;
+      
+                  return (
+                    <div
+                      key={uuid}
+                      className={`rounded-2xl shadow-lg border-2 p-6 hover:shadow-xl transition-all ${
+                        isModerated 
+                          ? 'bg-green-50 border-green-300' 
+                          : 'bg-amber-50 border-amber-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          {/* Moderation Status Badge */}
+                          <div className="mb-3">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
+                              isModerated 
+                                ? 'bg-green-200 text-green-800' 
+                                : 'bg-amber-200 text-amber-800'
+                            }`}>
+                              {isModerated ? '✓ Moderated' : '⚠ Not Moderated'}
+                            </span>
+                          </div>
+
+                          {/* Submission Time */}
+                          <div className="mb-4 pb-4 border-b border-slate-200">
+                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                              <Calendar size={16} className="text-indigo-600" />
+                              <span className="font-semibold">Submitted:</span>
+                              <span className="text-slate-900 font-bold">
+                                {formatToIST(
+                                  submission.__system?.submissionDate ||
+                                    submission.submission_time,
+                                )}
+                              </span>
+                            </div>
+                          </div>
+      
+                          {/* Dynamic fields based on form type */}
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                            {displayFields.map((field) => (
+                              <div key={field.key}>
+                                <div className="text-xs font-bold text-slate-500 uppercase mb-1">
+                                  {field.label}
+                                </div>
+                                <div className="text-sm font-bold text-slate-900 truncate">
+                                  {getFieldValue(submission, field.key)}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+      
+                        {/* Action buttons */}
+                        <div className="flex flex-col gap-2 ml-6">
+                          <button
+                            onClick={() => handleViewSubmission(submission)}
+                            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                          >
+                            View
+                          </button>
+      
+                          {showActions && (
+                            <>
+                              <button
+                                onClick={() => handleEditSubmission(submission)}
+                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                              >
+                                Edit
+                              </button>
+      
+                              {(isAdmin || isSuperAdmin) && (
+                                <button
+                                  onClick={() => handleDelete(submission)}
+                                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                                >
+                                  Delete
+                                </button>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
   
-        {/* Pagination */}
-        {submissions.length > 0 && totalPages > 1 && (
+        {/* Pagination - only show in card view */}
+        {viewMode === "card" && submissions.length > 0 && totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
             <button
               disabled={page === 1}

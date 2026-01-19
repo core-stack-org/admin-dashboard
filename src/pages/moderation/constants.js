@@ -12,6 +12,29 @@ import GroundwaterMaintenanceForm from "../../templates/maintenance_recharge_st.
 import WaterStructureMaintenanceForm from "../../templates/maintenance_water_structures.json";
 import SWBRemotelySensedForm from "../../templates/maintenance_rs_swb.json";
 
+import SettlementIcon from "../../icons/settlement_icon.svg";
+import WellIcon from "../../icons/well_icon.svg";
+import WaterBodyIcon from "../../icons/waterbodiesScreenIcon.svg";
+import RechargeIcon from "../../icons/recharge_icon.svg";
+import IrrigationIcon from "../../icons/irrigation_icon.svg";
+import LivelihoodIcon from "../../icons/livelihood_proposed.svg"
+import CropIcon from "../../icons/crops-svgrepo-com.svg"
+
+export const ICONS = {
+  Settlement: SettlementIcon,
+  Well: WellIcon,
+  Waterbody: WaterBodyIcon,
+  Crop: CropIcon,
+  Groundwater: RechargeIcon,
+  Livelihood: LivelihoodIcon,
+  Agri: IrrigationIcon,
+  "Agri Maintenance": IrrigationIcon,
+  "GroundWater Maintenance": RechargeIcon,
+  "Surface Water Body Maintenance": WaterBodyIcon,
+  "Surface Water Body Remotely Sensed Maintenance":
+  WaterBodyIcon,
+}
+
 export const BASEURL = `${process.env.REACT_APP_LOCALURL}`;
 
 export const FORM_TEMPLATES = {
