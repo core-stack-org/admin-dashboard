@@ -187,7 +187,7 @@ const AddMember = ({
         }
       }
 
-      setTimeout(() => navigate("/login"), 2500);
+      setTimeout(() => navigate("/dashboard"), 2500);
     } catch (error) {
       console.error("Error during registration:", error);
       toast.error("An error occurred.");

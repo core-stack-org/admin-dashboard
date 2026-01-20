@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/core-stack logo.png";
+import logo from "../assets/newLogo.png";
 
 const RegistrationForm = () => {
   const navigate = useNavigate();
@@ -38,9 +38,12 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
 
   const loadOrganization = async () => {
+
+    console.log("org")
+    console.log(process.env.REACT_APP_BASEURL)
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations/`,
+        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations`,
         {
           method: "GET",
           headers: {
@@ -59,7 +62,7 @@ const RegistrationForm = () => {
           value: org.id,
           label: org.name,
         })),
-        { value: "others", label: "Others" }, // ✅ static option
+        { value: "others", label: "Others" }, // static option
       ];
     } catch (error) {
       console.error("Error fetching organizations:", error);
@@ -109,6 +112,11 @@ const RegistrationForm = () => {
       newErrors.password_confirm = "Passwords do not match";
     }
 
+    if (formData.account_type === "org" && !formData.organization) {
+      newErrors.organization = "Organization is required";
+    }
+    
+
     return newErrors;
   };
 
@@ -119,15 +127,18 @@ const RegistrationForm = () => {
       setErrors(validationErrors);
     } else {
       const registrationData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        password_confirm: formData.password_confirm,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        contact_number: formData.contact_number,
-        organization: formData.organization,
-      };
+  username: formData.username,
+  email: formData.email,
+  password: formData.password,
+  password_confirm: formData.password_confirm,
+  first_name: formData.first_name,
+  last_name: formData.last_name,
+  contact_number: formData.contact_number,
+  account_type: formData.account_type,
+  ...(formData.organization && { organization: formData.organization }),
+};
+
+      console.log(registrationData)
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
@@ -136,6 +147,7 @@ const RegistrationForm = () => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "420",
               // Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(registrationData),
@@ -182,10 +194,22 @@ const RegistrationForm = () => {
       <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="p-8 bg-white shadow-lg border border-gray-300 rounded-xl w-full max-w-4xl">
-        <img src={logo} alt="NRM Logo" className="mx-auto h-20 w-20" />
-        <h2 className="text-2xl font-bold mb-6 text-center t">
-          User Registration
-        </h2>
+      <div className="relative flex items-center mb-8 h-20">
+  {/* Logo - LEFT */}
+  <img
+    src={logo}
+    alt="NRM Logo"
+    className="h-16 w-16 absolute left-0"
+  />
+
+  {/* Title - CENTER */}
+  <h2 className="absolute left-1/2 -translate-x-1/2 text-2xl font-bold text-gray-800">
+    User Registration
+  </h2>
+</div>
+
+
+     
         <form onSubmit={handleSubmit} className="space-y-10">
           <div className="grid grid-cols-2 gap-4">
             <div className="relative w-full">
@@ -274,22 +298,83 @@ const RegistrationForm = () => {
               )}
           </div>
 
+                        {/* ACCOUNT TYPE  */}
+          <div className="mt-4">
+            <div className="w-full rounded border border-gray-300 px-4 py-4 flex items-center gap-28">
+              <span className="text-gray-400 whitespace-nowrap">
+                Account Type <span className="text-red-500">*</span>
+              </span>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="account_type"
+                  value="individual"
+                  checked={formData.account_type === "individual"}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({
+                      ...formData,
+                      account_type: value,
+                      organization: value === "individual" ? "" : formData.organization,
+                    });
+                    if (value === "individual") {
+                      setSelectedOption(null);
+                    }
+                  }}
+                  
+                  className="accent-blue-500"
+                />
+                <span className="text-gray-700">Individual</span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer ml-32">
+                <input
+                  type="radio"
+                  name="account_type"
+                  value="org"
+                  checked={formData.account_type === "org"}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({
+                      ...formData,
+                      account_type: value,
+                      organization: value === "individual" ? "" : formData.organization,
+                    });
+                    if (value === "individual") {
+                      setSelectedOption(null);
+                    }
+                  }}
+                  
+                  className="accent-blue-500"
+                />
+                <span className="text-gray-700">Organization</span>
+              </label>
+            </div>
+          </div>
+
           {/* Organization */}
           <div className="relative w-full">
             <AsyncSelect
               loadOptions={loadOrganization}
               defaultOptions
+              isDisabled={formData.account_type === "individual"}   // ✅ KEY LINE
+              value={
+                formData.account_type === "individual" ? null : selectedOption
+              }
               onChange={(selected) => {
                 setSelectedOption(selected);
                 setFormData({
                   ...formData,
-                  organization: selected?.value,
+                  organization: selected?.value || "",
                 });
               }}
               placeholder={
-                <div>
-                  Select or search for an Organisation{" "}
-                  <span className="text-red-500">*</span>
+                <div className="flex items-center gap-1">
+                  Select or search for an Organisation
+                  {formData.account_type !== "individual" && (
+                    <span className="text-red-500">*</span>
+                  )}
                 </div>
               }
               classNamePrefix="react-select"
@@ -300,7 +385,12 @@ const RegistrationForm = () => {
                   height: "50px",
                   borderRadius: "6px",
                   borderColor: "#D1D5DB",
-                  boxShadow: "none",
+                  backgroundColor:
+                    formData.account_type === "individual" ? "#f3f4f6" : "white", // greyed
+                  cursor:
+                    formData.account_type === "individual"
+                      ? "not-allowed"
+                      : "default",
                 }),
                 placeholder: (provided) => ({
                   ...provided,
@@ -322,20 +412,6 @@ const RegistrationForm = () => {
             />
           </div>
 
-          {selectedOption?.value === "others" && (
-            <input
-              type="text"
-              placeholder="Enter organization name"
-              required
-              className="w-full mt-2 rounded border border-gray-300 pl-3 pr-3 py-2 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
-              value={
-                formData.organization === "others" ? "" : formData.organization
-              }
-              onChange={(e) =>
-                setFormData({ ...formData, organization: e.target.value })
-              }
-            />
-          )}
 
           <div className="grid grid-cols-2 gap-4">
             {/* Password Field */}
@@ -409,6 +485,8 @@ const RegistrationForm = () => {
               )}
             </div>
           </div>
+
+
 
           <div className="flex justify-center mt-6">
             <button
