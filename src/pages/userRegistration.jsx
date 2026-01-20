@@ -38,6 +38,9 @@ const RegistrationForm = () => {
   const [errors, setErrors] = useState({});
 
   const loadOrganization = async () => {
+
+    console.log("org")
+    console.log(process.env.REACT_APP_BASEURL)
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations`,
@@ -124,16 +127,17 @@ const RegistrationForm = () => {
       setErrors(validationErrors);
     } else {
       const registrationData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        password_confirm: formData.password_confirm,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        contact_number: formData.contact_number,
-        organization: formData.organization,
-        account_type: formData.account_type,
-      };
+  username: formData.username,
+  email: formData.email,
+  password: formData.password,
+  password_confirm: formData.password_confirm,
+  first_name: formData.first_name,
+  last_name: formData.last_name,
+  contact_number: formData.contact_number,
+  account_type: formData.account_type,
+  ...(formData.organization && { organization: formData.organization }),
+};
+
       console.log(registrationData)
       try {
         const token = sessionStorage.getItem("accessToken");
