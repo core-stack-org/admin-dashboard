@@ -11,8 +11,10 @@ import {
   DialogTitle,
   DialogContent,
   Button,
+ Menu,
+ Switch
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete"; // ✅ FIX
+import DeleteIcon from "@mui/icons-material/Delete"; 
 import FilterListIcon from "@mui/icons-material/FilterList";
 import {
   Edit2,
@@ -21,6 +23,7 @@ import {
   Upload,
   FilePlus,
   ArrowLeftCircle,
+  Settings
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Vector as VectorSource } from "ol/source";
@@ -46,6 +49,18 @@ const AllProjects = ({ statesList,currentUser }) => {
 const [openWBDialog, setOpenWBDialog] = useState(false);
 const [selectedWBProject, setSelectedWBProject] = useState(null);
 const [selectedWBFiles, setSelectedWBFiles] = useState([]);
+const [openWBComputeDialog, setOpenWBComputeDialog] = useState(false);
+const [selectedWBComputeProject, setSelectedWBComputeProject] = useState(null);
+const [computeFiles, setComputeFiles] = useState([]);
+const [isClosestWP, setIsClosestWP] = useState(true);
+const [geeAccounts, setGeeAccounts] = useState([]);
+const [selectedGEEAccount, setSelectedGEEAccount] = useState("");
+
+const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
+const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
+
+
+
 
 
 
@@ -111,6 +126,36 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
 
     fetchProjects();
   }, []);
+
+    useEffect(() => {
+      const fetchGEEAccounts = async () => {
+        const token = sessionStorage.getItem("accessToken");
+        try {
+          const response = await fetch(
+            `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "420",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = await response.json();
+          setGeeAccounts(data);
+        } catch (error) {
+          console.error("Error fetching GEE accounts:", error);
+        }
+      };
+  
+      fetchGEEAccounts();
+    }, []);
+
+    const handleGEEAccountChange = (e) => {
+      setSelectedGEEAccount(e.target.value);
+    };
+    
 
   // memoized filter lists
   const appTypes = useMemo(
@@ -451,9 +496,108 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
       });
     }
   };
+
+  const handleOpenSettings = (e, project) => {
+    setSelectedSettingsProject(project);
+    setSettingsMenuAnchor(e.currentTarget);
+  };
+  
+  const handleCloseSettings = () => {
+    setSettingsMenuAnchor(null);
+    setSelectedSettingsProject(null);
+  };
   
   
 
+  const handleToggleStatus = async () => {
+    if (!selectedSettingsProject) return;
+  
+    const newStatus = selectedSettingsProject.status === "Active" ? "Inactive" : "Active";
+  
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedSettingsProject.id}/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+  
+      // locally update UI
+      setProjects(prev =>
+        prev.map(p =>
+          p.id === selectedSettingsProject.id ? { ...p, status: newStatus } : p
+        )
+      );
+  
+      setSelectedSettingsProject(prev => ({
+        ...prev,
+        status: newStatus,
+      }));
+    } catch (err) {
+      alert("Failed to update status.");
+    }
+  };
+
+  const handleOpenWBCompute = (project) => {
+    setSelectedWBComputeProject(project);
+    setComputeFiles([]);
+    setIsClosestWP(true);
+    setOpenWBComputeDialog(true);
+  };
+
+  const handleComputeFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const valid = files.filter(
+      (f) => f.name.endsWith(".xlsx") || f.name.endsWith(".xls")
+    );
+  
+    if (!valid.length) return alert("Please upload valid Excel files");
+    setComputeFiles(valid);
+  };
+  
+  const handleRemoveComputeFile = (index) => {
+    setComputeFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleComputeWaterbody = async () => {
+    if (!computeFiles.length) return alert("Please select an Excel file!");
+  
+    const formData = new FormData();
+    computeFiles.forEach((f) => formData.append("files", f));
+    formData.append("project_id", selectedWBComputeProject.id);
+    formData.append("gee_account_id", 1);
+    formData.append("is_closest_wp", isClosestWP);
+    formData.append("is_processing_required", true);
+    formData.append("is_lulc_required", true);
+  
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBComputeProject.id}/waterrejuvenation/compute/`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+  
+      if (!res.ok) throw new Error("Compute failed");
+  
+      alert("Compute started successfully!");
+      setOpenWBComputeDialog(false);
+    } catch (err) {
+      alert("Failed to initiate compute");
+    }
+  };
+  
+  
+  
   return (
     <Box>
       <div className="h-screen flex flex-col">
@@ -470,10 +614,7 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
           </h1>
 
           {/* Clear All Filters */}
-          <span
-            onClick={clearAllFilters}
-            className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium"
-          >
+          <span onClick={clearAllFilters} className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium">
             Clear All Filters
           </span>
         </div>
@@ -625,7 +766,8 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                           )}
                           {/* Waterbody */}
                           {p.app_type === "waterbody" && isSuperAdmin && (
-                            <Tooltip title="Upload Excel">
+                            <>
+                                    <Tooltip title="Upload Excel">
                               <IconButton
                                 size="small"
                                 sx={{
@@ -640,6 +782,26 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                                 <Upload size={24} />
                               </IconButton>
                             </Tooltip>
+                            <Tooltip title="Compute">
+  <IconButton
+    size="small"
+    sx={{
+      color: "#059669",
+      "&:hover": {
+        color: "#047857",
+        backgroundColor: "rgba(5,150,105,0.1)",
+      },
+    }}
+    onClick={() => handleOpenWBCompute(p)}
+  >
+    <FilePlus size={24} />   {/* OR choose Hammer/Wrench if you want */}
+  </IconButton>
+</Tooltip>
+
+                            </>
+                    
+
+                            
                           )}
 
 
@@ -716,6 +878,26 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                                 </IconButton>
                               </Tooltip>
                             )}
+                          {(p.app_type === "plantation" || p.app_type === "waterbody") && isSuperAdmin  && (
+                              <Tooltip title="Project Settings">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#6b7280", // gray
+                                    "&:hover": {
+                                      color: "#374151",
+                                      backgroundColor: "rgba(107,114,128,0.1)",
+                                    },
+                                  }}
+                                  onClick={(e) => handleOpenSettings(e, p)}
+
+                                >
+                                  <Settings size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
+
                         </td>
                       </tr>
                     ))
@@ -837,6 +1019,41 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
               ))}
         </Box>
       </Popover>
+      <Menu
+  anchorEl={settingsMenuAnchor}
+  open={Boolean(settingsMenuAnchor)}
+  onClose={handleCloseSettings}
+  anchorOrigin={{
+    vertical: "bottom",
+    horizontal: "right",
+  }}
+  transformOrigin={{
+    vertical: "top",
+    horizontal: "right",
+  }}
+  PaperProps={{
+    elevation: 3,
+    sx: { borderRadius: 2, minWidth: 220 }
+  }}
+>
+  <MenuItem disabled sx={{ fontWeight: 600 }}>
+    {selectedSettingsProject?.name}
+  </MenuItem>
+
+  <MenuItem sx={{ display: "flex", justifyContent: "space-between" }}>
+    <span className="text-gray-700 text-sm">Enabled</span>
+    <Switch
+      checked={(selectedSettingsProject?.status ?? "Active") === "Active"}
+      onChange={() => handleToggleStatus()}
+      color="primary"
+    />
+  </MenuItem>
+</Menu>
+
+
+
+
+
 
       <Dialog
   open={openCEDialog}
@@ -961,6 +1178,101 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
     </Box>
   </DialogContent>
 </Dialog>
+
+<Dialog
+  open={openWBComputeDialog}
+  onClose={() => setOpenWBComputeDialog(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    Compute Waterbody – {selectedWBComputeProject?.name}
+  </DialogTitle>
+
+  <DialogContent>
+    <Box display="flex" flexDirection="column" gap={2}>
+      {/* Upload */}
+      <input
+        id="wb-compute-upload"
+        type="file"
+        accept=".xls,.xlsx"
+        multiple
+        hidden
+        onChange={handleComputeFileSelect}
+      />
+
+      <label htmlFor="wb-compute-upload">
+        <Box className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50">
+          Select Excel Files
+        </Box>
+      </label>
+
+      {/* Selected Files */}
+      {computeFiles.length > 0 && (
+        <Box className="bg-gray-100 p-3 rounded-lg">
+          {computeFiles.map((f, i) => (
+            <Box
+              key={i}
+              className="flex justify-between items-center p-2 border-b last:border-none"
+            >
+              {f.name}
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleRemoveComputeFile(i)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Toggle */}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <span>Use Closest WP</span>
+        <Switch
+          checked={isClosestWP}
+          onChange={() => setIsClosestWP(!isClosestWP)}
+        />
+      </Box>
+
+      {/* Select GEE Account */}
+      <Box display="flex" flexDirection="column" gap={1}>
+        <label className="text-lg font-semibold mb-1">
+          Select GEE Account:
+        </label>
+
+        <select
+          value={selectedGEEAccount}
+          onChange={handleGEEAccountChange}
+          className="w-full px-4 py-2 border text-lg rounded-lg"
+        >
+          <option value="">Select GEE Account</option>
+          {Array.isArray(geeAccounts) &&
+            geeAccounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+        </select>
+      </Box>
+
+
+      {/* Compute */}
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        disabled={!computeFiles.length}
+        onClick={handleComputeWaterbody}
+      >
+        Compute
+      </Button>
+    </Box>
+  </DialogContent>
+</Dialog>
+
 
 
     </Box>
