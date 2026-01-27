@@ -1,0 +1,258 @@
+{
+  "title": "Cropping Pattern Form",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Form submitted.</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "html",
+          "name": "crop_note_1",
+          "title": "",
+          "html": "<span style=\"font-size: large; color:red\">Note : Please provide information for crop patch on land owned by people in this settlement\n</span>"
+        },
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "Uncropped_barren_land",
+          "title": "Is this patch classified as uncropped or barren land?",
+          "isRequired": true,
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_widgets",
+          "visibleIf": "{Uncropped_barren_land} = 'No'",
+          "title": "What is the main source of irrigation in this patch of the settlement?",
+          "choices": [
+            "Rainfall",
+            "Well",
+            "Borewell",
+            "Canal",
+            "Pond",
+            {
+              "value": "don't_know",
+              "text": "Don't know"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "select_one_classified",
+          "visibleIf": "{Uncropped_barren_land} = 'No'",
+          "title": "What is this land classified as?",
+          "choices": [
+            "Upland",
+            "Midland",
+            {
+              "value": "lowland",
+              "text": "Lowland"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "select_one_practice",
+          "visibleIf": "{Uncropped_barren_land} = 'No'",
+          "title": "Which cropping seasons do you practice in this settlement?",
+          "isRequired": true,
+          "choices": [
+            "Kharif",
+            "Rabi",
+            "Zaid"
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_cropping_kharif",
+          "visibleIf": "{select_one_practice} contains 'Kharif'",
+          "title": "What are the main crops grown during Kharif season in this patch?",
+          "choices": [
+            {
+              "value": "paddy",
+              "text": "Paddy"
+            },
+            "Millets",
+            "Pulses",
+            "Vegetables",
+            "Fruits",
+            {
+              "value": "Oil_Seeds",
+              "text": "Oil Seeds"
+            },
+            {
+              "value": "Fodder_crop",
+              "text": "Fodder crop"
+            },
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_multiple_cropping_kharif_other",
+          "visibleIf": "{select_multiple_cropping_kharif} allof ['other']",
+          "title": "Specify other."
+        },
+        {
+          "type": "text",
+          "name": "total_area_cultivation_kharif",
+          "visibleIf": "{select_one_practice} contains 'Kharif'",
+          "title": "Total area under cultivation during the Kharif season",
+          "description": "In acres",
+          "validators": [
+            {
+              "type": "numeric"
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_cropping_Rabi",
+          "visibleIf": "{select_one_practice} contains 'Rabi'",
+          "title": "What are the main crops grown during Rabi season in this patch?\n",
+          "choices": [
+            {
+              "value": "paddy",
+              "text": "Paddy"
+            },
+            "Millets",
+            "Pulses",
+            "Vegetables",
+            "Fruits",
+            {
+              "value": "Oil_Seeds",
+              "text": "Oil Seeds"
+            },
+            {
+              "value": "Fodder_crop",
+              "text": "Fodder crop"
+            },
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_multiple_cropping_Rabi_other",
+          "visibleIf": "{select_multiple_cropping_Rabi} allof ['other']",
+          "title": "Specify other."
+        },
+        {
+          "type": "text",
+          "name": "total_area_cultivation_Rabi",
+          "visibleIf": "{select_one_practice} contains 'Rabi'",
+          "title": "Total area under cultivation during the Rabi season",
+          "description": "In acres",
+          "validators": [
+            {
+              "type": "numeric"
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_cropping_Zaid",
+          "visibleIf": "{select_one_practice} contains 'Zaid'",
+          "title": "What are the main crops grown during Zaid season in this patch?",
+          "choices": [
+            {
+              "value": "paddy",
+              "text": "Paddy"
+            },
+            "Millets",
+            "Pulses",
+            "Vegetables",
+            "Fruits",
+            {
+              "value": "Oil_Seeds",
+              "text": "Oil Seeds"
+            },
+            {
+              "value": "Fodder_crop",
+              "text": "Fodder crop"
+            },
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_multiple_cropping_Zaid_other",
+          "visibleIf": "{select_multiple_cropping_Zaid} allof ['other']",
+          "title": "Specify other."
+        },
+        {
+          "type": "text",
+          "name": "total_area_cultivation_Zaid",
+          "visibleIf": "{select_one_practice} contains 'Zaid'",
+          "title": "Total area under cultivation during the Zaid season",
+          "description": "In acres",
+          "validators": [
+            {
+              "type": "numeric"
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_productivity",
+          "visibleIf": "{Uncropped_barren_land} = 'No'",
+          "title": "How has cropping intensity changed over the last 3 years?",
+          "isRequired": true,
+          "choices": [
+            "Increased",
+            "Decreased",
+            "Remain Same"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "soil_degraded",
+          "visibleIf": "{Uncropped_barren_land} = 'No'",
+          "title": "Has the soil degraded over the last 3 years in this patch?",
+          "isRequired": true,
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "select_one_reason_degradation",
+          "visibleIf": "{soil_degraded} = 'Yes'",
+          "title": "If degraded, what are the reasons for degradation?",
+          "isRequired": true,
+          "choices": [
+            "Overuse of fertilizers",
+            "Heavy rains causing erosion",
+            "Deforestation",
+            "Overgrazing",
+            "Urbanization"
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

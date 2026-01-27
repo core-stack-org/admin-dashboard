@@ -1,0 +1,430 @@
+{
+  "title": "Propose New Recharge Structure",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Form submitted.</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "demand_type",
+          "title": "Type of demand",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Community_demand",
+              "text": "Community Demand"
+            },
+            {
+              "value": "Individual_demand",
+              "text": "Individual Demand"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Name",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's Name",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_gender",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Gender",
+          "isRequired": true,
+          "choices": [
+            "Male",
+            "Female"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "ben_father",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's father's name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Contact_Number",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Beneficiary's Contact Number",
+          "validators": [
+            {
+              "type": "regex",
+              "text": "Enter a phone number (format: 9876543210)",
+              "regex": "^(\\+?91[ -]?)?0?[6-9][0-9]{2}[ -]?[0-9]{3}[ -]?[0-9]{4}$"
+            }
+          ],
+          "inputType": "tel"
+        },
+        {
+          "type": "text",
+          "name": "khasra",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": "Provide khasra number"
+        },
+        {
+          "type": "radiogroup",
+          "name": "TYPE_OF_WORK_ID",
+          "title": "Select the work demand required for recharge in the settlement",
+          "isRequired": true,
+          "choices": [
+            "Check dam",
+            "Percolation tank",
+            "Earthen gully plug",
+            "Drainage/soakage channels",
+            "Recharge pits",
+            "Soakage pits",
+            "Trench cum bund network",
+            "Continuous contour trenches (CCT)",
+            "Staggered Contour trenches (SCT)",
+            "Water absorption trenches (WAT)",
+            {
+              "value": "Loose boulder structure",
+              "text": "Loose Boulder Structure"
+            },
+            "Rock fill dam",
+            "Stone bunding",
+            "Diversion drains",
+            "Bunding:Contour bunds/ graded bunds",
+            "5% model structure",
+            "30-40 model structure"
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Check_dam",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Check dam'",
+          "title": "Provide dimensions for Check dam  (Length, Width and Height is in feet)",
+          "items": [
+            {
+              "name": "Length_1",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_1",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Height_1",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Percolation_tank",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Percolation tank'",
+          "title": "Provide dimensions for Percolation tank (Length, Width and Height is in feet)",
+          "items": [
+            {
+              "name": "Length_2",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_2",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_2",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Earthen_gully_plug",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Earthen gully plug'",
+          "title": "Provide dimensions for Earthen gully plug (Length, Width and Height is in feet)",
+          "items": [
+            {
+              "name": "Length_3",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_3",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Breadth_3",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Drainage_channels",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Drainage/soakage channels'",
+          "title": "Provide dimensions Drainage/Soakage channels (Depth and Width is in feet)",
+          "items": [
+            {
+              "name": "Width_4",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_4",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Recharge_pits",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Recharge pits'",
+          "title": "Provide dimensions recharge pits ( Length, Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Length_5",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_5",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_5",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Soakage_pits",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Soakage pits'",
+          "title": "Provide dimensions soakage pits ( Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Width_6",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_6",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Trench_cum_bund_network",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Trench cum bund network'",
+          "title": "Provide dimensions trench cum bund network ( Length, Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Length_7",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_7",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_7",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Continuous_contour_trenches",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Continuous contour trenches (CCT)'",
+          "title": "Provide dimensions for Continuous contour trenches (CCT) ( Length, Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Length_8",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_8",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_8",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Staggered_contour_trenches",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Staggered Contour trenches (SCT)'",
+          "title": "Provide dimensions for Staggered Contour trenches(SCT) ( Length, Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Length_9",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_9",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_9",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Water_absorption_trenches",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Water absorption trenches (WAT)'",
+          "title": "Provide dimensions for Water absorption trenches(WAT) ( Length, Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Length_10",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_10",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_10",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Loose_boulder_structure",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Loose boulder structure'",
+          "title": "Provide dimensions for Loose boulder structure ( Length and Width is in feet )",
+          "items": [
+            {
+              "name": "Length_11",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_11",
+              "title": "Provide dimensions- Width"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Rock_fill_dam",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Rock fill dam'",
+          "title": "Provide dimensions for Rock fill dam ( Width and Height is in feet )",
+          "items": [
+            {
+              "name": "Width_12",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Height_12",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Model_structure1",
+          "visibleIf": "{TYPE_OF_WORK_ID} = '5% model structure'",
+          "title": "Provide dimensions of 5% model structure ( Length, breadth and Height is in feet )",
+          "items": [
+            {
+              "name": "Length_13",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Breadth_13",
+              "title": "Provide dimensions- breadth"
+            },
+            {
+              "name": "Height_13",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Model_structure2",
+          "visibleIf": "{TYPE_OF_WORK_ID} = '30-40 model structure'",
+          "title": "Provide dimensions 30-40 model structure ( Length, Breadth and Height is in feet )",
+          "items": [
+            {
+              "name": "Length_14",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Breadth_14",
+              "title": "Provide dimensions -breadth"
+            },
+            {
+              "name": "Height_14",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Stone_bunding",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Stone bunding'",
+          "title": "Provide dimensions for Stone bunding ( Length, Width and Height is in feet )",
+          "items": [
+            {
+              "name": "Length_15",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_15",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Height_15",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Diversion_drains",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Diversion drains'",
+          "title": "Provide dimensions for Diversion drains ( Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Width_16",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Depth_16",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Bunding",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Bunding:Contour bunds/ graded bunds'",
+          "title": "Provide dimensions for Bunding:Contour bunds/ graded bunds ( Length, Width and Height is in feet )",
+          "items": [
+            {
+              "name": "Width_17",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Depth_17",
+              "title": "Provide dimensions- Width"
+            },
+            {
+              "name": "Height_17",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

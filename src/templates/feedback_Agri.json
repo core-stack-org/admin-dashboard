@@ -1,0 +1,412 @@
+{
+  "title": "Agri Analysis Feedback Form",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Agricultural Analysis Form Submitted Successfully!</h3>",
+  "loadingHtml": "<h3>Loading Agricultural Analysis Form...</h3>",
+  "pages": [
+    {
+      "name": "agri_analysis_page",
+      "elements": [
+        {
+          "type": "html",
+          "name": "form_description",
+          "html": "<p><strong>Please fill out the feedback form as per your past experiences and observations for this farmland</strong></p><p><span style=\"color: #666;\">कृपया इस कृषि भूमि के लिए अपने पिछले अनुभवों और ऑब्जर्वेशन के आधार पर फीडबैक फॉर्म भरें</span></p>"
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_crop_pixel",
+          "title": "Is this a crop pixel?",
+          "choices": [
+            {
+              "value": "Yes",
+              "text": "Yes"
+            },
+            {
+              "value": "No",
+              "text": "No"
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_land_pixel",
+          "visibleIf": "{select_one_crop_pixel} = 'No'",
+          "title": "What is the Land use on this pixel",
+          "choices": [
+            {
+              "value": "Forest Land",
+              "text": "Forest Land "
+            },
+            {
+              "value": "Barren Land",
+              "text": "Barren Land"
+            },
+            {
+              "value": "Grassland/Pasture",
+              "text": "Grassland/Pasture"
+            },
+            {
+              "value": "Wetland",
+              "text": "Wetland"
+            },
+            {
+              "value": "Protected Area (National Park/Reserve)",
+              "text": "Protected Area (National Park/Reserve)"
+            },
+            {
+              "value": "Mining Area",
+              "text": "Mining Area / खनन क्षेत्र"
+            },
+            {
+              "value": "Commercial Land",
+              "text": "Commercial Land / व्यावसायिक भूमि"
+            },
+            {
+              "value": "Floodplain",
+              "text": "Floodplain / बाढ़ का मैदान"
+            },
+            {
+              "value": "Scrubland",
+              "text": "Scrubland / झाड़ीदार भूमि"
+            },
+            {
+              "value": "Coastal/Marine Area",
+              "text": "Coastal/Marine Area / तटीय/समुद्री क्षेत्र"
+            },
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ],
+          "showOtherItem": true,
+          "otherText": "Specify other"
+        },
+        {
+          "type": "panel",
+          "name": "crop_analysis_panel",
+          "visibleIf": "{select_one_crop_pixel} = 'Yes'",
+          "title": "Crop Analysis",
+          "elements": [
+            {
+              "type": "checkbox",
+              "name": "select_multiple_kharif_crop",
+              "title": "What are the different cropping patterns typically practiced as main crops on such lands during the Kharif season in this grid",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Paddy",
+                  "text": "Paddy"
+                },
+                {
+                  "value": "Millets",
+                  "text": "Millets"
+                },
+                {
+                  "value": "Pulses",
+                  "text": "Pulses"
+                },
+                {
+                  "value": "Vegetables",
+                  "text": "Vegetables"
+                },
+                {
+                  "value": "Fruits",
+                  "text": "Fruits"
+                },
+                {
+                  "value": "Oil_seeds",
+                  "text": "Oil seeds"
+                },
+                {
+                  "value": "Fodder_crop",
+                  "text": "Fodder crop"
+                },
+                {
+                  "value": "Fallow",
+                  "text": "Fallow"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ],
+              "showOtherItem": true,
+              "otherText": "Specify other"
+            },
+            {
+              "type": "checkbox",
+              "name": "select_multiple_rabi_crop",
+              "title": "What are the different cropping patterns typically practiced as main crops on such lands during the Rabi season in this grid",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Paddy",
+                  "text": "Paddy"
+                },
+                {
+                  "value": "Millets",
+                  "text": "Millets"
+                },
+                {
+                  "value": "Pulses",
+                  "text": "Pulses"
+                },
+                {
+                  "value": "Vegetables",
+                  "text": "Vegetables"
+                },
+                {
+                  "value": "Fruits",
+                  "text": "Fruits"
+                },
+                {
+                  "value": "Oil_seeds",
+                  "text": "Oil seeds"
+                },
+                {
+                  "value": "Fodder_crop",
+                  "text": "Fodder crop"
+                },
+                {
+                  "value": "Fallow",
+                  "text": "Fallow"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ],
+              "showOtherItem": true,
+              "otherText": "Specify other"
+            },
+            {
+              "type": "checkbox",
+              "name": "select_multiple_zaid_crop",
+              "title": "What are the different cropping patterns typically practiced as main crops on such lands during the Zaid season in this grid",
+              "choices": [
+                {
+                  "value": "Paddy",
+                  "text": "Paddy"
+                },
+                {
+                  "value": "Millets",
+                  "text": "Millets"
+                },
+                {
+                  "value": "Pulses",
+                  "text": "Pulses"
+                },
+                {
+                  "value": "Vegetables",
+                  "text": "Vegetables"
+                },
+                {
+                  "value": "Fruits",
+                  "text": "Fruits"
+                },
+                {
+                  "value": "Oil_seeds",
+                  "text": "Oil seeds"
+                },
+                {
+                  "value": "Fodder_crop",
+                  "text": "Fodder crop"
+                },
+                {
+                  "value": "Fallow",
+                  "text": "Fallow"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ],
+              "showOtherItem": true,
+              "otherText": "Specify other"
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "farming_practices_panel",
+          "title": "Farming Practices",
+          "elements": [
+            {
+              "type": "radiogroup",
+              "name": "select_one_cropping_cycles",
+              "title": "How many cropping cycles are followed in a year on this farm land",
+              "choices": [
+                {
+                  "value": "Single",
+                  "text": "Single"
+                },
+                {
+                  "value": "Double",
+                  "text": "Double"
+                },
+                {
+                  "value": "Triple",
+                  "text": "Triple"
+                }
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "select_one_farm_land_primarily",
+              "title": "Is this farm land primarily",
+              "choices": [
+                {
+                  "value": "Rainfed",
+                  "text": "Rainfed"
+                },
+                {
+                  "value": "Irrigated",
+                  "text": "Irrigated"
+                }
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "select_one_fertilizer",
+              "title": "What types of fertilizers are used on this farmland?",
+              "choices": [
+                {
+                  "value": "Organic",
+                  "text": "Organic"
+                },
+                {
+                  "value": "Chemical",
+                  "text": "Chemical"
+                },
+                {
+                  "value": "Both",
+                  "text": "Both"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "yield_and_changes_panel",
+          "title": "Yield and Pattern Changes",
+          "elements": [
+            {
+              "type": "radiogroup",
+              "name": "select_one_yield_changes",
+              "title": "Has the crop yield (in quintals per hectare) changed over the past five years?",
+              "choices": [
+                {
+                  "value": "Yield has increased",
+                  "text": "Yield has increased"
+                },
+                {
+                  "value": "Yield has decreased",
+                  "text": "Yield has decreased"
+                },
+                {
+                  "value": "No change",
+                  "text": "No change"
+                }
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "select_one_cropping_patterns_changes",
+              "title": "Have there been any notable changes in cropping patterns in the grid over the past five years?",
+              "choices": [
+                {
+                  "value": "Yes, switched to drought-resistant crops",
+                  "text": "Yes, switched to drought-resistant crops"
+                },
+                {
+                  "value": "Yes, switched to high-yield crops",
+                  "text": "Yes, switched to high-yield crops"
+                },
+                {
+                  "value": "Yes, switched to cash crops",
+                  "text": "Yes, switched to cash crops"
+                },
+                {
+                  "value": "Yes, diversified crops (growing a wider variety)",
+                  "text": "Yes, diversified crops (growing a wider variety)"
+                },
+                {
+                  "value": "No, cropping patterns have remained the same",
+                  "text": "No, cropping patterns have remained the same"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "rainfall_and_drought_panel",
+          "title": "Rainfall and Drought Analysis",
+          "elements": [
+            {
+              "type": "checkbox",
+              "name": "poor_rainfall_years",
+              "title": "Which of these years were poor rainfall years",
+              "choices": [
+                "2017",
+                "2018",
+                "2019",
+                "2020",
+                "2021",
+                "2022",
+                "2023"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "select_one_week_drought",
+              "title": "How many weeks did the most recent drought last in your area?",
+              "choices": [
+                {
+                  "value": "Less than 2 weeks",
+                  "text": "Less than 2 weeks"
+                },
+                {
+                  "value": "2-4 weeks",
+                  "text": "2-4 weeks"
+                },
+                {
+                  "value": "4-6 weeks",
+                  "text": "4-6 weeks"
+                },
+                {
+                  "value": "6-8 weeks",
+                  "text": "6-8 weeks"
+                },
+                {
+                  "value": "More than 8 weeks",
+                  "text": "More than 8 weeks"
+                }
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "select_one_crop_production_failed",
+              "title": "What percentage of the community's overall crop production failed during the most recent drought?",
+              "choices": [
+                {
+                  "value": "Less than 10%",
+                  "text": "Less than 10%"
+                },
+                "10-30%",
+                "30-50%",
+                {
+                  "value": "More than 50%",
+                  "text": "More than 50%"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

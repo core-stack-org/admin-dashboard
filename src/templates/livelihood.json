@@ -1,0 +1,286 @@
+{
+  "title": "Livelihood Details Form",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Livelihood Details have been recorded!</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement"
+        },
+        {
+          "type": "panel",
+          "name": "panel1",
+          "title": "Livestock",
+          "elements": [
+            {
+              "type": "radiogroup",
+              "name": "Livestock-is_demand_livestock",
+              "title": "Are there demands for promoting livestock in the settlement?",
+              "isRequired": true,
+              "choices": [
+                "Yes",
+                "No"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Livestock-livestock_demand",
+              "visibleIf": "{Livestock-is_demand_livestock} = 'Yes'",
+              "title": "Type of demand",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Community_demand",
+                  "text": "Community Demand"
+                },
+                {
+                  "value": "Individual_demand",
+                  "text": "Individual Demand"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "Livestock-ben_livestock",
+              "visibleIf": "{Livestock-livestock_demand} = 'Individual_demand'",
+              "title": "Beneficiary's Name",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "Livestock-gender_livestock",
+              "visibleIf": "{Livestock-livestock_demand} = 'Individual_demand'",
+              "title": "Gender",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "male",
+                  "text": "Male"
+                },
+                {
+                  "value": "female",
+                  "text": "Female"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "Livestock-ben_father_livestock",
+              "visibleIf": "{Livestock-livestock_demand} = 'Individual_demand'",
+              "title": "Beneficiary's father's name",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "Livestock-demands_promoting_livestock",
+              "visibleIf": "{Livestock-livestock_demand} = 'Individual_demand' or {Livestock-livestock_demand} = 'Community_demand'",
+              "title": "Select all the demands for promoting livestock development",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "poultry_shelter",
+                  "text": "Poultry shelter"
+                },
+                {
+                  "value": "goat_shelter",
+                  "text": "Goat shelter"
+                },
+                {
+                  "value": "piggery_shelter",
+                  "text": "Piggery shelter"
+                },
+                {
+                  "value": "cattle_shelter",
+                  "text": "Cattle shelter"
+                },
+                {
+                  "value": "fodder_troughts_for_cattle",
+                  "text": "Fodder troughts for cattle"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "Livestock-select_one_promoting_livestock_other",
+              "visibleIf": "{Livestock-demands_promoting_livestock} = 'other'",
+              "title": "Specify other."
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "panel2",
+          "title": "Kitchen Gardens",
+          "elements": [
+            {
+              "type": "radiogroup",
+              "name": "kitchen_gardens-assets_kg",
+              "title": "Are there demands for promoting Kitchen Gardens / Didi Badi / Poshan Vatika as Individual assets in the settlement",
+              "choices": [
+                "Yes",
+                "No"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "kitchen_gardens-demand_type_kitchen_garden",
+              "visibleIf": "{kitchen_gardens-assets_kg} = 'Yes'",
+              "title": "Type of demand",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Community_demand",
+                  "text": "Community Demand"
+                },
+                {
+                  "value": "Individual_demand",
+                  "text": "Individual Demand"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "kitchen_gardens-ben_kitchen_gardens",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand'",
+              "title": "Beneficiary's Name",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "kitchen_gardens-gender_kitchen_gardens",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand'",
+              "title": "Gender\n",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "male",
+                  "text": "Male"
+                },
+                {
+                  "value": "female",
+                  "text": "Female"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "kitchen_gardens-ben_father_kitchen_gardens",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand'",
+              "title": "Beneficiary's father's name",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "kitchen_gardens-area_kg",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Community_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand'",
+              "title": "Total area for kitchen gardens/ Didi Badi / Poshan Vatika (Acres)",
+              "isRequired": true
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "panel3",
+          "title": "Fisheries",
+          "elements": [
+            {
+              "type": "radiogroup",
+              "name": "fisheries-is_demand_fisheries",
+              "title": "Are there demands for promoting fisheries in the settlement?",
+              "choices": [
+                "Yes",
+                "No"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "fisheries-demand_type_fisheries",
+              "visibleIf": "{fisheries-is_demand_fisheries} = 'Yes'",
+              "title": "Type of demand",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Community_demand",
+                  "text": "Community Demand"
+                },
+                {
+                  "value": "Individual_demand",
+                  "text": "Individual Demand"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "fisheries-ben_fisheries",
+              "visibleIf": "{fisheries-demand_type_fisheries} = 'Individual_demand'",
+              "title": "Beneficiary's Name",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "fisheries-gender_fisheries",
+              "visibleIf": "{fisheries-demand_type_fisheries} = 'Individual_demand'",
+              "title": "Gender",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "male",
+                  "text": "Male"
+                },
+                {
+                  "value": "female",
+                  "text": "Female"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "fisheries-ben_father_fisheries",
+              "visibleIf": "{fisheries-demand_type_fisheries} = 'Individual_demand'",
+              "title": "Beneficiary's father's name",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "fisheries-demands_promoting_fisheries",
+              "visibleIf": "{fisheries-demand_type_fisheries} = 'Community_demand' or {fisheries-demand_type_fisheries} = 'Individual_demand'",
+              "title": "Select all that demands for promoting fisheries in the settlement",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Storage_facilities",
+                  "text": "Storage facilities"
+                },
+                {
+                  "value": "Promotion_of_fisheries_in_seasonal_water_bodies_on_public_land",
+                  "text": "Promotion of fisheries in seasonal water bodies on public land"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "fisheries-demands_promoting_fisheries_other",
+              "visibleIf": "{fisheries-demands_promoting_fisheries} = 'other'",
+              "title": "Specify other."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

@@ -1,0 +1,249 @@
+{
+  "title": "Propose New Irrigation Work",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Irrigation Work has been Proposed !!</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement",
+          "isRequired": true,
+          "validators": [
+            {
+              "type": "regex",
+              "regex": "[a-zA-Z]+"
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "demand_type_irrigation",
+          "title": "Type of demand",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Community_demand",
+              "text": "Community Demand"
+            },
+            {
+              "value": "Individual_demand",
+              "text": "Individual Demand"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Name",
+          "visibleIf": "{demand_type_irrigation} = 'Individual_demand'",
+          "title": "Beneficiary's Name",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "gender",
+          "visibleIf": "{demand_type_irrigation} = 'Individual_demand'",
+          "title": "Gender",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "male",
+              "text": "Male"
+            },
+            {
+              "value": "female",
+              "text": "Female"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "ben_father",
+          "visibleIf": "{demand_type_irrigation} = 'Individual_demand'",
+          "title": "Beneficiary's father's name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_Contact_Number",
+          "visibleIf": "{demand_type_irrigation} = 'Individual_demand'",
+          "title": "Beneficiary's Contact Number",
+          "validators": [
+            {
+              "type": "regex",
+              "text": "Enter a phone number (format: 9876543210)",
+              "regex": "^(?:(?:\\+?91[-\\s]?)|0)?[6-9]\\d{9}$"
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "text",
+          "name": "khasra",
+          "visibleIf": "{demand_type_irrigation} = 'Individual_demand'",
+          "title": "Provide khasra number"
+        },
+        {
+          "type": "radiogroup",
+          "name": "TYPE_OF_WORK_ID",
+          "title": "Select the type of Irrigation work in this settlement",
+          "isRequired": true,
+          "choices": [
+            "Farm pond",
+            "Community Pond",
+            "Well",
+            "Canal",
+            "Farm bund",
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "TYPE_OF_WORK_ID_other",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "multipletext",
+          "name": "Farm_pond",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Farm pond'",
+          "title": "Provide dimensions for Farm pond ( Length, Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Length_1",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_1",
+              "title": "Provide dimensions - Width"
+            },
+            {
+              "name": "Depth_1",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Well",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Well'",
+          "title": "Provide dimensions for well ( Diameter and Depth is in feet )\n",
+          "items": [
+            {
+              "name": "Diameter_2",
+              "title": "Provide dimensions - Diameter"
+            },
+            {
+              "name": "Depth_2",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Canal",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Canal'",
+          "title": "Provide dimensions Canal ( Width and Depth is in feet )",
+          "items": [
+            {
+              "name": "Width_3",
+              "title": "Provide dimensions - Width"
+            },
+            {
+              "name": "Depth_3",
+              "title": "Provide dimensions - Depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Community_pond",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Community Pond'",
+          "title": "Provide dimensions of community pond ( Length, Width and depth is in feet )",
+          "items": [
+            {
+              "name": "Length_4",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_4",
+              "title": "Provide dimensions - Width"
+            },
+            {
+              "name": "Height_4",
+              "title": "Provide dimensions - depth"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Farm_bund",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Farm bund'",
+          "title": "Provide dimensions farm bund ( Length, Width and Height is in feet )",
+          "items": [
+            {
+              "name": "Length_5",
+              "title": "Provide dimensions - Length"
+            },
+            {
+              "name": "Width_5",
+              "title": "Provide dimensions - Width"
+            },
+            {
+              "name": "Height_5",
+              "title": "Provide dimensions - Height"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_cropping_kharif",
+          "title": "What type of crops are grown in Kharif ?",
+          "choices": [
+            "Paddy",
+            "Millets",
+            "Pulses",
+            "Vegetables",
+            "Fruits",
+            {
+              "value": "Oil_Seeds",
+              "text": "Oil Seeds"
+            },
+            {
+              "value": "Fodder_crop",
+              "text": "Fodder crop"
+            },
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_multiple_cropping_kharif_other",
+          "visibleIf": "{select_multiple_cropping_kharif} contains 'other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_cropping_pattern",
+          "title": "What type of cropping pattern is practiced?",
+          "choices": [
+            "Mono cropping",
+            "Inter cropping",
+            "Mixed cropping"
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

@@ -1,0 +1,315 @@
+{
+  "title": "Add Well Form",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Form submitted.</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "well_id",
+          "title": "Well ID",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary's Settlement"
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_well_type",
+          "title": "Well type",
+          "isRequired": true,
+          "choices": [
+            "Hand pump",
+            "Borewell",
+            "Open well",
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_well_type_other",
+          "visibleIf": "{select_one_well_type} = 'other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_y_n",
+          "visibleIf": "{select_one_well_type} = 'Borewell'",
+          "title": "Is the bore well electrified?",
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_owns",
+          "title": "Who owns the well?",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Public well",
+              "text": "Community Well"
+            },
+            "Privately owned",
+            "Shared amongst families"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_name",
+          "visibleIf": "{select_one_owns} = 'Privately owned'",
+          "title": "Beneficiary's name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "ben_father",
+          "visibleIf": "{select_one_owns} = 'Privately owned'",
+          "title": "Beneficiary's father's name",
+          "isRequired": true,
+          "validators": [
+            {
+              "type": "regex",
+              "text": "Letters only",
+              "regex": "^[A-Za-z]+([\\sA-Za-z.'-]+)?$"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Beneficiary_contact_number",
+          "visibleIf": "{select_one_owns} = 'Privately owned'",
+          "title": "Beneficiary's contact number",
+          "validators": [
+            {
+              "type": "regex",
+              "text": "Enter a phone number (format: 9876543210)",
+              "regex": "^(\\+?91[ -]?)?0?[6-9][0-9]{2}[ -]?[0-9]{3}[ -]?[0-9]{4}$"
+            }
+          ],
+          "inputType": "tel"
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_caste_use",
+          "title": "Which caste groups use the well in this settlement?",
+          "isRequired": true,
+          "choices": [
+            "GC",
+            "SC",
+            "ST",
+            "OBC"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_scheme",
+          "title": "Under which scheme were funds made available for the construction of this well in this settlement?",
+          "isRequired": true,
+          "choices": [
+            "MGNREGA",
+            "PM-KUSUM",
+            "PMGSY",
+            "NRLM",
+            "Self funded",
+            "Don't know",
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_scheme_other",
+          "visibleIf": "{select_one_scheme} = 'other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_year",
+          "title": "Until which month of the year is water available in the well, with July as the reference?",
+          "isRequired": true,
+          "choices": [
+            "July",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "June"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "households_benefited",
+          "title": "Total number of households benefited from this well in this settlement?",
+          "isRequired": true,
+          "validators": [
+            {
+              "type": "numeric",
+              "minValue": 0
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "panel",
+          "name": "Well_usage",
+          "title": "Well usage and condition",
+          "elements": [
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-Is_water_from_well_used",
+              "title": "Is the water from the well used",
+              "isRequired": true,
+              "choices": [
+                "Yes",
+                "No"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-select_one_well_used",
+              "visibleIf": "{Well_usage-Is_water_from_well_used} = 'Yes'",
+              "title": "Well used for",
+              "isRequired": true,
+              "choices": [
+                "Irrigation",
+                {
+                  "value": "Domestic Purpose",
+                  "text": "Drinking"
+                },
+                "Both",
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "Well_usage-select_one_well_used_other",
+              "visibleIf": "{Well_usage-select_one_well_used} = 'other'",
+              "title": "Specify other."
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-is_maintenance_required",
+              "title": "Does the well require maintenance?",
+              "isRequired": true,
+              "choices": [
+                "Yes",
+                "No"
+              ]
+            },
+            {
+              "type": "checkbox",
+              "name": "Well_usage-repairs_type",
+              "visibleIf": "{Well_usage-is_maintenance_required} = 'Yes'",
+              "title": "Type of repairs needed in the well",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Repairing_cracks_or_damage_to_the_surface_seal_around_the_well_casing",
+                  "text": "Repairing cracks or damage to the surface seal around the well casing"
+                },
+                {
+                  "value": "Well_rehabilitation_like_Chemical_treatment_removing_material_that_clogs_the_Well",
+                  "text": "Well rehabilitation like Chemical treatment , removing material that clogs the Well"
+                },
+                {
+                  "value": "Repairing_handpumps_or_other_pumping_devices",
+                  "text": "Repairing handpumps or other pumping devices"
+                },
+                {
+                  "value": "Constructing_soil_bunds_around_the_well_to_prevent_surface_runoff",
+                  "text": "Constructing soil bunds/platform around the well to prevent surface runoff"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ],
+              "minSelectedChoices": 1
+            },
+            {
+              "type": "text",
+              "name": "Well_usage-repairs_type_other",
+              "visibleIf": "{Well_usage-repairs_type} anyof ['other']",
+              "title": "Specify other."
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-select_one_change_water_quality",
+              "title": "Have you observed any changes in the water quality (clarity, taste, color) in the past five years?",
+              "choices": [
+                "Significant deterioration (e.g., murky, bad taste, discoloration)",
+                "Minor deterioration (e.g., slight change in clarity or taste)",
+                "No noticeable change",
+                "Minor improvement (e.g., clearer water, better taste)",
+                "Significant improvement (e.g., clear water, restored natural color and taste)"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-select_one_pollutants_groundwater",
+              "title": "Are there any noticeable pollutants or contamination in the groundwater?",
+              "choices": [
+                "Yes, visible pollutants (e.g., oil slick)",
+                "Yes, chemical contamination (e.g., unpleasant odor, unusual color)",
+                "Yes, agricultural runoff (e.g., fertilizers, pesticides)",
+                "No, no noticeable pollutants or contamination",
+                "Unsure/Not sure"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-select_one_water_structure_near_you",
+              "title": "Are there any rainwater harvesting or groundwater recharge structures (e.g., ponds, check dams) near your wells?",
+              "choices": [
+                "Yes",
+                "No"
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-select_one_change_observed",
+              "title": "Changes observed in depth of this well over the past 5 years?",
+              "choices": [
+                {
+                  "value": "Decreasing_levels",
+                  "text": "Decreasing levels"
+                },
+                {
+                  "value": "Increasing_levels",
+                  "text": "Increasing levels"
+                },
+                {
+                  "value": "Not_observed_changes",
+                  "text": "Not observed any changes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}

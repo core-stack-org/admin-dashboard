@@ -1,0 +1,418 @@
+{
+  "title": "Settlement Form",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Form submitted.</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "Settlements_id",
+          "title": "Settlement's ID",
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "Settlements_name",
+          "title": "Settlement's name"
+        },
+        {
+          "type": "text",
+          "name": "number_households",
+          "title": "How many households are there in this settlement?",
+          "isRequired": true,
+          "validators": [
+            {
+              "type": "numeric",
+              "text": "Must be greater than or equal to 1",
+              "minValue": 1
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "text",
+          "name": "count_sc",
+          "title": "Total Households count under SC Category",
+          "isRequired": true,
+          "validators": [
+            {
+              "type": "expression"
+            }
+          ],
+          "inputType": "number",
+          "minErrorText": "The value should not be less than 0.",
+          "maxErrorText": "The value should not be greater than {number_households}"
+        },
+        {
+          "type": "text",
+          "name": "count_st",
+          "title": "Total Households count under ST Category",
+          "isRequired": true,
+          "inputType": "number"
+        },
+        {
+          "type": "text",
+          "name": "count_obc",
+          "title": "Total Households count under OBC Category",
+          "isRequired": true,
+          "inputType": "number"
+        },
+        {
+          "type": "text",
+          "name": "count_general",
+          "title": "Total Households count under General Category",
+          "isRequired": true,
+          "inputType": "number"
+        },
+        {
+          "type": "text",
+          "name": "distance_settlement_block",
+          "title": "Distance of the settlement from the block headquarters",
+          "description": "In kilometers (kms)",
+          "validators": [
+            {
+              "type": "numeric",
+              "minValue": 0
+            }
+          ],
+          "inputType": "number"
+        },
+        {
+          "type": "radiogroup",
+          "name": "road_connected",
+          "title": "Is the settlement connected by road throughout the year?",
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "settlement_electricity",
+          "title": "Does the settlement have access to electricity?",
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "farmer_family",
+          "title": "Number of farmer families based on land ownership in this settlement",
+          "items": [
+            {
+              "name": "landless_farmers",
+              "title": "Number of farmers with no land"
+            },
+            {
+              "name": "marginal_farmers",
+              "title": "Number of farmers with land < 2.5 acres"
+            },
+            {
+              "name": "small_farmers",
+              "title": "Number of farmers with small land holdings (2.5 to 5 acres)"
+            },
+            {
+              "name": "medium_farmers",
+              "title": "Number of farmers with medium land holding (5 to 10 acres)"
+            },
+            {
+              "name": "big_farmers",
+              "title": "Number of farmers with large land holdings (> 10 acres)"
+            }
+          ]
+        },
+        {
+          "type": "multipletext",
+          "name": "Livestock_Census",
+          "title": "Livestock Census in this settlement",
+          "items": [
+            {
+              "name": "Cattle"
+            },
+            {
+              "name": "Goats"
+            },
+            {
+              "name": "Sheep"
+            },
+            {
+              "name": "Poultry"
+            },
+            {
+              "name": "Piggery"
+            },
+            {
+              "name": "Bail",
+              "title": "Ox"
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "MNREGA_INFORMATION",
+          "title": "MGNREGA INFORMATION",
+          "elements": [
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-Households_BPL_cards",
+              "title": "Total number of households with BPL / PDS cards in this settlement",
+              "description": "Cannot exceed the total number of households"
+            },
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-NREGA_applied",
+              "title": "How many households have applied for NREGA Job cards in this settlement?",
+              "validators": [
+                {
+                  "type": "numeric",
+                  "minValue": 0
+                }
+              ],
+              "inputType": "number"
+            },
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-NREGA_have_job_card",
+              "title": "How many households have NREGA job cards in this settlement?",
+              "validators": [
+                {
+                  "type": "numeric",
+                  "minValue": 0
+                }
+              ],
+              "inputType": "number"
+            },
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-NREGA_work_days",
+              "title": "On average, how many work days did a NREGA card holder get in the previous year?",
+              "validators": [
+                {
+                  "type": "numeric",
+                  "minValue": 0
+                }
+              ],
+              "inputType": "number"
+            },
+            {
+              "type": "checkbox",
+              "name": "MNREGA_INFORMATION-reason_low_work",
+              "visibleIf": "{MNREGA_INFORMATION-NREGA_work_days} < 50",
+              "title": "What were the reasons for low work uptake under NREGA?",
+              "choices": [
+                {
+                  "value": "yes, and many demands were fullfilled",
+                  "text": "Migration"
+                },
+                {
+                  "value": "yes, but most of demands were not met",
+                  "text": "Poor wages"
+                },
+                {
+                  "value": "No, did not make demands",
+                  "text": "Saturation of works"
+                },
+                {
+                  "value": "Item 1",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-reason_low_work_other",
+              "visibleIf": "{MNREGA_INFORMATION-reason_low_work} allof ['Item 1']",
+              "title": "Specify other."
+            },
+            {
+              "type": "checkbox",
+              "name": "MNREGA_INFORMATION-work_demands",
+              "title": "What kind of work demands did the settlement proposed in the past ?",
+              "choices": [
+                {
+                  "value": "Farm_pond",
+                  "text": "Farm pond"
+                },
+                "Canal",
+                {
+                  "value": "Check_dam",
+                  "text": "Check dam"
+                },
+                {
+                  "value": "Percolation_tank",
+                  "text": "Percolation Tank"
+                },
+                {
+                  "value": "Earthern_gully_plugs",
+                  "text": "Earthern Gully plugs"
+                },
+                {
+                  "value": "Tree_plantations",
+                  "text": "Tree plantations"
+                },
+                {
+                  "value": "goat_and_cow_shelters",
+                  "text": "Goat and Cow shelters"
+                },
+                {
+                  "value": "Drainage_Soakage_channels",
+                  "text": "Drainage/ Soakage channels"
+                },
+                {
+                  "value": "Recharge_pits",
+                  "text": "Recharge pits"
+                },
+                {
+                  "value": "Sokage_pits",
+                  "text": "Sokage pits"
+                },
+                {
+                  "value": "Trench_cum_bund_network",
+                  "text": "Trench  cum bund Network"
+                },
+                {
+                  "value": "Large_water_bodies",
+                  "text": "Large Water bodies"
+                },
+                {
+                  "value": "Irrigation_channel",
+                  "text": "Irrigation Channel"
+                },
+                {
+                  "value": "Continuous_contour_trenches",
+                  "text": "Continuous contour trenches (CCT)"
+                },
+                {
+                  "value": "Staggered_contour_trenches(SCT)",
+                  "text": "Staggered Contour trenches (SCT)"
+                },
+                {
+                  "value": "Water_absorption_trenches(WAT)",
+                  "text": "Water absorption trenches (WAT)"
+                },
+                {
+                  "value": "Rock_fill_dam",
+                  "text": "Rock fill Dam"
+                },
+                {
+                  "value": "Loose_boulder_structure",
+                  "text": "Loose Boulder Structure"
+                },
+                {
+                  "value": "Stone_bunding",
+                  "text": "Stone bunding"
+                },
+                {
+                  "value": "Diversion_drains",
+                  "text": "Diversion drains"
+                },
+                {
+                  "value": "Bunding",
+                  "text": "Bunding: Contour bunds / graded bunds"
+                },
+                {
+                  "value": "Farm_bund",
+                  "text": "Farm bund"
+                },
+                "Well",
+                {
+                  "value": "5%_Model",
+                  "text": "5% Model"
+                },
+                {
+                  "value": "30-40_Model",
+                  "text": "30-40 Model"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                },
+                {
+                  "value": "No_demands_were_raised",
+                  "text": "No demands were raised"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-work_demands_other",
+              "visibleIf": "{MNREGA_INFORMATION-work_demands} anyof ['other']",
+              "title": "Specify other.",
+              "isRequired": true
+            },
+            {
+              "type": "checkbox",
+              "name": "MNREGA_INFORMATION-select_multiple_issues",
+              "title": "What are the three main issues with NREGA?",
+              "choices": [
+                {
+                  "value": "Delayed_reimbursements_for_expenses_made",
+                  "text": "Delayed reimbursements for expenses made"
+                },
+                {
+                  "value": "finding_labour_for_NREGA",
+                  "text": "Finding labour for NREGA"
+                },
+                {
+                  "value": "demands_for_new_works_are_not_met",
+                  "text": "Demands for new works are not met"
+                },
+                {
+                  "value": "not_aware_of_NREGA_details_and_how_to_get_work",
+                  "text": "Not aware of NREGA details and how to get work"
+                },
+                {
+                  "value": "want_work_but_do_not_get_support_to_register_demands",
+                  "text": "Want work but do not get support to register demands"
+                },
+                {
+                  "value": "Mismatch_in_the_online_attendance_due_to_lack_of_internet_or_no_smart_phones",
+                  "text": "Mismatch in the online attendance due to lack of internet or no smart phones"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ],
+              "maxSelectedChoices": 3
+            },
+            {
+              "type": "text",
+              "name": "MNREGA_INFORMATION-other_issue",
+              "visibleIf": "{MNREGA_INFORMATION-select_multiple_issues} anyof ['other']",
+              "title": "Please specify other issue",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "MNREGA_INFORMATION-select_one_contributions",
+              "title": "Is the community willing to come together collectively to raise the work demands such as water structures",
+              "choices": [
+                {
+                  "value": "yes,almost all",
+                  "text": "Yes, almost all"
+                },
+                {
+                  "value": "some",
+                  "text": "Some"
+                },
+                "Mostly none"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Other_information",
+          "title": "Any Other Information"
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}
