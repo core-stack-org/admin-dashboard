@@ -422,58 +422,6 @@
               "title": "Provide dimensions - Height"
             }
           ]
-        },
-        {
-          "type": "html",
-          "name": "rech_strc_note_1",
-          "html": "<span style=\"font-size: large; font-weight: bold; color:red;\">DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span>"
-        },
-        {
-          "type": "multipletext",
-          "name": "GPS_point",
-          "title": "Lat/Lon",
-          "description": "PLEASE DO NOT SPAN AROUND IN THE MAP BELOW",
-          "isRequired": true,
-          "readOnly": true,
-          "items": [
-            {
-              "name": "latitude",
-              "title": "latitude (x.y °)"
-            },
-            {
-              "name": "longitude",
-              "title": "longitude (x.y °)"
-            }
-          ]
-        },
-        {
-          "type": "text",
-          "name": "block_name",
-          "title": "Block name",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "plan_id",
-          "title": "Plan ID",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "plan_name",
-          "title": "Plan name",
-          "readOnly": true
-        },
-        {
-          "type": "text",
-          "name": "user_latlon",
-          "title": "Current location of the user"
-        },
-        {
-          "type": "text",
-          "name": "work_id",
-          "title": "Work ID",
-          "readOnly": true
         }
       ]
     }
