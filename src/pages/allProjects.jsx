@@ -509,40 +509,45 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
   
   
 
-  const handleToggleStatus = async () => {
+  const handleToggleProject = async () => {
     if (!selectedSettingsProject) return;
   
-    const newStatus = selectedSettingsProject.status === "Active" ? "Inactive" : "Active";
+    const token = sessionStorage.getItem("accessToken");
+  
+    const isEnabled = selectedSettingsProject.enabled;
+    const endpoint = isEnabled ? "disable" : "enable";
   
     try {
-      const token = sessionStorage.getItem("accessToken");
-      await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedSettingsProject.id}/`,
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedSettingsProject.id}/${endpoint}/`,
         {
-          method: "PATCH",
+          method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status: newStatus }),
         }
       );
   
-      // locally update UI
-      setProjects(prev =>
-        prev.map(p =>
-          p.id === selectedSettingsProject.id ? { ...p, status: newStatus } : p
+      if (!res.ok) throw new Error("Failed to toggle project");
+  
+      const updatedProject = await res.json();
+  
+      // 🔄 update projects list
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === updatedProject.id ? updatedProject : p
         )
       );
   
-      setSelectedSettingsProject(prev => ({
-        ...prev,
-        status: newStatus,
-      }));
+      // 🔄 update menu state
+      setSelectedSettingsProject(updatedProject);
+  
     } catch (err) {
-      alert("Failed to update status.");
+      console.error(err);
+      alert("Failed to update project status");
     }
   };
+  
 
   const handleOpenWBCompute = (project) => {
     setSelectedWBComputeProject(project);
@@ -569,17 +574,22 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
     if (!computeFiles.length) return alert("Please select an Excel file!");
   
     const formData = new FormData();
-    computeFiles.forEach((f) => formData.append("files", f));
-    formData.append("project_id", selectedWBComputeProject.id);
+    computeFiles.forEach((f) => formData.append("file", f));
     formData.append("gee_account_id", 1);
-    formData.append("is_closest_wp", isClosestWP);
+    formData.append("is_closest_wp", true);
     formData.append("is_processing_required", true);
     formData.append("is_lulc_required", true);
-  
+    formData.append("is_compute", true);
     try {
       const token = sessionStorage.getItem("accessToken");
+      console.log("---- Compute Waterbody FormData ----");
+      console.log(token)
+      for (let pair of formData.entries()) {
+        console.log(pair[0], ":", pair[1]);
+      }
+
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBComputeProject.id}/waterrejuvenation/compute/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBComputeProject.id}/waterrejuvenation/excel/`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -1020,35 +1030,36 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
         </Box>
       </Popover>
       <Menu
-  anchorEl={settingsMenuAnchor}
-  open={Boolean(settingsMenuAnchor)}
-  onClose={handleCloseSettings}
-  anchorOrigin={{
-    vertical: "bottom",
-    horizontal: "right",
-  }}
-  transformOrigin={{
-    vertical: "top",
-    horizontal: "right",
-  }}
-  PaperProps={{
-    elevation: 3,
-    sx: { borderRadius: 2, minWidth: 220 }
-  }}
->
-  <MenuItem disabled sx={{ fontWeight: 600 }}>
-    {selectedSettingsProject?.name}
-  </MenuItem>
+        anchorEl={settingsMenuAnchor}
+        open={Boolean(settingsMenuAnchor)}
+        onClose={handleCloseSettings}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        PaperProps={{
+          elevation: 3,
+          sx: { borderRadius: 2, minWidth: 220 }
+        }}
+      >
+        <MenuItem disabled sx={{ fontWeight: 600 }}>
+          {selectedSettingsProject?.name}
+        </MenuItem>
 
-  <MenuItem sx={{ display: "flex", justifyContent: "space-between" }}>
-    <span className="text-gray-700 text-sm">Enabled</span>
-    <Switch
-      checked={(selectedSettingsProject?.status ?? "Active") === "Active"}
-      onChange={() => handleToggleStatus()}
-      color="primary"
-    />
-  </MenuItem>
-</Menu>
+        <MenuItem sx={{ display: "flex", justifyContent: "space-between" }}>
+          <span className="text-gray-700 text-sm">Enabled</span>
+          <Switch
+            checked={selectedSettingsProject?.enabled === true}
+            onChange={handleToggleProject}
+            color="primary"
+          />
+
+        </MenuItem>
+      </Menu>
 
 
 
