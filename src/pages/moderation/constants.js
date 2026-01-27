@@ -35,7 +35,7 @@ export const ICONS = {
   WaterBodyIcon,
 }
 
-export const BASEURL = `${process.env.REACT_APP_LOCALURL}`;
+export const BASEURL = `${process.env.REACT_APP_BASEURL}`;
 
 export const FORM_TEMPLATES = {
   Settlement: SettlementForm,
