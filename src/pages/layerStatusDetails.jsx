@@ -18,7 +18,7 @@ const LayerStatusDetails = () => {
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/api/v1/layer_status_dashboard/`,
+          `${process.env.REACT_APP_BASEURL}api/v1/layer_status_dashboard/`,
           {
             method: "POST",
             headers: {
