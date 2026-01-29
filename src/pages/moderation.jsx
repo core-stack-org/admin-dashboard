@@ -318,6 +318,8 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       iconSrc = ICONS['Agri'];
     } else if (formType == "Crop"){
       iconSrc = ICONS['Crop']
+    } else if (formType=="Agrohorticulture"){
+      iconSrc = ICONS['Agrohorticulture']
     }
     
     return iconSrc;

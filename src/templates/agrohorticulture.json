@@ -1,0 +1,239 @@
+{
+  "title": "Agrohorticulture",
+  "logoFit": "none",
+  "logoPosition": "right",
+  "completedHtml": "<h3>Agrohorticulture Details have been recorded!</h3>",
+  "loadingHtml": "<h3>Loading Form...</h3>",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "text",
+          "name": "beneficiary_settlement",
+          "title": "Name of Beneficiary Settlement",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_y_n",
+          "title": "Are there demands for plantation in the settlement",
+          "isRequired": true,
+          "choices": [
+            "Yes",
+            "No"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "demand_type_plantations",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Type of Demand",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Community_demand",
+              "text": "Community Demand"
+            },
+            {
+              "value": "Individual_demand",
+              "text": "Individual Demand"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "beneficiary_name",
+          "visibleIf": "{demand_type_plantations} = 'Individual_demand'",
+          "title": "Beneficiary Name",
+          "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "gender",
+          "visibleIf": "{demand_type_plantations} = 'Individual_demand'",
+          "title": "Gender",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "male",
+              "text": "Male"
+            },
+            {
+              "value": "female",
+              "text": "Female"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "ben_father",
+          "visibleIf": "{demand_type_plantations} = 'Individual_demand'",
+          "title": "Beneficiary Fathers Name",
+          "isRequired": true
+        },
+        {
+          "type": "checkbox",
+          "name": "select_multiple_species",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Preferred Plant/ species for Plantation",
+          "choices": [
+            "Mango",
+            "Guava",
+            "Banana",
+            "Subabul",
+            "Bamboo",
+            "Moringa",
+            "Neem",
+            "Teak",
+            "Cashew",
+            "Mahua",
+            "Tamarind",
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "select_multiple_species_other",
+          "visibleIf": "{select_multiple_species} allof ['other']",
+          "title": "Specify other."
+        },
+        {
+          "type": "text",
+          "name": "crop_area",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Total area of the plantation",
+          "description": "Acres",
+          "isRequired": true,
+          "inputType": "number"
+        },
+        {
+          "type": "text",
+          "name": "total_saplings",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Total number of saplings needed",
+          "isRequired": true,
+          "inputType": "number"
+        },
+        {
+          "type": "checkbox",
+          "name": "land_type",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Land Type",
+          "isRequired": true,
+          "choices": [
+            "Upland",
+            "Midland",
+            "Lowland"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "land_ownership",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Land Ownership / Tenure",
+          "choices": [
+            {
+              "value": "Own_land",
+              "text": "Own land"
+            },
+            {
+              "value": "Leased_land",
+              "text": "Leased land"
+            },
+            {
+              "value": "Community_land",
+              "text": "Community land"
+            },
+            {
+              "value": "Forest_land",
+              "text": "Forest land"
+            },
+            {
+              "value": "Joint_ownership",
+              "text": "Joint ownership"
+            },
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "land_ownership_other",
+          "visibleIf": "{land_ownership} = 'other'",
+          "title": "Specify other."
+        },
+        {
+          "type": "checkbox",
+          "name": "current_land_use",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Current Land Use",
+          "choices": [
+            "Crop",
+            "Fallow",
+            "Grazing",
+            "Homestead"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "soil_type",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Soil Type\n",
+          "choices": [
+            "Sandy",
+            "Loam",
+            "Red",
+            "Black",
+            "Rocky"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "water_availability",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Water Availability",
+          "choices": [
+            "Seasonal",
+            "12 Months",
+            "No water available"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "agro_model",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Preferred agroforestry model",
+          "choices": [
+            {
+              "value": "Boundary_plantation",
+              "text": "Boundary plantation"
+            },
+            {
+              "value": "Orchard_development",
+              "text": "Orchard development"
+            },
+            {
+              "value": "Block_plantation",
+              "text": "Block plantation"
+            },
+            {
+              "value": "Silvi_pasture",
+              "text": "Silvi-pasture"
+            },
+            {
+              "value": "Homestead_plantation",
+              "text": "Homestead plantation"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "widthMode": "responsive"
+}
