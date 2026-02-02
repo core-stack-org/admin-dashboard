@@ -38,7 +38,7 @@ export const ICONS = {
   Agrohorticulture:AgrohorticultureIcon
 }
 
-export const BASEURL = `${process.env.REACT_APP_BASEURL}`;
+export const BASEURL = `${process.env.REACT_APP_LOCALURL}`;
 
 export const FORM_TEMPLATES = {
   Settlement: SettlementForm,

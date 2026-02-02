@@ -23,6 +23,18 @@ import {
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
+const token = sessionStorage.getItem("accessToken");
+
+const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+const user = sessionUser.user || {};
+const isSuperAdmin = user.is_superadmin;
+
+const headers = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+};
+
+
 const SelectionPage = ({
   onLoadSubmissions,
   initialProject = "",
@@ -32,6 +44,8 @@ const SelectionPage = ({
   const [projects, setProjects] = useState([]);
   const [plans, setPlans] = useState([]);
   const [forms, setForms] = useState([]);
+  const [organizations, setOrganizations] = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState("");
 
   const [selectedProject, setSelectedProject] =
     useState(initialProject);
@@ -40,7 +54,7 @@ const SelectionPage = ({
   const [selectedForm, setSelectedForm] =
     useState(initialForm);
 
-  const token = sessionStorage.getItem("accessToken");
+  // const token = sessionStorage.getItem("accessToken");
 
   const headers = {
     "Content-Type": "application/json",
@@ -48,15 +62,39 @@ const SelectionPage = ({
   };
 
   useEffect(() => {
-    fetch(`${BASEURL}api/v1/projects`, { headers })
-      .then((res) => res.json())
-      .then((data) =>
-        setProjects(data.data || data.projects || data)
-      )
-      .catch((err) =>
-        console.log("Project Fetch Error", err)
-      );
-  }, []);
+    if (!isSuperAdmin) return;
+
+    fetch(`${BASEURL}api/v1/organizations/`, { headers })
+      .then(res => res.json())
+      .then(data => setOrganizations(data || []))
+      .catch(err => console.error("Org fetch error", err));
+  }, [isSuperAdmin]);
+
+
+  useEffect(() => {
+  // NON superadmin → same as before
+    if (!isSuperAdmin) {
+      fetch(`${BASEURL}api/v1/projects`, { headers })
+        .then(res => res.json())
+        .then(data => setProjects(data.data || data.projects || data))
+        .catch(err => console.log(err));
+      return;
+    }
+
+    // Superadmin but org not selected
+    if (!selectedOrg) {
+      setProjects([]);
+      return;
+    }
+
+    // Superadmin + org selected
+    fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
+      .then(res => res.json())
+      .then(data => setProjects(data.data || data.projects || data))
+      .catch(err => console.log(err));
+
+  }, [isSuperAdmin, selectedOrg]);
+
 
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers })
@@ -141,7 +179,7 @@ const SelectionPage = ({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight">
+          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight mt-10">
             Moderation Dashboard
           </h1>
           <p className="text-slate-600 text-lg">
@@ -150,6 +188,31 @@ const SelectionPage = ({
         </div>
   
         <div className="bg-white shadow-2xl rounded-3xl p-10 border border-slate-200">
+
+          {isSuperAdmin && (
+            <div className="mb-7">
+              <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                Select Organization
+              </label>
+              <select
+                className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+                value={selectedOrg}
+                onChange={(e) => {
+                  setSelectedOrg(e.target.value);
+                  setSelectedProject("");
+                  setPlans([]);
+                }}
+              >
+                <option value="">-- Choose Organization --</option>
+                {organizations.map(org => (
+                  <option key={org.id} value={org.id}>
+                    {org.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Project
@@ -241,12 +304,12 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const overlayRef = useRef(null);
 
   // Check user permissions
-  const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
-  const user = sessionUser.user || {};
+  // const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+  // const user = sessionUser.user || {};
   const groups = Array.isArray(user.groups) ? user.groups : [];
   const isAdmin = groups.some(g => g.name === "Administrator");
   const isModerator = groups.some(g => g.name === "Moderator");
-  const isSuperAdmin = user.is_superadmin;
+  // const isSuperAdmin = user.is_superadmin;
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const didFetchRef = useRef(false);
 
