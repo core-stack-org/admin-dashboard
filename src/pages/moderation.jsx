@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import Select from "react-select";
 import { Trash2, ChevronLeft, Search, Calendar, User, Filter, Map as MapIcon, Grid, Home, Droplet, Waves } from "lucide-react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
@@ -35,8 +36,58 @@ const headers = {
 };
 
 
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: "56px",
+    borderRadius: "0.75rem",
+    borderWidth: "2px",
+    borderColor: state.isFocused ? "#6366f1" : "#cbd5e1",
+    boxShadow: state.isFocused
+      ? "0 0 0 4px rgba(99,102,241,0.2)"
+      : "none",
+    "&:hover": {
+      borderColor: "#6366f1",
+    },
+    fontWeight: 500,
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 1rem",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: "#64748b",
+    fontWeight: 500,
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontWeight: 500,
+    color: "#0f172a",
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: "0.75rem",
+    zIndex: 50,
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused
+      ? "#eef2ff"
+      : state.isSelected
+      ? "#6366f1"
+      : "white",
+    color: state.isSelected ? "white" : "#0f172a",
+    fontWeight: 500,
+  }),
+};
+
 const SelectionPage = ({
   onLoadSubmissions,
+  selectedOrg,
+  setSelectedOrg,
+  selectedProject,
+  setSelectedProject,
   initialProject = "",
   initialPlan = "",
   initialForm = "",
@@ -45,21 +96,10 @@ const SelectionPage = ({
   const [plans, setPlans] = useState([]);
   const [forms, setForms] = useState([]);
   const [organizations, setOrganizations] = useState([]);
-  const [selectedOrg, setSelectedOrg] = useState("");
-
-  const [selectedProject, setSelectedProject] =
-    useState(initialProject);
   const [selectedPlan, setSelectedPlan] =
     useState(initialPlan);
   const [selectedForm, setSelectedForm] =
     useState(initialForm);
-
-  // const token = sessionStorage.getItem("accessToken");
-
-  const headers = {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  };
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -72,7 +112,6 @@ const SelectionPage = ({
 
 
   useEffect(() => {
-  // NON superadmin → same as before
     if (!isSuperAdmin) {
       fetch(`${BASEURL}api/v1/projects`, { headers })
         .then(res => res.json())
@@ -81,13 +120,11 @@ const SelectionPage = ({
       return;
     }
 
-    // Superadmin but org not selected
     if (!selectedOrg) {
       setProjects([]);
       return;
     }
 
-    // Superadmin + org selected
     fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
       .then(res => res.json())
       .then(data => setProjects(data.data || data.projects || data))
@@ -123,6 +160,19 @@ const SelectionPage = ({
         setPlans([]);
       });
   }, [initialProject]);
+
+  useEffect(() => {
+    if (!initialPlan || plans.length === 0) return;
+  
+    const exists = plans.some(
+      p => p.plan_id === Number(initialPlan)
+    );
+  
+    if (exists) {
+      setSelectedPlan(initialPlan);
+    }
+  }, [plans, initialPlan]);
+  
 
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
@@ -194,22 +244,27 @@ const SelectionPage = ({
               <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
                 Select Organization
               </label>
-              <select
-                className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
-                value={selectedOrg}
-                onChange={(e) => {
-                  setSelectedOrg(e.target.value);
+              <Select
+                styles={selectStyles}
+                placeholder="-- Choose Organization --"
+                options={organizations.map(org => ({
+                  value: org.id,
+                  label: org.name,
+                }))}
+                value={
+                  selectedOrg
+                    ? organizations
+                        .map(org => ({ value: org.id, label: org.name }))
+                        .find(o => o.value === selectedOrg)
+                    : null
+                }
+                onChange={(opt) => {
+                  setSelectedOrg(opt?.value || "");
                   setSelectedProject("");
                   setPlans([]);
                 }}
-              >
-                <option value="">-- Choose Organization --</option>
-                {organizations.map(org => (
-                  <option key={org.id} value={org.id}>
-                    {org.name}
-                  </option>
-                ))}
-              </select>
+                isClearable
+              />
             </div>
           )}
 
@@ -217,61 +272,79 @@ const SelectionPage = ({
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Project
             </label>
-            <select
-              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
-              onChange={handleProjectChange}
-              value={selectedProject}
-            >
-              <option value="">-- Choose Project --</option>
-              {projects?.map((p, i) => (
-                <option key={i} value={p.id || p.project_id}>
-                  {p.project_name || p.name}
-                </option>
-              ))}
-            </select>
+            <Select
+              styles={selectStyles}
+              placeholder="-- Choose Project --"
+              options={projects.map(p => ({
+                value: p.id || p.project_id,
+                label: p.project_name || p.name,
+              }))}
+              value={
+                selectedProject
+                  ? projects
+                      .map(p => ({
+                        value: p.id || p.project_id,
+                        label: p.project_name || p.name,
+                      }))
+                      .find(p => p.value === selectedProject)
+                  : null
+              }
+              onChange={(opt) => handleProjectChange({ target: { value: opt?.value || "" } })}
+              isClearable
+            />
           </div>
   
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Plan
             </label>
-            <select
-              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
-              value={selectedPlan}
-              onChange={(e) => setSelectedPlan(e.target.value)}
-            >
-              <option value="">-- Choose Plan --</option>
-              {plans?.map((plan) => (
-                <option key={plan.plan_id} value={plan.plan_id}>
-                  {plan.plan}
-                  {(plan.year || plan.facilitator_name) && (
-                    <>
-                      {plan.year && ` (${plan.year})`}
-                      {plan.facilitator_name && ` – ${plan.facilitator_name}`}
-                    </>
-                  )}
-                </option>
-              ))}
-            </select>
+            <Select
+              styles={selectStyles}
+              placeholder="-- Choose Plan --"
+              options={plans.map(plan => ({
+                value: plan.plan_id,
+                label: `${plan.plan}${
+                  plan.year ? ` (${plan.year})` : ""
+                }${plan.facilitator_name ? ` – ${plan.facilitator_name}` : ""}`,
+              }))}
+              value={
+                selectedPlan
+                  ? plans
+                      .map(plan => ({
+                        value: plan.plan_id,
+                        label: plan.plan,
+                      }))
+                      .find(p => p.value === Number(selectedPlan))
+                  : null
+              }
+              onChange={(opt) => setSelectedPlan(opt?.value || "")}
+              isClearable
+            />
           </div>
           <div className="mb-8">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Form
             </label>
-  
-            <select
-              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
-              value={selectedForm}
-              onChange={(e) => setSelectedForm(e.target.value)}
-            >
-              <option value="">-- Choose Form --</option>
-  
-              {forms?.map((form) => (
-                <option key={form.form_id} value={form.name}>
-                  {form.display}
-                </option>
-              ))}
-            </select>
+            <Select
+              styles={selectStyles}
+              placeholder="-- Choose Form --"
+              options={forms.map(form => ({
+                value: form.name,
+                label: form.display,
+              }))}
+              value={
+                selectedForm
+                  ? forms
+                      .map(form => ({
+                        value: form.name,
+                        label: form.display,
+                      }))
+                      .find(f => f.value === selectedForm)
+                  : null
+              }
+              onChange={(opt) => setSelectedForm(opt?.value || "")}
+              isClearable
+            />
           </div>
           <button
             onClick={handleLoadSubmissions}
@@ -302,14 +375,9 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const vectorLayerRef = useRef(null);
   const popupRef = useRef(null);
   const overlayRef = useRef(null);
-
-  // Check user permissions
-  // const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
-  // const user = sessionUser.user || {};
   const groups = Array.isArray(user.groups) ? user.groups : [];
   const isAdmin = groups.some(g => g.name === "Administrator");
   const isModerator = groups.some(g => g.name === "Moderator");
-  // const isSuperAdmin = user.is_superadmin;
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const didFetchRef = useRef(false);
 
@@ -328,7 +396,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   
     const gps = submission.GPS_point;
   
-    // GeoJSON point (preferred & correct)
+    // GeoJSON point
     const geoPoint =
       gps.point_mapappearance ||
       gps.point_mapsappearance;
@@ -634,7 +702,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const fetchSubmissions = async (pg = 1, mode = "card") => {
     if (!selectedForm || !selectedPlan) return;
   
-    const token = sessionStorage.getItem("accessToken");
   
     const url =
       mode === "map"
@@ -738,9 +805,9 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     const overlay = new Overlay({
       element: popupRef.current,
       positioning: "bottom-center",
-      stopEvent: false,
-      offset: [0, -10],
-    });
+      stopEvent: true, 
+      offset: [0, -15],
+    });    
     map.addOverlay(overlay);
 
     mapRef.current = map;
@@ -1174,7 +1241,12 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
                 className="w-full h-[calc(100vh-280px)] min-h-[600px]"
               />
               {/* Popup container */}
-              <div ref={popupRef} style={{ display: 'none' }} />
+              <div
+                ref={popupRef}
+                className="absolute z-[1000] pointer-events-auto"
+                style={{ display: "none" }}
+              />
+
 
               {/* No submissions popup - small centered popup */}
               {filteredSubmissions.length === 0 && (
@@ -1365,6 +1437,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
 // Main Component
 const Moderation = () => {
   const [currentPage, setCurrentPage] = useState("selection");
+  const [selectedOrg, setSelectedOrg] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
@@ -1385,7 +1458,11 @@ const Moderation = () => {
   return currentPage === "selection" ? (
     <SelectionPage 
       onLoadSubmissions={handleLoadSubmissions}
-      initialProject={selectedProject}
+      selectedOrg={selectedOrg}
+      setSelectedOrg={setSelectedOrg}
+      selectedProject={selectedProject}
+      setSelectedProject={setSelectedProject}
+      initialProject={selectedProject}   
       initialPlan={selectedPlan}
       initialForm={selectedForm}
     />
