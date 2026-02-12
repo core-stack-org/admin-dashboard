@@ -882,83 +882,82 @@ const ProjectDashboard = ({ closeModal, currentUser, onClose, statesList }) => {
                                     </Tooltip>
 
                                     {selectedExcelFiles[project.id]?.length > 0 && (
-  <Box
-    sx={{
-      width: "100%",
-      backgroundColor: "#f9f9f9",
-      p: 2,
-      borderRadius: "8px",
-      boxShadow: "inset 0 0 5px rgba(0,0,0,0.1)",
-    }}
-  >
-    {selectedExcelFiles[project.id].map((file, index) => (
-      <Box
-        key={index}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "6px 12px",
-          borderRadius: "6px",
-          mb: 1,
-          backgroundColor: "#fff",
-          "&:hover": {
-            backgroundColor: "#f0f0f0",
-          },
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            overflow: "hidden",
-            flex: 1,
-          }}
-        >
-          <FolderIcon sx={{ color: "#ffa000" }} />
-          <Tooltip title={file.name}>
-            <Typography
-              variant="body2"
-              noWrap
-              sx={{
-                maxWidth: "calc(100% - 40px)",
-                fontSize: "14px",
-              }}
-            >
-              {file.name}
-            </Typography>
-          </Tooltip>
-        </Box>
+                                      <Box
+                                        sx={{
+                                          width: "100%",
+                                          backgroundColor: "#f9f9f9",
+                                          p: 2,
+                                          borderRadius: "8px",
+                                          boxShadow: "inset 0 0 5px rgba(0,0,0,0.1)",
+                                        }}
+                                      >
+                                        {selectedExcelFiles[project.id].map((file, index) => (
+                                          <Box
+                                            key={index}
+                                            sx={{
+                                              display: "flex",
+                                              alignItems: "center",
+                                              justifyContent: "space-between",
+                                              padding: "6px 12px",
+                                              borderRadius: "6px",
+                                              mb: 1,
+                                              backgroundColor: "#fff",
+                                              "&:hover": {
+                                                backgroundColor: "#f0f0f0",
+                                              },
+                                            }}
+                                          >
+                                            <Box
+                                              sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                overflow: "hidden",
+                                                flex: 1,
+                                              }}
+                                            >
+                                              <FolderIcon sx={{ color: "#ffa000" }} />
+                                              <Tooltip title={file.name}>
+                                                <Typography
+                                                  variant="body2"
+                                                  noWrap
+                                                  sx={{
+                                                    maxWidth: "calc(100% - 40px)",
+                                                    fontSize: "14px",
+                                                  }}
+                                                >
+                                                  {file.name}
+                                                </Typography>
+                                              </Tooltip>
+                                            </Box>
 
-        <IconButton
-          onClick={() => handleRemoveExcelFile(project.id, index)}
-          size="small"
-          color="error"
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Box>
-    ))}
+                                            <IconButton
+                                              onClick={() => handleRemoveExcelFile(project.id, index)}
+                                              size="small"
+                                              color="error"
+                                            >
+                                              <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                          </Box>
+                                        ))}
 
-    <Button
-      variant="contained"
-      color="primary"
-      fullWidth
-      sx={{
-        mt: 2,
-        py: 1.5,
-        fontWeight: 600,
-        borderRadius: "8px",
-        textTransform: "none",
-      }}
-      onClick={() => handleUploadExcel(project)}
-    >
-      Upload
-    </Button>
-  </Box>
-)}
-
+                                        <Button
+                                          variant="contained"
+                                          color="primary"
+                                          fullWidth
+                                          sx={{
+                                            mt: 2,
+                                            py: 1.5,
+                                            fontWeight: 600,
+                                            borderRadius: "8px",
+                                            textTransform: "none",
+                                          }}
+                                          onClick={() => handleUploadExcel(project)}
+                                        >
+                                          Upload
+                                        </Button>
+                                      </Box>
+                                    )}
                                   </Box>
                                 ) : project.app_type === "watershed" ? (
                                   <div className="flex items-center gap-2">

@@ -23,7 +23,7 @@ import {
   Upload,
   FilePlus,
   ArrowLeftCircle,
-  Settings
+  Settings,BarChart3
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Vector as VectorSource } from "ol/source";
@@ -60,15 +60,9 @@ const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
 const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
 const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
 
-
-
-
-
-
   const navigate = useNavigate();
   console.log(currentUser.user)
   const isSuperAdmin = currentUser?.user?.is_superadmin;
-
 
   const [toast, setToast] = useState({
     open: false,
@@ -237,7 +231,6 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
     selectedOrganization,
   ]);
   
-
   const enabledProjects = useMemo(() => {
     return filteredProjects.filter(p => p.enabled !== false);
   }, [filteredProjects]);
@@ -491,9 +484,7 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
   
   const handleRemoveWBFile = (index) => {
     setSelectedWBFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  
+  }; 
   
   const handleUploadWB = async () => {
     if (!selectedWBFiles.length) {
@@ -557,7 +548,6 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
     setSelectedSettingsProject(null);
   };
   
-  
   const handleToggleProject = async () => {
     if (!selectedSettingsProject) return;
   
@@ -579,14 +569,14 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
       const updatedProject = await res.json();
   
       if (updatedProject.enabled === true) {
-        // 🔥 Disabled → Enabled
+        //  Disabled → Enabled
         setDisabledProjectsApi(prev =>
           prev.filter(p => p.id !== updatedProject.id)
         );
   
         setProjects(prev => [...prev, updatedProject]);
       } else {
-        // 🔥 Enabled → Disabled
+        //  Enabled → Disabled
         setProjects(prev =>
           prev.filter(p => p.id !== updatedProject.id)
         );
@@ -634,8 +624,6 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
     formData.append("is_compute", true);
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log("---- Compute Waterbody FormData ----");
-      console.log(token)
       for (let pair of formData.entries()) {
         console.log(pair[0], ":", pair[1]);
       }
@@ -657,6 +645,53 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
       alert("Failed to initiate compute");
     }
   };
+
+  const handleViewStats = async () => {
+    if (!selectedSettingsProject) return;
+  
+    try {
+      const token = sessionStorage.getItem("accessToken");
+  
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/get_uploaded_result/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            project_id: selectedSettingsProject.id,
+          }),
+        }
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to download stats file");
+      }
+        const blob = await response.blob();
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+  
+      // Optional dynamic filename
+      const fileName = `${selectedSettingsProject.name}_stats.xlsx`;
+      a.download = fileName;
+  
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+  
+      handleCloseSettings();
+  
+    } catch (error) {
+      console.error("Error downloading stats:", error);
+      alert("Failed to download stats file");
+    }
+  };
+  
   
   
   
@@ -870,8 +905,6 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
                               )}
                             </>
                           )}
-
-
 
                           {/* Watershed */}
                           {p.app_type === "watershed" && (
@@ -1410,6 +1443,11 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
           />
 
         </MenuItem>
+        <MenuItem onClick={handleViewStats}>
+          <BarChart3 size={18} className="mr-2 text-blue-600" />
+          View Stats
+        </MenuItem>
+
       </Menu>
 
 
