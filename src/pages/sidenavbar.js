@@ -481,15 +481,17 @@ else {
                     </a>
                   ) : (
                     <button
-                      onClick={() =>
-                        item.onClick ? item.onClick() : navigate(item.href)
-                      }
-                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
-                        activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
-                      }`}
-                    >
+                    onClick={() => {
+                      setActiveItem(item.label);
+                      item.onClick ? item.onClick() : navigate(item.href);
+                    }}
+                    className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
+                      activeItem === item.label
+                        ? "bg-gray-700"
+                        : "hover:bg-gray-700"
+                    }`}
+                  >
+                  
                       <div className="flex items-center gap-3">
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
