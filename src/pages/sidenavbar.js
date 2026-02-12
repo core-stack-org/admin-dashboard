@@ -629,7 +629,6 @@ else {
                       className="flex items-center w-full px-4 py-2 text-sm text-blue-600"
                       onClick={openChangePasswordModal}
                     >
-                      {/* Use whichever lock icon you prefer */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="w-4 h-4 mr-3 text-blue-500"
