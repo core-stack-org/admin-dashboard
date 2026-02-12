@@ -11,14 +11,16 @@ import AgriMaintenanceForm from "../../templates/maintenance_irr.json";
 import GroundwaterMaintenanceForm from "../../templates/maintenance_recharge_st.json";
 import WaterStructureMaintenanceForm from "../../templates/maintenance_water_structures.json";
 import SWBRemotelySensedForm from "../../templates/maintenance_rs_swb.json";
+import Agrohorticulture from "../../templates/agrohorticulture.json"
 
 import SettlementIcon from "../../icons/settlement_icon.svg";
 import WellIcon from "../../icons/well_icon.svg";
 import WaterBodyIcon from "../../icons/waterbodiesScreenIcon.svg";
 import RechargeIcon from "../../icons/recharge_icon.svg";
 import IrrigationIcon from "../../icons/irrigation_icon.svg";
-import LivelihoodIcon from "../../icons/livelihood_proposed.svg"
-import CropIcon from "../../icons/crops-svgrepo-com.svg"
+import LivelihoodIcon from "../../icons/livelihood_proposed.svg";
+import CropIcon from "../../icons/crops-svgrepo-com.svg";
+import AgrohorticultureIcon from "../../icons/Plantation.svg";
 
 export const ICONS = {
   Settlement: SettlementIcon,
@@ -33,6 +35,7 @@ export const ICONS = {
   "Surface Water Body Maintenance": WaterBodyIcon,
   "Surface Water Body Remotely Sensed Maintenance":
   WaterBodyIcon,
+  Agrohorticulture:AgrohorticultureIcon
 }
 
 export const BASEURL = `${process.env.REACT_APP_BASEURL}`;
@@ -50,6 +53,7 @@ export const FORM_TEMPLATES = {
   "Surface Water Body Maintenance": WaterStructureMaintenanceForm,
   "Surface Water Body Remotely Sensed Maintenance":
     SWBRemotelySensedForm,
+  Agrohorticulture:Agrohorticulture
 };
 
 export const CARD_DISPLAY_FIELDS = {
@@ -234,4 +238,18 @@ export const CARD_DISPLAY_FIELDS = {
         "Select the type of surface water structure repair work",
     },
   ],
+
+  "Agrohorticulture":[
+    {
+        key: "beneficiary_settlement",
+        label: "Name of Beneficiary Settlement",
+    },
+    { key: "select_one_y_n", label: "Are there demands for plantation in the settlement" },
+    { key: "demand_type_plantations", label: "Type of Demand" },
+    {
+      key: "beneficiary_name",
+      label:
+        "Beneficiary Name",
+    },
+  ]
 };
