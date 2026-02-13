@@ -23,6 +23,64 @@ import {
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
+const token = sessionStorage.getItem("accessToken");
+
+const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+const user = sessionUser.user || {};
+const isSuperAdmin = user.is_superadmin;
+
+const headers = {
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${token}`,
+};
+// testing
+
+const selectStyles = {
+  control: (base, state) => ({
+    ...base,
+    minHeight: "56px",
+    borderRadius: "0.75rem",
+    borderWidth: "2px",
+    borderColor: state.isFocused ? "#6366f1" : "#cbd5e1",
+    boxShadow: state.isFocused
+      ? "0 0 0 4px rgba(99,102,241,0.2)"
+      : "none",
+    "&:hover": {
+      borderColor: "#6366f1",
+    },
+    fontWeight: 500,
+  }),
+  valueContainer: (base) => ({
+    ...base,
+    padding: "0 1rem",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: "#64748b",
+    fontWeight: 500,
+  }),
+  singleValue: (base) => ({
+    ...base,
+    fontWeight: 500,
+    color: "#0f172a",
+  }),
+  menu: (base) => ({
+    ...base,
+    borderRadius: "0.75rem",
+    zIndex: 50,
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isFocused
+      ? "#eef2ff"
+      : state.isSelected
+      ? "#6366f1"
+      : "white",
+    color: state.isSelected ? "white" : "#0f172a",
+    fontWeight: 500,
+  }),
+};
+
 const SelectionPage = ({
   onLoadSubmissions,
   initialProject = "",
