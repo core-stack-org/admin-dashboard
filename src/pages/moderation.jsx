@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import Select from "react-select";
 import { Trash2, ChevronLeft, Search, Calendar, User, Filter, Map as MapIcon, Grid, Home, Droplet, Waves } from "lucide-react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
@@ -24,70 +23,8 @@ import {
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
-const token = sessionStorage.getItem("accessToken");
-
-const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
-const user = sessionUser.user || {};
-const isSuperAdmin = user.is_superadmin;
-
-const headers = {
-  "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-};
-
-
-const selectStyles = {
-  control: (base, state) => ({
-    ...base,
-    minHeight: "56px",
-    borderRadius: "0.75rem",
-    borderWidth: "2px",
-    borderColor: state.isFocused ? "#6366f1" : "#cbd5e1",
-    boxShadow: state.isFocused
-      ? "0 0 0 4px rgba(99,102,241,0.2)"
-      : "none",
-    "&:hover": {
-      borderColor: "#6366f1",
-    },
-    fontWeight: 500,
-  }),
-  valueContainer: (base) => ({
-    ...base,
-    padding: "0 1rem",
-  }),
-  placeholder: (base) => ({
-    ...base,
-    color: "#64748b",
-    fontWeight: 500,
-  }),
-  singleValue: (base) => ({
-    ...base,
-    fontWeight: 500,
-    color: "#0f172a",
-  }),
-  menu: (base) => ({
-    ...base,
-    borderRadius: "0.75rem",
-    zIndex: 50,
-  }),
-  option: (base, state) => ({
-    ...base,
-    backgroundColor: state.isFocused
-      ? "#eef2ff"
-      : state.isSelected
-      ? "#6366f1"
-      : "white",
-    color: state.isSelected ? "white" : "#0f172a",
-    fontWeight: 500,
-  }),
-};
-
 const SelectionPage = ({
   onLoadSubmissions,
-  selectedOrg,
-  setSelectedOrg,
-  selectedProject,
-  setSelectedProject,
   initialProject = "",
   initialPlan = "",
   initialForm = "",
@@ -95,43 +32,31 @@ const SelectionPage = ({
   const [projects, setProjects] = useState([]);
   const [plans, setPlans] = useState([]);
   const [forms, setForms] = useState([]);
-  const [organizations, setOrganizations] = useState([]);
+
+  const [selectedProject, setSelectedProject] =
+    useState(initialProject);
   const [selectedPlan, setSelectedPlan] =
     useState(initialPlan);
   const [selectedForm, setSelectedForm] =
     useState(initialForm);
 
-  useEffect(() => {
-    if (!isSuperAdmin) return;
+  const token = sessionStorage.getItem("accessToken");
 
-    fetch(`${BASEURL}api/v1/organizations/`, { headers })
-      .then(res => res.json())
-      .then(data => setOrganizations(data || []))
-      .catch(err => console.error("Org fetch error", err));
-  }, [isSuperAdmin]);
-
+  const headers = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 
   useEffect(() => {
-    if (!isSuperAdmin) {
-      fetch(`${BASEURL}api/v1/projects`, { headers })
-        .then(res => res.json())
-        .then(data => setProjects(data.data || data.projects || data))
-        .catch(err => console.log(err));
-      return;
-    }
-
-    if (!selectedOrg) {
-      setProjects([]);
-      return;
-    }
-
-    fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
-      .then(res => res.json())
-      .then(data => setProjects(data.data || data.projects || data))
-      .catch(err => console.log(err));
-
-  }, [isSuperAdmin, selectedOrg]);
-
+    fetch(`${BASEURL}api/v1/projects`, { headers })
+      .then((res) => res.json())
+      .then((data) =>
+        setProjects(data.data || data.projects || data)
+      )
+      .catch((err) =>
+        console.log("Project Fetch Error", err)
+      );
+  }, []);
 
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers })
@@ -160,19 +85,6 @@ const SelectionPage = ({
         setPlans([]);
       });
   }, [initialProject]);
-
-  useEffect(() => {
-    if (!initialPlan || plans.length === 0) return;
-  
-    const exists = plans.some(
-      p => p.plan_id === Number(initialPlan)
-    );
-  
-    if (exists) {
-      setSelectedPlan(initialPlan);
-    }
-  }, [plans, initialPlan]);
-  
 
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
@@ -229,7 +141,7 @@ const SelectionPage = ({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight mt-10">
+          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight">
             Moderation Dashboard
           </h1>
           <p className="text-slate-600 text-lg">
@@ -238,113 +150,65 @@ const SelectionPage = ({
         </div>
   
         <div className="bg-white shadow-2xl rounded-3xl p-10 border border-slate-200">
-
-          {isSuperAdmin && (
-            <div className="mb-7">
-              <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-                Select Organization
-              </label>
-              <Select
-                styles={selectStyles}
-                placeholder="-- Choose Organization --"
-                options={organizations.map(org => ({
-                  value: org.id,
-                  label: org.name,
-                }))}
-                value={
-                  selectedOrg
-                    ? organizations
-                        .map(org => ({ value: org.id, label: org.name }))
-                        .find(o => o.value === selectedOrg)
-                    : null
-                }
-                onChange={(opt) => {
-                  setSelectedOrg(opt?.value || "");
-                  setSelectedProject("");
-                  setPlans([]);
-                }}
-                isClearable
-              />
-            </div>
-          )}
-
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Project
             </label>
-            <Select
-              styles={selectStyles}
-              placeholder="-- Choose Project --"
-              options={projects.map(p => ({
-                value: p.id || p.project_id,
-                label: p.project_name || p.name,
-              }))}
-              value={
-                selectedProject
-                  ? projects
-                      .map(p => ({
-                        value: p.id || p.project_id,
-                        label: p.project_name || p.name,
-                      }))
-                      .find(p => p.value === selectedProject)
-                  : null
-              }
-              onChange={(opt) => handleProjectChange({ target: { value: opt?.value || "" } })}
-              isClearable
-            />
+            <select
+              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+              onChange={handleProjectChange}
+              value={selectedProject}
+            >
+              <option value="">-- Choose Project --</option>
+              {projects?.map((p, i) => (
+                <option key={i} value={p.id || p.project_id}>
+                  {p.project_name || p.name}
+                </option>
+              ))}
+            </select>
           </div>
   
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Plan
             </label>
-            <Select
-              styles={selectStyles}
-              placeholder="-- Choose Plan --"
-              options={plans.map(plan => ({
-                value: plan.plan_id,
-                label: `${plan.plan}${
-                  plan.year ? ` (${plan.year})` : ""
-                }${plan.facilitator_name ? ` – ${plan.facilitator_name}` : ""}`,
-              }))}
-              value={
-                selectedPlan
-                  ? plans
-                      .map(plan => ({
-                        value: plan.plan_id,
-                        label: plan.plan,
-                      }))
-                      .find(p => p.value === Number(selectedPlan))
-                  : null
-              }
-              onChange={(opt) => setSelectedPlan(opt?.value || "")}
-              isClearable
-            />
+            <select
+              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+              value={selectedPlan}
+              onChange={(e) => setSelectedPlan(e.target.value)}
+            >
+              <option value="">-- Choose Plan --</option>
+              {plans?.map((plan) => (
+                <option key={plan.plan_id} value={plan.plan_id}>
+                  {plan.plan}
+                  {(plan.year || plan.facilitator_name) && (
+                    <>
+                      {plan.year && ` (${plan.year})`}
+                      {plan.facilitator_name && ` – ${plan.facilitator_name}`}
+                    </>
+                  )}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-8">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Form
             </label>
-            <Select
-              styles={selectStyles}
-              placeholder="-- Choose Form --"
-              options={forms.map(form => ({
-                value: form.name,
-                label: form.display,
-              }))}
-              value={
-                selectedForm
-                  ? forms
-                      .map(form => ({
-                        value: form.name,
-                        label: form.display,
-                      }))
-                      .find(f => f.value === selectedForm)
-                  : null
-              }
-              onChange={(opt) => setSelectedForm(opt?.value || "")}
-              isClearable
-            />
+  
+            <select
+              className="w-full border-2 border-slate-300 p-4 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium"
+              value={selectedForm}
+              onChange={(e) => setSelectedForm(e.target.value)}
+            >
+              <option value="">-- Choose Form --</option>
+  
+              {forms?.map((form) => (
+                <option key={form.form_id} value={form.name}>
+                  {form.display}
+                </option>
+              ))}
+            </select>
           </div>
           <button
             onClick={handleLoadSubmissions}
@@ -375,9 +239,14 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const vectorLayerRef = useRef(null);
   const popupRef = useRef(null);
   const overlayRef = useRef(null);
+
+  // Check user permissions
+  const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+  const user = sessionUser.user || {};
   const groups = Array.isArray(user.groups) ? user.groups : [];
   const isAdmin = groups.some(g => g.name === "Administrator");
   const isModerator = groups.some(g => g.name === "Moderator");
+  const isSuperAdmin = user.is_superadmin;
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const didFetchRef = useRef(false);
 
@@ -396,7 +265,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   
     const gps = submission.GPS_point;
   
-    // GeoJSON point
+    // GeoJSON point (preferred & correct)
     const geoPoint =
       gps.point_mapappearance ||
       gps.point_mapsappearance;
@@ -449,8 +318,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       iconSrc = ICONS['Agri'];
     } else if (formType == "Crop"){
       iconSrc = ICONS['Crop']
-    } else if (formType=="Agrohorticulture"){
-      iconSrc = ICONS['Agrohorticulture']
     }
     
     return iconSrc;
@@ -702,6 +569,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const fetchSubmissions = async (pg = 1, mode = "card") => {
     if (!selectedForm || !selectedPlan) return;
   
+    const token = sessionStorage.getItem("accessToken");
   
     const url =
       mode === "map"
@@ -805,9 +673,9 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
     const overlay = new Overlay({
       element: popupRef.current,
       positioning: "bottom-center",
-      stopEvent: true, 
-      offset: [0, -15],
-    });    
+      stopEvent: false,
+      offset: [0, -10],
+    });
     map.addOverlay(overlay);
 
     mapRef.current = map;
@@ -1241,12 +1109,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
                 className="w-full h-[calc(100vh-280px)] min-h-[600px]"
               />
               {/* Popup container */}
-              <div
-                ref={popupRef}
-                className="absolute z-[1000] pointer-events-auto"
-                style={{ display: "none" }}
-              />
-
+              <div ref={popupRef} style={{ display: 'none' }} />
 
               {/* No submissions popup - small centered popup */}
               {filteredSubmissions.length === 0 && (
@@ -1437,7 +1300,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
 // Main Component
 const Moderation = () => {
   const [currentPage, setCurrentPage] = useState("selection");
-  const [selectedOrg, setSelectedOrg] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
@@ -1458,11 +1320,7 @@ const Moderation = () => {
   return currentPage === "selection" ? (
     <SelectionPage 
       onLoadSubmissions={handleLoadSubmissions}
-      selectedOrg={selectedOrg}
-      setSelectedOrg={setSelectedOrg}
-      selectedProject={selectedProject}
-      setSelectedProject={setSelectedProject}
-      initialProject={selectedProject}   
+      initialProject={selectedProject}
       initialPlan={selectedPlan}
       initialForm={selectedForm}
     />
