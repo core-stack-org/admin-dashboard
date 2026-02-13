@@ -11,8 +11,10 @@ import {
   DialogTitle,
   DialogContent,
   Button,
+ Menu,
+ Switch
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete"; // ✅ FIX
+import DeleteIcon from "@mui/icons-material/Delete"; 
 import FilterListIcon from "@mui/icons-material/FilterList";
 import {
   Edit2,
@@ -21,6 +23,7 @@ import {
   Upload,
   FilePlus,
   ArrowLeftCircle,
+  Settings
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Vector as VectorSource } from "ol/source";
@@ -46,6 +49,19 @@ const AllProjects = ({ statesList,currentUser }) => {
 const [openWBDialog, setOpenWBDialog] = useState(false);
 const [selectedWBProject, setSelectedWBProject] = useState(null);
 const [selectedWBFiles, setSelectedWBFiles] = useState([]);
+const [openWBComputeDialog, setOpenWBComputeDialog] = useState(false);
+const [selectedWBComputeProject, setSelectedWBComputeProject] = useState(null);
+const [computeFiles, setComputeFiles] = useState([]);
+const [isClosestWP, setIsClosestWP] = useState(true);
+const [geeAccounts, setGeeAccounts] = useState([]);
+const [selectedGEEAccount, setSelectedGEEAccount] = useState("");
+const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
+
+const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
+const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
+
+
+
 
 
 
@@ -90,18 +106,18 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
 
         const stateMap = {};
         statesData.states.forEach((s) => {
-          stateMap[s.state_census_code] = s.state_name;
+          stateMap[String(s.id)] = s.state_name;
         });
-
-        // enrich projects and sort by name
+        
         const updatedProjects = data
           .map((p) => ({
             ...p,
-            state_name: stateMap[p.state] || "Unknown State",
+            state_name: p.state_soi_name || p.state_name || stateMap[String(p.state)] || "Unknown State",
           }))
           .sort((a, b) => a.name.localeCompare(b.name));
-
+        
         setProjects(updatedProjects);
+        
       } catch (err) {
         console.error("Error fetching projects:", err);
       } finally {
@@ -111,6 +127,65 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
 
     fetchProjects();
   }, []);
+
+  //fetc diabled projects
+  useEffect(() => {
+    const fetchDisabledProjects = async () => {
+      try {
+        const token = sessionStorage.getItem("accessToken");
+        const res = await fetch(
+          `${process.env.REACT_APP_BASEURL}api/v1/projects/disabled/`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+  
+        if (!res.ok) throw new Error("Failed to fetch disabled projects");
+  
+        const data = await res.json();
+        setDisabledProjectsApi(data);
+      } catch (err) {
+        console.error("Error fetching disabled projects:", err);
+      }
+    };
+  
+    fetchDisabledProjects();
+  }, []);
+  
+
+    useEffect(() => {
+      const fetchGEEAccounts = async () => {
+        const token = sessionStorage.getItem("accessToken");
+        try {
+          const response = await fetch(
+            `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "420",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          const data = await response.json();
+          setGeeAccounts(data);
+        } catch (error) {
+          console.error("Error fetching GEE accounts:", error);
+        }
+      };
+  
+      fetchGEEAccounts();
+    }, []);
+
+    const handleGEEAccountChange = (e) => {
+      setSelectedGEEAccount(e.target.value);
+    };
+    
 
   // memoized filter lists
   const appTypes = useMemo(
@@ -131,8 +206,12 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
   );
 
   // apply filters
+  const allProjects = useMemo(() => {
+    return [...projects, ...disabledProjectsApi];
+  }, [projects, disabledProjectsApi]);
+  
   const filteredProjects = useMemo(() => {
-    return projects.filter((p) => {
+    return allProjects.filter((p) => {
       return (
         (selectedState
           ? p.state_name?.toLowerCase() === selectedState.toLowerCase()
@@ -151,12 +230,21 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
       );
     });
   }, [
-    projects,
+    allProjects,
     selectedState,
     selectedStatus,
     selectedAppType,
     selectedOrganization,
   ]);
+  
+
+  const enabledProjects = useMemo(() => {
+    return filteredProjects.filter(p => p.enabled !== false);
+  }, [filteredProjects]);
+  
+  const disabledProjects = useMemo(() => {
+    return filteredProjects.filter(p => p.enabled === false);
+  }, [filteredProjects]);
 
   // popover handlers
   const handleFilterClick = (e, type) => {
@@ -404,22 +492,34 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
   const handleRemoveWBFile = (index) => {
     setSelectedWBFiles((prev) => prev.filter((_, i) => i !== index));
   };
+
+  
   
   const handleUploadWB = async () => {
     if (!selectedWBFiles.length) {
       alert("Please select Excel files first");
       return;
     }
+
+     if (!selectedGEEAccount) {
+          alert("Please select GEE account.");
+          return;
+        }
   
     const formData = new FormData();
-    selectedWBFiles.forEach((f) => formData.append("files[]", f));
+    selectedWBFiles.forEach((f) => formData.append("files", f));
+    formData.append("gee_account_id", selectedGEEAccount);
     formData.append("project_id", selectedWBProject.id);
+    formData.append("is_closest_wp", true);
+    formData.append("is_lulc_required", true);
+    formData.append("is_processing_required", true);
+   
   
     try {
       const token = sessionStorage.getItem("accessToken");
   
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/upload_waterbody_excel/`,
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBProject.id}/waterrejuvenation/excel/`,
         {
           method: "POST",
           headers: {
@@ -446,9 +546,120 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
       });
     }
   };
-  
-  
 
+  const handleOpenSettings = (e, project) => {
+    setSelectedSettingsProject(project);
+    setSettingsMenuAnchor(e.currentTarget);
+  };
+  
+  const handleCloseSettings = () => {
+    setSettingsMenuAnchor(null);
+    setSelectedSettingsProject(null);
+  };
+  
+  
+  const handleToggleProject = async () => {
+    if (!selectedSettingsProject) return;
+  
+    const token = sessionStorage.getItem("accessToken");
+    const isEnabled = selectedSettingsProject.enabled;
+    const endpoint = isEnabled ? "disable" : "enable";
+  
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedSettingsProject.id}/${endpoint}/`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+  
+      if (!res.ok) throw new Error("Failed to toggle project");
+  
+      const updatedProject = await res.json();
+  
+      if (updatedProject.enabled === true) {
+        // 🔥 Disabled → Enabled
+        setDisabledProjectsApi(prev =>
+          prev.filter(p => p.id !== updatedProject.id)
+        );
+  
+        setProjects(prev => [...prev, updatedProject]);
+      } else {
+        // 🔥 Enabled → Disabled
+        setProjects(prev =>
+          prev.filter(p => p.id !== updatedProject.id)
+        );
+  
+        setDisabledProjectsApi(prev => [...prev, updatedProject]);
+      }
+  
+      handleCloseSettings();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update project status");
+    }
+  };
+  
+  const handleOpenWBCompute = (project) => {
+    setSelectedWBComputeProject(project);
+    setComputeFiles([]);
+    setIsClosestWP(true);
+    setOpenWBComputeDialog(true);
+  };
+
+  const handleComputeFileSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const valid = files.filter(
+      (f) => f.name.endsWith(".xlsx") || f.name.endsWith(".xls")
+    );
+  
+    if (!valid.length) return alert("Please upload valid Excel files");
+    setComputeFiles(valid);
+  };
+  
+  const handleRemoveComputeFile = (index) => {
+    setComputeFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleComputeWaterbody = async () => {
+    if (!computeFiles.length) return alert("Please select an Excel file!");
+  
+    const formData = new FormData();
+    computeFiles.forEach((f) => formData.append("file", f));
+    formData.append("gee_account_id", selectedGEEAccount);
+    formData.append("is_closest_wp", true);
+    formData.append("is_processing_required", true);
+    formData.append("is_lulc_required", true);
+    formData.append("is_compute", true);
+    try {
+      const token = sessionStorage.getItem("accessToken");
+      console.log("---- Compute Waterbody FormData ----");
+      console.log(token)
+      for (let pair of formData.entries()) {
+        console.log(pair[0], ":", pair[1]);
+      }
+
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBComputeProject.id}/waterrejuvenation/excel/`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+  
+      if (!res.ok) throw new Error("Compute failed");
+  
+      alert("Compute started successfully!");
+      setOpenWBComputeDialog(false);
+    } catch (err) {
+      alert("Failed to initiate compute");
+    }
+  };
+  
+  
+  
   return (
     <Box>
       <div className="h-screen flex flex-col">
@@ -465,10 +676,7 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
           </h1>
 
           {/* Clear All Filters */}
-          <span
-            onClick={clearAllFilters}
-            className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium"
-          >
+          <span onClick={clearAllFilters} className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium">
             Clear All Filters
           </span>
         </div>
@@ -481,6 +689,10 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                 <CircularProgress />
               </div>
             ) : (
+              <div>
+                <h2 className="text-xl font-semibold mb-4 text-green-700 text-center">
+                Enabled Projects
+              </h2>
               <table className="min-w-full text-md text-left border-collapse">
                 <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
                   <tr>
@@ -535,8 +747,300 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                 </thead>
 
                 <tbody className="divide-y divide-gray-200">
-                  {filteredProjects.length > 0 ? (
-                    filteredProjects.map((p, i) => (
+                  {enabledProjects.length > 0 ? (
+                    enabledProjects.map((p, i) => (
+                      <tr
+                        key={p.id}
+                        className="hover:bg-gray-50 transition duration-200 text-gray-700"
+                      >
+                        <td className="px-6 py-4 font-medium">{i + 1}</td>
+                        <td className="px-6 py-4 font-medium">{p.name}</td>
+                        <td className="px-6 py-4 font-medium">
+                          {p.app_type_display || "N/A"}
+                        </td>
+                        <td className="px-6 py-4 font-medium">
+                          {p.state_name}
+                        </td>
+                        <td className="px-6 py-4 font-medium">
+                          {p.organization_name || "N/A"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                              (p.status || "Active") === "Active"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {p.status || "Active"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 flex gap-2">
+                          {/* Plantation */}
+                          {p.app_type === "plantation" && (
+                            <>
+                              <Tooltip title="Edit">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#4f46e5",
+                                    "&:hover": {
+                                      color: "#4338ca",
+                                      backgroundColor: "rgba(79,70,229,0.1)",
+                                    },
+                                  }}
+                                  onClick={() =>
+                                    navigate(`/projects/${p.id}/action`, {
+                                      state: { project: p },
+                                    })
+                                  }
+                                >
+                                  <Edit2 size={24} />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="View Layer">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#059669", // Emerald
+                                    "&:hover": {
+                                      color: "#047857",
+                                      backgroundColor: "rgba(5,150,105,0.1)",
+                                    },
+                                  }}
+                                  onClick={() => handleViewGeoJSON(p)}
+                                >
+                                  <Eye size={24} />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Download GeoJSON">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#f59e0b", // Amber
+                                    "&:hover": {
+                                      color: "#d97706",
+                                      backgroundColor: "rgba(245,158,11,0.1)",
+                                    },
+                                  }}
+                                  onClick={handleDownloadGeoJSON}
+                                >
+                                  <Download size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+                          {/* Waterbody */}
+                          {p.app_type === "waterbody" && (
+                            <>
+                              {/* Upload Excel – ALL users */}
+                              <Tooltip title="Upload Excel">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#2563eb",
+                                    "&:hover": {
+                                      color: "#1d4ed8",
+                                      backgroundColor: "rgba(37,99,235,0.1)",
+                                    },
+                                  }}
+                                  onClick={() => handleOpenWB(p)}
+                                >
+                                  <Upload size={24} />
+                                </IconButton>
+                              </Tooltip>
+
+                              {/* Compute – ONLY Super Admin */}
+                              {isSuperAdmin && (
+                                <Tooltip title="Compute">
+                                  <IconButton
+                                    size="small"
+                                    sx={{
+                                      color: "#059669",
+                                      "&:hover": {
+                                        color: "#047857",
+                                        backgroundColor: "rgba(5,150,105,0.1)",
+                                      },
+                                    }}
+                                    onClick={() => handleOpenWBCompute(p)}
+                                  >
+                                    <FilePlus size={24} />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </>
+                          )}
+
+
+
+                          {/* Watershed */}
+                          {p.app_type === "watershed" && (
+                            <>
+                              <Tooltip title="Create Plan(s)">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#d946ef", // Pink/Purple
+                                    "&:hover": {
+                                      color: "#c026d3",
+                                      backgroundColor: "rgba(217,70,239,0.1)",
+                                    },
+                                  }}
+                                  onClick={() => {
+                                    navigate(`/projects/${p.id}/planCreation`, {
+                                      state: {
+                                        projectName: p.name,
+                                        projectId: p.id,
+                                        stateName: p.state_soi_name,
+                                        stateId: p.state_soi,
+                                        districtId: p.district_soi,
+                                        districtName: p.district_soi_name,
+                                        blockId: p.block,
+                                        blockName: p.block_name,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <FilePlus size={24} />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="View Plans">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#f43f5e",
+                                    "&:hover": {
+                                      color: "#e11d48",
+                                      backgroundColor: "rgba(244,63,94,0.1)",
+                                    },
+                                  }}
+                                  onClick={() => {
+                                    navigate(`/projects/${p.id}/plans`, {
+                                      state: {
+                                        projectName: p.name,
+                                        projectId: p.id,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <Eye size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          )}
+                          {/* Community Engagement */}
+                          {p.app_type === "community_engagement" && (
+                              <Tooltip title="Manage Community Engagement">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#0ea5e9", // Sky blue
+                                    "&:hover": {
+                                      color: "#0284c7",
+                                      backgroundColor: "rgba(14,165,233,0.1)",
+                                    },
+                                  }}
+                                  onClick={() => handleOpenCE(p)}
+                                >
+                                  <Upload size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          {(p.app_type === "plantation" || p.app_type === "waterbody") && isSuperAdmin  && (
+                              <Tooltip title="Project Settings">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#6b7280", // gray
+                                    "&:hover": {
+                                      color: "#374151",
+                                      backgroundColor: "rgba(107,114,128,0.1)",
+                                    },
+                                  }}
+                                  onClick={(e) => handleOpenSettings(e, p)}
+
+                                >
+                                  <Settings size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
+
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="text-center py-6 text-gray-500"
+                      >
+                        No projects found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <div>
+                <h2 className="text-xl font-semibold mb-4 text-green-700 text-center">
+                Disabled Projects
+              </h2>
+              <table className="min-w-full text-md text-left border-collapse">
+                <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
+                  <tr>
+                    <th className="px-6 py-4">S. No.</th>
+                    <th className="px-6 py-4">Name</th>
+                    <th className="px-6 py-4">
+                      <div className="flex items-center">
+                        App Type
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleFilterClick(e, "app_type")}
+                        >
+                          <FilterListIcon fontSize="small" />
+                        </IconButton>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4">
+                      <div className="flex items-center">
+                        State
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleFilterClick(e, "state")}
+                        >
+                          <FilterListIcon fontSize="small" />
+                        </IconButton>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4">
+                      <div className="flex items-center">
+                        Organization
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleFilterClick(e, "organization")}
+                        >
+                          <FilterListIcon fontSize="small" />
+                        </IconButton>
+                      </div>
+                    </th>
+                    <th className="px-6 py-4">
+                      <div className="flex items-center">
+                        Status
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleFilterClick(e, "status")}
+                        >
+                          <FilterListIcon fontSize="small" />
+                        </IconButton>
+                      </div>
+                    </th>
+                    <th className="px-6 py-3">Actions</th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-gray-200">
+                  {disabledProjects.length > 0 ? (
+                    disabledProjects.map((p, i) => (
                       <tr
                         key={p.id}
                         className="hover:bg-gray-50 transition duration-200 text-gray-700"
@@ -620,7 +1124,8 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                           )}
                           {/* Waterbody */}
                           {p.app_type === "waterbody" && isSuperAdmin && (
-                            <Tooltip title="Upload Excel">
+                            <>
+                                    <Tooltip title="Upload Excel">
                               <IconButton
                                 size="small"
                                 sx={{
@@ -635,6 +1140,26 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                                 <Upload size={24} />
                               </IconButton>
                             </Tooltip>
+                            <Tooltip title="Compute">
+  <IconButton
+    size="small"
+    sx={{
+      color: "#059669",
+      "&:hover": {
+        color: "#047857",
+        backgroundColor: "rgba(5,150,105,0.1)",
+      },
+    }}
+    onClick={() => handleOpenWBCompute(p)}
+  >
+    <FilePlus size={24} />   {/* OR choose Hammer/Wrench if you want */}
+  </IconButton>
+</Tooltip>
+
+                            </>
+                    
+
+                            
                           )}
 
 
@@ -656,10 +1181,10 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                                       state: {
                                         projectName: p.name,
                                         projectId: p.id,
-                                        stateName: p.state_name,
-                                        stateId: p.state,
-                                        districtId: p.district,
-                                        districtName: p.district_name,
+                                        stateName: p.state_soi_name,
+                                        stateId: p.state_soi,
+                                        districtId: p.district_soi,
+                                        districtName: p.district_soi_name,
                                         blockId: p.block,
                                         blockName: p.block_name,
                                       },
@@ -711,6 +1236,26 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                                 </IconButton>
                               </Tooltip>
                             )}
+                          {(p.app_type === "plantation" || p.app_type === "waterbody") && isSuperAdmin  && (
+                              <Tooltip title="Project Settings">
+                                <IconButton
+                                  size="small"
+                                  sx={{
+                                    color: "#6b7280", // gray
+                                    "&:hover": {
+                                      color: "#374151",
+                                      backgroundColor: "rgba(107,114,128,0.1)",
+                                    },
+                                  }}
+                                  onClick={(e) => handleOpenSettings(e, p)}
+
+                                >
+                                  <Settings size={24} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+
+
                         </td>
                       </tr>
                     ))
@@ -726,6 +1271,9 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
                   )}
                 </tbody>
               </table>
+              </div>
+              </div>
+              
             )}
           </div>
         </div>
@@ -832,6 +1380,42 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
               ))}
         </Box>
       </Popover>
+      <Menu
+        anchorEl={settingsMenuAnchor}
+        open={Boolean(settingsMenuAnchor)}
+        onClose={handleCloseSettings}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
+        PaperProps={{
+          elevation: 3,
+          sx: { borderRadius: 2, minWidth: 220 }
+        }}
+      >
+        <MenuItem disabled sx={{ fontWeight: 600 }}>
+          {selectedSettingsProject?.name}
+        </MenuItem>
+
+        <MenuItem sx={{ display: "flex", justifyContent: "space-between" }}>
+          <span className="text-gray-700 text-sm">Enabled</span>
+          <Switch
+            checked={selectedSettingsProject?.enabled === true}
+            onChange={handleToggleProject}
+            color="primary"
+          />
+
+        </MenuItem>
+      </Menu>
+
+
+
+
+
 
       <Dialog
   open={openCEDialog}
@@ -956,6 +1540,101 @@ const [selectedWBFiles, setSelectedWBFiles] = useState([]);
     </Box>
   </DialogContent>
 </Dialog>
+
+<Dialog
+  open={openWBComputeDialog}
+  onClose={() => setOpenWBComputeDialog(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    Compute Waterbody – {selectedWBComputeProject?.name}
+  </DialogTitle>
+
+  <DialogContent>
+    <Box display="flex" flexDirection="column" gap={2}>
+      {/* Upload */}
+      <input
+        id="wb-compute-upload"
+        type="file"
+        accept=".xls,.xlsx"
+        multiple
+        hidden
+        onChange={handleComputeFileSelect}
+      />
+
+      <label htmlFor="wb-compute-upload">
+        <Box className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50">
+          Select Excel Files
+        </Box>
+      </label>
+
+      {/* Selected Files */}
+      {computeFiles.length > 0 && (
+        <Box className="bg-gray-100 p-3 rounded-lg">
+          {computeFiles.map((f, i) => (
+            <Box
+              key={i}
+              className="flex justify-between items-center p-2 border-b last:border-none"
+            >
+              {f.name}
+              <IconButton
+                size="small"
+                color="error"
+                onClick={() => handleRemoveComputeFile(i)}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {/* Toggle */}
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <span>Use Closest WP</span>
+        <Switch
+          checked={isClosestWP}
+          onChange={() => setIsClosestWP(!isClosestWP)}
+        />
+      </Box>
+
+      {/* Select GEE Account */}
+      <Box display="flex" flexDirection="column" gap={1}>
+        <label className="text-lg font-semibold mb-1">
+          Select GEE Account:
+        </label>
+
+        <select
+          value={selectedGEEAccount}
+          onChange={handleGEEAccountChange}
+          className="w-full px-4 py-2 border text-lg rounded-lg"
+        >
+          <option value="">Select GEE Account</option>
+          {Array.isArray(geeAccounts) &&
+            geeAccounts.map((account) => (
+              <option key={account.id} value={account.id}>
+                {account.name}
+              </option>
+            ))}
+        </select>
+      </Box>
+
+
+      {/* Compute */}
+      <Button
+        variant="contained"
+        color="primary"
+        fullWidth
+        disabled={!computeFiles.length}
+        onClick={handleComputeWaterbody}
+      >
+        Compute
+      </Button>
+    </Box>
+  </DialogContent>
+</Dialog>
+
 
 
     </Box>

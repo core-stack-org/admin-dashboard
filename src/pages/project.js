@@ -21,8 +21,6 @@ const Project = ({ currentUser }) => {
   const [block, setBlock] = useState({ id: "", name: "" });
   const [organizationsList, setOrganizationsList] = useState([]);
 
-  const [needDesiltingPoint, setNeedDesiltingPoint] = useState(true);
-
   useEffect(() => {
     fetchStates();
   }, []);
@@ -180,18 +178,16 @@ const Project = ({ currentUser }) => {
     const formData = {
       name: projectName,
       description: projectDescription,
-      state: parseInt(state.id),
-      district: district?.id ? parseInt(district.id) : null,
-      block: block?.id ? parseInt(block.id) : null,
+      state_soi: parseInt(state.id),
+      district_soi: district?.id ? parseInt(district.id) : null,
+      tehsil_soi: block?.id ? parseInt(block.id) : null,
       app_type: projectAppType,
       enabled: true, // Ensuring it's included
       created_by: userId,
       updated_by: userId,
       organization: organization,
-      ...(projectAppType === "waterbody" && {
-        need_desilting_point: needDesiltingPoint,
-      }),
     };
+    
     try {
       const token = sessionStorage.getItem("accessToken");
       const apiPath =  projectAppType === "community_engagement" ? "api/v1/create_community/" : "api/v1/projects/";
@@ -291,9 +287,6 @@ const Project = ({ currentUser }) => {
               onChange={(e) => {
                 const selectedType = e.target.value;
                 setProjectAppType(selectedType);
-                if (selectedType === "waterbody") {
-                  setNeedDesiltingPoint(true);
-                }
               }}
               className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300"
               required
@@ -307,25 +300,6 @@ const Project = ({ currentUser }) => {
               <option value="community_engagement">Community Engagement</option>
             </select>
           </div>
-
-          {projectAppType === "waterbody" && (
-            <div className="flex items-center justify-between">
-              <label className="text-lg font-medium">
-                Need Desilting Point
-              </label>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={needDesiltingPoint}
-                  onChange={() => setNeedDesiltingPoint(!needDesiltingPoint)}
-                />
-                <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-violet-600 relative">
-                  <div className="absolute left-[2px] top-[2px] w-5 h-5 bg-white rounded-full transition peer-checked:translate-x-full"></div>
-                </div>
-              </label>
-            </div>
-          )}
 
           {/* Location Dropdowns */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -343,8 +317,8 @@ const Project = ({ currentUser }) => {
                 <option value="">Select State</option>
                 {statesList.map((state) => (
                   <option
-                    key={state.state_census_code}
-                    value={`${state.state_census_code}_${state.state_name}`}
+                    key={state.id}
+                    value={`${state.id}_${state.state_name}`}
                   >
                     {state.state_name}
                   </option>

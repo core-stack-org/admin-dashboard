@@ -287,6 +287,20 @@
             "api_url": "${config.layer_api_url_v1}/generate_zoi_data/",
             "show_Dates": false,
             "workspace": ""
+        },
+        "MWS Connectivity Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_mws_connectivity_data/",
+            "show_Dates": false,
+            "workspace": ""
+        },
+        "NDVI": {
+            "api_url": "${config.layer_api_url_v1}/generate_ndvi_timeseries",
+            "show_Dates": true,
+            "workspace": "",
+            "date_range": [
+                2017,
+                2024
+            ]
         }
     }
 }
