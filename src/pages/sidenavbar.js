@@ -283,22 +283,22 @@ else if (isAdministrator) {
       label: "Request data layers",
       href: "/locationForm",
     },
-    {
-      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-      label: "Moderation Dashboard",
-      href: "/moderation",
-    },
+    // {
+    //   icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+    //   label: "Moderation Dashboard",
+    //   href: "/moderation",
+    // },
   ];
 }
 
 // MODERATOR (NO DASHBOARD)
 else if (isModerator) {
   menuItems = [
-    {
-      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-      label: "Moderation Dashboard",
-      href: "/moderation",
-    },
+    // {
+    //   icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+    //   label: "Moderation Dashboard",
+    //   href: "/moderation",
+    // },
     {
       icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
       label: "How to use",
