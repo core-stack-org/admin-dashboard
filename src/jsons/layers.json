@@ -268,7 +268,7 @@
             "show_Dates": false,
             "workspace": ""
         },
-        "Distance nearest DL": {
+        "Distance Nearest DL": {
             "api_url": "${config.layer_api_url_v1}/generate_distance_nearest_DL/",
             "show_Dates": false,
             "workspace": ""
@@ -294,7 +294,7 @@
             "workspace": ""
         },
         "NDVI": {
-            "api_url": "${config.layer_api_url_v1}/generate_ndvi_timeseries",
+            "api_url": "${config.layer_api_url_v1}/generate_ndvi_timeseries/",
             "show_Dates": true,
             "workspace": "",
             "date_range": [
