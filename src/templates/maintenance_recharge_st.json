@@ -78,6 +78,7 @@
         {
           "type": "radiogroup",
           "name": "past_repair",
+          "visibleIf": "{demand_type} = 'Community_demand' or {demand_type} = 'Individual_demand'",
           "title": "Any past repair or maintenance work done on this structure?",
           "isRequired": true,
           "choices": [
@@ -94,6 +95,7 @@
         {
           "type": "radiogroup",
           "name": "select_one_recharge_structure",
+          "visibleIf": "{demand_type} = 'Community_demand' or {demand_type} = 'Individual_demand'",
           "title": "Select the visible repairs or maintenance issues for the recharge structures?",
           "isRequired": true,
           "choices": [
@@ -120,7 +122,7 @@
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_check_dam",
           "visibleIf": "{select_one_recharge_structure} = 'Check dam'",
           "title": "Repair of check dam",
@@ -137,12 +139,12 @@
         {
           "type": "text",
           "name": "select_one_check_dam_other",
-          "visibleIf": "{select_one_check_dam} = 'other'",
+          "visibleIf": "{select_one_check_dam} anyof ['other']",
           "title": "Specify other ",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_percolation_tank",
           "visibleIf": "{select_one_recharge_structure} = 'Percolation tank'",
           "title": "Repair of percolation tank",
@@ -161,12 +163,12 @@
         {
           "type": "text",
           "name": "select_one_percolation_tank_other",
-          "visibleIf": "{select_one_percolation_tank} = 'other'",
+          "visibleIf": "{select_one_percolation_tank} anyof ['other']",
           "title": "Specify other ",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_earthen_gully_plug",
           "visibleIf": "{select_one_recharge_structure} = 'Earthen gully plug'",
           "title": "Repair of earthen gully plug",
@@ -184,12 +186,12 @@
         {
           "type": "text",
           "name": "select_one_earthen_gully_plug_other",
-          "visibleIf": "{select_one_earthen_gully_plug} = 'other'",
+          "visibleIf": "{select_one_earthen_gully_plug} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_drainage_soakage_channels",
           "visibleIf": "{select_one_recharge_structure} = 'Drainage/soakage channels'",
           "title": "Repair of drainage/soakage channels",
@@ -207,12 +209,12 @@
         {
           "type": "text",
           "name": "select_one_drainage_soakage_channels_other",
-          "visibleIf": "{select_one_drainage_soakage_channels} = 'other'",
+          "visibleIf": "{select_one_drainage_soakage_channels} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_recharge_pits",
           "visibleIf": "{select_one_recharge_structure} = 'Recharge pits'",
           "title": "Repair of recharge pits",
@@ -230,12 +232,12 @@
         {
           "type": "text",
           "name": "select_one_recharge_pits_other",
-          "visibleIf": "{select_one_recharge_pits} = 'other'",
+          "visibleIf": "{select_one_recharge_pits} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_sokage_pits",
           "visibleIf": "{select_one_recharge_structure} = 'Sokage pits'",
           "title": "Repair of soakage pits",
@@ -253,12 +255,12 @@
         {
           "type": "text",
           "name": "select_one_sokage_pits_other",
-          "visibleIf": "{select_one_sokage_pits} = 'other'",
+          "visibleIf": "{select_one_sokage_pits} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_trench_cum_bund_network",
           "visibleIf": "{select_one_recharge_structure} = 'Trench cum bund network'",
           "title": "Repair of trench cum bund network",
@@ -275,12 +277,12 @@
         {
           "type": "text",
           "name": "select_one_trench_cum_bund_network_other",
-          "visibleIf": "{select_one_trench_cum_bund_network} = 'other'",
+          "visibleIf": "{select_one_trench_cum_bund_network} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_continuous_contour_trenches",
           "visibleIf": "{select_one_recharge_structure} = 'Continuous contour trenches (CCT)'",
           "title": "Repair of continuous contour trenches (CCT)",
@@ -297,12 +299,12 @@
         {
           "type": "text",
           "name": "select_one_continuous_contour_trenches_other",
-          "visibleIf": "{select_one_continuous_contour_trenches} = 'other'",
+          "visibleIf": "{select_one_continuous_contour_trenches} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_staggered_contour_trenches",
           "visibleIf": "{select_one_recharge_structure} = 'Staggered Contour trenches(SCT)'",
           "title": "Repair of staggered contour trenches (SCT)",
@@ -319,12 +321,12 @@
         {
           "type": "text",
           "name": "select_one_staggered_contour_trenches_other",
-          "visibleIf": "{select_one_staggered_contour_trenches} = 'other'",
+          "visibleIf": "{select_one_staggered_contour_trenches} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_water_absorption_trenches",
           "visibleIf": "{select_one_recharge_structure} = 'Water absorption trenches(WAT)'",
           "title": "Repair of water absorption trenches (WAT)",
@@ -341,12 +343,12 @@
         {
           "type": "text",
           "name": "select_one_water_absorption_trenches_other",
-          "visibleIf": "{select_one_water_absorption_trenches} = 'other'",
+          "visibleIf": "{select_one_water_absorption_trenches} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_loose_boulder_structure",
           "visibleIf": "{select_one_recharge_structure} = 'Loose boulder structure'",
           "title": "Repair of loose boulder structure",
@@ -363,12 +365,12 @@
         {
           "type": "text",
           "name": "select_one_loose_boulder_structure_other",
-          "visibleIf": "{select_one_loose_boulder_structure} = 'other'",
+          "visibleIf": "{select_one_loose_boulder_structure} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_rock_fill_dam",
           "visibleIf": "{select_one_recharge_structure} = 'Rock fill dam'",
           "title": "Repair of rock fill dam",
@@ -385,12 +387,12 @@
         {
           "type": "text",
           "name": "select_one_rock_fill_dam_other",
-          "visibleIf": "{select_one_rock_fill_dam} = 'other'",
+          "visibleIf": "{select_one_rock_fill_dam} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_stone_bunding",
           "visibleIf": "{select_one_recharge_structure} = 'Stone bunding'",
           "title": "Repair of stone bunding",
@@ -407,12 +409,12 @@
         {
           "type": "text",
           "name": "select_one_stone_bunding_other",
-          "visibleIf": "{select_one_stone_bunding} = 'other'",
+          "visibleIf": "{select_one_stone_bunding} anyof ['other']",
           "title": "Specify other.",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_diversion_drains",
           "visibleIf": "{select_one_recharge_structure} = 'Diversion drains'",
           "title": "Repair of diversion drains",
@@ -429,12 +431,12 @@
         {
           "type": "text",
           "name": "select_one_diversion_drains_other",
-          "visibleIf": "{select_one_diversion_drains} = 'other'",
+          "visibleIf": "{select_one_diversion_drains} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_bunding",
           "visibleIf": "{select_one_recharge_structure} = 'Bunding:Contour bunds/ graded bunds'",
           "title": "Repair of bunding: Contour bunds/ graded bunds",
@@ -454,12 +456,12 @@
         {
           "type": "text",
           "name": "select_one_bunding_other",
-          "visibleIf": "{select_one_bunding} = 'other'",
+          "visibleIf": "{select_one_bunding} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_model5_structure",
           "visibleIf": "{select_one_recharge_structure} = '5% model structure'",
           "title": "Repair of 5% model structure",
@@ -476,12 +478,12 @@
         {
           "type": "text",
           "name": "select_one_model5_structure_other",
-          "visibleIf": "{select_one_model5_structure} = 'other'",
+          "visibleIf": "{select_one_model5_structure} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_model30_40_structure",
           "visibleIf": "{select_one_recharge_structure} = '30-40 model structure'",
           "title": "Repair of 30-40 model structure",
@@ -498,7 +500,7 @@
         {
           "type": "text",
           "name": "select_one_model30_40_structure_other",
-          "visibleIf": "{select_one_model30_40_structure} = 'other'",
+          "visibleIf": "{select_one_model30_40_structure} anyof ['other']",
           "title": "Specify other",
           "isRequired": true
         }

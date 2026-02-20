@@ -1,5 +1,5 @@
 {
-  "title": "Agrohorticulture",
+  "title": "Agrohorticulture Details Form",
   "logoFit": "none",
   "logoPosition": "right",
   "completedHtml": "<h3>Agrohorticulture Details have been recorded!</h3>",
@@ -34,6 +34,10 @@
             {
               "value": "Community_demand",
               "text": "Community Demand"
+            },
+            {
+              "value": "Cluster_demand",
+              "text": "Cluster Demand"
             },
             {
               "value": "Individual_demand",
@@ -231,6 +235,46 @@
               "text": "Homestead plantation"
             }
           ]
+        },
+        {
+          "type": "checkbox",
+          "name": "departments_converged",
+          "visibleIf": "{select_one_y_n} = 'Yes'",
+          "title": "Which departments / schemes may be converged with?",
+          "choices": [
+            {
+              "value": "Forest",
+              "text": "Forest Department"
+            },
+            {
+              "value": "Agri",
+              "text": "Agriculture Department"
+            },
+            {
+              "value": "Horticulture",
+              "text": "Horticulture Department"
+            },
+            "MGNREGA",
+            {
+              "value": "Tribal_welfare",
+              "text": "Tribal Welfare Department"
+            },
+            {
+              "value": "Panchayati_raj",
+              "text": "Panchayati Raj Department"
+            },
+            "NRLM",
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "departments_converged_other",
+          "visibleIf": "{departments_converged} anyof ['other']",
+          "title": "Specify other."
         }
       ]
     }
