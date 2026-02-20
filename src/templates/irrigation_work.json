@@ -90,6 +90,7 @@
         {
           "type": "radiogroup",
           "name": "TYPE_OF_WORK_ID",
+          "visibleIf": "{demand_type_irrigation} = 'Community_demand' or {demand_type_irrigation} = 'Individual_demand'",
           "title": "Select the type of Irrigation work in this settlement",
           "isRequired": true,
           "choices": [
@@ -109,6 +110,13 @@
           "name": "TYPE_OF_WORK_ID_other",
           "visibleIf": "{TYPE_OF_WORK_ID} = 'other'",
           "title": "Specify other."
+        },
+        {
+          "type": "html",
+          "name": "question2",
+          "visibleIf": "{TYPE_OF_WORK_ID} = 'Farm bund'",
+          "title": "Provide dimensions farm bund ( Length, Width and Height is in feet )",
+          "html": "<span style=\"color: red; font-weight: bold;\">\n  Below dimensions question will be shown in accordance to the type of irrigation work selected\n</span>"
         },
         {
           "type": "multipletext",
@@ -204,7 +212,73 @@
         },
         {
           "type": "checkbox",
+          "name": "departments_converged",
+          "visibleIf": "{demand_type_irrigation} = 'Community_demand' or {demand_type_irrigation} = 'Individual_demand'",
+          "title": "Which departments / schemes may be converged with?",
+          "choices": [
+            "MGNREGA",
+            {
+              "value": "Agri",
+              "text": "Agriculture Department"
+            },
+            {
+              "value": "Horticulture",
+              "text": "Horticulture Department"
+            },
+            {
+              "value": "Minor_irrigation",
+              "text": "Minor Irrigation Department"
+            },
+            {
+              "value": "Water_resources",
+              "text": "Water Resources Department"
+            },
+            "PMKSY",
+            {
+              "value": "Panchayati_raj",
+              "text": "Panchayati Raj Department"
+            },
+            "NRLM",
+            {
+              "value": "other",
+              "text": "Other"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "departments_converged_other",
+          "visibleIf": "{departments_converged} anyof ['other']",
+          "title": "Specify other."
+        },
+        {
+          "type": "radiogroup",
+          "name": "land_ownership",
+          "visibleIf": "{demand_type_irrigation} = 'Community_demand' or {demand_type_irrigation} = 'Individual_demand'",
+          "title": "Land Ownership / Status",
+          "choices": [
+            {
+              "value": "Private_land",
+              "text": "Private land"
+            },
+            {
+              "value": "Community_land",
+              "text": "Community land"
+            },
+            {
+              "value": "Panchayat_land",
+              "text": "Panchayat land"
+            },
+            {
+              "value": "Forest_land",
+              "text": "Forest land"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
           "name": "select_multiple_cropping_kharif",
+          "visibleIf": "{demand_type_irrigation} = 'Community_demand' or {demand_type_irrigation} = 'Individual_demand'",
           "title": "What type of crops are grown in Kharif ?",
           "choices": [
             "Paddy",
@@ -235,6 +309,7 @@
         {
           "type": "radiogroup",
           "name": "select_one_cropping_pattern",
+          "visibleIf": "{demand_type_irrigation} = 'Community_demand' or {demand_type_irrigation} = 'Individual_demand'",
           "title": "What type of cropping pattern is practiced?",
           "choices": [
             "Mono cropping",
