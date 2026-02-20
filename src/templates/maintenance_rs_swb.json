@@ -77,125 +77,321 @@
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_farm_pond",
           "visibleIf": "{TYPE_OF_WORK} = 'Farm pond'",
           "title": "Repair of farm pond",
           "choices": [
-            "Removal of accumulated sediments",
-            "Repairing cracks or damage in embankments",
-            "Controlling seepage or leaks in the pond bed",
-            "Erosion control on embankments",
-            "Addressing excessive aquatic vegetation growth"
+            {
+              "value": "Removal_of_accumulated_sediments",
+              "text": "Removal of accumulated sediments"
+            },
+            {
+              "value": "Repairing_cracks_or_damage_in_embankments",
+              "text": "Repairing cracks or damage in embankments"
+            },
+            {
+              "value": "Controlling_seepage_or_leaks_in_the_pond_bed",
+              "text": "Controlling seepage or leaks in the pond bed"
+            },
+            {
+              "value": "Erosion_control_on_embankments",
+              "text": "Erosion control on embankments"
+            },
+            {
+              "value": "Addressing_excessive_aquatic_vegetation_growth",
+              "text": "Addressing excessive aquatic vegetation growth"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_farm_pond_other",
+          "visibleIf": "{select_one_farm_pond} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_community_pond",
           "visibleIf": "{TYPE_OF_WORK} = 'Community Pond'",
           "title": "Repair of community Pond",
           "choices": [
-            "Removal of accumulated sediments",
-            "Shoreline erosion control",
-            "Repairing cracks or damage in embankments",
-            "Controlling excessive aquatic vegetation growth",
-            "Repair or cleaning of inlet/outlet structures"
+            {
+              "value": "Removal_of_accumulated_sediments",
+              "text": "Removal of accumulated sediments"
+            },
+            {
+              "value": "Shoreline_erosion_control",
+              "text": "Shoreline erosion control"
+            },
+            {
+              "value": "Repairing_cracks_or_damage_in_embankments",
+              "text": "Repairing cracks or damage in embankments"
+            },
+            {
+              "value": "Controlling_excessive_aquatic_vegetation_growth",
+              "text": "Controlling excessive aquatic vegetation growth"
+            },
+            {
+              "value": "Repair_or_cleaning_of_inlet_outlet_structures",
+              "text": "Repair or cleaning of inlet outlet structures"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_community_pond_other",
+          "visibleIf": "{select_one_community_pond} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_repair_large_water_body",
           "visibleIf": "{TYPE_OF_WORK} = 'Large water body'",
           "title": "Repair of large water body",
           "choices": [
-            "Removal of accumulated sediments",
             {
-              "value": "Shoreline Erosion Control",
+              "value": "Removal_of_accumulated_sediments",
+              "text": "Removal of accumulated sediments"
+            },
+            {
+              "value": "Shoreline_erosion_control",
               "text": "Shoreline erosion control"
             },
-            "Dam Repairs",
-            "Controlling excessive growth of aquatic vegetation"
+            {
+              "value": "Dam_repairs",
+              "text": "Dam repairs"
+            },
+            {
+              "value": "Controlling_excessive_growth_of_aquatic_vegetation",
+              "text": "Controlling excessive growth of aquatic vegetation"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_repair_large_water_body_other",
+          "visibleIf": "{select_one_repair_large_water_body} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_repair_canal",
           "visibleIf": "{TYPE_OF_WORK} = 'Canal'",
           "title": "Repair of canal",
           "choices": [
-            "Stabilizing canal banks to prevent erosion",
-            "Lining Repairs",
+            {
+              "value": "Stabilizing_canal_banks_to_prevent_erosion",
+              "text": "Stabilizing canal banks to prevent erosion"
+            },
+            {
+              "value": "Lining_repairs",
+              "text": "Lining repairs"
+            },
             "Desilting",
-            "Structural repairs"
+            {
+              "value": "Structural_repairs",
+              "text": "Structural repairs"
+            },
+            "other"
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_repair_canal_other",
+          "visibleIf": "{select_one_repair_canal} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_check_dam",
           "visibleIf": "{TYPE_OF_WORK} = 'Check dam'",
           "title": "Repair of check dam",
           "choices": [
-            "Erosion on the check dam",
-            "Sediment accumulated in the check dam",
-            "Structural damage on the check dam"
+            {
+              "value": "Erosion_on_the_check_dam",
+              "text": "Erosion on the check dam"
+            },
+            {
+              "value": "Sediment_accumulated_in_the_check_dam",
+              "text": "Sediment accumulated in the check dam"
+            },
+            {
+              "value": "Structural_damage_on_the_check_dam",
+              "text": "Structural damage on the check dam"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_check_dam_other",
+          "visibleIf": "{select_one_check_dam} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_percolation_tank",
           "visibleIf": "{TYPE_OF_WORK} = 'Percolation tank'",
           "title": "Repair of Percolation tank",
           "choices": [
-            "Sediment accumulation reducing infiltration capacity",
-            "Breach in embankments",
-            "Erosion on tank bund or inlet/outlet",
-            "Vegetation growth blocking water entry",
-            "Damage to spillway or outlet structure"
+            {
+              "value": "Sediment_accumulation_reducing_infiltration_capacity",
+              "text": "Sediment accumulation reducing infiltration capacity"
+            },
+            {
+              "value": "Breach_in_embankments",
+              "text": "Breach in embankments"
+            },
+            {
+              "value": "Erosion_on_tank_bund_or_inlet_outlet",
+              "text": "Erosion on tank bund or inlet outlet"
+            },
+            {
+              "value": "Vegetation_growth_blocking_water_entry",
+              "text": "Vegetation growth blocking water entry"
+            },
+            {
+              "value": "Damage_to_spillway_or_outlet_structure",
+              "text": "Damage to spillway or outlet structure"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_percolation_tank_other",
+          "visibleIf": "{select_one_percolation_tank} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_rock_fill_dam",
           "visibleIf": "{TYPE_OF_WORK} = 'Rock fill dam'",
           "title": "Repair of rock fill dam",
           "choices": [
-            "Sediment accumulation reducing water storage",
-            "Dislodged or loose rocks",
-            "Erosion around or under the dam structure"
+            {
+              "value": "Sediment_accumulation_reducing_water_storage",
+              "text": "Sediment accumulation reducing water storage"
+            },
+            {
+              "value": "Dislodged_or_loose_rocks",
+              "text": "Dislodged or loose rocks"
+            },
+            {
+              "value": "Erosion_around_or_under_the_dam_structure",
+              "text": "Erosion around or under the dam structure"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_rock_fill_dam_other",
+          "visibleIf": "{select_one_rock_fill_dam} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_loose_boulder_structure",
           "visibleIf": "{TYPE_OF_WORK} = 'Loose boulder structure'",
           "title": "Repair of loose boulder structure",
           "choices": [
-            "Dislodged boulders",
+            "Dislodged_boulders",
             "Grouting",
-            "Erosion around boulder structure"
+            "Erosion_around_boulder_structure",
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_loose_boulder_structure_other",
+          "visibleIf": "{select_one_loose_boulder_structure} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_model5_structure",
           "visibleIf": "{TYPE_OF_WORK} = '5% Model structure'",
           "title": "Repair of 5% Model structure",
           "choices": [
-            "Sediment accumulation reducing capacity",
-            "Breaches or leaks in the embankment",
-            "Erosion on sides or base"
+            {
+              "value": "Sediment_accumulation_reducing_capacity",
+              "text": "Sediment accumulation reducing capacity"
+            },
+            {
+              "value": "Breaches_or_leaks_in_the_embankment",
+              "text": "Breaches or leaks in the embankment"
+            },
+            {
+              "value": "Erosion_on_sides_or_base",
+              "text": "Erosion on sides or base"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "text",
+          "name": "select_one_model5_structure_other",
+          "visibleIf": "{select_one_model5_structure} anyof ['other']",
+          "title": "Specify other"
+        },
+        {
+          "type": "checkbox",
           "name": "select_one_Model30_40_structure",
           "visibleIf": "{TYPE_OF_WORK} = '30-40 Model structure'",
           "title": "Repair of 30-40 Model structure",
           "choices": [
-            "Sediment accumulation",
-            "Breaches in bunding or structure walls",
-            "Erosion along trenches or bunds"
+            {
+              "value": "Sediment_accumulation",
+              "text": "Sediment accumulation"
+            },
+            {
+              "value": "Breaches_in_bunding_or_structure_walls",
+              "text": "Breaches in bunding or structure walls"
+            },
+            {
+              "value": "Erosion_along_trenches_or_bunds",
+              "text": "Erosion along trenches or bunds"
+            },
+            {
+              "value": "other",
+              "text": ""
+            }
           ]
+        },
+        {
+          "type": "text",
+          "name": "select_one_Model30_40_structure_other",
+          "visibleIf": "{select_one_Model30_40_structure} anyof ['other']",
+          "title": "Specify other"
         }
       ]
     }

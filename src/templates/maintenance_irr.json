@@ -72,16 +72,31 @@
           ]
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_farm_pond",
           "visibleIf": "({select_one_irrigation_structure} == 'Farm pond')",
           "title": "Select the type of repair maintenance required for farm pond?",
           "choices": [
-            "Removal of accumulated sediments",
-            "Repairing cracks or damage in embankments",
-            "Controlling seepage or leaks in the pond bed",
-            "Erosion control on embankments",
-            "Addressing excessive aquatic vegetation growth",
+            {
+              "value": "Removal_of_accumulated_sediments",
+              "text": "Removal of accumulated sediments"
+            },
+            {
+              "value": "Repairing_cracks_or_damage_in_embankments",
+              "text": "Repairing cracks or damage in embankments"
+            },
+            {
+              "value": "Controlling_seepage_or_leaks_in_the_pond_bed",
+              "text": "Controlling seepage or leaks in the pond bed"
+            },
+            {
+              "value": "Erosion_control_on_embankments",
+              "text": "Erosion control on embankments"
+            },
+            {
+              "value": "Addressing_excessive_aquatic_vegetation_growth",
+              "text": "Addressing excessive aquatic vegetation growth"
+            },
             {
               "value": "other",
               "text": "Other"
@@ -91,21 +106,32 @@
         {
           "type": "text",
           "name": "select_one_farm_pond_other",
-          "visibleIf": "{select_one_farm_pond} = 'other' and {select_one_irrigation_structure} = 'Farm pond'",
+          "visibleIf": "{select_one_farm_pond} anyof ['other'] and {select_one_irrigation_structure} = 'Farm pond'",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_community_pond",
           "visibleIf": "({select_one_irrigation_structure} == 'Community Pond')",
           "title": "Select the type of repair maintenance required for community pond?",
           "choices": [
-            "Removal of accumulated sediments",
-            "Shoreline erosion control",
-            "Repairing cracks or damage in embankments",
-            "Controlling excessive aquatic vegetation growth",
-            "Repair or cleaning of inlet/outlet structures",
+            {
+              "value": "Removal_of_accumulated_sediments",
+              "text": "Removal of accumulated sediments"
+            },
+            {
+              "value": "Shoreline_erosion_control",
+              "text": "Shoreline erosion control"
+            },
+            {
+              "value": "Repair_or_cleaning_of_inlet_outlet_structures",
+              "text": "Repair or cleaning of inlet outlet structures"
+            },
+            {
+              "value": "Controlling_excessive_aquatic_vegetation_growth",
+              "text": "Controlling excessive aquatic vegetation growth"
+            },
             {
               "value": "other",
               "text": "Other"
@@ -115,21 +141,36 @@
         {
           "type": "text",
           "name": "select_one_community_pond_other",
-          "visibleIf": "{select_one_community_pond} = 'other' and {select_one_irrigation_structure} = 'Community Pond'",
+          "visibleIf": "{select_one_community_pond} anyof ['other'] and {select_one_irrigation_structure} = 'Community Pond'",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_well",
           "visibleIf": "({select_one_irrigation_structure} == 'Well')",
           "title": "Select the type of repair maintenance required for well?",
           "choices": [
-            "Cleaning and removal of silt or debris",
-            "Repairing cracks or damage to well walls",
-            "Deepening the well to enhance water availability",
-            "Repair or replacement of well cover or structure",
-            "Installing or repairing pumping mechanisms",
+            {
+              "value": "Cleaning_and_removal_of_silt_or_debris",
+              "text": "Cleaning and removal of silt or debris"
+            },
+            {
+              "value": "Repairing_cracks_or_damage_to_well_walls",
+              "text": "Repairing cracks or damage to well walls"
+            },
+            {
+              "value": "Deepening_the_well_to_enhance_water_availability",
+              "text": "Deepening the well to enhance water availability"
+            },
+            {
+              "value": "Repair_or_replacement_of_well_cover_or_structure",
+              "text": "Repair or replacement of well cover or structure"
+            },
+            {
+              "value": "Installing_or_repairing_pumping_mechanisms",
+              "text": "Installing or repairing pumping mechanisms"
+            },
             {
               "value": "other",
               "text": "Other"
@@ -139,23 +180,32 @@
         {
           "type": "text",
           "name": "select_one_well_other",
-          "visibleIf": "{select_one_well} = 'other' and {select_one_irrigation_structure} = 'Well'",
+          "visibleIf": "{select_one_well} anyof ['other'] and {select_one_irrigation_structure} = 'Well'",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_canal",
           "visibleIf": "({select_one_irrigation_structure} == 'Canal')",
           "title": "Select the type of repair maintenance required for canal?",
           "choices": [
-            "Stabilizing canal banks to prevent erosion",
-            "Lining Repairs",
+            {
+              "value": "Stabilizing_canal_banks_to_prevent_erosion",
+              "text": "Stabilizing canal banks to prevent erosion"
+            },
+            {
+              "value": "Lining_Repairs",
+              "text": "Lining Repairs"
+            },
             {
               "value": "Desiliting",
               "text": "Desilting"
             },
-            "Structural repairs",
+            {
+              "value": "Structural_repairs",
+              "text": "Structural repairs"
+            },
             {
               "value": "other",
               "text": "Other"
@@ -165,20 +215,20 @@
         {
           "type": "text",
           "name": "select_one_canal_other",
-          "visibleIf": "{select_one_canal} = 'other' and {select_one_irrigation_structure} = 'Canal'",
+          "visibleIf": "{select_one_canal} anyof ['other'] and {select_one_irrigation_structure} = 'Canal'",
           "title": "Specify other",
           "isRequired": true
         },
         {
-          "type": "radiogroup",
+          "type": "checkbox",
           "name": "select_one_farm_bund",
           "visibleIf": "({select_one_irrigation_structure} == 'Farm bund')",
           "title": "Select the type of repair maintenance required for farm bund?",
           "choices": [
-            "Repairing cracks or breaches in the bund",
-            "Strengthening bund structure with additional soil or materials",
-            "Leveling and reshaping the bund for better water retention",
-            "Vegetative stabilization to prevent erosion",
+            "Repairing_cracks_or_breaches_in_the_bund",
+            "Strengthening_bund_structure_with_additional_soil_or_materials",
+            "Leveling_and_reshaping_the_bund_for_better_water_retention",
+            "Vegetative_stabilization_to_prevent_erosion",
             {
               "value": "other",
               "text": "Other"
@@ -188,7 +238,7 @@
         {
           "type": "text",
           "name": "select_one_farm_bund_other",
-          "visibleIf": "{select_one_farm_bund} = 'other' and {select_one_irrigation_structure} = 'Farm bund'",
+          "visibleIf": "{select_one_farm_bund} anyof ['other'] and {select_one_irrigation_structure} = 'Farm bund'",
           "title": "Specify other",
           "isRequired": true
         }

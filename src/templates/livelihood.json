@@ -11,7 +11,8 @@
         {
           "type": "text",
           "name": "beneficiary_settlement",
-          "title": "Name of Beneficiary's Settlement"
+          "title": "Name of Beneficiary's Settlement",
+          "isRequired": true
         },
         {
           "type": "panel",
@@ -114,6 +115,34 @@
               "name": "Livestock-select_one_promoting_livestock_other",
               "visibleIf": "{Livestock-demands_promoting_livestock} = 'other'",
               "title": "Specify other."
+            },
+            {
+              "type": "checkbox",
+              "name": "Livestock-departments_converged",
+              "visibleIf": "{Livestock-livestock_demand} = 'Community_demand' or {Livestock-livestock_demand} = 'Individual_demand'",
+              "title": "Which departments / schemes may be converged with?",
+              "choices": [
+                {
+                  "value": "Animal_husbandry",
+                  "text": "Animal Husbandry"
+                },
+                "Agriculture",
+                "NRLM",
+                {
+                  "value": "Panchayati_raj",
+                  "text": "Panchayati Raj"
+                },
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "Livestock-departments_converged_other",
+              "visibleIf": "{Livestock-departments_converged} anyof ['other']",
+              "title": "Specify other."
             }
           ]
         },
@@ -145,6 +174,10 @@
                 {
                   "value": "Individual_demand",
                   "text": "Individual Demand"
+                },
+                {
+                  "value": "Cluster_demand",
+                  "text": "Cluster /FPO /SHG/ Demand"
                 }
               ]
             },
@@ -181,10 +214,85 @@
             },
             {
               "type": "text",
+              "name": "kitchen_gardens-name_cluster",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Cluster_demand'",
+              "title": "Name of Cluster Group / FPO / SHG"
+            },
+            {
+              "type": "text",
+              "name": "kitchen_gardens-total_cluster",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Cluster_demand'",
+              "title": "Total number of members in the cluster"
+            },
+            {
+              "type": "text",
               "name": "kitchen_gardens-area_kg",
-              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Community_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand'",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Community_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Cluster_demand'",
               "title": "Total area for kitchen gardens/ Didi Badi / Poshan Vatika (Acres)",
               "isRequired": true
+            },
+            {
+              "type": "checkbox",
+              "name": "kitchen_gardens-support_apart_labour",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Community_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Cluster_demand'",
+              "title": "What support would you need apart from labour?",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Item 1",
+                  "text": "Seeds"
+                },
+                {
+                  "value": "Item 2",
+                  "text": "Saplings"
+                },
+                {
+                  "value": "Item 3",
+                  "text": "Compost/organic inputs"
+                },
+                {
+                  "value": "Item 4",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "kitchen_gardens-support_apart_labour_other",
+              "visibleIf": "{kitchen_gardens-support_apart_labour} anyof ['Item 4']",
+              "title": "Specify other."
+            },
+            {
+              "type": "checkbox",
+              "name": "kitchen_gardens-departments_convered_kg",
+              "visibleIf": "{kitchen_gardens-demand_type_kitchen_garden} = 'Community_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Individual_demand' or {kitchen_gardens-demand_type_kitchen_garden} = 'Cluster_demand'",
+              "title": "Which departments / schemes may be converged with?",
+              "choices": [
+                {
+                  "value": "Agri",
+                  "text": "Agriculture Department"
+                },
+                {
+                  "value": "Horticulture",
+                  "text": "Horticulture Department"
+                },
+                {
+                  "value": "Panchayati_raj",
+                  "text": "Panchayati Raj Department"
+                },
+                "NRLM",
+                "ICDS",
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "kitchen_gardens-departments_convered_kg_other",
+              "visibleIf": "{kitchen_gardens-departments_convered_kg} anyof ['other']",
+              "title": "Specify other."
             }
           ]
         },
@@ -247,7 +355,7 @@
               "type": "text",
               "name": "fisheries-ben_father_fisheries",
               "visibleIf": "{fisheries-demand_type_fisheries} = 'Individual_demand'",
-              "title": "Beneficiary's father's name",
+              "title": "Beneficiary's Father's / Husband name",
               "isRequired": true
             },
             {
@@ -275,6 +383,34 @@
               "type": "text",
               "name": "fisheries-demands_promoting_fisheries_other",
               "visibleIf": "{fisheries-demands_promoting_fisheries} = 'other'",
+              "title": "Specify other."
+            },
+            {
+              "type": "checkbox",
+              "name": "fisheries-departments_convered_fisheries",
+              "visibleIf": "{fisheries-demand_type_fisheries} = 'Community_demand' or {fisheries-demand_type_fisheries} = 'Individual_demand'",
+              "title": "Which departments / schemes may be converged with?",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Fisheries_department",
+                  "text": "Fisheries Department"
+                },
+                {
+                  "value": "Panchayati_raj",
+                  "text": "Panchayati Raj"
+                },
+                "NRLM",
+                {
+                  "value": "other",
+                  "text": "Other"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "name": "fisheries-departments_convered_fisheries_other",
+              "visibleIf": "{fisheries-departments_convered_fisheries} anyof ['other']",
               "title": "Specify other."
             }
           ]
