@@ -86,6 +86,7 @@ const SelectionPage = ({
   initialProject = "",
   initialPlan = "",
   initialForm = "",
+  initialOrg = "",
 }) => {
   const [projects, setProjects] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -95,18 +96,38 @@ const SelectionPage = ({
     useState(initialPlan);
   const [selectedForm, setSelectedForm] =
     useState(initialForm);
-  
+  const prevUserRef = useRef();
 
-  useEffect(() => {
-  setSelectedOrg("");
-  setSelectedProject("");
-  setSelectedPlan("");
-  setSelectedForm("");
+useEffect(() => {
+  if (!prevUserRef.current) {
+    prevUserRef.current = userId;
+    return;
+  }
 
-  setOrganizations([]);
-  setProjects([]);
-  setPlans([]);
-}, [isSuperAdmin, userId]);
+  if (prevUserRef.current !== userId) {
+    setSelectedOrg("");
+    setSelectedProject("");
+    setSelectedPlan("");
+    setSelectedForm("");
+
+    setOrganizations([]);
+    setProjects([]);
+    setPlans([]);
+  }
+
+  prevUserRef.current = userId;
+}, [userId]);
+
+//   useEffect(() => {
+//   setSelectedOrg("");
+//   setSelectedProject("");
+//   setSelectedPlan("");
+//   setSelectedForm("");
+
+//   setOrganizations([]);
+//   setProjects([]);
+//   setPlans([]);
+// }, [isSuperAdmin, userId]);
 
   // ── Loaders ──────────────────────────────────────────
   const [loadingOrgs, setLoadingOrgs] = useState(false);
@@ -155,6 +176,33 @@ const SelectionPage = ({
 
 }, [isSuperAdmin, selectedOrg]);
 
+  
+useEffect(() => {
+  if (!initialOrg || organizations.length === 0) return;
+
+  const exists = organizations.some(
+    o => o.id === Number(initialOrg)
+  );
+
+  if (exists) {
+    setSelectedOrg(initialOrg);
+  }
+}, [organizations, initialOrg]);
+
+ useEffect(() => {
+  if (!initialProject) return;
+  if (projects.length === 0) return;
+  if (isSuperAdmin && !selectedOrg) return;
+
+  const exists = projects.some(
+    p => (p.id || p.project_id) === Number(initialProject)
+  );
+
+  if (exists) {
+    setSelectedProject(initialProject);
+  }
+}, [projects, selectedOrg, isSuperAdmin, initialProject]);
+
   useEffect(() => {
     setLoadingForms(true);
     fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
@@ -165,37 +213,46 @@ const SelectionPage = ({
   }, []);
 
   useEffect(() => {
-    if (!initialProject || !userId) return;
+  if (!initialForm || forms.length === 0) return;
 
-    setLoadingPlans(true);
-    fetch(
-      `${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`,
-      { headers: getHeaders() }
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        const rawPlans =
-          data?.data || data?.plans || data || [];
-        setPlans(formatPlansForDropdown(rawPlans));
-      })
-      .catch((err) => {
-        console.error("Plan Fetch Error", err);
-        setPlans([]);
-      })
-      .finally(() => setLoadingPlans(false));
-  }, [initialProject]);
+  const exists = forms.some(
+    f => f.name === initialForm
+  );
+
+  if (exists) {
+    setSelectedForm(initialForm);
+  }
+}, [forms, initialForm]);
 
   useEffect(() => {
-    if (!initialPlan || plans.length === 0) return;
-  
-    const exists = plans.some(
-      p => p.plan_id === Number(initialPlan)
-    );
-  
-    if (exists) {
-      setSelectedPlan(initialPlan);
-    }
-  }, [plans, initialPlan]);
+  if (!selectedProject) return;
+
+  setLoadingPlans(true);
+  fetch(`${BASEURL}api/v1/projects/${selectedProject}/watershed/plans/`, {
+    headers: getHeaders(),
+  })
+    .then(res => res.json())
+    .then(data => {
+      const rawPlans = data?.data || data?.plans || data || [];
+      setPlans(formatPlansForDropdown(rawPlans));
+    })
+    .catch(() => setPlans([]))
+    .finally(() => setLoadingPlans(false));
+}, [selectedProject]);
+
+  useEffect(() => {
+  if (!initialPlan) return;
+  if (plans.length === 0) return;
+  if (!selectedProject) return;
+
+  const exists = plans.some(
+    p => p.plan_id === Number(initialPlan)
+  );
+
+  if (exists) {
+    setSelectedPlan(initialPlan);
+  }
+}, [plans, selectedProject, initialPlan]);
   
 
   const formatPlansForDropdown = (rawPlans = []) =>
@@ -1566,6 +1623,7 @@ useEffect(() => {
       initialProject={selectedProject}   
       initialPlan={selectedPlan}
       initialForm={selectedForm}
+      initialOrg={selectedOrg}
     />
   ) : (
     <FormViewPage
