@@ -24,17 +24,10 @@ import {
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
-const token = sessionStorage.getItem("accessToken");
-
-const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
-const user = sessionUser.user || {};
-const isSuperAdmin = user.is_superadmin;
-
-const headers = {
+const getHeaders = () => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${token}`,
-};
-
+  Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+});
 
 const selectStyles = {
   control: (base, state) => ({
@@ -83,6 +76,8 @@ const selectStyles = {
 };
 
 const SelectionPage = ({
+  isSuperAdmin,
+  userId,
   onLoadSubmissions,
   selectedOrg,
   setSelectedOrg,
@@ -100,6 +95,18 @@ const SelectionPage = ({
     useState(initialPlan);
   const [selectedForm, setSelectedForm] =
     useState(initialForm);
+  
+
+  useEffect(() => {
+  setSelectedOrg("");
+  setSelectedProject("");
+  setSelectedPlan("");
+  setSelectedForm("");
+
+  setOrganizations([]);
+  setProjects([]);
+  setPlans([]);
+}, [isSuperAdmin, userId]);
 
   // ── Loaders ──────────────────────────────────────────
   const [loadingOrgs, setLoadingOrgs] = useState(false);
@@ -109,46 +116,48 @@ const SelectionPage = ({
   // ─────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!isSuperAdmin) return;
+  if (!isSuperAdmin) {
+    setOrganizations([]);
+    return;
+  }
 
-    setLoadingOrgs(true);
-    fetch(`${BASEURL}api/v1/organizations/`, { headers })
-      .then(res => res.json())
-      .then(data => setOrganizations(data || []))
-      .catch(err => console.error("Org fetch error", err))
-      .finally(() => setLoadingOrgs(false));
-  }, [isSuperAdmin]);
+  setLoadingOrgs(true);
+  fetch(`${BASEURL}api/v1/organizations/`, { headers :getHeaders() })
+    .then(res => res.json())
+    .then(data => setOrganizations(data || []))
+    .catch(err => console.error("Org fetch error", err))
+    .finally(() => setLoadingOrgs(false));
+}, [isSuperAdmin]);
 
 
   useEffect(() => {
-    if (!isSuperAdmin) {
-      setLoadingProjects(true);
-      fetch(`${BASEURL}api/v1/projects`, { headers })
-        .then(res => res.json())
-        .then(data => setProjects(data.data || data.projects || data))
-        .catch(err => console.log(err))
-        .finally(() => setLoadingProjects(false));
-      return;
-    }
-
-    if (!selectedOrg) {
-      setProjects([]);
-      return;
-    }
-
+  if (!isSuperAdmin) {
     setLoadingProjects(true);
-    fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
+    fetch(`${BASEURL}api/v1/projects`, { headers: getHeaders() })
       .then(res => res.json())
       .then(data => setProjects(data.data || data.projects || data))
       .catch(err => console.log(err))
       .finally(() => setLoadingProjects(false));
+    return;
+  }
 
-  }, [isSuperAdmin, selectedOrg]);
+  if (!selectedOrg) {
+    setProjects([]);
+    return;
+  }
 
+  setLoadingProjects(true);
+  fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers: getHeaders() })
+    .then(res => res.json())
+    .then(data => setProjects(data.data || data.projects || data))
+    .catch(err => console.log(err))
+    .finally(() => setLoadingProjects(false));
+
+}, [isSuperAdmin, selectedOrg]);
 
   useEffect(() => {
     setLoadingForms(true);
-    fetch(`${BASEURL}api/v1/forms`, { headers })
+    fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
       .then((res) => res.json())
       .then((data) => setForms(data.forms || []))
       .catch((err) => console.log("Forms Fetch Error", err))
@@ -156,12 +165,12 @@ const SelectionPage = ({
   }, []);
 
   useEffect(() => {
-    if (!initialProject) return;
+    if (!initialProject || !userId) return;
 
     setLoadingPlans(true);
     fetch(
       `${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`,
-      { headers }
+      { headers: getHeaders() }
     )
       .then((res) => res.json())
       .then((data) => {
@@ -211,7 +220,7 @@ const SelectionPage = ({
     setLoadingPlans(true);
     fetch(
       `${BASEURL}api/v1/projects/${id}/watershed/plans/`,
-      { headers }
+      { headers :getHeaders() }
     )
       .then((res) => res.json())
       .then((data) => {
@@ -410,7 +419,7 @@ const SelectionPage = ({
 };
 
 // Page 2: Form View with SurveyJS
-const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) => {
+const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, isSuperAdmin, user }) => {
   const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -425,7 +434,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const vectorLayerRef = useRef(null);
   const popupRef = useRef(null);
   const overlayRef = useRef(null);
-  const groups = Array.isArray(user.groups) ? user.groups : [];
+  const groups = Array.isArray(user?.groups) ? user.groups : [];
   const isAdmin = groups.some(g => g.name === "Administrator");
   const isModerator = groups.some(g => g.name === "Moderator");
   const showActions = isAdmin || isModerator || isSuperAdmin;
@@ -763,7 +772,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
         },
       });
   
@@ -1499,12 +1508,39 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
 
 // Main Component
 const Moderation = () => {
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState({});
+  const [userId, setUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState("selection");
   const [selectedOrg, setSelectedOrg] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
+
+useEffect(() => {
+  const syncRole = () => {
+    const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+    const user = sessionUser.user || {};
+
+    setCurrentUser(user);
+    setIsSuperAdmin(user.is_superadmin);
+    setUserId(user.id); 
+  };
+
+  syncRole();
+  window.addEventListener("storage", syncRole);
+  return () => window.removeEventListener("storage", syncRole);
+}, []);
+
+useEffect(() => {
+  setSelectedOrg("");
+  setSelectedProject("");
+  setSelectedPlan("");
+  setSelectedForm("");
+  setSelectedPlanName("");
+  setCurrentPage("selection");
+}, [userId]);
 
   const handleLoadSubmissions = (project, plan, form, planName) => {
     setSelectedProject(project);
@@ -1520,6 +1556,8 @@ const Moderation = () => {
 
   return currentPage === "selection" ? (
     <SelectionPage 
+    key={userId}
+    isSuperAdmin={isSuperAdmin}
       onLoadSubmissions={handleLoadSubmissions}
       selectedOrg={selectedOrg}
       setSelectedOrg={setSelectedOrg}
@@ -1531,10 +1569,12 @@ const Moderation = () => {
     />
   ) : (
     <FormViewPage
-      selectedForm={selectedForm}
+       selectedForm={selectedForm}
       selectedPlan={selectedPlan}
       selectedPlanName={selectedPlanName}
       onBack={handleBack}
+      isSuperAdmin={isSuperAdmin}
+      user={currentUser}
     />
   );
 };
