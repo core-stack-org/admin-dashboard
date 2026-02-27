@@ -101,22 +101,33 @@ const SelectionPage = ({
   const [selectedForm, setSelectedForm] =
     useState(initialForm);
 
+  // ── Loaders ──────────────────────────────────────────
+  const [loadingOrgs, setLoadingOrgs] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [loadingPlans, setLoadingPlans] = useState(false);
+  const [loadingForms, setLoadingForms] = useState(false);
+  // ─────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!isSuperAdmin) return;
 
+    setLoadingOrgs(true);
     fetch(`${BASEURL}api/v1/organizations/`, { headers })
       .then(res => res.json())
       .then(data => setOrganizations(data || []))
-      .catch(err => console.error("Org fetch error", err));
+      .catch(err => console.error("Org fetch error", err))
+      .finally(() => setLoadingOrgs(false));
   }, [isSuperAdmin]);
 
 
   useEffect(() => {
     if (!isSuperAdmin) {
+      setLoadingProjects(true);
       fetch(`${BASEURL}api/v1/projects`, { headers })
         .then(res => res.json())
         .then(data => setProjects(data.data || data.projects || data))
-        .catch(err => console.log(err));
+        .catch(err => console.log(err))
+        .finally(() => setLoadingProjects(false));
       return;
     }
 
@@ -125,26 +136,29 @@ const SelectionPage = ({
       return;
     }
 
+    setLoadingProjects(true);
     fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
       .then(res => res.json())
       .then(data => setProjects(data.data || data.projects || data))
-      .catch(err => console.log(err));
+      .catch(err => console.log(err))
+      .finally(() => setLoadingProjects(false));
 
   }, [isSuperAdmin, selectedOrg]);
 
 
   useEffect(() => {
+    setLoadingForms(true);
     fetch(`${BASEURL}api/v1/forms`, { headers })
       .then((res) => res.json())
       .then((data) => setForms(data.forms || []))
-      .catch((err) =>
-        console.log("Forms Fetch Error", err)
-      );
+      .catch((err) => console.log("Forms Fetch Error", err))
+      .finally(() => setLoadingForms(false));
   }, []);
 
   useEffect(() => {
     if (!initialProject) return;
 
+    setLoadingPlans(true);
     fetch(
       `${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`,
       { headers }
@@ -158,7 +172,8 @@ const SelectionPage = ({
       .catch((err) => {
         console.error("Plan Fetch Error", err);
         setPlans([]);
-      });
+      })
+      .finally(() => setLoadingPlans(false));
   }, [initialProject]);
 
   useEffect(() => {
@@ -193,6 +208,7 @@ const SelectionPage = ({
 
     if (!id) return;
 
+    setLoadingPlans(true);
     fetch(
       `${BASEURL}api/v1/projects/${id}/watershed/plans/`,
       { headers }
@@ -206,7 +222,8 @@ const SelectionPage = ({
       .catch((err) => {
         console.error("Plan Fetch Error", err);
         setPlans([]);
-      });
+      })
+      .finally(() => setLoadingPlans(false));
   };
 
   const handleLoadSubmissions = () => {
@@ -225,8 +242,28 @@ const SelectionPage = ({
     );
   };
 
+  // Inline spinner component
+  const Spinner = () => (
+    <span
+      style={{
+        display: "inline-block",
+        width: 16,
+        height: 16,
+        border: "2px solid #cbd5e1",
+        borderTop: "2px solid #6366f1",
+        borderRadius: "50%",
+        animation: "spin 0.7s linear infinite",
+        marginLeft: 8,
+        verticalAlign: "middle",
+      }}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
+      {/* Keyframe for spinner */}
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight mt-10">
@@ -242,11 +279,12 @@ const SelectionPage = ({
           {isSuperAdmin && (
             <div className="mb-7">
               <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-                Select Organization
+                Select Organization {loadingOrgs && <Spinner />}
               </label>
               <Select
                 styles={selectStyles}
                 placeholder="-- Choose Organization --"
+                isLoading={loadingOrgs}
                 options={organizations.map(org => ({
                   value: org.id,
                   label: org.name,
@@ -270,11 +308,12 @@ const SelectionPage = ({
 
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Project
+              Select Project {loadingProjects && <Spinner />}
             </label>
             <Select
               styles={selectStyles}
               placeholder="-- Choose Project --"
+              isLoading={loadingProjects}
               options={projects.map(p => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
@@ -296,11 +335,12 @@ const SelectionPage = ({
   
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Plan
+              Select Plan {loadingPlans && <Spinner />}
             </label>
             <Select
               styles={selectStyles}
               placeholder="-- Choose Plan --"
+              isLoading={loadingPlans}
               options={plans.map(plan => ({
                 value: plan.plan_id,
                 label: `${plan.plan}${
@@ -321,13 +361,15 @@ const SelectionPage = ({
               isClearable
             />
           </div>
+
           <div className="mb-8">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Form
+              Select Form {loadingForms && <Spinner />}
             </label>
             <Select
               styles={selectStyles}
               placeholder="-- Choose Form --"
+              isLoading={loadingForms}
               options={forms.map(form => ({
                 value: form.name,
                 label: form.display,
@@ -346,9 +388,17 @@ const SelectionPage = ({
               isClearable
             />
           </div>
+
           <button
             onClick={handleLoadSubmissions}
-            disabled={!selectedPlan || !selectedForm}
+            disabled={
+              !selectedProject ||
+              !selectedPlan ||
+              !selectedForm ||
+              loadingProjects ||
+              loadingPlans ||
+              loadingForms
+            }
             className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
             Submit
@@ -379,7 +429,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   const isAdmin = groups.some(g => g.name === "Administrator");
   const isModerator = groups.some(g => g.name === "Moderator");
   const showActions = isAdmin || isModerator || isSuperAdmin;
-  const didFetchRef = useRef(false);
+  const [loading, setLoading] = useState(false);
 
   const reloadSubmissions = () => {
     if (viewMode === "map") {
@@ -700,6 +750,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
   };
 
   const fetchSubmissions = async (pg = 1, mode = "card") => {
+    setLoading(true);
     if (!selectedForm || !selectedPlan) return;
   
   
@@ -742,6 +793,8 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       }
     } catch (err) {
       console.log("Submission Fetch Error", err);
+    } finally {
+    setLoading(false); 
     }
   };
   
@@ -1207,7 +1260,17 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack }) 
       )}
   
       {/* Map View or Card View */}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto relative">
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-14 h-14 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-indigo-700 font-bold text-lg">
+                Loading Submissions...
+              </p>
+            </div>
+          </div>
+        )}
         {viewMode === "map" ? (
           /* Map View */
           <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 overflow-hidden">
