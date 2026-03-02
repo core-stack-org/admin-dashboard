@@ -11,7 +11,7 @@ import AgriMaintenanceForm from "../../templates/maintenance_irr.json";
 import GroundwaterMaintenanceForm from "../../templates/maintenance_recharge_st.json";
 import WaterStructureMaintenanceForm from "../../templates/maintenance_water_structures.json";
 import SWBRemotelySensedForm from "../../templates/maintenance_rs_swb.json";
-import Agrohorticulture from "../../templates/agrohorticulture.json"
+import Agrohorticulture from "../../templates/agrohorticulture.json";
 
 import SettlementIcon from "../../icons/settlement_icon.svg";
 import WellIcon from "../../icons/well_icon.svg";
@@ -33,12 +33,40 @@ export const ICONS = {
   "Agri Maintenance": IrrigationIcon,
   "GroundWater Maintenance": RechargeIcon,
   "Surface Water Body Maintenance": WaterBodyIcon,
-  "Surface Water Body Remotely Sensed Maintenance":
-  WaterBodyIcon,
-  Agrohorticulture:AgrohorticultureIcon
-}
+  "Surface Water Body Remotely Sensed Maintenance": WaterBodyIcon,
+  Agrohorticulture: AgrohorticultureIcon,
+};
 
 export const BASEURL = `${process.env.REACT_APP_BASEURL}`;
+
+export const FORM_CATEGORY_MAP = {
+  // Resource Mapping
+  Settlement: "Resource Mapping",
+  Well: "Resource Mapping",
+  Waterbody: "Resource Mapping",
+  Crop: "Resource Mapping",
+  // New Demands
+  Groundwater: "New Demands",
+  Livelihood: "New Demands",
+  Agri: "New Demands",
+  Agrohorticulture: "New Demands",
+  // Maintenance
+  "Agri Maintenance": "Maintenance",
+  "GroundWater Maintenance": "Maintenance",
+  "Surface Water Body Maintenance": "Maintenance",
+  "Surface Water Body Remotely Sensed Maintenance": "Maintenance",
+  // Feedback
+  "Feedback Agri": "Feedback",
+  "Feedback Groundwater": "Feedback",
+  "Feedback Surface Water Bodies": "Feedback",
+};
+
+export const FORM_CATEGORY_ORDER = [
+  "Resource Mapping",
+  "New Demands",
+  "Maintenance",
+  "Feedback",
+];
 
 export const FORM_TEMPLATES = {
   Settlement: SettlementForm,
@@ -51,9 +79,8 @@ export const FORM_TEMPLATES = {
   "Agri Maintenance": AgriMaintenanceForm,
   "GroundWater Maintenance": GroundwaterMaintenanceForm,
   "Surface Water Body Maintenance": WaterStructureMaintenanceForm,
-  "Surface Water Body Remotely Sensed Maintenance":
-    SWBRemotelySensedForm,
-  Agrohorticulture:Agrohorticulture
+  "Surface Water Body Remotely Sensed Maintenance": SWBRemotelySensedForm,
+  Agrohorticulture: Agrohorticulture,
 };
 
 export const CARD_DISPLAY_FIELDS = {
@@ -65,15 +92,15 @@ export const CARD_DISPLAY_FIELDS = {
       label: "How many households are there in this settlement?",
     },
     {
-        key: "farmer_family-marginal_farmers",
-        label: "Number of farmers with land < 2.5 acres",
+      key: "farmer_family-marginal_farmers",
+      label: "Number of farmers with land < 2.5 acres",
     },
   ],
 
   Well: [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     { key: "select_one_well_type", label: "Well Type" },
     { key: "select_one_owns", label: "Who owns the well?" },
@@ -85,53 +112,49 @@ export const CARD_DISPLAY_FIELDS = {
 
   Waterbody: [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     {
-        key: "select_one_water_structure",
-        label: "Type of water structure",
+      key: "select_one_water_structure",
+      label: "Type of water structure",
     },
     {
-        key: "select_one_owns",
-        label: "Who owns the Water structure in this settlement?",
+      key: "select_one_owns",
+      label: "Who owns the Water structure in this settlement?",
     },
     {
-    key: "select_one_maintenance",
-    label:
-        "Does the water structure require repair maintenance?",
+      key: "select_one_maintenance",
+      label: "Does the water structure require repair maintenance?",
     },
   ],
 
   Crop: [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     {
-        key: "select_one_classified",
-        label: "What is this land classified as?",
+      key: "select_one_classified",
+      label: "What is this land classified as?",
     },
     {
       key: "select_one_practice",
-      label:
-        "Which cropping seasons do you practice in this settlement?",
+      label: "Which cropping seasons do you practice in this settlement?",
     },
-    
   ],
 
   Groundwater: [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary's Name" },
     {
       key: "TYPE_OF_WORK_ID",
-      label:
-        "Select the work demand required for recharge in the settlement",
-    },  
+      label: "Select the work demand required for recharge in the settlement",
+    },
   ],
 
   Livelihood: [
@@ -141,8 +164,7 @@ export const CARD_DISPLAY_FIELDS = {
     },
     {
       key: "panel1-Livestock-is_demand_livestock",
-      label:
-        "Are there demands for promoting livestock in the settlement?",
+      label: "Are there demands for promoting livestock in the settlement?",
     },
     {
       key: "panel1-Livestock-ben_livestock",
@@ -159,8 +181,7 @@ export const CARD_DISPLAY_FIELDS = {
     },
     {
       key: "panel3-fisheries-is_demand_fisheries",
-      label:
-        "Are there demands for promoting fisheries in the settlement?",
+      label: "Are there demands for promoting fisheries in the settlement?",
     },
     {
       key: "panel3-fisheries-ben_fisheries",
@@ -170,22 +191,21 @@ export const CARD_DISPLAY_FIELDS = {
 
   Agri: [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     { key: "demand_type_irrigation", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary's Name" },
     {
-        key: "TYPE_OF_WORK_ID",
-        label:
-          "Select the type of Irrigation work in this settlement",
+      key: "TYPE_OF_WORK_ID",
+      label: "Select the type of Irrigation work in this settlement",
     },
   ],
 
   "Agri Maintenance": [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
@@ -198,10 +218,10 @@ export const CARD_DISPLAY_FIELDS = {
 
   "GroundWater Maintenance": [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
-      },
-      { key: "demand_type", label: "Type of demand" },
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
+    },
+    { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
     {
       key: "select_one_recharge_structure",
@@ -212,12 +232,12 @@ export const CARD_DISPLAY_FIELDS = {
 
   "Surface Water Body Maintenance": [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
-      },
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
+    },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
-    
+
     {
       key: "select_one_recharge_structure",
       label:
@@ -227,29 +247,30 @@ export const CARD_DISPLAY_FIELDS = {
 
   "Surface Water Body Remotely Sensed Maintenance": [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary's Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
     },
     { key: "demand_type", label: "Type of demand" },
     { key: "Beneficiary_Name", label: "Beneficiary Name" },
     {
       key: "TYPE_OF_WORK",
-      label:
-        "Select the type of surface water structure repair work",
+      label: "Select the type of surface water structure repair work",
     },
   ],
 
-  "Agrohorticulture":[
+  Agrohorticulture: [
     {
-        key: "beneficiary_settlement",
-        label: "Name of Beneficiary Settlement",
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary Settlement",
     },
-    { key: "select_one_y_n", label: "Are there demands for plantation in the settlement" },
+    {
+      key: "select_one_y_n",
+      label: "Are there demands for plantation in the settlement",
+    },
     { key: "demand_type_plantations", label: "Type of Demand" },
     {
       key: "beneficiary_name",
-      label:
-        "Beneficiary Name",
+      label: "Beneficiary Name",
     },
-  ]
+  ],
 };

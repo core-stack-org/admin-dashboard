@@ -14,7 +14,7 @@ import {
   faLocationDot,
   faMapMarkerAlt,
   faLocationArrow,
-  faShieldAlt
+  faShieldAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
 import logo from "../assets/core-stack logo.png";
@@ -39,19 +39,18 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
   const [activeItem, setActiveItem] = useState(
-    sessionStorage.getItem("activeItem") || "Dashboard"
+    sessionStorage.getItem("activeItem") || "Dashboard",
   );
   const [layers, setLayers] = useState([]);
 
   useEffect(() => {
     const layers = Object.keys(layersData.layers_json).map((key) =>
-      key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase())
+      key.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
     );
     setLayerNames(layers);
   }, []);
@@ -119,7 +118,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ refresh: refreshToken }),
-        }
+        },
       );
 
       if (!response.ok) throw new Error("Failed to refresh token");
@@ -157,13 +156,13 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
             "ngrok-skip-browser-warning": "420",
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       if (!response.ok) {
         const errorDetails = await response.text();
         throw new Error(
-          `HTTP error! Status: ${response.status}. Details: ${errorDetails}`
+          `HTTP error! Status: ${response.status}. Details: ${errorDetails}`,
         );
       }
 
@@ -193,171 +192,166 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     setIsDropdownOpen(false);
   };
 
+  // ROLE CHECKS
+  const isSuperAdmin = currentuser?.user?.is_superadmin === true;
 
-// ROLE CHECKS
-const isSuperAdmin = currentuser?.user?.is_superadmin === true;
+  const userRoles = currentuser?.user?.groups?.map((r) => r.name) || [];
 
-const userRoles = currentuser?.user?.groups?.map(r => r.name) || [];
+  const isAdministrator =
+    userRoles.includes("Administrator") || userRoles.includes("Org Admin");
 
-const isAdministrator =
-  userRoles.includes("Administrator") || userRoles.includes("Org Admin");
+  const isAppUser = userRoles.includes("App User");
+  const isModerator = userRoles.includes("Moderator");
 
-const isAppUser = userRoles.includes("App User");
-const isModerator = userRoles.includes("Moderator");
+  // Always visible to ALL users
+  let menuItems = [];
 
+  // SUPERADMIN → SHOW ALL
+  if (isSuperAdmin) {
+    menuItems = [
+      {
+        icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+        label: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "How to use",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q&list=PLZ0pcz8ccRmI4rk-fjVOpxzJKMoY6-Jie&index=1",
+        external: true,
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+        label: "Request data layers",
+        href: "/locationForm",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Moderation Dashboard",
+        href: "/moderation",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
+        label: "Activate Location",
+        href: "/activateBlock",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faFileExcel} size="lg" />,
+        label: "Generate Excel",
+        href: "/generateExcel",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faMap} size="lg" />,
+        label: "Layer Json Map",
+        href: "/generateLayerJsonMap",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Layer Status",
+        href: "/layerStatus",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
+        label: "Generate Layers",
+        isSubmenu: true,
+        layers: layers,
+        href: "/locationForm",
+      },
+    ];
+  }
 
+  // ADMINISTRATOR / ORG ADMIN
+  else if (isAdministrator) {
+    menuItems = [
+      {
+        icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+        label: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "How to use",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+        label: "Request data layers",
+        href: "/locationForm",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Moderation Dashboard",
+        href: "/moderation",
+      },
+    ];
+  }
 
-// Always visible to ALL users
-let menuItems = [];
+  // MODERATOR (NO DASHBOARD)
+  else if (isModerator) {
+    menuItems = [
+      {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Moderation Dashboard",
+        href: "/moderation",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "How to use",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+        label: "Request data layers",
+        href: "/locationForm",
+      },
+    ];
+  }
 
-// SUPERADMIN → SHOW ALL
-if (isSuperAdmin) {
-  menuItems = [
-    {
-      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
-      label: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-      label: "How to use",
-      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q&list=PLZ0pcz8ccRmI4rk-fjVOpxzJKMoY6-Jie&index=1",
-      external: true,
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
-      label: "Request data layers",
-      href: "/locationForm",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-      label: "Moderation Dashboard",
-      href: "/moderation",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
-      label: "Activate Location",
-      href: "/activateBlock",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faFileExcel} size="lg" />,
-      label: "Generate Excel",
-      href: "/generateExcel",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faMap} size="lg" />,
-      label: "Layer Json Map",
-      href: "/generateLayerJsonMap",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-      label: "Layer Status",
-      href: "/layerStatus",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
-      label: "Generate Layers",
-      isSubmenu: true,
-      layers: layers,
-      href: "/locationForm",
-    },
-  ];
-}
+  // APP USER
+  else if (isAppUser) {
+    menuItems = [
+      {
+        icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+        label: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "How to use",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+        label: "Request data layers",
+        href: "/locationForm",
+      },
+    ];
+  }
 
-// ADMINISTRATOR / ORG ADMIN
-else if (isAdministrator) {
-  menuItems = [
-    {
-      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
-      label: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-      label: "How to use",
-      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-      external: true,
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
-      label: "Request data layers",
-      href: "/locationForm",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-      label: "Moderation Dashboard",
-      href: "/moderation",
-    },
-  ];
-}
-
-// MODERATOR (NO DASHBOARD)
-else if (isModerator) {
-  menuItems = [
-    {
-      icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-      label: "Moderation Dashboard",
-      href: "/moderation",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-      label: "How to use",
-      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-      external: true,
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
-      label: "Request data layers",
-      href: "/locationForm",
-    }
-  ];
-}
-
-// APP USER
-else if (isAppUser) {
-  menuItems = [
-    {
-      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
-      label: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-      label: "How to use",
-      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-      external: true,
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
-      label: "Request data layers",
-      href: "/locationForm",
-    },
-  ];
-}
-
-// DEFAULT (fallback)
-else {
-  menuItems = [
-    {
-      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
-      label: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-      label: "How to use",
-      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-      external: true,
-    },
-    {
-      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
-      label: "Request data layers",
-      href: "/locationForm",
-    },
-  ];
-}
-
-
+  // DEFAULT (fallback)
+  else {
+    menuItems = [
+      {
+        icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+        label: "Dashboard",
+        href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "How to use",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
+      },
+      {
+        icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+        label: "Request data layers",
+        href: "/locationForm",
+      },
+    ];
+  }
 
   // const menuItems = [
   //   {
@@ -481,17 +475,16 @@ else {
                     </a>
                   ) : (
                     <button
-                    onClick={() => {
-                      setActiveItem(item.label);
-                      item.onClick ? item.onClick() : navigate(item.href);
-                    }}
-                    className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
-                      activeItem === item.label
-                        ? "bg-gray-700"
-                        : "hover:bg-gray-700"
-                    }`}
-                  >
-                  
+                      onClick={() => {
+                        setActiveItem(item.label);
+                        item.onClick ? item.onClick() : navigate(item.href);
+                      }}
+                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
+                        activeItem === item.label
+                          ? "bg-gray-700"
+                          : "hover:bg-gray-700"
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
@@ -554,7 +547,7 @@ else {
       {/* Top Navbar */}
       <nav className="fixed top-0 left-64 right-0 bg-gray-800 text-white h-16 z-20">
         <div className="flex items-center h-full px-4 relative">
-          <h1 className="text-xl font-bold mx-auto">CoRE stack dashboard</h1>
+          <h1 className="text-xl font-bold mx-auto">CoRE Stack dashboard</h1>
 
           <div className="relative mr-4">
             <button className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors">
@@ -638,10 +631,10 @@ else {
                       >
                         <path
                           fillRule="evenodd"
-                          d="M10 2a4 4 0 00-4 4v2H5a2 2 
-                            0 00-2 2v6a2 2 0 002 2h10a2 2 
-                            0 002-2v-6a2 2 0 00-2-2h-1V6a4 4 
-                            0 00-4-4zm0 12a1 1 0 110-2 1 1 
+                          d="M10 2a4 4 0 00-4 4v2H5a2 2
+                            0 00-2 2v6a2 2 0 002 2h10a2 2
+                            0 002-2v-6a2 2 0 00-2-2h-1V6a4 4
+                            0 00-4-4zm0 12a1 1 0 110-2 1 1
                             0 010 2z"
                           clipRule="evenodd"
                         />
