@@ -838,7 +838,7 @@ const FormViewPage = ({
     } catch (err) {
       console.log("Submission Fetch Error", err);
     } finally {
-    setLoading(false); 
+    setLoading(false);
     }
   };
 
@@ -1822,7 +1822,7 @@ useEffect(() => {
 
     setCurrentUser(user);
     setIsSuperAdmin(user.is_superadmin);
-    setUserId(user.id); 
+    setUserId(user.id);
   };
 
   syncRole();
