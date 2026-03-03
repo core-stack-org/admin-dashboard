@@ -217,6 +217,8 @@ const SelectionPage = ({
       plan: p.plan,
       facilitator_name: p.facilitator_name || "",
       year: p.created_at ? new Date(p.created_at).getFullYear() : "",
+      village: p.village || p.village_name || "",
+      created_at: p.created_at || "",
     }));
 
   const handleProjectChange = (e) => {
@@ -344,13 +346,24 @@ const SelectionPage = ({
               Select Plan
             </label>
             <Select
-              styles={selectStyles}
+              styles={{
+                ...selectStyles,
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isFocused
+                    ? "#eef2ff"
+                    : state.isSelected
+                      ? "#6366f1"
+                      : "white",
+                  color: state.isSelected ? "white" : "#0f172a",
+                  padding: "10px 12px",
+                }),
+              }}
               placeholder="-- Choose Plan --"
               options={plans.map((plan) => ({
                 value: plan.plan_id,
-                label: `${plan.plan}${
-                  plan.year ? ` (${plan.year})` : ""
-                }${plan.facilitator_name ? ` – ${plan.facilitator_name}` : ""}`,
+                label: plan.plan,
+                plan,
               }))}
               value={
                 selectedPlan
@@ -358,11 +371,96 @@ const SelectionPage = ({
                       .map((plan) => ({
                         value: plan.plan_id,
                         label: plan.plan,
+                        plan,
                       }))
                       .find((p) => p.value === Number(selectedPlan))
                   : null
               }
               onChange={(opt) => setSelectedPlan(opt?.value || "")}
+              formatOptionLabel={({ plan, label }, { context }) => {
+                if (context === "value") {
+                  return (
+                    <span className="font-semibold text-slate-800">
+                      {label}
+                    </span>
+                  );
+                }
+                const date = plan.created_at
+                  ? new Date(plan.created_at).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : null;
+                return (
+                  <div className="py-0.5">
+                    <div className="font-semibold text-slate-800 text-sm leading-snug">
+                      {plan.plan}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                      {plan.facilitator_name && (
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <svg
+                            className="w-3 h-3 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          {plan.facilitator_name}
+                        </span>
+                      )}
+                      {plan.village && (
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <svg
+                            className="w-3 h-3 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                            />
+                          </svg>
+                          {plan.village}
+                        </span>
+                      )}
+                      {date && (
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <svg
+                            className="w-3 h-3 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                          {date}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              }}
               isClearable
             />
           </div>
