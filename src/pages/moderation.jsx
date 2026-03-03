@@ -138,7 +138,10 @@ const SelectionPage = ({
 
     fetch(`${BASEURL}api/v1/organizations/`, { headers })
       .then((res) => res.json())
-      .then((data) => setOrganizations(data || []))
+      .then((data) => {
+        const list = data.data || data.results || data;
+        setOrganizations(Array.isArray(list) ? list : []);
+      })
       .catch((err) => console.error("Org fetch error", err));
   }, [isSuperAdmin]);
 
@@ -146,7 +149,10 @@ const SelectionPage = ({
     if (!isSuperAdmin) {
       fetch(`${BASEURL}api/v1/projects`, { headers })
         .then((res) => res.json())
-        .then((data) => setProjects(data.data || data.projects || data))
+        .then((data) => {
+          const list = data.data || data.projects || data;
+          setProjects(Array.isArray(list) ? list : []);
+        })
         .catch((err) => console.log(err));
       return;
     }
@@ -158,14 +164,20 @@ const SelectionPage = ({
 
     fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
       .then((res) => res.json())
-      .then((data) => setProjects(data.data || data.projects || data))
+      .then((data) => {
+        const list = data.data || data.projects || data;
+        setProjects(Array.isArray(list) ? list : []);
+      })
       .catch((err) => console.log(err));
   }, [isSuperAdmin, selectedOrg]);
 
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers })
       .then((res) => res.json())
-      .then((data) => setForms(data.forms || []))
+      .then((data) => {
+        const list = data.forms || data.data || data;
+        setForms(Array.isArray(list) ? list : []);
+      })
       .catch((err) => console.log("Forms Fetch Error", err));
   }, []);
 
@@ -177,8 +189,10 @@ const SelectionPage = ({
     })
       .then((res) => res.json())
       .then((data) => {
-        const rawPlans = data?.data || data?.plans || data || [];
-        setPlans(formatPlansForDropdown(rawPlans));
+        const rawPlans = data?.data || data?.plans || data;
+        setPlans(
+          formatPlansForDropdown(Array.isArray(rawPlans) ? rawPlans : []),
+        );
       })
       .catch((err) => {
         console.error("Plan Fetch Error", err);
@@ -216,8 +230,10 @@ const SelectionPage = ({
     fetch(`${BASEURL}api/v1/projects/${id}/watershed/plans/`, { headers })
       .then((res) => res.json())
       .then((data) => {
-        const rawPlans = data?.data || data?.plans || data || [];
-        setPlans(formatPlansForDropdown(rawPlans));
+        const rawPlans = data?.data || data?.plans || data;
+        setPlans(
+          formatPlansForDropdown(Array.isArray(rawPlans) ? rawPlans : []),
+        );
       })
       .catch((err) => {
         console.error("Plan Fetch Error", err);
