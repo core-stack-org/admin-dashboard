@@ -44,7 +44,13 @@ import {
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
-const getHeaders = () => ({
+const token = sessionStorage.getItem("accessToken");
+
+const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
+const user = sessionUser.user || {};
+const isSuperAdmin = user.is_superadmin;
+
+const headers = {
   "Content-Type": "application/json",
   Authorization: `Bearer ${token}`,
 };
@@ -111,8 +117,6 @@ const selectStyles = {
 };
 
 const SelectionPage = ({
-  isSuperAdmin,
-  userId,
   onLoadSubmissions,
   selectedOrg,
   setSelectedOrg,
@@ -121,7 +125,6 @@ const SelectionPage = ({
   initialProject = "",
   initialPlan = "",
   initialForm = "",
-  initialOrg = "",
 }) => {
   const [projects, setProjects] = useState([]);
   const [plans, setPlans] = useState([]);
@@ -130,11 +133,8 @@ const SelectionPage = ({
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
 
-useEffect(() => {
-  if (!prevUserRef.current) {
-    prevUserRef.current = userId;
-    return;
-  }
+  useEffect(() => {
+    if (!isSuperAdmin) return;
 
     fetch(`${BASEURL}api/v1/organizations/`, { headers })
       .then((res) => res.json())
@@ -151,13 +151,10 @@ useEffect(() => {
       return;
     }
 
-  setLoadingOrgs(true);
-  fetch(`${BASEURL}api/v1/organizations/`, { headers :getHeaders() })
-    .then(res => res.json())
-    .then(data => setOrganizations(data || []))
-    .catch(err => console.error("Org fetch error", err))
-    .finally(() => setLoadingOrgs(false));
-}, [isSuperAdmin]);
+    if (!selectedOrg) {
+      setProjects([]);
+      return;
+    }
 
     fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
       .then((res) => res.json())
@@ -166,15 +163,14 @@ useEffect(() => {
   }, [isSuperAdmin, selectedOrg]);
 
   useEffect(() => {
-    setLoadingForms(true);
-    fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
+    fetch(`${BASEURL}api/v1/forms`, { headers })
       .then((res) => res.json())
       .then((data) => setForms(data.forms || []))
       .catch((err) => console.log("Forms Fetch Error", err));
   }, []);
 
   useEffect(() => {
-  if (!initialForm || forms.length === 0) return;
+    if (!initialProject) return;
 
     fetch(`${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`, {
       headers,
@@ -226,8 +222,7 @@ useEffect(() => {
       .catch((err) => {
         console.error("Plan Fetch Error", err);
         setPlans([]);
-      })
-      .finally(() => setLoadingPlans(false));
+      });
   };
 
   const groupFormsByCategory = (forms) => {
@@ -255,28 +250,8 @@ useEffect(() => {
     onLoadSubmissions(selectedProject, selectedPlan, selectedForm, planName);
   };
 
-  // Inline spinner component
-  const Spinner = () => (
-    <span
-      style={{
-        display: "inline-block",
-        width: 16,
-        height: 16,
-        border: "2px solid #cbd5e1",
-        borderTop: "2px solid #6366f1",
-        borderRadius: "50%",
-        animation: "spin 0.7s linear infinite",
-        marginLeft: 8,
-        verticalAlign: "middle",
-      }}
-    />
-  );
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
-      {/* Keyframe for spinner */}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight mt-10">
@@ -291,7 +266,7 @@ useEffect(() => {
           {isSuperAdmin && (
             <div className="mb-7">
               <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-                Select Organization {loadingOrgs && <Spinner />}
+                Select Organization
               </label>
               <Select
                 styles={selectStyles}
@@ -319,7 +294,7 @@ useEffect(() => {
 
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Project {loadingProjects && <Spinner />}
+              Select Project
             </label>
             <Select
               styles={selectStyles}
@@ -347,7 +322,7 @@ useEffect(() => {
 
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Plan {loadingPlans && <Spinner />}
+              Select Plan
             </label>
             <Select
               styles={selectStyles}
@@ -375,7 +350,7 @@ useEffect(() => {
 
           <div className="mb-8">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Form {loadingForms && <Spinner />}
+              Select Form
             </label>
             <Select
               styles={selectStyles}
@@ -395,17 +370,9 @@ useEffect(() => {
               isClearable
             />
           </div>
-
           <button
             onClick={handleLoadSubmissions}
-            disabled={
-              !selectedProject ||
-              !selectedPlan ||
-              !selectedForm ||
-              loadingProjects ||
-              loadingPlans ||
-              loadingForms
-            }
+            disabled={!selectedPlan || !selectedForm}
             className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
             Submit
@@ -447,7 +414,7 @@ const FormViewPage = ({
   const isAdmin = groups.some((g) => g.name === "Administrator");
   const isModerator = groups.some((g) => g.name === "Moderator");
   const showActions = isAdmin || isModerator || isSuperAdmin;
-  const [loading, setLoading] = useState(false);
+  const didFetchRef = useRef(false);
 
   useEffect(() => {
     if (!selectedProject || !selectedPlan) return;
@@ -793,7 +760,6 @@ const FormViewPage = ({
   };
 
   const fetchSubmissions = async (pg = 1, mode = "card") => {
-    setLoading(true);
     if (!selectedForm || !selectedPlan) return;
 
     const url =
@@ -805,7 +771,7 @@ const FormViewPage = ({
       const res = await fetch(url, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -837,8 +803,6 @@ const FormViewPage = ({
       }
     } catch (err) {
       console.log("Submission Fetch Error", err);
-    } finally {
-    setLoading(false);
     }
   };
 
@@ -1560,17 +1524,7 @@ const FormViewPage = ({
       )}
 
       {/* Map View or Card View */}
-      <div className="max-w-7xl mx-auto relative">
-        {loading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/70 backdrop-blur-sm rounded-2xl">
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-14 h-14 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-indigo-700 font-bold text-lg">
-                Loading Submissions...
-              </p>
-            </div>
-          </div>
-        )}
+      <div className="max-w-7xl mx-auto">
         {viewMode === "map" ? (
           /* Map View */
           <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 overflow-hidden">
@@ -1805,39 +1759,12 @@ const FormViewPage = ({
 
 // Main Component
 const Moderation = () => {
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [currentUser, setCurrentUser] = useState({});
-  const [userId, setUserId] = useState(null);
   const [currentPage, setCurrentPage] = useState("selection");
   const [selectedOrg, setSelectedOrg] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
-
-useEffect(() => {
-  const syncRole = () => {
-    const sessionUser = JSON.parse(sessionStorage.getItem("currentUser") || "{}");
-    const user = sessionUser.user || {};
-
-    setCurrentUser(user);
-    setIsSuperAdmin(user.is_superadmin);
-    setUserId(user.id);
-  };
-
-  syncRole();
-  window.addEventListener("storage", syncRole);
-  return () => window.removeEventListener("storage", syncRole);
-}, []);
-
-useEffect(() => {
-  setSelectedOrg("");
-  setSelectedProject("");
-  setSelectedPlan("");
-  setSelectedForm("");
-  setSelectedPlanName("");
-  setCurrentPage("selection");
-}, [userId]);
 
   const handleLoadSubmissions = (project, plan, form, planName) => {
     setSelectedProject(project);
@@ -1861,17 +1788,14 @@ useEffect(() => {
       initialProject={selectedProject}
       initialPlan={selectedPlan}
       initialForm={selectedForm}
-      initialOrg={selectedOrg}
     />
   ) : (
     <FormViewPage
-       selectedForm={selectedForm}
+      selectedForm={selectedForm}
       selectedPlan={selectedPlan}
       selectedPlanName={selectedPlanName}
       selectedProject={selectedProject}
       onBack={handleBack}
-      isSuperAdmin={isSuperAdmin}
-      user={currentUser}
     />
   );
 };
