@@ -1,6 +1,24 @@
 import React, { useEffect, useState, useRef } from "react";
 import Select from "react-select";
-import { Trash2, ChevronLeft, Search, Calendar, User, Filter, Map as MapIcon, Grid, Home, Droplet, Waves } from "lucide-react";
+import {
+  Trash2,
+  ChevronLeft,
+  ChevronDown,
+  Search,
+  Calendar,
+  User,
+  Filter,
+  Map as MapIcon,
+  Grid,
+  Home,
+  Droplet,
+  Waves,
+  Mail,
+  Send,
+  FileText,
+  Eye,
+  Pencil,
+} from "lucide-react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
 import "survey-core/survey-core.min.css";
@@ -20,14 +38,16 @@ import {
   BASEURL,
   FORM_TEMPLATES,
   CARD_DISPLAY_FIELDS,
-  ICONS
+  ICONS,
+  FORM_CATEGORY_MAP,
+  FORM_CATEGORY_ORDER,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
 const getHeaders = () => ({
   "Content-Type": "application/json",
-  Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-});
+  Authorization: `Bearer ${token}`,
+};
 
 const selectStyles = {
   control: (base, state) => ({
@@ -36,9 +56,7 @@ const selectStyles = {
     borderRadius: "0.75rem",
     borderWidth: "2px",
     borderColor: state.isFocused ? "#6366f1" : "#cbd5e1",
-    boxShadow: state.isFocused
-      ? "0 0 0 4px rgba(99,102,241,0.2)"
-      : "none",
+    boxShadow: state.isFocused ? "0 0 0 4px rgba(99,102,241,0.2)" : "none",
     "&:hover": {
       borderColor: "#6366f1",
     },
@@ -68,10 +86,27 @@ const selectStyles = {
     backgroundColor: state.isFocused
       ? "#eef2ff"
       : state.isSelected
-      ? "#6366f1"
-      : "white",
+        ? "#6366f1"
+        : "white",
     color: state.isSelected ? "white" : "#0f172a",
     fontWeight: 500,
+  }),
+  groupHeading: (base) => ({
+    ...base,
+    fontSize: "0.65rem",
+    fontWeight: 800,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase",
+    color: "#6366f1",
+    backgroundColor: "#eef2ff",
+    padding: "6px 12px",
+    borderBottom: "1px solid #c7d2fe",
+    marginBottom: "2px",
+  }),
+  group: (base) => ({
+    ...base,
+    paddingTop: 0,
+    paddingBottom: 4,
   }),
 };
 
@@ -92,11 +127,8 @@ const SelectionPage = ({
   const [plans, setPlans] = useState([]);
   const [forms, setForms] = useState([]);
   const [organizations, setOrganizations] = useState([]);
-  const [selectedPlan, setSelectedPlan] =
-    useState(initialPlan);
-  const [selectedForm, setSelectedForm] =
-    useState(initialForm);
-  const prevUserRef = useRef();
+  const [selectedPlan, setSelectedPlan] = useState(initialPlan);
+  const [selectedForm, setSelectedForm] = useState(initialForm);
 
 useEffect(() => {
   if (!prevUserRef.current) {
@@ -104,43 +136,20 @@ useEffect(() => {
     return;
   }
 
-  if (prevUserRef.current !== userId) {
-    setSelectedOrg("");
-    setSelectedProject("");
-    setSelectedPlan("");
-    setSelectedForm("");
-
-    setOrganizations([]);
-    setProjects([]);
-    setPlans([]);
-  }
-
-  prevUserRef.current = userId;
-}, [userId]);
-
-//   useEffect(() => {
-//   setSelectedOrg("");
-//   setSelectedProject("");
-//   setSelectedPlan("");
-//   setSelectedForm("");
-
-//   setOrganizations([]);
-//   setProjects([]);
-//   setPlans([]);
-// }, [isSuperAdmin, userId]);
-
-  // ── Loaders ──────────────────────────────────────────
-  const [loadingOrgs, setLoadingOrgs] = useState(false);
-  const [loadingProjects, setLoadingProjects] = useState(false);
-  const [loadingPlans, setLoadingPlans] = useState(false);
-  const [loadingForms, setLoadingForms] = useState(false);
-  // ─────────────────────────────────────────────────────
+    fetch(`${BASEURL}api/v1/organizations/`, { headers })
+      .then((res) => res.json())
+      .then((data) => setOrganizations(data || []))
+      .catch((err) => console.error("Org fetch error", err));
+  }, [isSuperAdmin]);
 
   useEffect(() => {
-  if (!isSuperAdmin) {
-    setOrganizations([]);
-    return;
-  }
+    if (!isSuperAdmin) {
+      fetch(`${BASEURL}api/v1/projects`, { headers })
+        .then((res) => res.json())
+        .then((data) => setProjects(data.data || data.projects || data))
+        .catch((err) => console.log(err));
+      return;
+    }
 
   setLoadingOrgs(true);
   fetch(`${BASEURL}api/v1/organizations/`, { headers :getHeaders() })
@@ -150,119 +159,53 @@ useEffect(() => {
     .finally(() => setLoadingOrgs(false));
 }, [isSuperAdmin]);
 
-
-  useEffect(() => {
-  if (!isSuperAdmin) {
-    setLoadingProjects(true);
-    fetch(`${BASEURL}api/v1/projects`, { headers: getHeaders() })
-      .then(res => res.json())
-      .then(data => setProjects(data.data || data.projects || data))
-      .catch(err => console.log(err))
-      .finally(() => setLoadingProjects(false));
-    return;
-  }
-
-  if (!selectedOrg) {
-    setProjects([]);
-    return;
-  }
-
-  setLoadingProjects(true);
-  fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers: getHeaders() })
-    .then(res => res.json())
-    .then(data => setProjects(data.data || data.projects || data))
-    .catch(err => console.log(err))
-    .finally(() => setLoadingProjects(false));
-
-}, [isSuperAdmin, selectedOrg]);
-
-  
-useEffect(() => {
-  if (!initialOrg || organizations.length === 0) return;
-
-  const exists = organizations.some(
-    o => o.id === Number(initialOrg)
-  );
-
-  if (exists) {
-    setSelectedOrg(initialOrg);
-  }
-}, [organizations, initialOrg]);
-
- useEffect(() => {
-  if (!initialProject) return;
-  if (projects.length === 0) return;
-  if (isSuperAdmin && !selectedOrg) return;
-
-  const exists = projects.some(
-    p => (p.id || p.project_id) === Number(initialProject)
-  );
-
-  if (exists) {
-    setSelectedProject(initialProject);
-  }
-}, [projects, selectedOrg, isSuperAdmin, initialProject]);
+    fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, { headers })
+      .then((res) => res.json())
+      .then((data) => setProjects(data.data || data.projects || data))
+      .catch((err) => console.log(err));
+  }, [isSuperAdmin, selectedOrg]);
 
   useEffect(() => {
     setLoadingForms(true);
     fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
       .then((res) => res.json())
       .then((data) => setForms(data.forms || []))
-      .catch((err) => console.log("Forms Fetch Error", err))
-      .finally(() => setLoadingForms(false));
+      .catch((err) => console.log("Forms Fetch Error", err));
   }, []);
 
   useEffect(() => {
   if (!initialForm || forms.length === 0) return;
 
-  const exists = forms.some(
-    f => f.name === initialForm
-  );
-
-  if (exists) {
-    setSelectedForm(initialForm);
-  }
-}, [forms, initialForm]);
-
-  useEffect(() => {
-  if (!selectedProject) return;
-
-  setLoadingPlans(true);
-  fetch(`${BASEURL}api/v1/projects/${selectedProject}/watershed/plans/`, {
-    headers: getHeaders(),
-  })
-    .then(res => res.json())
-    .then(data => {
-      const rawPlans = data?.data || data?.plans || data || [];
-      setPlans(formatPlansForDropdown(rawPlans));
+    fetch(`${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`, {
+      headers,
     })
-    .catch(() => setPlans([]))
-    .finally(() => setLoadingPlans(false));
-}, [selectedProject]);
+      .then((res) => res.json())
+      .then((data) => {
+        const rawPlans = data?.data || data?.plans || data || [];
+        setPlans(formatPlansForDropdown(rawPlans));
+      })
+      .catch((err) => {
+        console.error("Plan Fetch Error", err);
+        setPlans([]);
+      });
+  }, [initialProject]);
 
   useEffect(() => {
-  if (!initialPlan) return;
-  if (plans.length === 0) return;
-  if (!selectedProject) return;
+    if (!initialPlan || plans.length === 0) return;
 
-  const exists = plans.some(
-    p => p.plan_id === Number(initialPlan)
-  );
+    const exists = plans.some((p) => p.plan_id === Number(initialPlan));
 
-  if (exists) {
-    setSelectedPlan(initialPlan);
-  }
-}, [plans, selectedProject, initialPlan]);
-  
+    if (exists) {
+      setSelectedPlan(initialPlan);
+    }
+  }, [plans, initialPlan]);
 
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
       plan_id: p.id || p.plan_id,
       plan: p.plan,
       facilitator_name: p.facilitator_name || "",
-      year: p.created_at
-        ? new Date(p.created_at).getFullYear()
-        : "",
+      year: p.created_at ? new Date(p.created_at).getFullYear() : "",
     }));
 
   const handleProjectChange = (e) => {
@@ -274,15 +217,10 @@ useEffect(() => {
 
     if (!id) return;
 
-    setLoadingPlans(true);
-    fetch(
-      `${BASEURL}api/v1/projects/${id}/watershed/plans/`,
-      { headers :getHeaders() }
-    )
+    fetch(`${BASEURL}api/v1/projects/${id}/watershed/plans/`, { headers })
       .then((res) => res.json())
       .then((data) => {
-        const rawPlans =
-          data?.data || data?.plans || data || [];
+        const rawPlans = data?.data || data?.plans || data || [];
         setPlans(formatPlansForDropdown(rawPlans));
       })
       .catch((err) => {
@@ -292,20 +230,29 @@ useEffect(() => {
       .finally(() => setLoadingPlans(false));
   };
 
+  const groupFormsByCategory = (forms) => {
+    const groups = {};
+    forms.forEach((form) => {
+      const category = FORM_CATEGORY_MAP[form.name] || "Other";
+      if (!groups[category]) groups[category] = [];
+      groups[category].push({ value: form.name, label: form.name });
+    });
+
+    return FORM_CATEGORY_ORDER.filter((cat) => groups[cat])
+      .map((cat) => ({ label: cat, options: groups[cat] }))
+      .concat(
+        groups["Other"] ? [{ label: "Other", options: groups["Other"] }] : [],
+      );
+  };
+
   const handleLoadSubmissions = () => {
     if (!selectedForm || !selectedPlan) return;
 
     const planName =
-      plans.find(
-        (p) => p.plan_id === Number(selectedPlan)
-      )?.plan || "Unknown Plan";
+      plans.find((p) => p.plan_id === Number(selectedPlan))?.plan ||
+      "Unknown Plan";
 
-    onLoadSubmissions(
-      selectedProject,
-      selectedPlan,
-      selectedForm,
-      planName
-    );
+    onLoadSubmissions(selectedProject, selectedPlan, selectedForm, planName);
   };
 
   // Inline spinner component
@@ -339,9 +286,8 @@ useEffect(() => {
             Select project, plan, and form to review Forms
           </p>
         </div>
-  
-        <div className="bg-white shadow-2xl rounded-3xl p-10 border border-slate-200">
 
+        <div className="bg-white shadow-2xl rounded-3xl p-10 border border-slate-200">
           {isSuperAdmin && (
             <div className="mb-7">
               <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
@@ -350,16 +296,15 @@ useEffect(() => {
               <Select
                 styles={selectStyles}
                 placeholder="-- Choose Organization --"
-                isLoading={loadingOrgs}
-                options={organizations.map(org => ({
+                options={organizations.map((org) => ({
                   value: org.id,
                   label: org.name,
                 }))}
                 value={
                   selectedOrg
                     ? organizations
-                        .map(org => ({ value: org.id, label: org.name }))
-                        .find(o => o.value === selectedOrg)
+                        .map((org) => ({ value: org.id, label: org.name }))
+                        .find((o) => o.value === selectedOrg)
                     : null
                 }
                 onChange={(opt) => {
@@ -379,26 +324,27 @@ useEffect(() => {
             <Select
               styles={selectStyles}
               placeholder="-- Choose Project --"
-              isLoading={loadingProjects}
-              options={projects.map(p => ({
+              options={projects.map((p) => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
               }))}
               value={
                 selectedProject
                   ? projects
-                      .map(p => ({
+                      .map((p) => ({
                         value: p.id || p.project_id,
                         label: p.project_name || p.name,
                       }))
-                      .find(p => p.value === selectedProject)
+                      .find((p) => p.value === selectedProject)
                   : null
               }
-              onChange={(opt) => handleProjectChange({ target: { value: opt?.value || "" } })}
+              onChange={(opt) =>
+                handleProjectChange({ target: { value: opt?.value || "" } })
+              }
               isClearable
             />
           </div>
-  
+
           <div className="mb-7">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Plan {loadingPlans && <Spinner />}
@@ -406,8 +352,7 @@ useEffect(() => {
             <Select
               styles={selectStyles}
               placeholder="-- Choose Plan --"
-              isLoading={loadingPlans}
-              options={plans.map(plan => ({
+              options={plans.map((plan) => ({
                 value: plan.plan_id,
                 label: `${plan.plan}${
                   plan.year ? ` (${plan.year})` : ""
@@ -416,11 +361,11 @@ useEffect(() => {
               value={
                 selectedPlan
                   ? plans
-                      .map(plan => ({
+                      .map((plan) => ({
                         value: plan.plan_id,
                         label: plan.plan,
                       }))
-                      .find(p => p.value === Number(selectedPlan))
+                      .find((p) => p.value === Number(selectedPlan))
                   : null
               }
               onChange={(opt) => setSelectedPlan(opt?.value || "")}
@@ -435,19 +380,15 @@ useEffect(() => {
             <Select
               styles={selectStyles}
               placeholder="-- Choose Form --"
-              isLoading={loadingForms}
-              options={forms.map(form => ({
-                value: form.name,
-                label: form.display,
-              }))}
+              options={groupFormsByCategory(forms)}
               value={
                 selectedForm
                   ? forms
-                      .map(form => ({
+                      .map((form) => ({
                         value: form.name,
-                        label: form.display,
+                        label: form.name,
                       }))
-                      .find(f => f.value === selectedForm)
+                      .find((f) => f.value === selectedForm)
                   : null
               }
               onChange={(opt) => setSelectedForm(opt?.value || "")}
@@ -472,11 +413,17 @@ useEffect(() => {
         </div>
       </div>
     </div>
-  );  
+  );
 };
 
 // Page 2: Form View with SurveyJS
-const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, isSuperAdmin, user }) => {
+const FormViewPage = ({
+  selectedForm,
+  selectedPlan,
+  selectedPlanName,
+  selectedProject,
+  onBack,
+}) => {
   const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -486,16 +433,37 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [surveyModel, setSurveyModel] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [dprExpanded, setDprExpanded] = useState(false);
+  const [dprEmail, setDprEmail] = useState("");
+  const [dprLoading, setDprLoading] = useState(false);
+  const [dprNotification, setDprNotification] = useState(null); // { type: "success"|"error", message: string }
+  const [planDetails, setPlanDetails] = useState(null);
   const mapElement = useRef(null);
   const mapRef = useRef(null);
   const vectorLayerRef = useRef(null);
   const popupRef = useRef(null);
   const overlayRef = useRef(null);
-  const groups = Array.isArray(user?.groups) ? user.groups : [];
-  const isAdmin = groups.some(g => g.name === "Administrator");
-  const isModerator = groups.some(g => g.name === "Moderator");
+  const groups = Array.isArray(user.groups) ? user.groups : [];
+  const isAdmin = groups.some((g) => g.name === "Administrator");
+  const isModerator = groups.some((g) => g.name === "Moderator");
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selectedProject || !selectedPlan) return;
+    fetch(`${BASEURL}api/v1/projects/${selectedProject}/watershed/plans/`, {
+      headers,
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const plans = data?.data || data?.plans || data || [];
+        const match = plans.find(
+          (p) => (p.id || p.plan_id) === Number(selectedPlan),
+        );
+        if (match) setPlanDetails(match);
+      })
+      .catch((err) => console.error("Plan details fetch error", err));
+  }, [selectedProject, selectedPlan]);
 
   const reloadSubmissions = () => {
     if (viewMode === "map") {
@@ -504,118 +472,117 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
       fetchSubmissions(page, "card");
     }
   };
-  
 
   // Extract coordinates from submission
   const getCoordinates = (submission) => {
     if (!submission?.GPS_point) return null;
-  
+
     const gps = submission.GPS_point;
-  
+
     // GeoJSON point
-    const geoPoint =
-      gps.point_mapappearance ||
-      gps.point_mapsappearance;
-  
+    const geoPoint = gps.point_mapappearance || gps.point_mapsappearance;
+
     if (
       geoPoint &&
       Array.isArray(geoPoint.coordinates) &&
       geoPoint.coordinates.length === 2
     ) {
       const [lon, lat] = geoPoint.coordinates;
-  
+
       if (!isNaN(lon) && !isNaN(lat)) {
         return [lon, lat];
       }
     }
-  
+
     // fallback (very rare, just in case)
     if (gps.longitude && gps.latitude) {
-      return [
-        parseFloat(gps.longitude),
-        parseFloat(gps.latitude),
-      ];
+      return [parseFloat(gps.longitude), parseFloat(gps.latitude)];
     }
-  
+
     return null;
   };
-  
 
-  
   // Get marker icon based on form type and moderation status
   const getMarkerIcon = (formType, isModerated) => {
     // Determine which icon to use based on form name
-    let iconSrc = ICONS['Settlement']; 
-    
+    let iconSrc = ICONS["Settlement"];
+
     if (formType == "Settlement") {
-      iconSrc = ICONS['Settlement'];
+      iconSrc = ICONS["Settlement"];
     } else if (formType == "Well") {
-      iconSrc = ICONS['Well'];
-    } else if (formType == "Waterbody"){
-      iconSrc = ICONS['Waterbody'];
-    } else if (formType == "Surface Water Body Remotely Sensed Maintenance"){
-      iconSrc = ICONS['Waterbody'];
-    } else if (formType == "Surface Water Body Maintenance"){
-      iconSrc = ICONS['Waterbody'];
-    } else if (formType.includes('Groundwater') || formType.includes('GroundWater Maintenance')) {
-      iconSrc = ICONS['Groundwater'];
+      iconSrc = ICONS["Well"];
+    } else if (formType == "Waterbody") {
+      iconSrc = ICONS["Waterbody"];
+    } else if (formType == "Surface Water Body Remotely Sensed Maintenance") {
+      iconSrc = ICONS["Waterbody"];
+    } else if (formType == "Surface Water Body Maintenance") {
+      iconSrc = ICONS["Waterbody"];
+    } else if (
+      formType.includes("Groundwater") ||
+      formType.includes("GroundWater Maintenance")
+    ) {
+      iconSrc = ICONS["Groundwater"];
     } else if (formType == "Livelihood") {
-      iconSrc = ICONS['Livelihood'];
-    } else if (formType.includes('Agri') || formType.includes('Agri Maintenance')) {
-      iconSrc = ICONS['Agri'];
-    } else if (formType == "Crop"){
-      iconSrc = ICONS['Crop']
-    } else if (formType=="Agrohorticulture"){
-      iconSrc = ICONS['Agrohorticulture']
+      iconSrc = ICONS["Livelihood"];
+    } else if (
+      formType.includes("Agri") ||
+      formType.includes("Agri Maintenance")
+    ) {
+      iconSrc = ICONS["Agri"];
+    } else if (formType == "Crop") {
+      iconSrc = ICONS["Crop"];
+    } else if (formType == "Agrohorticulture") {
+      iconSrc = ICONS["Agrohorticulture"];
     }
-    
+
     return iconSrc;
   };
-
 
   // Generic function to analyze form schema and identify field types
   const analyzeFormSchema = (schema) => {
     const fieldTypes = {};
-    
-    const analyzeElement = (element, parentName = '') => {
-      const elementName = element.name.startsWith(parentName + '-') 
-        ? element.name 
-        : (parentName ? `${parentName}-${element.name}` : element.name);
-      
-      if (element.type === 'checkbox') {
-        fieldTypes[elementName] = 'checkbox';
-      } else if (element.type === 'radiogroup') {
-        fieldTypes[elementName] = 'radio';
-      } else if (element.type === 'multipletext') {
-        fieldTypes[elementName] = 'multipletext';
-      } else if (element.type === 'panel') {
+
+    const analyzeElement = (element, parentName = "") => {
+      const elementName = element.name.startsWith(parentName + "-")
+        ? element.name
+        : parentName
+          ? `${parentName}-${element.name}`
+          : element.name;
+
+      if (element.type === "checkbox") {
+        fieldTypes[elementName] = "checkbox";
+      } else if (element.type === "radiogroup") {
+        fieldTypes[elementName] = "radio";
+      } else if (element.type === "multipletext") {
+        fieldTypes[elementName] = "multipletext";
+      } else if (element.type === "panel") {
         if (element.elements) {
-          element.elements.forEach(child => {
-            if (child.name.includes('-')) {
-              analyzeElement(child, '');
+          element.elements.forEach((child) => {
+            if (child.name.includes("-")) {
+              analyzeElement(child, "");
             } else {
               analyzeElement(child, element.name);
             }
           });
         }
       }
-      
+
       if (element.items && Array.isArray(element.items)) {
-        fieldTypes[elementName] = 'multipletext';
-        element.items.forEach(item => {
-          fieldTypes[`${elementName}.${item.name}`] = 'multipletext_item';
+        fieldTypes[elementName] = "multipletext";
+        element.items.forEach((item) => {
+          fieldTypes[`${elementName}.${item.name}`] = "multipletext_item";
         });
       }
     };
-    
+
     if (schema.pages) {
-      schema.pages.forEach(page => {
+      schema.pages.forEach((page) => {
         if (page.elements) {
-          page.elements.forEach(element => analyzeElement(element));
+          page.elements.forEach((element) => analyzeElement(element));
         }
       });
     }
-    
+
     return fieldTypes;
   };
 
@@ -623,36 +590,40 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
   const transformApiToSurvey = (submission, formSchema) => {
     const fieldTypes = analyzeFormSchema(formSchema);
     const transformedData = { ...submission };
-    
-    const processObject = (obj, parentKey = '') => {
-      Object.keys(obj).forEach(key => {
+
+    const processObject = (obj, parentKey = "") => {
+      Object.keys(obj).forEach((key) => {
         const value = obj[key];
         const fullKey = parentKey ? `${parentKey}-${key}` : key;
-        
-        if (value && typeof value === 'object' && !Array.isArray(value)) {
-          if (key === 'GPS_point') {
-            const coordsObj = value.point_mapsappearance || value.point_mapappearance;
+
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          if (key === "GPS_point") {
+            const coordsObj =
+              value.point_mapsappearance || value.point_mapappearance;
             if (coordsObj?.coordinates) {
               const coords = coordsObj.coordinates;
-              transformedData['GPS_point'] = {
+              transformedData["GPS_point"] = {
                 longitude: coords[0],
-                latitude: coords[1]
+                latitude: coords[1],
               };
               return;
             }
-          }
-          else if (value.latitude !== undefined && value.longitude !== undefined) {
+          } else if (
+            value.latitude !== undefined &&
+            value.longitude !== undefined
+          ) {
             transformedData[fullKey] = value;
-          }
-          else {
+          } else {
             processObject(value, key);
           }
         } else {
-          if (typeof value === 'string' && value.trim().length > 0) {
+          if (typeof value === "string" && value.trim().length > 0) {
             const fieldType = fieldTypes[fullKey] || fieldTypes[key];
-            
-            if (fieldType === 'checkbox' && value.includes(' ')) {
-              transformedData[fullKey] = value.split(' ').filter(v => v.trim().length > 0);
+
+            if (fieldType === "checkbox" && value.includes(" ")) {
+              transformedData[fullKey] = value
+                .split(" ")
+                .filter((v) => v.trim().length > 0);
             } else {
               transformedData[fullKey] = value;
             }
@@ -664,7 +635,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
         }
       });
     };
-    
+
     processObject(submission);
     return transformedData;
   };
@@ -674,52 +645,58 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     const fieldTypes = analyzeFormSchema(formSchema);
     const saveData = { ...surveyData };
     const nestedData = {};
-    
-    Object.keys(saveData).forEach(key => {
-      if (key.includes('-')) {
-        const [parent, child] = key.split('-');
+
+    Object.keys(saveData).forEach((key) => {
+      if (key.includes("-")) {
+        const [parent, child] = key.split("-");
         if (!nestedData[parent]) {
           nestedData[parent] = {};
         }
-        
+
         const fieldType = fieldTypes[key];
         const value = saveData[key];
-        
-        if (Array.isArray(value) && fieldType === 'checkbox') {
-          nestedData[parent][child] = value.join(' ');
+
+        if (Array.isArray(value) && fieldType === "checkbox") {
+          nestedData[parent][child] = value.join(" ");
         } else {
           nestedData[parent][child] = value;
         }
         delete saveData[key];
       }
     });
-    
-    if (saveData.GPS_point && saveData.GPS_point.latitude && saveData.GPS_point.longitude) {
+
+    if (
+      saveData.GPS_point &&
+      saveData.GPS_point.latitude &&
+      saveData.GPS_point.longitude
+    ) {
       const originalGPS = originalSubmission.GPS_point;
-      
+
       if (originalGPS) {
-        const coordsKey = originalGPS.point_mapsappearance ? 'point_mapsappearance' : 'point_mapappearance';
-        
+        const coordsKey = originalGPS.point_mapsappearance
+          ? "point_mapsappearance"
+          : "point_mapappearance";
+
         nestedData.GPS_point = {
           ...originalGPS,
           [coordsKey]: {
             type: "Point",
             coordinates: [
               parseFloat(saveData.GPS_point.longitude),
-              parseFloat(saveData.GPS_point.latitude)
-            ]
-          }
+              parseFloat(saveData.GPS_point.latitude),
+            ],
+          },
         };
       } else {
         nestedData.GPS_point = saveData.GPS_point;
       }
       delete saveData.GPS_point;
     }
-    
-    Object.keys(nestedData).forEach(parent => {
+
+    Object.keys(nestedData).forEach((parent) => {
       saveData[parent] = nestedData[parent];
     });
-    
+
     return saveData;
   };
 
@@ -727,11 +704,11 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
   const getFieldValue = (submission, fieldKey) => {
     // Helper to check if a value is valid for display
     const isValidValue = (val) => {
-      if (val === null || val === undefined || val === '') return false;
+      if (val === null || val === undefined || val === "") return false;
       // Reject objects that aren't arrays (they're likely nested structures)
-      if (typeof val === 'object' && !Array.isArray(val)) return false;
+      if (typeof val === "object" && !Array.isArray(val)) return false;
       // Reject very long numeric strings (likely coordinates or IDs that shouldn't be displayed)
-      if (typeof val === 'string' && /^\d+\.\d{10,}$/.test(val)) return false;
+      if (typeof val === "string" && /^\d+\.\d{10,}$/.test(val)) return false;
       return true;
     };
 
@@ -740,10 +717,10 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     if (isValidValue(directValue)) {
       return directValue;
     }
-    
+
     // Handle nested objects with hyphen notation
-    if (fieldKey.includes('-')) {
-      const [parent, child] = fieldKey.split('-');
+    if (fieldKey.includes("-")) {
+      const [parent, child] = fieldKey.split("-");
       if (submission[parent]) {
         const nestedValue = submission[parent][child];
         if (isValidValue(nestedValue)) {
@@ -751,7 +728,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
         }
       }
     }
-    
+
     // Try nested paths only for known data structures
     const nestedPaths = [
       `data.${fieldKey}`,
@@ -759,31 +736,31 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
       `data_well.${fieldKey}`,
       `data_waterbody.${fieldKey}`,
     ];
-    
+
     for (const path of nestedPaths) {
-      const keys = path.split('.');
+      const keys = path.split(".");
       let value = submission;
       let found = true;
-      
+
       for (const key of keys) {
-        if (value && typeof value === 'object' && value[key] !== undefined) {
+        if (value && typeof value === "object" && value[key] !== undefined) {
           value = value[key];
         } else {
           found = false;
           break;
         }
       }
-      
+
       if (found && isValidValue(value)) {
         // Handle coordinates specially
-        if (Array.isArray(value) && path.includes('coordinates')) {
-          return value.join(', ');
+        if (Array.isArray(value) && path.includes("coordinates")) {
+          return value.join(", ");
         }
         return value;
       }
     }
-    
-    return '-';
+
+    return "-";
   };
 
   // Helper to get UUID from submission
@@ -804,27 +781,26 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     if (!utcDate) return "-";
     const date = new Date(utcDate);
     const options = {
-      timeZone: 'Asia/Kolkata',
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     };
-    return date.toLocaleString('en-IN', options).replace(',', '') + ' IST';
+    return date.toLocaleString("en-IN", options).replace(",", "") + " IST";
   };
 
   const fetchSubmissions = async (pg = 1, mode = "card") => {
     setLoading(true);
     if (!selectedForm || !selectedPlan) return;
-  
-  
+
     const url =
       mode === "map"
         ? `${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/`
         : `${BASEURL}api/v1/submissions/${selectedForm}/${selectedPlan}/?page=${pg}`;
-  
+
     try {
       const res = await fetch(url, {
         headers: {
@@ -832,23 +808,25 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
           Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
         },
       });
-  
+
       const data = await res.json();
-  
-      const submissionsWithFlags = (data.data || []).map(item =>
-        Array.isArray(item)
-          ? { ...item[0], _moderated: item[1] }
-          : item
+
+      const submissionsWithFlags = (data.data || []).map((item) =>
+        Array.isArray(item) ? { ...item[0], _moderated: item[1] } : item,
       );
-  
+
       const sortedData = submissionsWithFlags.sort((a, b) => {
-        const dateA = new Date(a.submission_time || a.__system?.submissionDate || 0);
-        const dateB = new Date(b.submission_time || b.__system?.submissionDate || 0);
+        const dateA = new Date(
+          a.submission_time || a.__system?.submissionDate || 0,
+        );
+        const dateB = new Date(
+          b.submission_time || b.__system?.submissionDate || 0,
+        );
         return dateB - dateA;
       });
-  
+
       setSubmissions(sortedData);
-  
+
       // pagination sirf card ke liye
       if (mode === "card") {
         setPage(data.page || pg);
@@ -863,7 +841,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     setLoading(false); 
     }
   };
-  
 
   useEffect(() => {
     if (viewMode === "map") {
@@ -872,14 +849,13 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
       fetchSubmissions(page, "card");
     }
   }, [viewMode]);
-  
 
   // Filter submissions - MOVED BEFORE useEffect hooks that use it
-  const filteredSubmissions = submissions.filter(sub => {
+  const filteredSubmissions = submissions.filter((sub) => {
     // Apply search filter
     const searchString = JSON.stringify(sub).toLowerCase();
     const matchesSearch = searchString.includes(searchTerm.toLowerCase());
-    
+
     // Apply moderation filter
     let matchesModeration = true;
     if (moderationFilter === "moderated") {
@@ -887,7 +863,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     } else if (moderationFilter === "not-moderated") {
       matchesModeration = sub._moderated === false;
     }
-    
+
     return matchesSearch && matchesModeration;
   });
 
@@ -924,9 +900,9 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     const overlay = new Overlay({
       element: popupRef.current,
       positioning: "bottom-center",
-      stopEvent: true, 
+      stopEvent: true,
       offset: [0, -15],
-    });    
+    });
     map.addOverlay(overlay);
 
     mapRef.current = map;
@@ -935,49 +911,53 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
 
     // Click handler for markers
     map.on("click", (evt) => {
-      const feature = map.forEachFeatureAtPixel(evt.pixel, (feature) => feature);
+      const feature = map.forEachFeatureAtPixel(
+        evt.pixel,
+        (feature) => feature,
+      );
       if (feature) {
         const submission = feature.get("submission");
         const coordinates = feature.getGeometry().getCoordinates();
-        
+
         // Show popup
         overlayRef.current.setPosition(coordinates);
-        
+
         // You can customize what's shown in the popup
         const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
-        let popupContent = '<div class="bg-white rounded-lg shadow-xl p-4 min-w-[280px] max-w-[350px]">';
+        let popupContent =
+          '<div class="bg-white rounded-lg shadow-xl p-4 min-w-[280px] max-w-[350px]">';
         popupContent += `<div class="font-bold text-lg mb-3 text-indigo-600 border-b border-slate-200 pb-2">Submission Details</div>`;
-        
-        displayFields.slice(0, 3).forEach(field => {
+
+        displayFields.slice(0, 3).forEach((field) => {
           const value = getFieldValue(submission, field.key);
           popupContent += `<div class="mb-2"><span class="text-xs text-slate-500 font-semibold">${field.label}:</span><br/><span class="text-sm text-slate-900">${value}</span></div>`;
         });
-        
+
         popupContent += `<div class="mt-4 pt-3 border-t border-slate-200 flex gap-2">`;
         popupContent += `<button class="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all" onclick="window.viewSubmissionFromMap('${getSubmissionUUID(submission)}')">View</button>`;
-        
+
         // Add Edit and Delete buttons if user has permissions
         if (showActions) {
           popupContent += `<button class="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-all" onclick="window.editSubmissionFromMap('${getSubmissionUUID(submission)}')">Edit</button>`;
-          
+
           if (isAdmin || isSuperAdmin) {
             popupContent += `<button class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition-all" onclick="window.deleteSubmissionFromMap('${getSubmissionUUID(submission)}')">Delete</button>`;
           }
         }
-        
+
         popupContent += `</div>`;
-        popupContent += '</div>';
-        
+        popupContent += "</div>";
+
         popupRef.current.innerHTML = popupContent;
-        popupRef.current.style.display = 'block';
+        popupRef.current.style.display = "block";
       } else {
-        popupRef.current.style.display = 'none';
+        popupRef.current.style.display = "none";
       }
     });
 
     // Close popup on map move
     map.on("movestart", () => {
-      popupRef.current.style.display = 'none';
+      popupRef.current.style.display = "none";
     });
 
     return () => {
@@ -998,9 +978,14 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     const features = [];
     const validCoords = [];
 
-    filteredSubmissions.forEach(submission => {
+    filteredSubmissions.forEach((submission) => {
       const coords = getCoordinates(submission);
-      if (coords && coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+      if (
+        coords &&
+        coords.length === 2 &&
+        !isNaN(coords[0]) &&
+        !isNaN(coords[1])
+      ) {
         const feature = new Feature({
           geometry: new Point(coords),
           submission: submission,
@@ -1009,15 +994,15 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
         const isModerated = submission._moderated === true;
         // const iconSrc = getMarkerIcon(selectedForm, isModerated);
         const iconSrc = getDynamicMarkerIcon(selectedForm, submission);
-                
+
         // icon ko alag se add karo (same as before)
         feature.setStyle([
           new Style({
             image: new Circle({
               radius: 22,
-              fill: new Fill({ color: 'rgba(255,255,255,0)' }),
+              fill: new Fill({ color: "rgba(255,255,255,0)" }),
               stroke: new Stroke({
-                color: isModerated ? '#22c55e' : '#facc15',
+                color: isModerated ? "#22c55e" : "#facc15",
                 width: 3,
               }),
             }),
@@ -1027,12 +1012,11 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
               src: `${iconSrc}#${submission.__id || Date.now()}`,
               scale: 0.5,
               anchor: [0.5, 0.5],
-              anchorXUnits: 'fraction',
-              anchorYUnits: 'fraction',
-            }),            
+              anchorXUnits: "fraction",
+              anchorYUnits: "fraction",
+            }),
           }),
         ]);
-        
 
         features.push(feature);
         validCoords.push(coords);
@@ -1055,26 +1039,26 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
   // Global function to view submission from map popup
   useEffect(() => {
     window.viewSubmissionFromMap = (uuid) => {
-      const submission = submissions.find(s => getSubmissionUUID(s) === uuid);
+      const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
       if (submission) {
         handleViewSubmission(submission);
       }
     };
-    
+
     window.editSubmissionFromMap = (uuid) => {
-      const submission = submissions.find(s => getSubmissionUUID(s) === uuid);
+      const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
       if (submission) {
         handleEditSubmission(submission);
       }
     };
-    
+
     window.deleteSubmissionFromMap = (uuid) => {
-      const submission = submissions.find(s => getSubmissionUUID(s) === uuid);
+      const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
       if (submission) {
         handleDelete(submission);
       }
     };
-    
+
     return () => {
       delete window.viewSubmissionFromMap;
       delete window.editSubmissionFromMap;
@@ -1084,18 +1068,18 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
 
   const handleViewSubmission = (submission) => {
     const formTemplate = FORM_TEMPLATES[selectedForm];
-    
+
     if (!formTemplate) {
       alert(`No template found for form: ${selectedForm}`);
       return;
     }
-    
+
     setSelectedSubmission(submission);
     setIsEditing(false);
-    
+
     const model = new Model(formTemplate);
     model.mode = "display";
-    
+
     const transformedData = transformApiToSurvey(submission, formTemplate);
     model.data = transformedData;
     setSurveyModel(model);
@@ -1103,26 +1087,30 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
 
   const handleEditSubmission = (submission) => {
     const formTemplate = FORM_TEMPLATES[selectedForm];
-    
+
     if (!formTemplate) {
       alert(`No template found for form: ${selectedForm}`);
       return;
     }
-    
+
     setSelectedSubmission(submission);
     setIsEditing(true);
-    
+
     const model = new Model(formTemplate);
-    
+
     const transformedData = transformApiToSurvey(submission, formTemplate);
     model.data = transformedData;
-    
+
     model.onComplete.add((sender) => {
-      const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
+      const saveData = transformSurveyToApi(
+        sender.data,
+        submission,
+        formTemplate,
+      );
       const uuid = getSubmissionUUID(submission);
       handleSaveSubmission(uuid, saveData);
     });
-    
+
     setSurveyModel(model);
   };
 
@@ -1137,7 +1125,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
             Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
           },
           body: JSON.stringify(data),
-        }
+        },
       );
       const result = await response.json();
       if (result.success) {
@@ -1156,13 +1144,13 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
 
   const handleDelete = async (submission) => {
     if (!window.confirm("Delete this submission?")) return;
-    
+
     const uuid = getSubmissionUUID(submission);
     if (!uuid) {
       alert("Could not find submission UUID");
       return;
     }
-    
+
     try {
       const response = await fetch(
         `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/delete/`,
@@ -1171,7 +1159,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
           },
-        }
+        },
       );
       const data = await response.json();
       if (data.success) {
@@ -1184,100 +1172,346 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
     }
   };
 
+  const handleGenerateDPR = async () => {
+    if (!dprEmail || !selectedPlan) return;
+    setDprLoading(true);
+    setDprNotification(null);
+    try {
+      const response = await fetch(`${BASEURL}api/v1/generate_dpr/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+        },
+        body: JSON.stringify({
+          plan_id: Number(selectedPlan),
+          email_id: dprEmail,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setDprNotification({
+          type: "success",
+          message: data.message || "DPR generation request sent successfully!",
+        });
+        setDprEmail("");
+        setDprExpanded(false);
+      } else {
+        setDprNotification({
+          type: "error",
+          message: data.message || data.error || "Failed to send DPR request.",
+        });
+      }
+    } catch (err) {
+      console.error("DPR error:", err);
+      setDprNotification({
+        type: "error",
+        message: "Network error. Please try again.",
+      });
+    } finally {
+      setDprLoading(false);
+      setTimeout(() => setDprNotification(null), 5000);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6 mt-8">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <button
-            onClick={onBack}
-            className="px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-bold shadow-md hover:shadow-lg flex items-center gap-2"
-          >
-            <ChevronLeft size={20} />
-            Back to Selection
-          </button>
-  
-          <div className="flex gap-4 items-center">
-            <div className="bg-white px-6 py-3 rounded-xl border-2 border-indigo-200 shadow-md">
-              <div className="text-xs text-indigo-600 font-bold uppercase mb-1">
-                Plan
-              </div>
-              <div className="text-sm font-black text-slate-900">
-                {selectedPlanName}
-              </div>
-            </div>
-  
-            <div className="bg-white px-6 py-3 rounded-xl border-2 border-blue-200 shadow-md">
-              <div className="text-xs text-blue-600 font-bold uppercase mb-1">
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+          {/* Top strip — gradient context bar */}
+          <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 px-6 py-4 flex items-center gap-4">
+            {/* Back button */}
+            <button
+              onClick={onBack}
+              className="flex items-center gap-2 text-white/90 hover:text-white font-semibold text-sm bg-white/15 hover:bg-white/25 px-4 py-2 rounded-lg transition-all shrink-0"
+            >
+              <ChevronLeft size={16} />
+              Back
+            </button>
+
+            <div className="w-px h-6 bg-white/30 shrink-0" />
+
+            {/* Form */}
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-indigo-200 text-xs font-bold uppercase tracking-wider shrink-0">
                 Form
-              </div>
-              <div className="text-sm font-black text-slate-900">
+              </span>
+              <span className="text-white font-bold text-sm truncate">
                 {selectedForm}
-              </div>
+              </span>
+            </div>
+
+            {/* Submission counts pushed to the right */}
+            <div className="ml-auto flex items-center gap-4 shrink-0">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+                {filteredSubmissions.filter((s) => !s._moderated).length}{" "}
+                Pending
+              </span>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
+                {filteredSubmissions.filter((s) => s._moderated).length}{" "}
+                Moderated
+              </span>
             </div>
           </div>
-  
-          <div className="flex gap-3 items-center">
-            {/* View Mode Toggle */}
-            <div className="flex bg-white border-2 border-slate-300 rounded-xl overflow-hidden shadow-md">
+
+          {/* Plan details ribbon */}
+          <div className="px-8 py-3 bg-indigo-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap">
+            {[
+              {
+                label: "Plan ID",
+                value: `#${planDetails?.id || planDetails?.plan_id || selectedPlan}`,
+              },
+              {
+                label: "Plan Name",
+                value: planDetails?.plan || selectedPlanName || "—",
+              },
+              {
+                label: "Facilitator",
+                value: planDetails?.facilitator_name || "—",
+              },
+              {
+                label: "Village",
+                value: planDetails?.village || "—",
+              },
+              {
+                label: "Gram Panchayat",
+                value:
+                  planDetails?.gram_panchayat || planDetails?.gp_name || "—",
+              },
+            ].map(({ label, value }) => (
+              <div key={label} className="flex flex-col min-w-0">
+                <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">
+                  {label}
+                </span>
+                <span className="text-sm font-bold text-slate-800 truncate max-w-[220px]">
+                  {value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom strip — controls bar */}
+          <div className="px-8 py-4 flex items-center gap-4 bg-white/60 backdrop-blur-md">
+            {/* Card / Map toggle */}
+            <div className="flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
               <button
                 onClick={() => setViewMode("card")}
-                className={`px-4 py-3 font-bold transition-all flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
                   viewMode === "card"
-                    ? "bg-indigo-600 text-white"
-                    : "text-slate-700 hover:bg-slate-50"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                 }`}
               >
-                <Grid size={18} />
+                <Grid size={15} />
                 Card
               </button>
               <button
                 onClick={() => setViewMode("map")}
-                className={`px-4 py-3 font-bold transition-all flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
                   viewMode === "map"
-                    ? "bg-indigo-600 text-white"
-                    : "text-slate-700 hover:bg-slate-50"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                 }`}
               >
-                <MapIcon size={18} />
+                <MapIcon size={15} />
                 Map
               </button>
             </div>
 
-            <div className="relative">
+            <div className="w-px h-6 bg-slate-200/80 shrink-0" />
+
+            {/* Search — expands to fill remaining space */}
+            <div className="relative flex-1">
               <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                size={15}
               />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Search submissions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-3 w-48 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium text-sm"
+                className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-sm shadow-sm"
               />
             </div>
 
-            {/* Moderation Filter */}
-            <div className="relative">
+            {/* Moderation filter — pinned to right */}
+            <div className="relative shrink-0">
               <Filter
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-                size={18}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                size={15}
               />
               <select
                 value={moderationFilter}
                 onChange={(e) => setModerationFilter(e.target.value)}
-                className="pl-10 pr-4 py-3 border-2 border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none transition-all font-medium appearance-none bg-white text-sm"
+                className="pl-10 pr-10 py-2.5 border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-sm font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
               >
-                <option value="all">All</option>
+                <option value="all">All Submissions</option>
                 <option value="moderated">Moderated</option>
-                <option value="not-moderated">Not Moderated</option>
+                <option value="not-moderated">Pending</option>
               </select>
+            </div>
+          </div>
+
+          {/* Third row — Generate DPR */}
+          <div className="px-8 py-3 border-t border-slate-100/80 bg-white/40 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              {/* Toggle button */}
+              <button
+                onClick={() => setDprExpanded(!dprExpanded)}
+                className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${
+                  dprExpanded
+                    ? "bg-violet-600 text-white border-violet-600 shadow-md"
+                    : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
+                }`}
+              >
+                <FileText size={15} />
+                Generate DPR
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${dprExpanded ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {/* Expanded panel */}
+              {dprExpanded && (
+                <div className="flex-1 flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-200">
+                  {/* Plan info pill */}
+                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm border border-slate-200/80 rounded-xl px-4 py-2 text-sm shrink-0 shadow-sm">
+                    <span className="text-slate-400 font-medium">Plan</span>
+                    <span className="w-px h-4 bg-slate-200" />
+                    <span className="font-bold text-slate-800 truncate max-w-[180px]">
+                      {selectedPlanName}
+                    </span>
+                    <span className="w-px h-4 bg-slate-200" />
+                    <span className="text-xs font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md">
+                      #{selectedPlan}
+                    </span>
+                  </div>
+
+                  {/* Email input */}
+                  <div className="relative flex-1">
+                    <Mail
+                      size={15}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Enter email address to receive the DPR..."
+                      value={dprEmail}
+                      onChange={(e) => setDprEmail(e.target.value)}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && handleGenerateDPR()
+                      }
+                      className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm shadow-sm"
+                    />
+                  </div>
+
+                  {/* Send button */}
+                  <button
+                    onClick={handleGenerateDPR}
+                    disabled={!dprEmail || dprLoading}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all shrink-0"
+                  >
+                    {dprLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send size={14} />
+                        Send Request
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-  
+
+      {/* Floating toast notification */}
+      {dprNotification && (
+        <div
+          className={`fixed top-6 right-6 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm transition-all animate-in fade-in slide-in-from-top-3 duration-300 ${
+            dprNotification.type === "success"
+              ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+              : "bg-red-50/90 border-red-200 text-red-900"
+          }`}
+        >
+          <div
+            className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+              dprNotification.type === "success"
+                ? "bg-emerald-500"
+                : "bg-red-500"
+            }`}
+          >
+            {dprNotification.type === "success" ? (
+              <svg
+                className="w-3 h-3 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-3 h-3 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={3}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-sm">
+              {dprNotification.type === "success"
+                ? "Request Sent!"
+                : "Request Failed"}
+            </p>
+            <p className="text-sm mt-0.5 opacity-80">
+              {dprNotification.message}
+            </p>
+          </div>
+          <button
+            onClick={() => setDprNotification(null)}
+            className="shrink-0 opacity-50 hover:opacity-100 transition-opacity"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Modal for viewing/editing submission */}
       {selectedSubmission && surveyModel && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
@@ -1317,14 +1551,14 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
                 </svg>
               </button>
             </div>
-  
+
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               <Survey model={surveyModel} />
             </div>
           </div>
         </div>
       )}
-  
+
       {/* Map View or Card View */}
       <div className="max-w-7xl mx-auto relative">
         {loading && (
@@ -1346,13 +1580,15 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-amber-400 border-2 border-amber-600"></div>
                   <span className="text-sm font-bold text-slate-700">
-                    Not Moderated: {filteredSubmissions.filter(s => !s._moderated).length}
+                    Not Moderated:{" "}
+                    {filteredSubmissions.filter((s) => !s._moderated).length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-green-400 border-2 border-green-600"></div>
                   <span className="text-sm font-bold text-slate-700">
-                    Moderated: {filteredSubmissions.filter(s => s._moderated).length}
+                    Moderated:{" "}
+                    {filteredSubmissions.filter((s) => s._moderated).length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1365,8 +1601,8 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
 
             {/* Map Container */}
             <div className="relative">
-              <div 
-                ref={mapElement} 
+              <div
+                ref={mapElement}
                 className="w-full h-[calc(100vh-280px)] min-h-[600px]"
               />
               {/* Popup container */}
@@ -1375,7 +1611,6 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
                 className="absolute z-[1000] pointer-events-auto"
                 style={{ display: "none" }}
               />
-
 
               {/* No submissions popup - small centered popup */}
               {filteredSubmissions.length === 0 && (
@@ -1429,92 +1664,97 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
                 </p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredSubmissions.map((submission) => {
                   const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
                   const uuid = getSubmissionUUID(submission);
                   const isModerated = submission._moderated === true;
-      
+
                   return (
                     <div
                       key={uuid}
-                      className={`rounded-2xl shadow-lg border-2 p-6 hover:shadow-xl transition-all ${
-                        isModerated 
-                          ? 'bg-green-50 border-green-300' 
-                          : 'bg-amber-50 border-amber-300'
-                      }`}
+                      className="relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          {/* Moderation Status Badge */}
-                          <div className="mb-3">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold ${
-                              isModerated 
-                                ? 'bg-green-200 text-green-800' 
-                                : 'bg-amber-200 text-amber-800'
-                            }`}>
-                              {isModerated ? '✓ Moderated' : '⚠ Not Moderated'}
-                            </span>
-                          </div>
+                      {/* Left accent stripe */}
+                      <div
+                        className={`absolute left-0 top-0 bottom-0 w-1 ${
+                          isModerated ? "bg-emerald-400" : "bg-amber-400"
+                        }`}
+                      />
 
-                          {/* Submission Time */}
-                          <div className="mb-4 pb-4 border-b border-slate-200">
-                            <div className="flex items-center gap-2 text-sm text-slate-600">
-                              <Calendar size={16} className="text-indigo-600" />
-                              <span className="font-semibold">Submitted:</span>
-                              <span className="text-slate-900 font-bold">
-                                {formatToIST(
-                                  submission.__system?.submissionDate ||
-                                    submission.submission_time,
-                                )}
-                              </span>
-                            </div>
-                          </div>
-      
-                          {/* Dynamic fields based on form type */}
-                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            {displayFields.map((field) => (
-                              <div key={field.key}>
-                                <div className="text-xs font-bold text-slate-500 uppercase mb-1">
-                                  {field.label}
-                                </div>
-                                <div className="text-sm font-bold text-slate-900 truncate">
-                                  {getFieldValue(submission, field.key)}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-      
-                        {/* Action buttons */}
-                        <div className="flex flex-col gap-2 ml-6">
-                          <button
-                            onClick={() => handleViewSubmission(submission)}
-                            className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
+                      <div className="pl-6 pr-5 pt-4 pb-0">
+                        {/* Top row: status badge + date */}
+                        <div className="flex items-center justify-between mb-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${
+                              isModerated
+                                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                                : "bg-amber-50 text-amber-700 ring-amber-200"
+                            }`}
                           >
-                            View
-                          </button>
-      
-                          {showActions && (
-                            <>
-                              <button
-                                onClick={() => handleEditSubmission(submission)}
-                                className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
-                              >
-                                Edit
-                              </button>
-      
-                              {(isAdmin || isSuperAdmin) && (
-                                <button
-                                  onClick={() => handleDelete(submission)}
-                                  className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-all shadow-md hover:shadow-lg"
-                                >
-                                  Delete
-                                </button>
-                              )}
-                            </>
-                          )}
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                isModerated ? "bg-emerald-500" : "bg-amber-400"
+                              }`}
+                            />
+                            {isModerated ? "Moderated" : "Pending Moderation"}
+                          </span>
+
+                          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+                            <Calendar size={12} />
+                            {formatToIST(
+                              submission.__system?.submissionDate ||
+                                submission.submission_time,
+                            )}
+                          </div>
                         </div>
+
+                        {/* Dynamic data fields */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3 mb-4">
+                          {displayFields.map((field) => (
+                            <div key={field.key} className="min-w-0">
+                              <div className="text-xs text-slate-400 font-medium mb-0.5 truncate">
+                                {field.label}
+                              </div>
+                              <div className="text-sm font-semibold text-slate-800 truncate">
+                                {getFieldValue(submission, field.key)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Bottom action bar */}
+                      <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/60">
+                        <button
+                          onClick={() => handleViewSubmission(submission)}
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all"
+                        >
+                          <Eye size={13} />
+                          View
+                        </button>
+
+                        {showActions && (
+                          <>
+                            <button
+                              onClick={() => handleEditSubmission(submission)}
+                              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-sky-600 bg-sky-50 hover:bg-sky-100 rounded-lg transition-all"
+                            >
+                              <Pencil size={13} />
+                              Edit
+                            </button>
+
+                            {(isAdmin || isSuperAdmin) && (
+                              <button
+                                onClick={() => handleDelete(submission)}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all"
+                              >
+                                <Trash2 size={13} />
+                                Delete
+                              </button>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   );
@@ -1523,7 +1763,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
             )}
           </>
         )}
-  
+
         {/* Pagination - only show in card view */}
         {viewMode === "card" && submissions.length > 0 && totalPages > 1 && (
           <div className="flex justify-center gap-2 mt-8">
@@ -1534,7 +1774,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
             >
               Previous
             </button>
-  
+
             {[...Array(totalPages)].map((_, i) => (
               <button
                 key={i}
@@ -1548,7 +1788,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
                 {i + 1}
               </button>
             ))}
-  
+
             <button
               disabled={page === totalPages}
               onClick={() => fetchSubmissions(page + 1)}
@@ -1560,7 +1800,7 @@ const FormViewPage = ({ selectedForm, selectedPlan, selectedPlanName, onBack, is
         )}
       </div>
     </div>
-  );  
+  );
 };
 
 // Main Component
@@ -1612,15 +1852,13 @@ useEffect(() => {
   };
 
   return currentPage === "selection" ? (
-    <SelectionPage 
-    key={userId}
-    isSuperAdmin={isSuperAdmin}
+    <SelectionPage
       onLoadSubmissions={handleLoadSubmissions}
       selectedOrg={selectedOrg}
       setSelectedOrg={setSelectedOrg}
       selectedProject={selectedProject}
       setSelectedProject={setSelectedProject}
-      initialProject={selectedProject}   
+      initialProject={selectedProject}
       initialPlan={selectedPlan}
       initialForm={selectedForm}
       initialOrg={selectedOrg}
@@ -1630,6 +1868,7 @@ useEffect(() => {
        selectedForm={selectedForm}
       selectedPlan={selectedPlan}
       selectedPlanName={selectedPlanName}
+      selectedProject={selectedProject}
       onBack={handleBack}
       isSuperAdmin={isSuperAdmin}
       user={currentUser}
