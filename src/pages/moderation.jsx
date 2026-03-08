@@ -41,6 +41,7 @@ import {
   ICONS,
   FORM_CATEGORY_MAP,
   FORM_CATEGORY_ORDER,
+  FORM_DISPLAY_NAMES,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -251,7 +252,8 @@ const SelectionPage = ({
     forms.forEach((form) => {
       const category = FORM_CATEGORY_MAP[form.name] || "Other";
       if (!groups[category]) groups[category] = [];
-      groups[category].push({ value: form.name, label: form.name });
+      const displayName = FORM_DISPLAY_NAMES[form.name] || form.name;
+      groups[category].push({ value: form.name, label: displayName });
     });
 
     return FORM_CATEGORY_ORDER.filter((cat) => groups[cat])
@@ -478,7 +480,7 @@ const SelectionPage = ({
                   ? forms
                       .map((form) => ({
                         value: form.name,
-                        label: form.name,
+                        label: FORM_DISPLAY_NAMES[form.name] || form.name,
                       }))
                       .find((f) => f.value === selectedForm)
                   : null
