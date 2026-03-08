@@ -61,6 +61,15 @@ export const FORM_CATEGORY_MAP = {
   "Feedback Surface Water Bodies": "Feedback",
 };
 
+export const FORM_DISPLAY_NAMES = {
+  Waterbody: "Water Structures",
+  Crop: "Cropping Pattern",
+  Groundwater: "Recharge Structures",
+  Agri: "Irrigation Structures",
+  "Agri Maintenance": "Irrigation Structure Maintenance",
+  "GroundWater Maintenance": "Recharge Structure Maintenance",
+};
+
 export const FORM_CATEGORY_ORDER = [
   "Resource Mapping",
   "New Demands",
