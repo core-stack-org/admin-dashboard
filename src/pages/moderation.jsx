@@ -1328,8 +1328,7 @@ const FormViewPage = ({
             <div className="ml-auto flex items-center gap-4 shrink-0">
               <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
-                {filteredSubmissions.filter((s) => !s._moderated).length}{" "}
-                Pending
+                {filteredSubmissions.filter((s) => !s._moderated).length}
               </span>
               <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
@@ -1652,15 +1651,14 @@ const FormViewPage = ({
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-amber-400 border-2 border-amber-600"></div>
                   <span className="text-sm font-bold text-slate-700">
-                    Not Moderated:{" "}
                     {filteredSubmissions.filter((s) => !s._moderated).length}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-green-400 border-2 border-green-600"></div>
                   <span className="text-sm font-bold text-slate-700">
-                    Moderated:{" "}
-                    {filteredSubmissions.filter((s) => s._moderated).length}
+                    {filteredSubmissions.filter((s) => s._moderated).length}{" "}
+                    Moderated
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1769,7 +1767,7 @@ const FormViewPage = ({
                                 isModerated ? "bg-emerald-500" : "bg-amber-400"
                               }`}
                             />
-                            {isModerated ? "Moderated" : "Pending Moderation"}
+                            {isModerated ? "Moderated" : ""}
                           </span>
 
                           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
