@@ -629,7 +629,7 @@ const FormViewPage = ({
     try {
 
       const res = await fetch(
-        `http://127.0.0.1:8000/api/v1/validate_site/?lat=${lat}&lon=${lon}&structure_type=${structureRule}`,
+        `${BASEURL}api/v1/validate_site/?lat=${lat}&lon=${lon}&structure_type=${structureRule}`,
         { headers: getHeaders() }
       );
 
