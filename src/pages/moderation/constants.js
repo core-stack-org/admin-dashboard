@@ -167,36 +167,39 @@ export const CARD_DISPLAY_FIELDS = {
   ],
 
   Livelihood: [
-    {
-      key: "beneficiary_settlement",
-      label: "Name of Beneficiary's Settlement",
-    },
-    {
-      key: "panel1-Livestock-is_demand_livestock",
-      label: "Are there demands for promoting livestock in the settlement?",
-    },
-    {
-      key: "panel1-Livestock-ben_livestock",
-      label: "Beneficiary's Name",
-    },
-    {
-      key: "panel2-kitchen_gardens-assets_kg",
-      label:
-        "Are there demands for promoting Kitchen Gardens / Didi Badi / Poshan Vatika as Individual assets in the settlement",
-    },
-    {
-      key: "panel2-kitchen_gardens-ben_kitchen_gardens",
-      label: "Beneficiary's Name",
-    },
-    {
-      key: "panel3-fisheries-is_demand_fisheries",
-      label: "Are there demands for promoting fisheries in the settlement?",
-    },
-    {
-      key: "panel3-fisheries-ben_fisheries",
-      label: "Beneficiary's Name",
-    },
-  ],
+  {
+    key: "beneficiary_settlement",
+    label: "Name of Beneficiary's Settlement",
+  },
+  {
+    key: "beneficiary_name",
+    label: "Beneficiary's Name",
+  },
+  {
+    key: "Livestock-is_demand_livestock",
+    label: "Livestock Demand?",
+  },
+  {
+    key: "Livestock-ben_livestock",
+    label: "Livestock Beneficiary",
+  },
+  {
+    key: "kitchen_gardens-assets_kg",
+    label: "Kitchen Garden Demand?",
+  },
+  {
+    key: "kitchen_gardens-ben_kitchen_gardens",
+    label: "Kitchen Garden Beneficiary",
+  },
+  {
+    key: "fisheries-is_demand_fisheries",
+    label: "Fisheries Demand?",
+  },
+  {
+    key: "fisheries-ben_fisheries",
+    label: "Fisheries Beneficiary",
+  },
+],
 
   Agri: [
     {
