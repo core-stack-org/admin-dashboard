@@ -2014,7 +2014,7 @@ const handleEditSubmission = (submission) => {
                               Edit
                             </button>
 
-                            {["Waterbody","Groundwater","Agri"].includes(selectedForm) && (
+                            {["Groundwater","Agri"].includes(selectedForm) && (
                               <button
                                 onClick={() => handleValidateSubmission(submission)}
                                 disabled={validationLoading[uuid]}
