@@ -283,3 +283,30 @@ export const CARD_DISPLAY_FIELDS = {
     },
   ],
 };
+
+
+export const structureRules = {
+  "Staggered Contour trenches (SCT)":"staggered_contour_trenches_sct",
+  "Check dam":"check_dam",
+  "Percolation tank":"percolation_tank",
+  "Earthen gully plug":"earthen_gully_plug",
+  "Drainage/soakage channels":"drainage_soakage_channels",
+  "Recharge pits":"recharge_pits",
+  "Soakage pits":"soakage_pits",
+  "Trench cum bund network":"trench_cum_bund_network",
+  "Continuous contour trenches (CCT)":"continuous_contour_trenches_cct",
+  "Water absorption trenches (WAT)":"water_absorption_trenches_wat",
+  "Loose Boulder Structure":"loose_boulder_structure",
+  "Rock fill dam":"rock_fill_dam",
+  "Stone bunding":"stone_bunding",
+  "Diversion drains":"diversion_drains",
+  "Bunding:Contour bunds/ graded bunds":"contour_bund",
+  "5% model structure":"5_percent_model_structure",
+  "30-40 model structure":"30_40_model_structure",
+  "Farm pond":"farm_pond",
+  "Community Pond":"community_pond",
+  "Well":"well",
+  "Canal":"canal",
+  "Farm bund":"farm_bund",
+  "Large water body":"large_water_body"
+}
