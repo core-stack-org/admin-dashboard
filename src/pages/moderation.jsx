@@ -42,6 +42,7 @@ import {
   FORM_CATEGORY_MAP,
   FORM_CATEGORY_ORDER,
   FORM_DISPLAY_NAMES,
+  structureRules
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -517,14 +518,14 @@ const FormViewPage = ({
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [moderationFilter, setModerationFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("card"); // "card" or "map"
+  const [viewMode, setViewMode] = useState("card"); 
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [surveyModel, setSurveyModel] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [dprExpanded, setDprExpanded] = useState(false);
   const [dprEmail, setDprEmail] = useState("");
   const [dprLoading, setDprLoading] = useState(false);
-  const [dprNotification, setDprNotification] = useState(null); // { type: "success"|"error", message: string }
+  const [dprNotification, setDprNotification] = useState(null); 
   const [planDetails, setPlanDetails] = useState(null);
   const mapElement = useRef(null);
   const mapRef = useRef(null);
@@ -535,7 +536,8 @@ const FormViewPage = ({
   const isAdmin = groups.some((g) => g.name === "Administrator");
   const isModerator = groups.some((g) => g.name === "Moderator");
   const showActions = isAdmin || isModerator || isSuperAdmin;
-  const didFetchRef = useRef(false);
+  const [validationResults, setValidationResults] = useState({});
+  const [validationLoading, setValidationLoading] = useState({});
 
   useEffect(() => {
     if (!selectedProject || !selectedPlan) return;
@@ -588,6 +590,79 @@ const FormViewPage = ({
     }
 
     return null;
+  };
+
+  const getStructureType = (submission) => {
+
+    if (selectedForm === "Waterbody") {
+      return submission.select_one_water_structure;
+    }
+
+    if (selectedForm === "Groundwater" || selectedForm === "Agri") {
+      return submission.TYPE_OF_WORK_ID;
+    }
+
+    return null;
+  };
+
+  const fetchValidationResult = async (submission) => {
+
+    const coords = getCoordinates(submission);
+    if (!coords) return;
+
+    const [lon, lat] = coords;
+
+    const uuid = getSubmissionUUID(submission);
+
+    if (validationResults[uuid]) return;
+
+    const structureType = getStructureType(submission);
+    const structureRule = structureRules[structureType];
+
+    if (!structureRule) return;
+
+    setValidationLoading(prev => ({
+      ...prev,
+      [uuid]: true
+    }));
+
+    try {
+
+      const res = await fetch(
+        `${BASEURL}api/v1/validate_site/?lat=${lat}&lon=${lon}&structure_type=${structureRule}`,
+        { headers: getHeaders() }
+      );
+
+      const data = await res.json();
+
+      const params = data?.evaluation?.parameters || {};
+
+      const extracted = {};
+
+      Object.keys(params).forEach((key) => {
+        extracted[key] = params[key].category;
+      });
+
+      const finalDecision = data?.evaluation?.final_decision;
+
+      setValidationResults(prev => ({
+        ...prev,
+        [uuid]: {
+          parameters: extracted,
+          finalDecision: finalDecision
+        }
+      }));
+
+    } catch (err) {
+      console.error("Validation API error:", err);
+    }
+
+    finally {
+      setValidationLoading(prev => ({
+        ...prev,
+        [uuid]: false
+      }));
+    }
   };
 
   // Get marker icon based on form type and moderation status
@@ -1265,6 +1340,14 @@ const handleEditSubmission = (submission) => {
     }
   };
 
+  const handleValidateSubmission = async (submission) => {
+    const uuid = getSubmissionUUID(submission);
+
+    if (!uuid) return;
+
+    await fetchValidationResult(submission);
+  };
+
   const handleDelete = async (submission) => {
     if (!window.confirm("Delete this submission?")) return;
 
@@ -1877,6 +1960,40 @@ const handleEditSubmission = (submission) => {
                         </div>
                       </div>
 
+                      {validationResults[uuid] && (
+                        <div className="pl-6 pr-5 pt-3 border-t">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="text-xs font-semibold text-slate-400">
+                              Site Validation
+                            </div>
+                            <span
+                              className={`px-2 py-1 text-xs rounded-md font-bold ${
+                                validationResults[uuid].finalDecision === "Recommended"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-red-50 text-red-700"
+                              }`}
+                            >
+                              {validationResults[uuid].finalDecision}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(validationResults[uuid].parameters).map(([param, category]) => (
+                              <span
+                                key={param}
+                                className={`px-2 py-1 text-xs rounded-md font-semibold ${
+                                  category === "accepted"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : category === "partially_accepted"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-red-50 text-red-700"
+                                }`}
+                              >
+                                {param} → {category.replace("_"," ")}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       {/* Bottom action bar */}
                       <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/60">
                         <button
@@ -1896,6 +2013,25 @@ const handleEditSubmission = (submission) => {
                               <Pencil size={13} />
                               Edit
                             </button>
+
+                            {["Waterbody","Groundwater","Agri"].includes(selectedForm) && (
+                              <button
+                                onClick={() => handleValidateSubmission(submission)}
+                                disabled={validationLoading[uuid]}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-60"
+                              >
+                                {validationLoading[uuid] ? (
+                                  <>
+                                    <div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div>
+                                    Validating...
+                                  </>
+                                ) : (
+                                  <>
+                                    Validate
+                                  </>
+                                )}
+                              </button>
+                            )}
 
                             {(isAdmin || isSuperAdmin) && (
                               <button
