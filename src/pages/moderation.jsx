@@ -800,6 +800,53 @@ const FormViewPage = ({
     };
 
     processObject(submission);
+    
+    const legacyKeyMap = {
+      // LIVESTOCK
+      "select_one_demand_promoting_livestock" : "Livestock-is_demand_livestock",
+      "select_one_promoting_livestock"  : "Livestock-demands_promoting_livestock",
+      "select_one_promoting_livestock_other"  : "Livestock-select_one_promoting_livestock_other",
+
+      // KITCHEN GARDENS
+      "area_didi_badi"   : "kitchen_gardens-area_kg",
+      "indi_assets"  : "kitchen_gardens-assets_kg",
+
+      // FISHERIES
+      "select_one_demand_promoting_fisheries" : "fisheries-is_demand_fisheries",
+      "select_one_promoting_fisheries" : "fisheries-demands_promoting_fisheries",
+      "select_one_promoting_fisheries_other" : "fisheries-demands_promoting_fisheries_other",
+    };
+
+    Object.entries(legacyKeyMap).forEach(([oldKey, newKey]) => {
+      const oldValue = submission[oldKey];
+      const currentValue = transformedData[newKey];
+      const isCurrentEmpty = currentValue === null || currentValue === undefined || currentValue === "";
+      const isOldValueReal = oldValue !== null && oldValue !== undefined && oldValue !== "";
+      if (isCurrentEmpty && isOldValueReal) {
+        transformedData[newKey] = oldValue;
+      }
+    });
+
+    const legacyBeneficiaryName = submission["beneficiary_name"];
+    if (
+      legacyBeneficiaryName !== null &&
+      legacyBeneficiaryName !== undefined &&
+      legacyBeneficiaryName !== ""
+    ) {
+      const livestockDemand = submission["select_one_demand_promoting_livestock"];
+      const fishDemand      = submission["select_one_demand_promoting_fisheries"];
+      const kitchenDemand   = submission["indi_assets"]; 
+
+      if (livestockDemand === "Yes" && !transformedData["Livestock-ben_livestock"]) {
+        transformedData["Livestock-ben_livestock"] = legacyBeneficiaryName;
+      }
+      if (fishDemand === "Yes" && !transformedData["fisheries-ben_fisheries"]) {
+        transformedData["fisheries-ben_fisheries"] = legacyBeneficiaryName;
+      }
+      if (kitchenDemand === "Yes" && !transformedData["kitchen_gardens-ben_kitchen_gardens"]) {
+        transformedData["kitchen_gardens-ben_kitchen_gardens"] = legacyBeneficiaryName;
+      }
+    }
     return transformedData;
   };
 
@@ -865,34 +912,42 @@ const FormViewPage = ({
 
   // Helper function to get nested field value from submission
   const getFieldValue = (submission, fieldKey) => {
-    // Helper to check if a value is valid for display
     const isValidValue = (val) => {
       if (val === null || val === undefined || val === "") return false;
-      // Reject objects that aren't arrays (they're likely nested structures)
       if (typeof val === "object" && !Array.isArray(val)) return false;
-      // Reject very long numeric strings (likely coordinates or IDs that shouldn't be displayed)
       if (typeof val === "string" && /^\d+\.\d{10,}$/.test(val)) return false;
       return true;
     };
 
-    // Check direct access first
+    // 1. Direct key
     const directValue = submission[fieldKey];
-    if (isValidValue(directValue)) {
-      return directValue;
-    }
+    if (isValidValue(directValue)) return directValue;
 
-    // Handle nested objects with hyphen notation
     if (fieldKey.includes("-")) {
       const [parent, child] = fieldKey.split("-");
       if (submission[parent]) {
         const nestedValue = submission[parent][child];
-        if (isValidValue(nestedValue)) {
-          return nestedValue;
-        }
+        if (isValidValue(nestedValue)) return nestedValue;
       }
     }
 
-    // Try nested paths only for known data structures
+    const legacyFallback = {
+      "Livestock-is_demand_livestock" : "select_one_demand_promoting_livestock",
+      "Livestock-demands_promoting_livestock" : "select_one_promoting_livestock",
+      "Livestock-select_one_promoting_livestock_other" : "select_one_promoting_livestock_other",
+      "kitchen_gardens-area_kg"  : "area_didi_badi",
+      "kitchen_gardens-assets_kg"  : "indi_assets",
+      "fisheries-is_demand_fisheries"  : "select_one_demand_promoting_fisheries",
+      "fisheries-demands_promoting_fisheries"  : "select_one_promoting_fisheries",
+      "fisheries-demands_promoting_fisheries_other" : "select_one_promoting_fisheries_other",
+    };
+
+    const legacyKey = legacyFallback[fieldKey];
+    if (legacyKey && isValidValue(submission[legacyKey])) {
+      return submission[legacyKey];
+    }
+
+    // 4. Nested paths
     const nestedPaths = [
       `data.${fieldKey}`,
       `data_settlement.${fieldKey}`,
@@ -904,7 +959,6 @@ const FormViewPage = ({
       const keys = path.split(".");
       let value = submission;
       let found = true;
-
       for (const key of keys) {
         if (value && typeof value === "object" && value[key] !== undefined) {
           value = value[key];
@@ -913,14 +967,7 @@ const FormViewPage = ({
           break;
         }
       }
-
-      if (found && isValidValue(value)) {
-        // Handle coordinates specially
-        if (Array.isArray(value) && path.includes("coordinates")) {
-          return value.join(", ");
-        }
-        return value;
-      }
+      if (found && isValidValue(value)) return value;
     }
 
     return "-";
@@ -1224,52 +1271,46 @@ const FormViewPage = ({
   }, [submissions]);
 
   const handleViewSubmission = (submission) => {
-    const formTemplate = FORM_TEMPLATES[selectedForm];
+  const formTemplate = FORM_TEMPLATES[selectedForm];
+  if (!formTemplate) { alert(`No template found for form: ${selectedForm}`); return; }
 
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
+  const transformedData = transformApiToSurvey(submission, formTemplate);
+  
+  // Pass transformedData so it knows which fields have values
+  const smartTemplate = smartVisibleIf(formTemplate, transformedData, "view");
 
-    setSelectedSubmission(submission);
-    setIsEditing(false);
+  setSelectedSubmission(submission);
+  setIsEditing(false);
 
-    const model = new Model(formTemplate);
-    model.mode = "display";
+  const model = new Model(smartTemplate);
+  model.mode = "display";
+  model.data = transformedData;
+  setSurveyModel(model);
+};
 
-    const transformedData = transformApiToSurvey(submission, formTemplate);
-    model.data = transformedData;
-    setSurveyModel(model);
-  };
+const handleEditSubmission = (submission) => {
+  const formTemplate = FORM_TEMPLATES[selectedForm];
+  if (!formTemplate) { alert(`No template found for form: ${selectedForm}`); return; }
 
-  const handleEditSubmission = (submission) => {
-    const formTemplate = FORM_TEMPLATES[selectedForm];
+  const transformedData = transformApiToSurvey(submission, formTemplate);
 
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
+  // Pass transformedData so it knows which fields have values
+  const smartTemplate = smartVisibleIf(formTemplate, transformedData, "edit");
 
-    setSelectedSubmission(submission);
-    setIsEditing(true);
+  setSelectedSubmission(submission);
+  setIsEditing(true);
 
-    const model = new Model(formTemplate);
+  const model = new Model(smartTemplate);
+  model.data = transformedData;
 
-    const transformedData = transformApiToSurvey(submission, formTemplate);
-    model.data = transformedData;
+  model.onComplete.add((sender) => {
+    const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
+    const uuid = getSubmissionUUID(submission);
+    handleSaveSubmission(uuid, saveData);
+  });
 
-    model.onComplete.add((sender) => {
-      const saveData = transformSurveyToApi(
-        sender.data,
-        submission,
-        formTemplate,
-      );
-      const uuid = getSubmissionUUID(submission);
-      handleSaveSubmission(uuid, saveData);
-    });
-
-    setSurveyModel(model);
-  };
+  setSurveyModel(model);
+};
 
   const handleSaveSubmission = async (uuid, data) => {
     try {
@@ -1377,6 +1418,48 @@ const FormViewPage = ({
       setDprLoading(false);
       setTimeout(() => setDprNotification(null), 5000);
     }
+  };
+
+  const smartVisibleIf = (schema, submissionData, mode) => {
+
+    const hasValue = (elementName, data) => {
+      if (!data) return false;
+      const direct = data[elementName];
+      if (direct !== undefined && direct !== null && direct !== "") return true;
+      if (Array.isArray(direct) && direct.length > 0) return true;
+      if (elementName.includes("-")) {
+        const [parent, child] = elementName.split("-");
+        const nested = data[parent]?.[child];
+        if (nested !== undefined && nested !== null && nested !== "") return true;
+      }
+      return false;
+    };
+
+    const processElements = (elements, data) =>
+      elements.map((el) => {
+        const processed = { ...el };
+
+        if (processed.visibleIf && hasValue(processed.name, data)) {
+          delete processed.visibleIf;
+          if (mode === "edit") {
+            delete processed.isRequired;
+          }
+        }
+
+        if (processed.elements) {
+          processed.elements = processElements(processed.elements, data);
+        }
+
+        return processed;
+      });
+
+    return {
+      ...schema,
+      pages: schema.pages.map((page) => ({
+        ...page,
+        elements: processElements(page.elements || [], submissionData),
+      })),
+    };
   };
 
   return (
@@ -1931,7 +2014,7 @@ const FormViewPage = ({
                               Edit
                             </button>
 
-                            {["Waterbody","Groundwater","Agri"].includes(selectedForm) && (
+                            {["Groundwater","Agri"].includes(selectedForm) && (
                               <button
                                 onClick={() => handleValidateSubmission(submission)}
                                 disabled={validationLoading[uuid]}
