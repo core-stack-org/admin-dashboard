@@ -34,6 +34,7 @@ import LayerStatusComponent from "./pages/layerStatus";
 import LayerStatusDetails from "./pages/layerStatusDetails";
 import RequestLocationForm from "./pages/requestLocationForm";
 import Moderation from "./pages/moderation";
+import ForgotPassword from "./pages/forgot-password";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -58,6 +59,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
               element={<Login setCurrentUser={setCurrentUser} />}
             />
             <Route path="/register" element={<UserRegistration />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             {currentUser ? (
               <>
                 <Route

@@ -156,6 +156,19 @@ const LoginPage = ({ setCurrentUser }) => {
               )}
             </div>
           </div>
+          <div className="flex justify-between items-center text-sm">
+            <label className="flex items-center gap-2 text-gray-600">
+              <input type="checkbox" className="accent-blue-600" />
+              Remember me
+            </label>
+
+            <span
+              onClick={() => navigate("/forgot-password")}
+              className="text-blue-500 cursor-pointer hover:underline"
+            >
+              Forgot password?
+            </span>
+          </div>
 
           <button
             type="submit"
