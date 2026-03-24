@@ -602,6 +602,22 @@ const FormViewPage = ({
       return submission.TYPE_OF_WORK_ID;
     }
 
+    if (selectedForm === "Well") {
+      return "Well";
+    }
+
+    if (selectedForm === "Agri Maintenance"){
+      return submission.select_one_irrigation_structure;
+    }
+
+    if (selectedForm === "GroundWater Maintenance"){
+      return submission.TYPE_OF_WORK;
+    }
+
+    if (selectedForm === "Surface Water Body Maintenance" || selectedForm === "Surface Water Body Remotely Sensed Maintenance"){
+      return submission.select_one_recharge_structure;
+    }
+
     return null;
   };
 
@@ -1992,6 +2008,19 @@ const handleEditSubmission = (submission) => {
                               </span>
                             ))}
                           </div>
+                          <span className="text-xs font-semibold text-red-700 bg-red-50 px-2 py-1 inline-block mt-3 mb-4">
+                            Note:- The datasets against which we are checking can be incorrect too, so the request is to go with what the community says in terms of the suitability of the location.
+                          </span>
+                          <p className="text-sm font-semibold text-slate-800 truncate">
+                            Click <a 
+                              href="https://github.com/core-stack-org/core-stack-backend/blob/main/moderation/utils/rules.json"
+                              className="text-blue-600"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              here
+                            </a> to read the rules
+                          </p>
                         </div>
                       )}
                       {/* Bottom action bar */}
@@ -2014,7 +2043,7 @@ const handleEditSubmission = (submission) => {
                               Edit
                             </button>
 
-                            {["Groundwater","Agri"].includes(selectedForm) && (
+                            {["Waterbody","Groundwater","Agri","Agri Maintenance", "GroundWater Maintenance","Surface Water Body Maintenance", "Surface Water Body Remotely Sensed Maintenance", "Well"].includes(selectedForm) && (
                               <button
                                 onClick={() => handleValidateSubmission(submission)}
                                 disabled={validationLoading[uuid]}
