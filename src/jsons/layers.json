@@ -293,6 +293,11 @@
             "show_Dates": false,
             "workspace": ""
         },
+        "MWS Centroid Data": {
+            "api_url": "${config.layer_api_url_v1}/generate_mws_centroid/",
+            "show_Dates": false,
+            "workspace": ""
+        },
         "NDVI": {
             "api_url": "${config.layer_api_url_v1}/generate_ndvi_timeseries/",
             "show_Dates": true,
@@ -301,6 +306,11 @@
                 2017,
                 2024
             ]
+        },
+        "Facility Proximity": {
+            "api_url": "${config.layer_api_url_v1}/generate_facilities_proximity/",
+            "show_Dates": false,
+            "workspace": ""
         }
     }
 }
