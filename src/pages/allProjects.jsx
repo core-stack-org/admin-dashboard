@@ -61,13 +61,7 @@ const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
 const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
 const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
 
-
-
-
-
-
   const navigate = useNavigate();
-  console.log(currentUser.user)
   const isSuperAdmin = currentUser?.user?.is_superadmin;
 
 
@@ -635,11 +629,7 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
     formData.append("is_compute", true);
     try {
       const token = sessionStorage.getItem("accessToken");
-      console.log("---- Compute Waterbody FormData ----");
-      console.log(token)
-      for (let pair of formData.entries()) {
-        console.log(pair[0], ":", pair[1]);
-      }
+  
 
       const res = await fetch(
         `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBComputeProject.id}/waterrejuvenation/excel/`,
