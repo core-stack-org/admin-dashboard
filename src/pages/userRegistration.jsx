@@ -39,8 +39,6 @@ const RegistrationForm = () => {
 
   const loadOrganization = async () => {
 
-    console.log("org")
-    console.log(process.env.REACT_APP_BASEURL)
     try {
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/available_organizations`,
@@ -138,7 +136,6 @@ const RegistrationForm = () => {
   ...(formData.organization && { organization: formData.organization }),
 };
 
-      console.log(registrationData)
       try {
         const token = sessionStorage.getItem("accessToken");
         const response = await fetch(

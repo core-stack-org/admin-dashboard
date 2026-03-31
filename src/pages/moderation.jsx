@@ -1058,7 +1058,7 @@ const FormViewPage = ({
         setTotalPages(1);
       }
     } catch (err) {
-      console.log("Submission Fetch Error", err);
+      console.error("Submission Fetch Error", err);
     }
   };
 
