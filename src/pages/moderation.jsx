@@ -2013,7 +2013,7 @@ const handleEditSubmission = (submission) => {
                           </span>
                           <p className="text-sm font-semibold text-slate-800 truncate">
                             Click <a 
-                              href="https://github.com/core-stack-org/core-stack-backend/blob/main/moderation/utils/rules.json"
+                              href="https://docs.google.com/spreadsheets/d/1EUkK0ZGXHnQlQdAK88HH-Mar-rOncHzHPbfOetaLbKE/edit?gid=125362813#gid=125362813"
                               className="text-blue-600"
                               target="_blank"
                               rel="noopener noreferrer"
