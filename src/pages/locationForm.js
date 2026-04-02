@@ -195,6 +195,7 @@ const LocationFormComponent = ({ currentUser }) => {
           }
         );
         const data = await response.json();
+        console.log(data)
         setGeeAccounts(data);
       } catch (error) {
         console.error("Error fetching GEE accounts:", error);
@@ -536,18 +537,23 @@ const LocationFormComponent = ({ currentUser }) => {
             Select GEE Account:
           </label>
           <select
-            value={selectedGEEAccount}
-            onChange={handleGEEAccountChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select GEE Account</option>
-            {Array.isArray(geeAccounts) &&
-              geeAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-          </select>
+  value={selectedGEEAccount}
+  onChange={handleGEEAccountChange}
+  className="w-full px-4 py-3 border text-lg rounded-lg"
+>
+  <option value="">Select GEE Account</option>
+
+  {geeAccounts &&
+    Object.entries(geeAccounts).map(([email, accounts]) => (
+      <optgroup key={email} label={email}>
+        {accounts.map((acc) => (
+          <option key={acc.id} value={acc.id}>
+            {acc.name}
+          </option>
+        ))}
+      </optgroup>
+    ))}
+</select>
         </div>
 
         {/* Submit Button */}
