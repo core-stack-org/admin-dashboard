@@ -18,6 +18,7 @@ import {
   FileText,
   Eye,
   Pencil,
+  CheckCircle2,
 } from "lucide-react";
 import { Model } from "survey-core";
 import { Survey } from "survey-react-ui";
@@ -42,7 +43,7 @@ import {
   FORM_CATEGORY_MAP,
   FORM_CATEGORY_ORDER,
   FORM_DISPLAY_NAMES,
-  structureRules
+  structureRules,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -511,22 +512,28 @@ const FormViewPage = ({
   selectedPlan,
   selectedPlanName,
   selectedProject,
+  onFormChange,
   onBack,
 }) => {
+  const [forms, setForms] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [moderationFilter, setModerationFilter] = useState("all");
-  const [viewMode, setViewMode] = useState("card"); 
+  const [viewMode, setViewMode] = useState("card");
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [surveyModel, setSurveyModel] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [dprExpanded, setDprExpanded] = useState(false);
   const [dprEmail, setDprEmail] = useState("");
   const [dprLoading, setDprLoading] = useState(false);
-  const [dprNotification, setDprNotification] = useState(null); 
+  const [dprNotification, setDprNotification] = useState(null);
   const [planDetails, setPlanDetails] = useState(null);
+  const [dprWorkflowStatus, setDprWorkflowStatus] = useState(null);
+  const [dprWorkflowMissing, setDprWorkflowMissing] = useState(false);
+  const [dprWorkflowLoading, setDprWorkflowLoading] = useState("");
+  const [dprWorkflowNotification, setDprWorkflowNotification] = useState(null);
   const mapElement = useRef(null);
   const mapRef = useRef(null);
   const vectorLayerRef = useRef(null);
@@ -538,6 +545,30 @@ const FormViewPage = ({
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const [validationResults, setValidationResults] = useState({});
   const [validationLoading, setValidationLoading] = useState({});
+
+  useEffect(() => {
+    fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
+      .then((res) => res.json())
+      .then((data) => {
+        const list = data.forms || data.data || data;
+        setForms(Array.isArray(list) ? list : []);
+      })
+      .catch((err) => console.log("Forms Fetch Error", err));
+  }, []);
+
+  const groupedFormOptions = FORM_CATEGORY_ORDER.filter((category) =>
+    forms.some(
+      (form) => (FORM_CATEGORY_MAP[form.name] || "Other") === category,
+    ),
+  ).map((category) => ({
+    label: category,
+    options: forms
+      .filter((form) => (FORM_CATEGORY_MAP[form.name] || "Other") === category)
+      .map((form) => ({
+        value: form.name,
+        label: FORM_DISPLAY_NAMES[form.name] || form.name,
+      })),
+  }));
 
   useEffect(() => {
     if (!selectedProject || !selectedPlan) return;
@@ -554,6 +585,45 @@ const FormViewPage = ({
       })
       .catch((err) => console.error("Plan details fetch error", err));
   }, [selectedProject, selectedPlan]);
+
+  useEffect(() => {
+    if (!selectedPlan) return;
+
+    setDprWorkflowStatus(null);
+    setDprWorkflowMissing(false);
+    setDprWorkflowNotification(null);
+
+    fetch(`${BASEURL}api/v1/dpr_data/${selectedPlan}/report-status/`, {
+      headers: getHeaders(),
+    })
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 404) {
+          setDprWorkflowMissing(true);
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(
+            data?.message ||
+              data?.error ||
+              "Failed to fetch DPR workflow status.",
+          );
+        }
+        return data;
+      })
+      .then((data) => {
+        if (data) {
+          setDprWorkflowStatus(data);
+        }
+      })
+      .catch((err) => {
+        console.error("DPR workflow fetch error", err);
+        setDprWorkflowNotification({
+          type: "error",
+          message: err.message || "Failed to fetch DPR workflow status.",
+        });
+      });
+  }, [selectedPlan]);
 
   const reloadSubmissions = () => {
     if (viewMode === "map") {
@@ -593,7 +663,6 @@ const FormViewPage = ({
   };
 
   const getStructureType = (submission) => {
-
     if (selectedForm === "Waterbody") {
       return submission.select_one_water_structure;
     }
@@ -606,15 +675,18 @@ const FormViewPage = ({
       return "Well";
     }
 
-    if (selectedForm === "Agri Maintenance"){
+    if (selectedForm === "Agri Maintenance") {
       return submission.select_one_irrigation_structure;
     }
 
-    if (selectedForm === "GroundWater Maintenance"){
+    if (selectedForm === "GroundWater Maintenance") {
       return submission.TYPE_OF_WORK;
     }
 
-    if (selectedForm === "Surface Water Body Maintenance" || selectedForm === "Surface Water Body Remotely Sensed Maintenance"){
+    if (
+      selectedForm === "Surface Water Body Maintenance" ||
+      selectedForm === "Surface Water Body Remotely Sensed Maintenance"
+    ) {
       return submission.select_one_recharge_structure;
     }
 
@@ -622,7 +694,6 @@ const FormViewPage = ({
   };
 
   const fetchValidationResult = async (submission) => {
-
     const coords = getCoordinates(submission);
     if (!coords) return;
 
@@ -637,16 +708,15 @@ const FormViewPage = ({
 
     if (!structureRule) return;
 
-    setValidationLoading(prev => ({
+    setValidationLoading((prev) => ({
       ...prev,
-      [uuid]: true
+      [uuid]: true,
     }));
 
     try {
-
       const res = await fetch(
         `${BASEURL}api/v1/validate_site/?lat=${lat}&lon=${lon}&structure_type=${structureRule}`,
-        { headers: getHeaders() }
+        { headers: getHeaders() },
       );
 
       const data = await res.json();
@@ -661,22 +731,19 @@ const FormViewPage = ({
 
       const finalDecision = data?.evaluation?.final_decision;
 
-      setValidationResults(prev => ({
+      setValidationResults((prev) => ({
         ...prev,
         [uuid]: {
           parameters: extracted,
-          finalDecision: finalDecision
-        }
+          finalDecision: finalDecision,
+        },
       }));
-
     } catch (err) {
       console.error("Validation API error:", err);
-    }
-
-    finally {
-      setValidationLoading(prev => ({
+    } finally {
+      setValidationLoading((prev) => ({
         ...prev,
-        [uuid]: false
+        [uuid]: false,
       }));
     }
   };
@@ -816,28 +883,34 @@ const FormViewPage = ({
     };
 
     processObject(submission);
-    
+
     const legacyKeyMap = {
       // LIVESTOCK
-      "select_one_demand_promoting_livestock" : "Livestock-is_demand_livestock",
-      "select_one_promoting_livestock"  : "Livestock-demands_promoting_livestock",
-      "select_one_promoting_livestock_other"  : "Livestock-select_one_promoting_livestock_other",
+      select_one_demand_promoting_livestock: "Livestock-is_demand_livestock",
+      select_one_promoting_livestock: "Livestock-demands_promoting_livestock",
+      select_one_promoting_livestock_other:
+        "Livestock-select_one_promoting_livestock_other",
 
       // KITCHEN GARDENS
-      "area_didi_badi"   : "kitchen_gardens-area_kg",
-      "indi_assets"  : "kitchen_gardens-assets_kg",
+      area_didi_badi: "kitchen_gardens-area_kg",
+      indi_assets: "kitchen_gardens-assets_kg",
 
       // FISHERIES
-      "select_one_demand_promoting_fisheries" : "fisheries-is_demand_fisheries",
-      "select_one_promoting_fisheries" : "fisheries-demands_promoting_fisheries",
-      "select_one_promoting_fisheries_other" : "fisheries-demands_promoting_fisheries_other",
+      select_one_demand_promoting_fisheries: "fisheries-is_demand_fisheries",
+      select_one_promoting_fisheries: "fisheries-demands_promoting_fisheries",
+      select_one_promoting_fisheries_other:
+        "fisheries-demands_promoting_fisheries_other",
     };
 
     Object.entries(legacyKeyMap).forEach(([oldKey, newKey]) => {
       const oldValue = submission[oldKey];
       const currentValue = transformedData[newKey];
-      const isCurrentEmpty = currentValue === null || currentValue === undefined || currentValue === "";
-      const isOldValueReal = oldValue !== null && oldValue !== undefined && oldValue !== "";
+      const isCurrentEmpty =
+        currentValue === null ||
+        currentValue === undefined ||
+        currentValue === "";
+      const isOldValueReal =
+        oldValue !== null && oldValue !== undefined && oldValue !== "";
       if (isCurrentEmpty && isOldValueReal) {
         transformedData[newKey] = oldValue;
       }
@@ -849,18 +922,26 @@ const FormViewPage = ({
       legacyBeneficiaryName !== undefined &&
       legacyBeneficiaryName !== ""
     ) {
-      const livestockDemand = submission["select_one_demand_promoting_livestock"];
-      const fishDemand      = submission["select_one_demand_promoting_fisheries"];
-      const kitchenDemand   = submission["indi_assets"]; 
+      const livestockDemand =
+        submission["select_one_demand_promoting_livestock"];
+      const fishDemand = submission["select_one_demand_promoting_fisheries"];
+      const kitchenDemand = submission["indi_assets"];
 
-      if (livestockDemand === "Yes" && !transformedData["Livestock-ben_livestock"]) {
+      if (
+        livestockDemand === "Yes" &&
+        !transformedData["Livestock-ben_livestock"]
+      ) {
         transformedData["Livestock-ben_livestock"] = legacyBeneficiaryName;
       }
       if (fishDemand === "Yes" && !transformedData["fisheries-ben_fisheries"]) {
         transformedData["fisheries-ben_fisheries"] = legacyBeneficiaryName;
       }
-      if (kitchenDemand === "Yes" && !transformedData["kitchen_gardens-ben_kitchen_gardens"]) {
-        transformedData["kitchen_gardens-ben_kitchen_gardens"] = legacyBeneficiaryName;
+      if (
+        kitchenDemand === "Yes" &&
+        !transformedData["kitchen_gardens-ben_kitchen_gardens"]
+      ) {
+        transformedData["kitchen_gardens-ben_kitchen_gardens"] =
+          legacyBeneficiaryName;
       }
     }
     return transformedData;
@@ -948,14 +1029,16 @@ const FormViewPage = ({
     }
 
     const legacyFallback = {
-      "Livestock-is_demand_livestock" : "select_one_demand_promoting_livestock",
-      "Livestock-demands_promoting_livestock" : "select_one_promoting_livestock",
-      "Livestock-select_one_promoting_livestock_other" : "select_one_promoting_livestock_other",
-      "kitchen_gardens-area_kg"  : "area_didi_badi",
-      "kitchen_gardens-assets_kg"  : "indi_assets",
-      "fisheries-is_demand_fisheries"  : "select_one_demand_promoting_fisheries",
-      "fisheries-demands_promoting_fisheries"  : "select_one_promoting_fisheries",
-      "fisheries-demands_promoting_fisheries_other" : "select_one_promoting_fisheries_other",
+      "Livestock-is_demand_livestock": "select_one_demand_promoting_livestock",
+      "Livestock-demands_promoting_livestock": "select_one_promoting_livestock",
+      "Livestock-select_one_promoting_livestock_other":
+        "select_one_promoting_livestock_other",
+      "kitchen_gardens-area_kg": "area_didi_badi",
+      "kitchen_gardens-assets_kg": "indi_assets",
+      "fisheries-is_demand_fisheries": "select_one_demand_promoting_fisheries",
+      "fisheries-demands_promoting_fisheries": "select_one_promoting_fisheries",
+      "fisheries-demands_promoting_fisheries_other":
+        "select_one_promoting_fisheries_other",
     };
 
     const legacyKey = legacyFallback[fieldKey];
@@ -1068,7 +1151,15 @@ const FormViewPage = ({
     } else {
       fetchSubmissions(page, "card");
     }
-  }, [viewMode]);
+  }, [viewMode, selectedForm, selectedPlan, page]);
+
+  useEffect(() => {
+    setSearchTerm("");
+    setModerationFilter("all");
+    setSelectedSubmission(null);
+    setSurveyModel(null);
+    setPage(1);
+  }, [selectedForm]);
 
   // Filter submissions - MOVED BEFORE useEffect hooks that use it
   const filteredSubmissions = submissions.filter((sub) => {
@@ -1287,46 +1378,56 @@ const FormViewPage = ({
   }, [submissions]);
 
   const handleViewSubmission = (submission) => {
-  const formTemplate = FORM_TEMPLATES[selectedForm];
-  if (!formTemplate) { alert(`No template found for form: ${selectedForm}`); return; }
+    const formTemplate = FORM_TEMPLATES[selectedForm];
+    if (!formTemplate) {
+      alert(`No template found for form: ${selectedForm}`);
+      return;
+    }
 
-  const transformedData = transformApiToSurvey(submission, formTemplate);
-  
-  // Pass transformedData so it knows which fields have values
-  const smartTemplate = smartVisibleIf(formTemplate, transformedData, "view");
+    const transformedData = transformApiToSurvey(submission, formTemplate);
 
-  setSelectedSubmission(submission);
-  setIsEditing(false);
+    // Pass transformedData so it knows which fields have values
+    const smartTemplate = smartVisibleIf(formTemplate, transformedData, "view");
 
-  const model = new Model(smartTemplate);
-  model.mode = "display";
-  model.data = transformedData;
-  setSurveyModel(model);
-};
+    setSelectedSubmission(submission);
+    setIsEditing(false);
 
-const handleEditSubmission = (submission) => {
-  const formTemplate = FORM_TEMPLATES[selectedForm];
-  if (!formTemplate) { alert(`No template found for form: ${selectedForm}`); return; }
+    const model = new Model(smartTemplate);
+    model.mode = "display";
+    model.data = transformedData;
+    setSurveyModel(model);
+  };
 
-  const transformedData = transformApiToSurvey(submission, formTemplate);
+  const handleEditSubmission = (submission) => {
+    const formTemplate = FORM_TEMPLATES[selectedForm];
+    if (!formTemplate) {
+      alert(`No template found for form: ${selectedForm}`);
+      return;
+    }
 
-  // Pass transformedData so it knows which fields have values
-  const smartTemplate = smartVisibleIf(formTemplate, transformedData, "edit");
+    const transformedData = transformApiToSurvey(submission, formTemplate);
 
-  setSelectedSubmission(submission);
-  setIsEditing(true);
+    // Pass transformedData so it knows which fields have values
+    const smartTemplate = smartVisibleIf(formTemplate, transformedData, "edit");
 
-  const model = new Model(smartTemplate);
-  model.data = transformedData;
+    setSelectedSubmission(submission);
+    setIsEditing(true);
 
-  model.onComplete.add((sender) => {
-    const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
-    const uuid = getSubmissionUUID(submission);
-    handleSaveSubmission(uuid, saveData);
-  });
+    const model = new Model(smartTemplate);
+    model.data = transformedData;
 
-  setSurveyModel(model);
-};
+    model.onComplete.add((sender) => {
+      const saveData = transformSurveyToApi(
+        sender.data,
+        submission,
+        formTemplate,
+      );
+      const uuid = getSubmissionUUID(submission);
+      handleSaveSubmission(uuid, saveData);
+    });
+
+    setSurveyModel(model);
+  };
 
   const handleSaveSubmission = async (uuid, data) => {
     try {
@@ -1436,8 +1537,51 @@ const handleEditSubmission = (submission) => {
     }
   };
 
-  const smartVisibleIf = (schema, submissionData, mode) => {
+  const handleDprWorkflowUpdate = async (field, value, loadingKey = field) => {
+    if (!selectedPlan) return;
 
+    setDprWorkflowLoading(loadingKey);
+    setDprWorkflowNotification(null);
+
+    try {
+      const response = await fetch(
+        `${BASEURL}api/v1/dpr_data/${selectedPlan}/report-status/`,
+        {
+          method: "PATCH",
+          headers: getHeaders(),
+          body: JSON.stringify({ [field]: value }),
+        },
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "Failed to update DPR workflow status.",
+        );
+      }
+
+      setDprWorkflowStatus(data);
+      setDprWorkflowMissing(false);
+      setDprWorkflowNotification({
+        type: "success",
+        message: "DPR workflow status updated successfully.",
+      });
+    } catch (error) {
+      console.error("DPR workflow update error:", error);
+      setDprWorkflowNotification({
+        type: "error",
+        message: error.message || "Failed to update DPR workflow status.",
+      });
+    } finally {
+      setDprWorkflowLoading("");
+      setTimeout(() => setDprWorkflowNotification(null), 4000);
+    }
+  };
+
+  const smartVisibleIf = (schema, submissionData, mode) => {
     const hasValue = (elementName, data) => {
       if (!data) return false;
       const direct = data[elementName];
@@ -1446,7 +1590,8 @@ const handleEditSubmission = (submission) => {
       if (elementName.includes("-")) {
         const [parent, child] = elementName.split("-");
         const nested = data[parent]?.[child];
-        if (nested !== undefined && nested !== null && nested !== "") return true;
+        if (nested !== undefined && nested !== null && nested !== "")
+          return true;
       }
       return false;
     };
@@ -1484,7 +1629,7 @@ const handleEditSubmission = (submission) => {
       <div className="max-w-7xl mx-auto mb-6 mt-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           {/* Top strip — gradient context bar */}
-          <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 px-6 py-4 flex items-center gap-4">
+          <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 px-6 py-4 flex items-center gap-4 flex-wrap">
             {/* Back button */}
             <button
               onClick={onBack}
@@ -1497,13 +1642,37 @@ const handleEditSubmission = (submission) => {
             <div className="w-px h-6 bg-white/30 shrink-0" />
 
             {/* Form */}
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <span className="text-indigo-200 text-xs font-bold uppercase tracking-wider shrink-0">
                 Form
               </span>
-              <span className="text-white font-bold text-sm truncate">
-                {selectedForm}
-              </span>
+              <div className="min-w-[260px] max-w-[420px] flex-1">
+                <Select
+                  styles={{
+                    ...selectStyles,
+                    control: (base, state) => ({
+                      ...selectStyles.control(base, state),
+                      minHeight: "42px",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      borderColor: state.isFocused ? "#c7d2fe" : "#bfdbfe",
+                      boxShadow: state.isFocused
+                        ? "0 0 0 3px rgba(255,255,255,0.15)"
+                        : "none",
+                    }),
+                    menu: (base) => ({
+                      ...selectStyles.menu(base),
+                      zIndex: 80,
+                    }),
+                  }}
+                  options={groupedFormOptions}
+                  value={groupedFormOptions
+                    .flatMap((group) => group.options)
+                    .find((option) => option.value === selectedForm)}
+                  onChange={(opt) => onFormChange(opt?.value || "")}
+                  isSearchable
+                  placeholder="Switch form..."
+                />
+              </div>
             </div>
 
             {/* Submission counts pushed to the right */}
@@ -1619,80 +1788,369 @@ const handleEditSubmission = (submission) => {
             </div>
           </div>
 
-          {/* Third row — Generate DPR */}
+          {/* Third row — DPR details */}
           <div className="px-8 py-3 border-t border-slate-100/80 bg-white/40 backdrop-blur-md">
-            <div className="flex items-center gap-4">
-              {/* Toggle button */}
-              <button
-                onClick={() => setDprExpanded(!dprExpanded)}
-                className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${
-                  dprExpanded
-                    ? "bg-violet-600 text-white border-violet-600 shadow-md"
-                    : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
-                }`}
-              >
-                <FileText size={15} />
-                Generate DPR
-                <ChevronDown
-                  size={14}
-                  className={`transition-transform duration-200 ${dprExpanded ? "rotate-180" : ""}`}
-                />
-              </button>
-
-              {/* Expanded panel */}
-              {dprExpanded && (
-                <div className="flex-1 flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-200">
-                  {/* Plan info pill */}
-                  <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm border border-slate-200/80 rounded-xl px-4 py-2 text-sm shrink-0 shadow-sm">
-                    <span className="text-slate-400 font-medium">Plan</span>
-                    <span className="w-px h-4 bg-slate-200" />
-                    <span className="font-bold text-slate-800 truncate max-w-[180px]">
-                      {selectedPlanName}
-                    </span>
-                    <span className="w-px h-4 bg-slate-200" />
-                    <span className="text-xs font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md">
-                      #{selectedPlan}
-                    </span>
-                  </div>
-
-                  {/* Email input */}
-                  <div className="relative flex-1">
-                    <Mail
-                      size={15}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Enter email address to receive the DPR..."
-                      value={dprEmail}
-                      onChange={(e) => setDprEmail(e.target.value)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && handleGenerateDPR()
-                      }
-                      className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm shadow-sm"
-                    />
-                  </div>
-
-                  {/* Send button */}
-                  <button
-                    onClick={handleGenerateDPR}
-                    disabled={!dprEmail || dprLoading}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all shrink-0"
-                  >
-                    {dprLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send size={14} />
-                        Send Request
-                      </>
-                    )}
-                  </button>
+            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">
+                    DPR Details
+                  </p>
+                  <h3 className="mt-1 text-lg font-bold text-slate-900">
+                    Workflow status
+                  </h3>
                 </div>
-              )}
+                <div className="rounded-xl bg-violet-50 p-3 text-violet-600">
+                  <FileText size={18} />
+                </div>
+              </div>
+
+              <div className="mt-5">
+                <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-5 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setDprExpanded(!dprExpanded)}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${
+                        dprExpanded
+                          ? "bg-violet-600 text-white border-violet-600 shadow-md"
+                          : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
+                      }`}
+                    >
+                      <FileText size={15} />
+                      Generate DPR
+                      <ChevronDown
+                        size={14}
+                        className={`transition-transform duration-200 ${dprExpanded ? "rotate-180" : ""}`}
+                      />
+                    </button>
+
+                    <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm border border-slate-200/80 rounded-xl px-4 py-2 text-sm shrink-0 shadow-sm">
+                      <span className="text-slate-400 font-medium">Plan</span>
+                      <span className="w-px h-4 bg-slate-200" />
+                      <span className="font-bold text-slate-800 truncate max-w-[180px]">
+                        {selectedPlanName}
+                      </span>
+                      <span className="w-px h-4 bg-slate-200" />
+                      <span className="text-xs font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-md">
+                        #{selectedPlan}
+                      </span>
+                    </div>
+                  </div>
+
+                  {dprExpanded && (
+                    <div className="mt-4 flex flex-col gap-3 animate-in fade-in slide-in-from-left-2 duration-200 sm:flex-row sm:items-center">
+                      <div className="relative flex-1">
+                        <Mail
+                          size={15}
+                          className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                        />
+                        <input
+                          type="email"
+                          placeholder="Enter email address to receive the DPR..."
+                          value={dprEmail}
+                          onChange={(e) => setDprEmail(e.target.value)}
+                          onKeyDown={(e) =>
+                            e.key === "Enter" && handleGenerateDPR()
+                          }
+                          className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm shadow-sm"
+                        />
+                      </div>
+
+                      <button
+                        onClick={handleGenerateDPR}
+                        disabled={!dprEmail || dprLoading}
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all shrink-0"
+                      >
+                        {dprLoading ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            Sending...
+                          </>
+                        ) : (
+                          <>
+                            <Send size={14} />
+                            Send Request
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-4">
+                  <div className="flex flex-col gap-3 lg:flex-row">
+                    <div className="flex-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800">
+                            DPR submitted
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            dprWorkflowStatus?.status !== "SUBMITTED" &&
+                            handleDprWorkflowUpdate(
+                              "status",
+                              "SUBMITTED",
+                              "status-submitted",
+                            )
+                          }
+                          disabled={
+                            dprWorkflowMissing ||
+                            dprWorkflowLoading === "status-submitted"
+                          }
+                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                            dprWorkflowStatus?.status === "SUBMITTED"
+                              ? "bg-emerald-500"
+                              : "bg-slate-300"
+                          } ${
+                            dprWorkflowMissing ||
+                            dprWorkflowLoading === "status-submitted"
+                              ? "cursor-not-allowed opacity-60"
+                              : "cursor-pointer"
+                          }`}
+                          aria-pressed={
+                            dprWorkflowStatus?.status === "SUBMITTED"
+                          }
+                          aria-label="DPR submitted"
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                              dprWorkflowStatus?.status === "SUBMITTED"
+                                ? "translate-x-6"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                        <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                          <div>
+                            <p className="text-xs font-semibold text-slate-700">
+                              Resources submitted
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {dprWorkflowStatus?.submitted_breakdown
+                                ?.resources_submitted ?? 0}{" "}
+                              records
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDprWorkflowUpdate(
+                                "resources_submitted",
+                                dprWorkflowStatus?.submitted_breakdown
+                                  ?.resources_submitted > 0
+                                  ? "PENDING"
+                                  : "SUBMITTED",
+                                "resources_submitted",
+                              )
+                            }
+                            disabled={
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "resources_submitted"
+                            }
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
+                              dprWorkflowStatus?.submitted_breakdown
+                                ?.resources_submitted > 0
+                                ? "bg-emerald-500"
+                                : "bg-slate-300"
+                            } ${
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "resources_submitted"
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer"
+                            }`}
+                            aria-pressed={
+                              dprWorkflowStatus?.submitted_breakdown
+                                ?.resources_submitted > 0
+                            }
+                            aria-label="Resources submitted"
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                dprWorkflowStatus?.submitted_breakdown
+                                  ?.resources_submitted > 0
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                          <div>
+                            <p className="text-xs font-semibold text-slate-700">
+                              Demands submitted
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {dprWorkflowStatus?.submitted_breakdown
+                                ?.demands_submitted ?? 0}{" "}
+                              records
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleDprWorkflowUpdate(
+                                "demands_submitted",
+                                dprWorkflowStatus?.submitted_breakdown
+                                  ?.demands_submitted > 0
+                                  ? "PENDING"
+                                  : "SUBMITTED",
+                                "demands_submitted",
+                              )
+                            }
+                            disabled={
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "demands_submitted"
+                            }
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
+                              dprWorkflowStatus?.submitted_breakdown
+                                ?.demands_submitted > 0
+                                ? "bg-emerald-500"
+                                : "bg-slate-300"
+                            } ${
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "demands_submitted"
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer"
+                            }`}
+                            aria-pressed={
+                              dprWorkflowStatus?.submitted_breakdown
+                                ?.demands_submitted > 0
+                            }
+                            aria-label="Demands submitted"
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                dprWorkflowStatus?.submitted_breakdown
+                                  ?.demands_submitted > 0
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid flex-1 gap-3 sm:grid-cols-2">
+                      <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800">
+                            DPR approved
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            dprWorkflowStatus?.status !== "APPROVED" &&
+                            handleDprWorkflowUpdate(
+                              "status",
+                              "APPROVED",
+                              "status-approved",
+                            )
+                          }
+                          disabled={
+                            dprWorkflowMissing ||
+                            dprWorkflowLoading === "status-approved"
+                          }
+                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                            dprWorkflowStatus?.status === "APPROVED"
+                              ? "bg-emerald-500"
+                              : "bg-slate-300"
+                          } ${
+                            dprWorkflowMissing ||
+                            dprWorkflowLoading === "status-approved"
+                              ? "cursor-not-allowed opacity-60"
+                              : "cursor-pointer"
+                          }`}
+                          aria-pressed={
+                            dprWorkflowStatus?.status === "APPROVED"
+                          }
+                          aria-label="DPR approved"
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                              dprWorkflowStatus?.status === "APPROVED"
+                                ? "translate-x-6"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-800">
+                            DPR rejected
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            dprWorkflowStatus?.status !== "REJECTED" &&
+                            handleDprWorkflowUpdate(
+                              "status",
+                              "REJECTED",
+                              "status-rejected",
+                            )
+                          }
+                          disabled={
+                            dprWorkflowMissing ||
+                            dprWorkflowLoading === "status-rejected"
+                          }
+                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                            dprWorkflowStatus?.status === "REJECTED"
+                              ? "bg-emerald-500"
+                              : "bg-slate-300"
+                          } ${
+                            dprWorkflowMissing ||
+                            dprWorkflowLoading === "status-rejected"
+                              ? "cursor-not-allowed opacity-60"
+                              : "cursor-pointer"
+                          }`}
+                          aria-pressed={
+                            dprWorkflowStatus?.status === "REJECTED"
+                          }
+                          aria-label="DPR rejected"
+                        >
+                          <span
+                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                              dprWorkflowStatus?.status === "REJECTED"
+                                ? "translate-x-6"
+                                : "translate-x-1"
+                            }`}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {dprWorkflowMissing && (
+                  <div className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    DPR report has not been generated for this plan yet.
+                  </div>
+                )}
+
+                {dprWorkflowNotification && (
+                  <div
+                    className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
+                      dprWorkflowNotification.type === "success"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    <CheckCircle2 size={16} className="shrink-0" />
+                    <span>{dprWorkflowNotification.message}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -1984,7 +2442,8 @@ const handleEditSubmission = (submission) => {
                             </div>
                             <span
                               className={`px-2 py-1 text-xs rounded-md font-bold ${
-                                validationResults[uuid].finalDecision === "Recommended"
+                                validationResults[uuid].finalDecision ===
+                                "Recommended"
                                   ? "bg-emerald-50 text-emerald-700"
                                   : "bg-red-50 text-red-700"
                               }`}
@@ -1993,33 +2452,40 @@ const handleEditSubmission = (submission) => {
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-2">
-                            {Object.entries(validationResults[uuid].parameters).map(([param, category]) => (
+                            {Object.entries(
+                              validationResults[uuid].parameters,
+                            ).map(([param, category]) => (
                               <span
                                 key={param}
                                 className={`px-2 py-1 text-xs rounded-md font-semibold ${
                                   category === "accepted"
                                     ? "bg-emerald-50 text-emerald-700"
                                     : category === "partially_accepted"
-                                    ? "bg-amber-50 text-amber-700"
-                                    : "bg-red-50 text-red-700"
+                                      ? "bg-amber-50 text-amber-700"
+                                      : "bg-red-50 text-red-700"
                                 }`}
                               >
-                                {param} → {category.replace("_"," ")}
+                                {param} → {category.replace("_", " ")}
                               </span>
                             ))}
                           </div>
                           <span className="text-xs font-semibold text-red-700 bg-red-50 px-2 py-1 inline-block mt-3 mb-4">
-                            Note:- The datasets against which we are checking can be incorrect too, so the request is to go with what the community says in terms of the suitability of the location.
+                            Note:- The datasets against which we are checking
+                            can be incorrect too, so the request is to go with
+                            what the community says in terms of the suitability
+                            of the location.
                           </span>
                           <p className="text-sm font-semibold text-slate-800 truncate">
-                            Click <a 
+                            Click{" "}
+                            <a
                               href="https://docs.google.com/spreadsheets/d/1EUkK0ZGXHnQlQdAK88HH-Mar-rOncHzHPbfOetaLbKE/edit?gid=125362813#gid=125362813"
                               className="text-blue-600"
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               here
-                            </a> to read the rules
+                            </a>{" "}
+                            to read the rules
                           </p>
                         </div>
                       )}
@@ -2043,9 +2509,20 @@ const handleEditSubmission = (submission) => {
                               Edit
                             </button>
 
-                            {["Waterbody","Groundwater","Agri","Agri Maintenance", "GroundWater Maintenance","Surface Water Body Maintenance", "Surface Water Body Remotely Sensed Maintenance", "Well"].includes(selectedForm) && (
+                            {[
+                              "Waterbody",
+                              "Groundwater",
+                              "Agri",
+                              "Agri Maintenance",
+                              "GroundWater Maintenance",
+                              "Surface Water Body Maintenance",
+                              "Surface Water Body Remotely Sensed Maintenance",
+                              "Well",
+                            ].includes(selectedForm) && (
                               <button
-                                onClick={() => handleValidateSubmission(submission)}
+                                onClick={() =>
+                                  handleValidateSubmission(submission)
+                                }
                                 disabled={validationLoading[uuid]}
                                 className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-60"
                               >
@@ -2055,9 +2532,7 @@ const handleEditSubmission = (submission) => {
                                     Validating...
                                   </>
                                 ) : (
-                                  <>
-                                    Validate
-                                  </>
+                                  <>Validate</>
                                 )}
                               </button>
                             )}
@@ -2170,6 +2645,10 @@ const Moderation = () => {
     setCurrentPage("selection");
   };
 
+  const handleFormChange = (form) => {
+    setSelectedForm(form);
+  };
+
   return currentPage === "selection" ? (
     <SelectionPage
       isSuperAdmin={isSuperAdmin}
@@ -2191,6 +2670,7 @@ const Moderation = () => {
       selectedPlan={selectedPlan}
       selectedPlanName={selectedPlanName}
       selectedProject={selectedProject}
+      onFormChange={handleFormChange}
       onBack={handleBack}
     />
   );
