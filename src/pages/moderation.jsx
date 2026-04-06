@@ -530,6 +530,8 @@ const FormViewPage = ({
   const [dprLoading, setDprLoading] = useState(false);
   const [dprNotification, setDprNotification] = useState(null);
   const [planDetails, setPlanDetails] = useState(null);
+  const [planReviewLoading, setPlanReviewLoading] = useState(false);
+  const [planReviewNotification, setPlanReviewNotification] = useState(null);
   const [dprWorkflowStatus, setDprWorkflowStatus] = useState(null);
   const [dprWorkflowMissing, setDprWorkflowMissing] = useState(false);
   const [dprWorkflowLoading, setDprWorkflowLoading] = useState("");
@@ -1581,6 +1583,53 @@ const FormViewPage = ({
     }
   };
 
+  const handlePlanReviewedToggle = async (value) => {
+    if (!selectedProject || !selectedPlan) return;
+
+    setPlanReviewLoading(true);
+    setPlanReviewNotification(null);
+
+    try {
+      const response = await fetch(
+        `${BASEURL}api/v1/projects/${selectedProject}/watershed/plans/${selectedPlan}/`,
+        {
+          method: "PATCH",
+          headers: getHeaders(),
+          body: JSON.stringify({ is_dpr_reviewed: value }),
+        },
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message ||
+            data?.error ||
+            "Failed to update DPR reviewed status.",
+        );
+      }
+
+      setPlanDetails((prev) => ({
+        ...prev,
+        ...(data?.data || data),
+        is_dpr_reviewed: value,
+      }));
+      setPlanReviewNotification({
+        type: "success",
+        message: "DPR reviewed status updated.",
+      });
+    } catch (error) {
+      console.error("Plan review update error:", error);
+      setPlanReviewNotification({
+        type: "error",
+        message: error.message || "Failed to update DPR reviewed status.",
+      });
+    } finally {
+      setPlanReviewLoading(false);
+      setTimeout(() => setPlanReviewNotification(null), 4000);
+    }
+  };
+
   const smartVisibleIf = (schema, submissionData, mode) => {
     const hasValue = (elementName, data) => {
       if (!data) return false;
@@ -1877,256 +1926,351 @@ const FormViewPage = ({
                   )}
                 </div>
 
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-4">
-                  <div className="flex flex-col gap-3 lg:flex-row">
-                    <div className="flex-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-800">
-                            DPR submitted
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            dprWorkflowStatus?.status !== "SUBMITTED" &&
-                            handleDprWorkflowUpdate(
-                              "status",
-                              "SUBMITTED",
-                              "status-submitted",
-                            )
-                          }
-                          disabled={
-                            dprWorkflowMissing ||
-                            dprWorkflowLoading === "status-submitted"
-                          }
-                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
-                            dprWorkflowStatus?.status === "SUBMITTED"
-                              ? "bg-emerald-500"
-                              : "bg-slate-300"
-                          } ${
-                            dprWorkflowMissing ||
-                            dprWorkflowLoading === "status-submitted"
-                              ? "cursor-not-allowed opacity-60"
-                              : "cursor-pointer"
-                          }`}
-                          aria-pressed={
-                            dprWorkflowStatus?.status === "SUBMITTED"
-                          }
-                          aria-label="DPR submitted"
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                              dprWorkflowStatus?.status === "SUBMITTED"
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                      </div>
-
-                      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                        <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                          <div>
-                            <p className="text-xs font-semibold text-slate-700">
-                              Resources submitted
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {dprWorkflowStatus?.submitted_breakdown
-                                ?.resources_submitted ?? 0}{" "}
-                              records
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDprWorkflowUpdate(
-                                "resources_submitted",
-                                dprWorkflowStatus?.submitted_breakdown
-                                  ?.resources_submitted > 0
-                                  ? "PENDING"
-                                  : "SUBMITTED",
-                                "resources_submitted",
-                              )
-                            }
-                            disabled={
-                              dprWorkflowMissing ||
-                              dprWorkflowLoading === "resources_submitted"
-                            }
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
-                              dprWorkflowStatus?.submitted_breakdown
-                                ?.resources_submitted > 0
-                                ? "bg-emerald-500"
-                                : "bg-slate-300"
-                            } ${
-                              dprWorkflowMissing ||
-                              dprWorkflowLoading === "resources_submitted"
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer"
-                            }`}
-                            aria-pressed={
-                              dprWorkflowStatus?.submitted_breakdown
-                                ?.resources_submitted > 0
-                            }
-                            aria-label="Resources submitted"
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                dprWorkflowStatus?.submitted_breakdown
-                                  ?.resources_submitted > 0
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                              }`}
-                            />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                          <div>
-                            <p className="text-xs font-semibold text-slate-700">
-                              Demands submitted
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {dprWorkflowStatus?.submitted_breakdown
-                                ?.demands_submitted ?? 0}{" "}
-                              records
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDprWorkflowUpdate(
-                                "demands_submitted",
-                                dprWorkflowStatus?.submitted_breakdown
-                                  ?.demands_submitted > 0
-                                  ? "PENDING"
-                                  : "SUBMITTED",
-                                "demands_submitted",
-                              )
-                            }
-                            disabled={
-                              dprWorkflowMissing ||
-                              dprWorkflowLoading === "demands_submitted"
-                            }
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
-                              dprWorkflowStatus?.submitted_breakdown
-                                ?.demands_submitted > 0
-                                ? "bg-emerald-500"
-                                : "bg-slate-300"
-                            } ${
-                              dprWorkflowMissing ||
-                              dprWorkflowLoading === "demands_submitted"
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer"
-                            }`}
-                            aria-pressed={
-                              dprWorkflowStatus?.submitted_breakdown
-                                ?.demands_submitted > 0
-                            }
-                            aria-label="Demands submitted"
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                dprWorkflowStatus?.submitted_breakdown
-                                  ?.demands_submitted > 0
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                              }`}
-                            />
-                          </button>
-                        </div>
+                <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
+                  <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h4 className="mt-1 text-base font-bold text-slate-900">
+                          Review status
+                        </h4>
                       </div>
                     </div>
 
-                    <div className="grid flex-1 gap-3 sm:grid-cols-2">
-                      <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
+                    <div className="mt-4 rounded-xl border border-sky-200 bg-white/90 px-4 py-3">
+                      <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-slate-800">
-                            DPR approved
+                            DPR Reviewed
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            Current status:{" "}
+                            {planDetails?.is_dpr_reviewed
+                              ? "Reviewed"
+                              : "Not reviewed"}
                           </p>
                         </div>
                         <button
                           type="button"
                           onClick={() =>
-                            dprWorkflowStatus?.status !== "APPROVED" &&
-                            handleDprWorkflowUpdate(
-                              "status",
-                              "APPROVED",
-                              "status-approved",
+                            handlePlanReviewedToggle(
+                              !planDetails?.is_dpr_reviewed,
                             )
                           }
-                          disabled={
-                            dprWorkflowMissing ||
-                            dprWorkflowLoading === "status-approved"
-                          }
+                          disabled={planReviewLoading}
                           className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
-                            dprWorkflowStatus?.status === "APPROVED"
-                              ? "bg-emerald-500"
+                            planDetails?.is_dpr_reviewed
+                              ? "bg-sky-500"
                               : "bg-slate-300"
                           } ${
-                            dprWorkflowMissing ||
-                            dprWorkflowLoading === "status-approved"
+                            planReviewLoading
                               ? "cursor-not-allowed opacity-60"
                               : "cursor-pointer"
                           }`}
-                          aria-pressed={
-                            dprWorkflowStatus?.status === "APPROVED"
-                          }
-                          aria-label="DPR approved"
+                          aria-pressed={Boolean(planDetails?.is_dpr_reviewed)}
+                          aria-label="DPR reviewed"
                         >
                           <span
                             className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                              dprWorkflowStatus?.status === "APPROVED"
+                              planDetails?.is_dpr_reviewed
                                 ? "translate-x-6"
                                 : "translate-x-1"
                             }`}
                           />
                         </button>
                       </div>
+                    </div>
 
-                      <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white/80 px-4 py-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-800">
-                            DPR rejected
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            dprWorkflowStatus?.status !== "REJECTED" &&
-                            handleDprWorkflowUpdate(
-                              "status",
-                              "REJECTED",
-                              "status-rejected",
-                            )
-                          }
-                          disabled={
-                            dprWorkflowMissing ||
-                            dprWorkflowLoading === "status-rejected"
-                          }
-                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
-                            dprWorkflowStatus?.status === "REJECTED"
-                              ? "bg-emerald-500"
-                              : "bg-slate-300"
-                          } ${
-                            dprWorkflowMissing ||
-                            dprWorkflowLoading === "status-rejected"
-                              ? "cursor-not-allowed opacity-60"
-                              : "cursor-pointer"
-                          }`}
-                          aria-pressed={
-                            dprWorkflowStatus?.status === "REJECTED"
-                          }
-                          aria-label="DPR rejected"
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                              dprWorkflowStatus?.status === "REJECTED"
-                                ? "translate-x-6"
-                                : "translate-x-1"
+                    {planReviewNotification && (
+                      <div
+                        className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
+                          planReviewNotification.type === "success"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-red-50 text-red-700"
+                        }`}
+                      >
+                        <CheckCircle2 size={16} className="shrink-0" />
+                        <span>{planReviewNotification.message}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <h4 className="mt-1 text-base font-bold text-slate-900">
+                          Workflow status
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                      <div className="rounded-xl border border-violet-200 bg-white/90 px-4 py-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-800">
+                              DPR Submitted
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Current state:{" "}
+                              {dprWorkflowStatus?.status || "Unavailable"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              dprWorkflowStatus?.status !== "SUBMITTED" &&
+                              handleDprWorkflowUpdate(
+                                "status",
+                                "SUBMITTED",
+                                "status-submitted",
+                              )
+                            }
+                            disabled={
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "status-submitted"
+                            }
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                              dprWorkflowStatus?.status === "SUBMITTED"
+                                ? "bg-violet-500"
+                                : "bg-slate-300"
+                            } ${
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "status-submitted"
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer"
                             }`}
-                          />
-                        </button>
+                            aria-pressed={
+                              dprWorkflowStatus?.status === "SUBMITTED"
+                            }
+                            aria-label="DPR submitted"
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                dprWorkflowStatus?.status === "SUBMITTED"
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold text-slate-700">
+                                  Resources Submitted
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {dprWorkflowStatus?.submitted_breakdown
+                                    ?.resources_submitted ?? 0}{" "}
+                                  records
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDprWorkflowUpdate(
+                                    "resources_submitted",
+                                    dprWorkflowStatus?.submitted_breakdown
+                                      ?.resources_submitted > 0
+                                      ? "PENDING"
+                                      : "SUBMITTED",
+                                    "resources_submitted",
+                                  )
+                                }
+                                disabled={
+                                  dprWorkflowMissing ||
+                                  dprWorkflowLoading === "resources_submitted"
+                                }
+                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
+                                  dprWorkflowStatus?.submitted_breakdown
+                                    ?.resources_submitted > 0
+                                    ? "bg-violet-500"
+                                    : "bg-slate-300"
+                                } ${
+                                  dprWorkflowMissing ||
+                                  dprWorkflowLoading === "resources_submitted"
+                                    ? "cursor-not-allowed opacity-60"
+                                    : "cursor-pointer"
+                                }`}
+                                aria-pressed={
+                                  dprWorkflowStatus?.submitted_breakdown
+                                    ?.resources_submitted > 0
+                                }
+                                aria-label="Resources submitted"
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    dprWorkflowStatus?.submitted_breakdown
+                                      ?.resources_submitted > 0
+                                      ? "translate-x-6"
+                                      : "translate-x-1"
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-semibold text-slate-700">
+                                  Demands Submitted
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {dprWorkflowStatus?.submitted_breakdown
+                                    ?.demands_submitted ?? 0}{" "}
+                                  records
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDprWorkflowUpdate(
+                                    "demands_submitted",
+                                    dprWorkflowStatus?.submitted_breakdown
+                                      ?.demands_submitted > 0
+                                      ? "PENDING"
+                                      : "SUBMITTED",
+                                    "demands_submitted",
+                                  )
+                                }
+                                disabled={
+                                  dprWorkflowMissing ||
+                                  dprWorkflowLoading === "demands_submitted"
+                                }
+                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
+                                  dprWorkflowStatus?.submitted_breakdown
+                                    ?.demands_submitted > 0
+                                    ? "bg-violet-500"
+                                    : "bg-slate-300"
+                                } ${
+                                  dprWorkflowMissing ||
+                                  dprWorkflowLoading === "demands_submitted"
+                                    ? "cursor-not-allowed opacity-60"
+                                    : "cursor-pointer"
+                                }`}
+                                aria-pressed={
+                                  dprWorkflowStatus?.submitted_breakdown
+                                    ?.demands_submitted > 0
+                                }
+                                aria-label="Demands submitted"
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                    dprWorkflowStatus?.submitted_breakdown
+                                      ?.demands_submitted > 0
+                                      ? "translate-x-6"
+                                      : "translate-x-1"
+                                  }`}
+                                />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                        <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-slate-800">
+                                DPR Approved
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Final approval state
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                dprWorkflowStatus?.status !== "APPROVED" &&
+                                handleDprWorkflowUpdate(
+                                  "status",
+                                  "APPROVED",
+                                  "status-approved",
+                                )
+                              }
+                              disabled={
+                                dprWorkflowMissing ||
+                                dprWorkflowLoading === "status-approved"
+                              }
+                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                                dprWorkflowStatus?.status === "APPROVED"
+                                  ? "bg-emerald-500"
+                                  : "bg-slate-300"
+                              } ${
+                                dprWorkflowMissing ||
+                                dprWorkflowLoading === "status-approved"
+                                  ? "cursor-not-allowed opacity-60"
+                                  : "cursor-pointer"
+                              }`}
+                              aria-pressed={
+                                dprWorkflowStatus?.status === "APPROVED"
+                              }
+                              aria-label="DPR approved"
+                            >
+                              <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                  dprWorkflowStatus?.status === "APPROVED"
+                                    ? "translate-x-6"
+                                    : "translate-x-1"
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-slate-800">
+                                DPR Rejected
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                Final rejection state
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                dprWorkflowStatus?.status !== "REJECTED" &&
+                                handleDprWorkflowUpdate(
+                                  "status",
+                                  "REJECTED",
+                                  "status-rejected",
+                                )
+                              }
+                              disabled={
+                                dprWorkflowMissing ||
+                                dprWorkflowLoading === "status-rejected"
+                              }
+                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                                dprWorkflowStatus?.status === "REJECTED"
+                                  ? "bg-rose-500"
+                                  : "bg-slate-300"
+                              } ${
+                                dprWorkflowMissing ||
+                                dprWorkflowLoading === "status-rejected"
+                                  ? "cursor-not-allowed opacity-60"
+                                  : "cursor-pointer"
+                              }`}
+                              aria-pressed={
+                                dprWorkflowStatus?.status === "REJECTED"
+                              }
+                              aria-label="DPR rejected"
+                            >
+                              <span
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                  dprWorkflowStatus?.status === "REJECTED"
+                                    ? "translate-x-6"
+                                    : "translate-x-1"
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -2347,6 +2491,18 @@ const FormViewPage = ({
         ) : (
           /* Card View */
           <>
+            <div className="mb-4 rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">
+                    Submissions
+                  </p>
+                </div>
+                <div className="text-sm font-semibold text-slate-500">
+                  {filteredSubmissions.length} total
+                </div>
+              </div>
+            </div>
             {filteredSubmissions.length === 0 ? (
               <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 p-16 text-center">
                 <div className="text-slate-300 mb-6">
