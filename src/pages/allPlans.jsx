@@ -16,7 +16,6 @@ import {
   CheckCircle,
   ArrowLeftCircle,
   MoreVertical,
-  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -50,7 +49,7 @@ const AllPlans = () => {
         const token = sessionStorage.getItem("accessToken");
         const res = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await res.json();
         setStatesList(data.states || data.results || []);
@@ -74,21 +73,24 @@ const AllPlans = () => {
               Authorization: `Bearer ${token}`,
               "ngrok-skip-browser-warning": "1",
             },
-          }
+          },
         );
         const data = await res.json();
         const projectPlans = (data.results || data).filter(
-          (p) => String(p.project) === String(projectId)
+          (p) => String(p.project) === String(projectId),
         );
         setPlans(projectPlans);
 
         // Preload districts for all states in plans
-        const statesToFetch = [...new Set(projectPlans.map((p) => p.state_soi))];
-        const districtsToFetch = [...new Set(projectPlans.map((p) => p.district_soi))];
-        
+        const statesToFetch = [
+          ...new Set(projectPlans.map((p) => p.state_soi)),
+        ];
+        const districtsToFetch = [
+          ...new Set(projectPlans.map((p) => p.district_soi)),
+        ];
+
         statesToFetch.forEach((stateCode) => fetchDistricts(stateCode));
         districtsToFetch.forEach((districtCode) => fetchBlocks(districtCode));
-        
       } catch (err) {
         console.error(err);
       } finally {
@@ -104,7 +106,7 @@ const AllPlans = () => {
     try {
       const res = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateCode}/`,
-        { headers: { "content-type": "application/json" } }
+        { headers: { "content-type": "application/json" } },
       );
       const data = await res.json();
       const districts = (data.districts || []).map((d) => ({
@@ -129,8 +131,8 @@ const AllPlans = () => {
 
   // Resolve state name
   const getStateName = (stateCode) =>
-    statesList.find((s) => String(s.id) === String(stateCode))
-      ?.state_name || "Unknown State";
+    statesList.find((s) => String(s.id) === String(stateCode))?.state_name ||
+    "Unknown State";
 
   const fetchBlocks = async (districtCode) => {
     if (blocksCache[districtCode]) return; // already cached
@@ -144,7 +146,7 @@ const AllPlans = () => {
             "content-type": "application/json",
             "ngrok-skip-browser-warning": "420",
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -190,14 +192,14 @@ const AllPlans = () => {
       const updatedPlan = await response.json();
 
       toast.success(
-        `Plan ${updatedPlan.enabled ? "enabled" : "disabled"} successfully!`
+        `Plan ${updatedPlan.enabled ? "enabled" : "disabled"} successfully!`,
       );
 
       // refresh plans in UI (assuming you have setPlans from useState)
       setPlans((prev) =>
         prev.map((p) =>
-          p.id === plan.id ? { ...p, enabled: updatedPlan.enabled } : p
-        )
+          p.id === plan.id ? { ...p, enabled: updatedPlan.enabled } : p,
+        ),
       );
     } catch (error) {
       console.error("Error toggling enabled state:", error);
@@ -274,7 +276,6 @@ const AllPlans = () => {
                   <th className="px-6 py-4">Facilitator</th>
                   <th className="px-6 py-4">Enabled</th>
                   <th className="px-6 py-4">Completed</th>
-                  <th className="px-6 py-4">DPR Generated</th>
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
@@ -288,7 +289,9 @@ const AllPlans = () => {
                     <td className="px-6 py-4 font-medium">
                       {plan.plan || "-"}
                     </td>
-                    <td className="px-6 py-4">{getStateName(plan.state_soi)}</td>
+                    <td className="px-6 py-4">
+                      {getStateName(plan.state_soi)}
+                    </td>
                     <td className="px-6 py-4">
                       {getDistrictName(plan.state_soi, plan.district_soi)}
                     </td>
@@ -303,9 +306,6 @@ const AllPlans = () => {
                     <td className="px-6 py-4">{plan.enabled ? "Yes" : "No"}</td>
                     <td className="px-6 py-4">
                       {plan.is_completed ? "Yes" : "No"}
-                    </td>
-                    <td className="px-6 py-4">
-                      {plan.is_dpr_generated ? "Yes" : "No"}
                     </td>
 
                     <td className="px-6 py-4 flex gap-2">

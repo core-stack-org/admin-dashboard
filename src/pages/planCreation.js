@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import { ArrowLeft } from "lucide-react";
-import { Switch } from "@mui/material";
 import Select from "react-select";
 
 const PlanCreation = ({ onClose, onPlanSaved }) => {
@@ -45,10 +44,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const [villageName, setVillageName] = useState("");
   const [gramPanchayat, setGramPanchayat] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [isDprGenerated, setIsDprGenerated] = useState(false);
-  const [isDprReviewed, setIsDprReviewed] = useState(false);
-  const [isDprApproved, setIsDprApproved] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [users, setUsers] = useState([]);
   const selectRef = useRef(null);
@@ -67,7 +62,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
             "ngrok-skip-browser-warning": "420",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       const data = await response.json();
@@ -76,14 +71,14 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       const usersArray = Array.isArray(data)
         ? data
         : Array.isArray(data.results)
-        ? data.results
-        : [];
+          ? data.results
+          : [];
 
       // ✅ Sort alphabetically by first name, fallback to username
       const sortedUsers = usersArray.sort((a, b) =>
         (a.first_name || a.username || "").localeCompare(
-          b.first_name || b.username || ""
-        )
+          b.first_name || b.username || "",
+        ),
       );
 
       setUsers(sortedUsers);
@@ -112,7 +107,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
         const token = sessionStorage.getItem("accessToken");
         const res = await fetch(
           `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const data = await res.json();
         setStatesList(data.states || data.results || []);
@@ -141,16 +136,16 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const fetchDistricts = async (stateId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`,
       );
       const data = await res.json();
       const activeDistricts = (data.districts || []).filter(
-        (d) => d.active_status === true
+        (d) => d.active_status === true,
       );
 
       // Sort alphabetically by district_name
       activeDistricts.sort((a, b) =>
-        a.district_name.localeCompare(b.district_name)
+        a.district_name.localeCompare(b.district_name),
       );
       setDistrictsList(activeDistricts);
       return activeDistricts;
@@ -163,7 +158,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
   const fetchBlocks = async (districtId) => {
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`,
       );
       const data = await res.json();
       const activeBlocks = (data.blocks || [])
@@ -198,10 +193,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
     setPlan("");
     setVillageName("");
     setGramPanchayat("");
-    setIsCompleted(false);
-    setIsDprGenerated(false);
-    setIsDprReviewed(false);
-    setIsDprApproved(false);
     setShowConfirm(false);
   };
 
@@ -224,14 +215,13 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
             Accept: "application/json",
             "ngrok-skip-browser-warning": "1",
           },
-        }
+        },
       );
       const data = await res.json();
 
       const stateNameFromList =
-        statesList.find(
-          (s) => String(s.id) === String(data.state_soi)
-        )?.state_name || "";
+        statesList.find((s) => String(s.id) === String(data.state_soi))
+          ?.state_name || "";
 
       setState({ id: data.state_soi, name: stateNameFromList });
 
@@ -244,8 +234,8 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       //  Fetch blocks for the district and set selected block
       const blocks = await fetchBlocks(data.district_soi);
       const blockName =
-        blocks.find((b) => String(b.id) === String(data.tehsil_soi))?.block_name ||
-        "";
+        blocks.find((b) => String(b.id) === String(data.tehsil_soi))
+          ?.block_name || "";
       setBlock({ id: data.tehsil_soi, name: blockName });
 
       //  Set other fields
@@ -253,7 +243,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       setPlan(data.plan || "");
       setVillageName(data.village_name || "");
       setGramPanchayat(data.gram_panchayat || "");
-      setIsCompleted(data.is_completed || false);
     } catch (error) {
       console.error("Error fetching plan details:", error);
     }
@@ -271,12 +260,9 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       village_name: villageName,
       gram_panchayat: gramPanchayat,
       // facilitator_name: facilitator.first_name,
-      facilitator_name: `${facilitator.first_name} ${facilitator.last_name || ""}`.trim(),
+      facilitator_name:
+        `${facilitator.first_name} ${facilitator.last_name || ""}`.trim(),
       enabled: true,
-      is_completed: isCompleted,
-      is_dpr_generated: isDprGenerated,
-      is_dpr_reviewed: isDprReviewed,
-      is_dpr_approved: isDprApproved,
     };
 
     try {
@@ -497,30 +483,30 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
                   ? facilitator.username === "others"
                     ? { value: "others", label: "Others" }
                     : users.find(
-                        (u) =>
-                          u.username === facilitator.username ||
-                          u.name === facilitator.username
-                      )
-                    ? {
-                        value: facilitator.username,
-                        label: `${
-                          users.find(
-                            (u) =>
-                              u.username === facilitator.username ||
-                              u.name === facilitator.username
-                          ).username || facilitator.username
-                        }${
-                          facilitator.first_name || facilitator.last_name
-                            ? ` (${[
-                                facilitator.first_name,
-                                facilitator.last_name,
-                              ]
-                                .filter(Boolean)
-                                .join(" ")})`
-                            : ""
-                        }`,
-                      }
-                    : null
+                          (u) =>
+                            u.username === facilitator.username ||
+                            u.name === facilitator.username,
+                        )
+                      ? {
+                          value: facilitator.username,
+                          label: `${
+                            users.find(
+                              (u) =>
+                                u.username === facilitator.username ||
+                                u.name === facilitator.username,
+                            ).username || facilitator.username
+                          }${
+                            facilitator.first_name || facilitator.last_name
+                              ? ` (${[
+                                  facilitator.first_name,
+                                  facilitator.last_name,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" ")})`
+                              : ""
+                          }`,
+                        }
+                      : null
                   : null
               }
               onChange={(selected) => {
@@ -551,7 +537,7 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
                 const selectedUser = users.find(
                   (u) =>
-                    u.username === selected.value || u.name === selected.value
+                    u.username === selected.value || u.name === selected.value,
                 );
                 if (selectedUser) {
                   setFacilitator({
@@ -640,62 +626,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
               placeholder="Enter Gram Panchayat"
             />
           </div>
-
-          {/* Toggles in 2-column layout */}
-          {isEditMode && (
-            <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="col-span-full">
-                <hr className="my-2 border-gray-300" />
-              </div>
-              {/* Completed */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">
-                  Is Plan Completed?
-                </label>
-                <Switch
-                  checked={isCompleted}
-                  onChange={(e) => setIsCompleted(e.target.checked)}
-                  color="primary"
-                />
-              </div>
-
-              {/* DPR Generated */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">
-                  DPR Generated?
-                </label>
-                <Switch
-                  checked={isDprGenerated}
-                  onChange={(e) => setIsDprGenerated(e.target.checked)}
-                  color="primary"
-                />
-              </div>
-
-              {/* DPR Reviewed */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">
-                  DPR Reviewed?
-                </label>
-                <Switch
-                  checked={isDprReviewed}
-                  onChange={(e) => setIsDprReviewed(e.target.checked)}
-                  color="primary"
-                />
-              </div>
-
-              {/* DPR Approved */}
-              <div className="flex items-center gap-4">
-                <label className="text-sm font-medium text-gray-700">
-                  DPR Approved?
-                </label>
-                <Switch
-                  checked={isDprApproved}
-                  onChange={(e) => setIsDprApproved(e.target.checked)}
-                  color="primary"
-                />
-              </div>
-            </div>
-          )}
         </form>
 
         {/* Submit */}
@@ -750,25 +680,6 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
               <li>
                 <strong>Gram Panchayat:</strong> {gramPanchayat}
               </li>
-              {isEditMode && (
-                <>
-                  <li>
-                    <strong>Completed:</strong> {isCompleted ? "Yes" : "No"}
-                  </li>
-                  <li>
-                    <strong>DPR Generated:</strong>{" "}
-                    {isDprGenerated ? "Yes" : "No"}
-                  </li>
-                  <li>
-                    <strong>DPR Reviewed:</strong>{" "}
-                    {isDprReviewed ? "Yes" : "No"}
-                  </li>
-                  <li>
-                    <strong>DPR Approved:</strong>{" "}
-                    {isDprApproved ? "Yes" : "No"}
-                  </li>
-                </>
-              )}
             </ul>
 
             <div className="flex justify-end gap-4">
