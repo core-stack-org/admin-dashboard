@@ -1583,7 +1583,7 @@ const FormViewPage = ({
     }
   };
 
-  const handlePlanReviewedToggle = async (value) => {
+  const handlePlanStatusToggle = async (field, value, label) => {
     if (!selectedProject || !selectedPlan) return;
 
     setPlanReviewLoading(true);
@@ -1595,7 +1595,7 @@ const FormViewPage = ({
         {
           method: "PATCH",
           headers: getHeaders(),
-          body: JSON.stringify({ is_dpr_reviewed: value }),
+          body: JSON.stringify({ [field]: value }),
         },
       );
 
@@ -1605,24 +1605,24 @@ const FormViewPage = ({
         throw new Error(
           data?.message ||
             data?.error ||
-            "Failed to update DPR reviewed status.",
+            `Failed to update ${label} status.`,
         );
       }
 
       setPlanDetails((prev) => ({
         ...prev,
         ...(data?.data || data),
-        is_dpr_reviewed: value,
+        [field]: value,
       }));
       setPlanReviewNotification({
         type: "success",
-        message: "DPR reviewed status updated.",
+        message: `${label} status updated.`,
       });
     } catch (error) {
       console.error("Plan review update error:", error);
       setPlanReviewNotification({
         type: "error",
-        message: error.message || "Failed to update DPR reviewed status.",
+        message: error.message || `Failed to update ${label} status.`,
       });
     } finally {
       setPlanReviewLoading(false);
@@ -1845,9 +1845,6 @@ const FormViewPage = ({
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">
                     DPR Details
                   </p>
-                  <h3 className="mt-1 text-lg font-bold text-slate-900">
-                    Workflow status
-                  </h3>
                 </div>
                 <div className="rounded-xl bg-violet-50 p-3 text-violet-600">
                   <FileText size={18} />
@@ -1936,7 +1933,52 @@ const FormViewPage = ({
                       </div>
                     </div>
 
-                    <div className="mt-4 rounded-xl border border-sky-200 bg-white/90 px-4 py-3">
+                    <div className="mt-4 space-y-3">
+                      <div className="rounded-xl border border-sky-200 bg-white/90 px-4 py-3">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-slate-800">
+                              Is Plan Completed?
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              Current status:{" "}
+                              {planDetails?.is_completed ? "Completed" : "Not completed"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handlePlanStatusToggle(
+                                "is_completed",
+                                !planDetails?.is_completed,
+                                "Plan completed",
+                              )
+                            }
+                            disabled={planReviewLoading}
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                              planDetails?.is_completed
+                                ? "bg-sky-500"
+                                : "bg-slate-300"
+                            } ${
+                              planReviewLoading
+                                ? "cursor-not-allowed opacity-60"
+                                : "cursor-pointer"
+                            }`}
+                            aria-pressed={Boolean(planDetails?.is_completed)}
+                            aria-label="Is Plan Completed?"
+                          >
+                            <span
+                              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                planDetails?.is_completed
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-sky-200 bg-white/90 px-4 py-3">
                       <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-slate-800">
@@ -1952,8 +1994,10 @@ const FormViewPage = ({
                         <button
                           type="button"
                           onClick={() =>
-                            handlePlanReviewedToggle(
+                            handlePlanStatusToggle(
+                              "is_dpr_reviewed",
                               !planDetails?.is_dpr_reviewed,
+                              "DPR reviewed",
                             )
                           }
                           disabled={planReviewLoading}
@@ -1979,6 +2023,7 @@ const FormViewPage = ({
                         </button>
                       </div>
                     </div>
+                    </div>
 
                     {planReviewNotification && (
                       <div
@@ -1995,15 +2040,7 @@ const FormViewPage = ({
                   </div>
 
                   <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 shadow-sm">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h4 className="mt-1 text-base font-bold text-slate-900">
-                          Workflow status
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
                       <div className="rounded-xl border border-violet-200 bg-white/90 px-4 py-4">
                         <div className="flex items-center justify-between gap-4">
                           <div className="min-w-0">
