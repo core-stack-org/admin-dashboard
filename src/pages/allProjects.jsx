@@ -1646,14 +1646,19 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
         <select
           value={selectedGEEAccount}
           onChange={handleGEEAccountChange}
-          className="w-full px-4 py-2 border text-lg rounded-lg"
+          className="w-full px-4 py-3 border text-lg rounded-lg"
         >
           <option value="">Select GEE Account</option>
-          {Array.isArray(geeAccounts) &&
-            geeAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
+
+          {geeAccounts &&
+            Object.entries(geeAccounts).map(([email, accounts]) => (
+              <optgroup key={email} label={email}>
+                {accounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
         </select>
       </Box>
