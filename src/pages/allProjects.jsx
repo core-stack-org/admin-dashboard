@@ -802,15 +802,13 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
                           {p.organization_name || "N/A"}
                         </td>
                         <td className="px-6 py-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              (p.status || "Active") === "Active"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {p.status || "Active"}
-                          </span>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            p.enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {p.enabled ? "Active" : "Inactive"}
+                        </span>
                         </td>
                         <td className="px-6 py-4 flex gap-2">
                           {/* Plantation */}
@@ -1094,15 +1092,13 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
                           {p.organization_name || "N/A"}
                         </td>
                         <td className="px-6 py-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                              (p.status || "Active") === "Active"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {p.status || "Active"}
-                          </span>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            p.enabled ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {p.enabled ? "Active" : "Inactive"}
+                        </span>
                         </td>
                         <td className="px-6 py-4 flex gap-2">
                           {/* Plantation */}
@@ -1650,14 +1646,19 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
         <select
           value={selectedGEEAccount}
           onChange={handleGEEAccountChange}
-          className="w-full px-4 py-2 border text-lg rounded-lg"
+          className="w-full px-4 py-3 border text-lg rounded-lg"
         >
           <option value="">Select GEE Account</option>
-          {Array.isArray(geeAccounts) &&
-            geeAccounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
+
+          {geeAccounts &&
+            Object.entries(geeAccounts).map(([email, accounts]) => (
+              <optgroup key={email} label={email}>
+                {accounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
         </select>
       </Box>

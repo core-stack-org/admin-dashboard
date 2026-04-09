@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
-import layersData from "../jsons/layers.json";
-import { Vector as VectorSource } from "ol/source";
-import GeoJSON from "ol/format/GeoJSON";
+
 
 const GenerateExcelComponent = () => {
   const [state, setState] = useState({ id: "", name: "" });
@@ -10,6 +8,7 @@ const GenerateExcelComponent = () => {
   const [statesList, setStatesList] = useState([]);
   const [districtsList, setDistrictsList] = useState([]);
   const [blocksList, setBlocksList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchStates();
@@ -126,7 +125,7 @@ const GenerateExcelComponent = () => {
       alert("Please select a state, district, and block to generate Excel.");
       return;
     }
-
+    setLoading(true);
     try {
       const url = new URL(
         `${process.env.REACT_APP_BASEURL}/api/v1/generate_stats_excel_file/`
@@ -159,6 +158,9 @@ const GenerateExcelComponent = () => {
     } catch (error) {
       console.error("Error generating Excel:", error);
       alert("Something went wrong while generating the Excel file.");
+    }
+    finally {
+      setLoading(false); 
     }
   };
 
@@ -239,11 +241,22 @@ const GenerateExcelComponent = () => {
         <div className="text-center">
           <button
             type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            disabled={loading}
+            className={`px-4 py-2 rounded-lg text-white ${
+              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+            }`}
             onClick={handleGenerateExcel}
           >
-            Generate Excel
+            {loading ? "Generating Excel..." : "Generate Excel"}
           </button>
+
+          {/* Spinner */}
+          {loading && (
+            <div className="flex flex-col items-center mt-4">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-2 text-gray-600">Please wait, generating Excel...</p>
+            </div>
+          )}
         </div>
       </form>
     </div>
