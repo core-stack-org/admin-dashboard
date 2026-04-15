@@ -67,14 +67,14 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
       const data = await response.json();
 
-      // ✅ Handle both array and paginated formats
+      // Handle both array and paginated formats
       const usersArray = Array.isArray(data)
         ? data
         : Array.isArray(data.results)
           ? data.results
           : [];
 
-      // ✅ Sort alphabetically by first name, fallback to username
+      // Sort alphabetically by first name, fallback to username
       const sortedUsers = usersArray.sort((a, b) =>
         (a.first_name || a.username || "").localeCompare(
           b.first_name || b.username || "",
@@ -299,8 +299,10 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       resetForm();
       if (onPlanSaved) onPlanSaved(data);
       if (onClose) onClose();
-      navigate(`/projects/${projectId}/plans`);
-    } catch (error) {
+      if (isEditMode) {
+        navigate(`/projects/${projectId}/plans`);
+      }
+        } catch (error) {
       console.error(error);
       toast.error("Error saving plan");
     }
