@@ -299,8 +299,10 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
       resetForm();
       if (onPlanSaved) onPlanSaved(data);
       if (onClose) onClose();
-      navigate(`/projects/${projectId}/plans`);
-    } catch (error) {
+      if (isEditMode) {
+        navigate(`/projects/${projectId}/plans`);
+      }
+        } catch (error) {
       console.error(error);
       toast.error("Error saving plan");
     }
