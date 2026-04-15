@@ -67,14 +67,14 @@ const PlanCreation = ({ onClose, onPlanSaved }) => {
 
       const data = await response.json();
 
-      // ✅ Handle both array and paginated formats
+      // Handle both array and paginated formats
       const usersArray = Array.isArray(data)
         ? data
         : Array.isArray(data.results)
           ? data.results
           : [];
 
-      // ✅ Sort alphabetically by first name, fallback to username
+      // Sort alphabetically by first name, fallback to username
       const sortedUsers = usersArray.sort((a, b) =>
         (a.first_name || a.username || "").localeCompare(
           b.first_name || b.username || "",
