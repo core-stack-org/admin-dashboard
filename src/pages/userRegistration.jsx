@@ -26,6 +26,10 @@ const RegistrationForm = () => {
     last_name: "",
     contact_number: "",
     organization: "",
+    account_type:"",
+    gender: "",
+  age: "",
+  education: ""
   });
   const passwordRequirements = [
     "At least 8 characters long",
@@ -113,6 +117,19 @@ const RegistrationForm = () => {
     if (formData.account_type === "org" && !formData.organization) {
       newErrors.organization = "Organization is required";
     }
+    if (!formData.gender) newErrors.gender = "Gender is required";
+
+    if (!formData.age) {
+      newErrors.age = "Age is required";
+    } else if (!/^\d+$/.test(formData.age)) {
+      newErrors.age = "Only numbers are allowed";
+    } else if (Number(formData.age) <= 0) {
+      newErrors.age = "Enter a valid age";
+    }
+
+    if (!formData.education) {
+      newErrors.education = "Education is required";
+    }
     
 
     return newErrors;
@@ -124,17 +141,24 @@ const RegistrationForm = () => {
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
     } else {
-      const registrationData = {
-  username: formData.username,
-  email: formData.email,
-  password: formData.password,
-  password_confirm: formData.password_confirm,
-  first_name: formData.first_name,
-  last_name: formData.last_name,
-  contact_number: formData.contact_number,
-  account_type: formData.account_type,
-  ...(formData.organization && { organization: formData.organization }),
-};
+      const registrationData = new FormData();
+
+      registrationData.append("username", formData.username);
+      registrationData.append("email", formData.email);
+      registrationData.append("password", formData.password);
+      registrationData.append("password_confirm", formData.password_confirm);
+      registrationData.append("first_name", formData.first_name);
+      registrationData.append("last_name", formData.last_name);
+      registrationData.append("contact_number", formData.contact_number);
+      registrationData.append("account_type", formData.account_type);
+      registrationData.append("gender", formData.gender);
+      registrationData.append("age", formData.age);
+      registrationData.append("education_qualification", formData.education);
+      
+      // optional
+      if (formData.organization) {
+        registrationData.append("organization", formData.organization);
+      }
 
       try {
         const token = sessionStorage.getItem("accessToken");
@@ -143,11 +167,10 @@ const RegistrationForm = () => {
           {
             method: "POST",
             headers: {
-              "Content-Type": "application/json",
               "ngrok-skip-browser-warning": "420",
               // Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(registrationData),
+            body: registrationData,
           }
         );
 
@@ -165,6 +188,10 @@ const RegistrationForm = () => {
             last_name: "",
             contact_number: "",
             organization: "",
+            account_type: "",
+            gender: "",
+            age: "",
+            education: "",
           });
           setSelectedOption(null);
           setSelectedPermission([]);
@@ -294,6 +321,116 @@ const RegistrationForm = () => {
                 </p>
               )}
           </div>
+
+                {/* GENDER (FULL WIDTH LIKE ACCOUNT TYPE) */}
+    <div className="w-full rounded border border-gray-300 px-4 py-4 flex items-center gap-20 ">
+      <span className="text-gray-400 whitespace-nowrap">
+        Gender <span className="text-red-500">*</span>
+      </span>
+
+      <label className="flex items-center gap-2 cursor-pointer ml-24">
+        <input
+          type="radio"
+          name="gender"
+          value="M"
+          checked={formData.gender === "M"}
+          onChange={handleChange}
+          className="accent-blue-500"
+        />
+        <span className="text-gray-700">Male</span>
+      </label>
+
+      <label className="flex items-center gap-2 cursor-pointer ml-6">
+        <input
+          type="radio"
+          name="gender"
+          value="F"
+          checked={formData.gender === "F"}
+          onChange={handleChange}
+          className="accent-blue-500"
+        />
+        <span className="text-gray-700">Female</span>
+      </label>
+
+      <label className="flex items-center gap-2 cursor-pointer ml-6">
+        <input
+          type="radio"
+          name="gender"
+          value="O"
+          checked={formData.gender === "O"}
+          onChange={handleChange}
+          className="accent-blue-500"
+        />
+        <span className="text-gray-700">Other</span>
+      </label>
+    </div>
+
+    {errors.gender && (
+      <p className="text-red-500 text-sm">{errors.gender}</p>
+    )}
+
+    {/* AGE + EDUCATION */}
+    <div className="grid grid-cols-2 gap-4">
+
+      <div className="relative">
+      <input
+  name="age"
+  type="text"
+  value={formData.age}
+  onChange={(e) => {
+    const value = e.target.value;
+  
+    setFormData({
+      ...formData,
+      age: value,
+    });
+  
+    // Validation for numbers only
+    if (value && !/^\d+$/.test(value)) {
+      setErrors((prev) => ({
+        ...prev,
+        age: "Only numbers are allowed",
+      }));
+    } else {
+      setErrors((prev) => ({
+        ...prev,
+        age: "",
+      }));
+    }
+  }}
+  inputMode="numeric"
+  pattern="[0-9]*"
+  className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+  placeholder="Enter Age"
+/>
+<span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+    *
+  </span>
+        {errors.age && (
+          <p className="text-red-500 text-sm">{errors.age}</p>
+        )}
+      </div>
+
+      <div className="relative">
+        <input
+          name="education"
+          value={formData.education}
+          onChange={handleChange}
+          className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          placeholder="Education Qualification"
+        />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+    *
+  </span>
+        {errors.education && (
+          <p className="text-red-500 text-sm">{errors.education}</p>
+        )}
+      </div>
+
+    </div>
+
+
+
 
                         {/* ACCOUNT TYPE  */}
           <div className="mt-4">

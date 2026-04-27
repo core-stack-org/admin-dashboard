@@ -25,6 +25,9 @@ const AddMember = ({
     last_name: "",
     contact_number: "",
     organization: "",
+    gender: "",
+    age: "",
+    education_qualification: ""
   });
 
   const [errors, setErrors] = useState({});
@@ -143,12 +146,26 @@ const AddMember = ({
     }
 
     try {
+      const formDataToSend = new FormData();
+
+formDataToSend.append("username", formData.username);
+formDataToSend.append("email", formData.email);
+formDataToSend.append("password", formData.password);
+formDataToSend.append("password_confirm", formData.password_confirm);
+formDataToSend.append("first_name", formData.first_name);
+formDataToSend.append("last_name", formData.last_name);
+formDataToSend.append("contact_number", formData.contact_number);
+formDataToSend.append("organization", formData.organization);
+
+// NEW FIELDS
+formDataToSend.append("gender", formData.gender);
+formDataToSend.append("age", formData.age);
+formDataToSend.append("education_qualification", formData.education);
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: formDataToSend,
         }
       );
       const data = await response.json();
@@ -323,6 +340,78 @@ const AddMember = ({
                   </p>
                 )}
             </div>
+
+            {/* GENDER */}
+<div className="w-full rounded border border-gray-300 px-4 py-4 flex items-center gap-20">
+  <span className="text-gray-400 whitespace-nowrap">
+    Gender <span className="text-red-500">*</span>
+  </span>
+
+  <label className="flex items-center gap-2 cursor-pointer ml-20">
+    <input
+      type="radio"
+      name="gender"
+      value="M"
+      checked={formData.gender === "M"}
+      onChange={handleChange}
+      className="accent-blue-500"
+    />
+    <span className="text-gray-700">Male</span>
+  </label>
+
+  <label className="flex items-center gap-2 cursor-pointer">
+    <input
+      type="radio"
+      name="gender"
+      value="F"
+      checked={formData.gender === "F"}
+      onChange={handleChange}
+      className="accent-blue-500"
+    />
+    <span className="text-gray-700">Female</span>
+  </label>
+
+  <label className="flex items-center gap-2 cursor-pointer">
+    <input
+      type="radio"
+      name="gender"
+      value="O"
+      checked={formData.gender === "O"}
+      onChange={handleChange}
+      className="accent-blue-500"
+    />
+    <span className="text-gray-700">Other</span>
+  </label>
+</div>
+
+{/* AGE + EDUCATION */}
+<div className="grid grid-cols-2 gap-4">
+
+  <div>
+    <input
+      name="age"
+      type="text"
+      value={formData.age}
+      onChange={(e) => {
+        const value = e.target.value;
+        setFormData({ ...formData, age: value });
+      }}
+      className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+      placeholder="Enter Age *"
+    />
+  </div>
+
+  <div>
+    <input
+      name="education"
+      value={formData.education}
+      onChange={handleChange}
+      className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+      placeholder="Education Qualification *"
+    />
+  </div>
+
+</div>
 
             {/* Organization */}
             <div className="relative w-full">
