@@ -390,7 +390,9 @@ formDataToSend.append("education_qualification", formData.education);
   <div>
     <input
       name="age"
-      type="text"
+      type="number"
+      min="1"
+      max="100"
       value={formData.age}
       onChange={(e) => {
         const value = e.target.value;
