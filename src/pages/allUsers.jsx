@@ -9,8 +9,10 @@ import {
   Tooltip,
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import { ArrowLeftCircle, Home } from "lucide-react";
+import { ArrowLeftCircle, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -115,6 +117,58 @@ const UsersTable = () => {
     setAnchorEl(null); // close any open filter popover
   };
 
+  const exportToExcel = () => {
+    const dataToExport = filteredUsers
+      // optional cleanup (removes "Unnamed" junk rows)
+      .filter((user) => user.username && !user.username.includes("Unnamed"))
+      .map((user, index) => {
+        let groupNames = user.groups?.map((g) => g.name) || [];
+        if (user.is_superadmin) groupNames.unshift("Superadmin");
+  
+        return {
+          "S. No": index + 1,
+          Name:
+            user.first_name || user.last_name
+              ? `${user.first_name || ""} ${user.last_name || ""}`.trim()
+              : "N/A",
+          Username: user.username || "N/A",
+          Email: user.email || "N/A",
+          Contact: user.contact_number || "N/A",
+          Organization: user.organization_name || "N/A",
+          Projects:
+            user.project_details?.map((p) => p.project_name).join(", ") ||
+            "N/A",
+          Status: user.is_active ? "Active" : "Inactive",
+          Roles: groupNames.join(", ") || "N/A",
+        };
+      });
+  
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  
+    const colWidths = Object.keys(dataToExport[0] || {}).map((key) => ({
+      wch: Math.max(
+        key.length,
+        ...dataToExport.map((row) => (row[key] ? row[key].toString().length : 10))
+      ),
+    }));
+    worksheet["!cols"] = colWidths;
+  
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+  
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+  
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+  
+    saveAs(blob, "Users_List.xlsx");
+  };
+
   return (
     <Box>
       <div className="h-screen flex flex-col">
@@ -136,6 +190,20 @@ const UsersTable = () => {
           >
             Clear All Filters
           </span>
+          <Tooltip title="Export Excel">
+  <button
+    onClick={exportToExcel}
+    className="ml-3 flex items-center gap-2 px-3 py-2
+               border border-green-400 text-green-700
+               bg-white
+               rounded-lg shadow-sm
+               hover:bg-green-50 hover:border-green-600
+               transition"
+  >
+    <Download size={18} />
+    <span className="text-sm font-medium">Export</span>
+  </button>
+</Tooltip>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2">

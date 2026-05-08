@@ -29,6 +29,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { Vector as VectorSource } from "ol/source";
 import GeoJSON from "ol/format/GeoJSON";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const AllProjects = ({ statesList,currentUser }) => {
   const [projects, setProjects] = useState([]);
@@ -696,6 +698,45 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
       alert("Failed to download stats file");
     }
   };
+
+  const exportProjectsToExcel = () => {
+    const dataToExport = filteredProjects.map((p, index) => ({
+      "S. No": index + 1,
+      Name: p.name || "N/A",
+      "App Type": p.app_type_display || p.app_type || "N/A",
+      State: p.state_name || "N/A",
+      Organization: p.organization_name || "N/A",
+      Status: p.enabled ? "Active" : "Inactive",
+    }));
+  
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  
+    // auto column width
+    const colWidths = Object.keys(dataToExport[0] || {}).map((key) => ({
+      wch: Math.max(
+        key.length,
+        ...dataToExport.map((row) =>
+          row[key] ? row[key].toString().length : 10
+        )
+      ),
+    }));
+    worksheet["!cols"] = colWidths;
+  
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Projects");
+  
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+  
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+  
+    saveAs(blob, "Projects_List.xlsx");
+  };
   
   return (
     <Box>
@@ -713,9 +754,29 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
           </h1>
 
           {/* Clear All Filters */}
-          <span onClick={clearAllFilters} className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium">
-            Clear All Filters
-          </span>
+          <div className="flex items-center gap-3">
+  <span
+    onClick={clearAllFilters}
+    className="text-blue-500 hover:text-blue-700 cursor-pointer font-medium"
+  >
+    Clear All Filters
+  </span>
+
+  <Tooltip title="Export Excel">
+  <button
+    onClick={exportProjectsToExcel}
+    className="ml-3 flex items-center gap-2 px-3 py-2
+               border border-green-400 text-green-700
+               bg-white
+               rounded-lg shadow-sm
+               hover:bg-green-50 hover:border-green-600
+               transition"
+  >
+    <Download size={18} />
+    <span className="text-sm font-medium">Export</span>
+  </button>
+</Tooltip>
+</div>
         </div>
 
         {/* Table container */}

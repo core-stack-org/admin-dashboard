@@ -16,8 +16,11 @@ import {
   CheckCircle,
   ArrowLeftCircle,
   MoreVertical,
+  Download
 } from "lucide-react";
 import { toast } from "react-toastify";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 const AllPlans = () => {
   const { projectId } = useParams();
@@ -238,6 +241,49 @@ const AllPlans = () => {
     }
   };
 
+  const exportPlansToExcel = () => {
+    const dataToExport = plans.map((plan, index) => ({
+      "S. No": index + 1,
+      "Plan Name": plan.plan || "-",
+      State: getStateName(plan.state_soi),
+      District: getDistrictName(plan.state_soi, plan.district_soi),
+      Block: getBlockName(plan.district_soi, plan.tehsil_soi),
+      Village: plan.village_name || "-",
+      "Gram Panchayat": plan.gram_panchayat || "-",
+      Facilitator: plan.facilitator_name || "-",
+      Enabled: plan.enabled ? "Yes" : "No",
+      Completed: plan.is_completed ? "Yes" : "No",
+    }));
+  
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+  
+    // auto width
+    const colWidths = Object.keys(dataToExport[0] || {}).map((key) => ({
+      wch: Math.max(
+        key.length,
+        ...dataToExport.map((row) =>
+          row[key] ? row[key].toString().length : 10
+        )
+      ),
+    }));
+    worksheet["!cols"] = colWidths;
+  
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Plans");
+  
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+  
+    const blob = new Blob([excelBuffer], {
+      type:
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+  
+    saveAs(blob, `Plans_${projectName || "Project"}.xlsx`);
+  };
+
   if (loading)
     return (
       <div className="flex justify-center p-6">
@@ -258,6 +304,20 @@ const AllPlans = () => {
         <h1 className="flex-1 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600 text-center drop-shadow-md">
           Plans for Project {projectName}
         </h1>
+        <Tooltip title="Export Excel">
+  <button
+    onClick={exportPlansToExcel}
+    className="ml-3 flex items-center gap-2 px-3 py-2
+               border border-green-400 text-green-700
+               bg-white
+               rounded-lg shadow-sm
+               hover:bg-green-50 hover:border-green-600
+               transition"
+  >
+    <Download size={18} />
+    <span className="text-sm font-medium">Export</span>
+  </button>
+</Tooltip>
       </div>
 
       <div className="flex-1 overflow-y-auto mt-6">

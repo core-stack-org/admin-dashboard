@@ -374,16 +374,18 @@ const RegistrationForm = () => {
 
       <div className="relative">
       <input
-  name="age"
-  type="text"
-  value={formData.age}
-  onChange={(e) => {
-    const value = e.target.value;
-  
-    setFormData({
-      ...formData,
-      age: value,
-    });
+        name="age"
+        type="number"
+        min="1"
+        max="100"
+        value={formData.age}
+        onChange={(e) => {
+          const value = e.target.value;
+        
+          setFormData({
+            ...formData,
+            age: value,
+          });
   
     // Validation for numbers only
     if (value && !/^\d+$/.test(value)) {
@@ -492,7 +494,7 @@ const RegistrationForm = () => {
             <AsyncSelect
               loadOptions={loadOrganization}
               defaultOptions
-              isDisabled={formData.account_type === "individual"}   // ✅ KEY LINE
+              isDisabled={formData.account_type === "individual"} 
               value={
                 formData.account_type === "individual" ? null : selectedOption
               }
