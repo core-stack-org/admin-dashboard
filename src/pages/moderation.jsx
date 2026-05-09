@@ -1638,9 +1638,7 @@ const handleEditSubmission = (submission) => {
 
       if (!response.ok) {
         throw new Error(
-          data?.message ||
-            data?.error ||
-            `Failed to update ${label} status.`,
+          data?.message || data?.error || `Failed to update ${label} status.`,
         );
       }
 
@@ -1918,25 +1916,21 @@ const handleEditSubmission = (submission) => {
                 </div>
 
                 <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-                  <div className="rounded-2xl border border-sky-200 bg-gradient-to-br from-sky-50 to-white p-5 shadow-sm">
-                    <div className="flex items-start justify-between gap-4">
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
                       <div>
-                        <h4 className="mt-1 text-base font-bold text-slate-900">
+                        <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
                           Review status
                         </h4>
                       </div>
                     </div>
 
-                    <div className="mt-4 space-y-3">
-                      <div className="rounded-xl border border-sky-200 bg-white/90 px-4 py-3">
+                    <div className="space-y-3 p-5">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                         <div className="flex items-center justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800">
-                              Is Plan Completed?
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              Current status:{" "}
-                              {planDetails?.is_completed ? "Completed" : "Not completed"}
+                            <p className="text-sm font-medium text-slate-900">
+                              Is DPR Completed?
                             </p>
                           </div>
                           <button
@@ -1949,9 +1943,9 @@ const handleEditSubmission = (submission) => {
                               )
                             }
                             disabled={planReviewLoading}
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
                               planDetails?.is_completed
-                                ? "bg-sky-500"
+                                ? "bg-blue-700"
                                 : "bg-slate-300"
                             } ${
                               planReviewLoading
@@ -1962,7 +1956,7 @@ const handleEditSubmission = (submission) => {
                             aria-label="Is Plan Completed?"
                           >
                             <span
-                              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
                                 planDetails?.is_completed
                                   ? "translate-x-6"
                                   : "translate-x-1"
@@ -1971,60 +1965,14 @@ const handleEditSubmission = (submission) => {
                           </button>
                         </div>
                       </div>
-
-                      <div className="rounded-xl border border-sky-200 bg-white/90 px-4 py-3">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-800">
-                            DPR Reviewed
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Current status:{" "}
-                            {planDetails?.is_dpr_reviewed
-                              ? "Reviewed"
-                              : "Not reviewed"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            handlePlanStatusToggle(
-                              "is_dpr_reviewed",
-                              !planDetails?.is_dpr_reviewed,
-                              "DPR reviewed",
-                            )
-                          }
-                          disabled={planReviewLoading}
-                          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
-                            planDetails?.is_dpr_reviewed
-                              ? "bg-sky-500"
-                              : "bg-slate-300"
-                          } ${
-                            planReviewLoading
-                              ? "cursor-not-allowed opacity-60"
-                              : "cursor-pointer"
-                          }`}
-                          aria-pressed={Boolean(planDetails?.is_dpr_reviewed)}
-                          aria-label="DPR reviewed"
-                        >
-                          <span
-                            className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                              planDetails?.is_dpr_reviewed
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                            }`}
-                          />
-                        </button>
-                      </div>
-                    </div>
                     </div>
 
                     {planReviewNotification && (
                       <div
-                        className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
+                        className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
                           planReviewNotification.type === "success"
-                            ? "bg-emerald-50 text-emerald-700"
-                            : "bg-red-50 text-red-700"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : "border-red-200 bg-red-50 text-red-800"
                         }`}
                       >
                         <CheckCircle2 size={16} className="shrink-0" />
@@ -2033,17 +1981,19 @@ const handleEditSubmission = (submission) => {
                     )}
                   </div>
 
-                  <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5 shadow-sm">
-                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                      <div className="rounded-xl border border-violet-200 bg-white/90 px-4 py-4">
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-200 px-5 py-4">
+                      <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
+                        DPR workflow
+                      </h4>
+                    </div>
+
+                    <div className="grid gap-3 p-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
                         <div className="flex items-center justify-between gap-4">
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-slate-800">
+                            <p className="text-sm font-medium text-slate-900">
                               DPR Submitted
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              Current state:{" "}
-                              {dprWorkflowStatus?.status || "Unavailable"}
                             </p>
                           </div>
                           <button
@@ -2060,9 +2010,9 @@ const handleEditSubmission = (submission) => {
                               dprWorkflowMissing ||
                               dprWorkflowLoading === "status-submitted"
                             }
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
                               dprWorkflowStatus?.status === "SUBMITTED"
-                                ? "bg-violet-500"
+                                ? "bg-blue-700"
                                 : "bg-slate-300"
                             } ${
                               dprWorkflowMissing ||
@@ -2076,7 +2026,7 @@ const handleEditSubmission = (submission) => {
                             aria-label="DPR submitted"
                           >
                             <span
-                              className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
                                 dprWorkflowStatus?.status === "SUBMITTED"
                                   ? "translate-x-6"
                                   : "translate-x-1"
@@ -2085,132 +2035,30 @@ const handleEditSubmission = (submission) => {
                           </button>
                         </div>
 
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
+                        <div className="mt-4 grid gap-3">
+                          <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
                             <div className="flex items-center justify-between gap-3">
                               <div>
-                                <p className="text-xs font-semibold text-slate-700">
-                                  Resources Submitted
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                  {dprWorkflowStatus?.submitted_breakdown
-                                    ?.resources_submitted ?? 0}{" "}
-                                  records
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDprWorkflowUpdate(
-                                    "resources_submitted",
-                                    dprWorkflowStatus?.submitted_breakdown
-                                      ?.resources_submitted > 0
-                                      ? "PENDING"
-                                      : "SUBMITTED",
-                                    "resources_submitted",
-                                  )
-                                }
-                                disabled={
-                                  dprWorkflowMissing ||
-                                  dprWorkflowLoading === "resources_submitted"
-                                }
-                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
-                                  dprWorkflowStatus?.submitted_breakdown
-                                    ?.resources_submitted > 0
-                                    ? "bg-violet-500"
-                                    : "bg-slate-300"
-                                } ${
-                                  dprWorkflowMissing ||
-                                  dprWorkflowLoading === "resources_submitted"
-                                    ? "cursor-not-allowed opacity-60"
-                                    : "cursor-pointer"
-                                }`}
-                                aria-pressed={
-                                  dprWorkflowStatus?.submitted_breakdown
-                                    ?.resources_submitted > 0
-                                }
-                                aria-label="Resources submitted"
-                              >
-                                <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    dprWorkflowStatus?.submitted_breakdown
-                                      ?.resources_submitted > 0
-                                      ? "translate-x-6"
-                                      : "translate-x-1"
-                                  }`}
-                                />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold text-slate-700">
+                                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                                   Demands Submitted
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="mt-1 text-sm font-semibold text-slate-900">
                                   {dprWorkflowStatus?.submitted_breakdown
                                     ?.demands_submitted ?? 0}{" "}
                                   records
                                 </p>
                               </div>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  handleDprWorkflowUpdate(
-                                    "demands_submitted",
-                                    dprWorkflowStatus?.submitted_breakdown
-                                      ?.demands_submitted > 0
-                                      ? "PENDING"
-                                      : "SUBMITTED",
-                                    "demands_submitted",
-                                  )
-                                }
-                                disabled={
-                                  dprWorkflowMissing ||
-                                  dprWorkflowLoading === "demands_submitted"
-                                }
-                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all ${
-                                  dprWorkflowStatus?.submitted_breakdown
-                                    ?.demands_submitted > 0
-                                    ? "bg-violet-500"
-                                    : "bg-slate-300"
-                                } ${
-                                  dprWorkflowMissing ||
-                                  dprWorkflowLoading === "demands_submitted"
-                                    ? "cursor-not-allowed opacity-60"
-                                    : "cursor-pointer"
-                                }`}
-                                aria-pressed={
-                                  dprWorkflowStatus?.submitted_breakdown
-                                    ?.demands_submitted > 0
-                                }
-                                aria-label="Demands submitted"
-                              >
-                                <span
-                                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                    dprWorkflowStatus?.submitted_breakdown
-                                      ?.demands_submitted > 0
-                                      ? "translate-x-6"
-                                      : "translate-x-1"
-                                  }`}
-                                />
-                              </button>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                        <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3">
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                           <div className="flex items-center justify-between gap-4">
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-800">
+                              <p className="text-sm font-medium text-slate-900">
                                 DPR Approved
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                Final approval state
                               </p>
                             </div>
                             <button
@@ -2227,9 +2075,9 @@ const handleEditSubmission = (submission) => {
                                 dprWorkflowMissing ||
                                 dprWorkflowLoading === "status-approved"
                               }
-                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
                                 dprWorkflowStatus?.status === "APPROVED"
-                                  ? "bg-emerald-500"
+                                  ? "bg-emerald-700"
                                   : "bg-slate-300"
                               } ${
                                 dprWorkflowMissing ||
@@ -2243,7 +2091,7 @@ const handleEditSubmission = (submission) => {
                               aria-label="DPR approved"
                             >
                               <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
                                   dprWorkflowStatus?.status === "APPROVED"
                                     ? "translate-x-6"
                                     : "translate-x-1"
@@ -2253,14 +2101,11 @@ const handleEditSubmission = (submission) => {
                           </div>
                         </div>
 
-                        <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3">
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                           <div className="flex items-center justify-between gap-4">
                             <div className="min-w-0">
-                              <p className="text-sm font-semibold text-slate-800">
+                              <p className="text-sm font-medium text-slate-900">
                                 DPR Rejected
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                Final rejection state
                               </p>
                             </div>
                             <button
@@ -2277,9 +2122,9 @@ const handleEditSubmission = (submission) => {
                                 dprWorkflowMissing ||
                                 dprWorkflowLoading === "status-rejected"
                               }
-                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all ${
+                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
                                 dprWorkflowStatus?.status === "REJECTED"
-                                  ? "bg-rose-500"
+                                  ? "bg-red-700"
                                   : "bg-slate-300"
                               } ${
                                 dprWorkflowMissing ||
@@ -2293,7 +2138,7 @@ const handleEditSubmission = (submission) => {
                               aria-label="DPR rejected"
                             >
                               <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
                                   dprWorkflowStatus?.status === "REJECTED"
                                     ? "translate-x-6"
                                     : "translate-x-1"
