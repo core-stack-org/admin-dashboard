@@ -113,6 +113,7 @@ export const CARD_DISPLAY_FIELDS = {
     },
     { key: "select_one_well_type", label: "Well Type" },
     { key: "select_one_owns", label: "Who owns the well?" },
+    { key: "Beneficiary_name", label: "Beneficiary's name" },
     {
       key: "Well_usage-is_maintenance_required",
       label: "Does the well require maintenance?",

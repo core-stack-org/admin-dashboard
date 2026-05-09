@@ -547,6 +547,12 @@ const FormViewPage = ({
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const [validationResults, setValidationResults] = useState({});
   const [validationLoading, setValidationLoading] = useState({});
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const [saveError, setSaveError] = useState("");
+  const [deleteStatus, setDeleteStatus] = useState("idle"); 
+  const [deleteError, setDeleteError] = useState("");
+  const [submissionToDelete, setSubmissionToDelete] = useState(null);
+
 
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
@@ -627,11 +633,13 @@ const FormViewPage = ({
       });
   }, [selectedPlan]);
 
-  const reloadSubmissions = () => {
+    const reloadSubmissions = (resetToPage1 = false) => {
     if (viewMode === "map") {
       fetchSubmissions(1, "map");
     } else {
-      fetchSubmissions(page, "card");
+      const targetPage = resetToPage1 ? 1 : page;
+      if (resetToPage1) setPage(1);
+      fetchSubmissions(targetPage, "card");
     }
   };
 
@@ -1452,8 +1460,9 @@ const handleEditSubmission = (submission) => {
   const transformedData = transformApiToSurvey(submission, formTemplate);
   setSelectedSubmission(submission);
   setIsEditing(true);
-  const model = new Model(formTemplate); // raw template — no smartVisibleIf
+  const model = new Model(formTemplate); 
   model.data = transformedData;
+  model.showCompletedPage = false;
   model.onComplete.add((sender) => {
     const saveData = transformSurveyToApi(
       sender.data,
@@ -1466,33 +1475,46 @@ const handleEditSubmission = (submission) => {
   setSurveyModel(model);
 };
 
-  const handleSaveSubmission = async (uuid, data) => {
-    try {
-      const response = await fetch(
-        `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify(data),
+const handleSaveSubmission = async (uuid, data) => {
+  setSaveStatus("saving");
+  setSaveError("");
+  try {
+    const response = await fetch(
+      `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
         },
-      );
-      const result = await response.json();
-      if (result.success) {
-        alert("Saved successfully!");
-        setSelectedSubmission(null);
-        setSurveyModel(null);
-        reloadSubmissions();
-      } else {
-        alert("Save failed");
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-      alert("Server error");
+        body: JSON.stringify(data),
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      setSaveStatus("error");
+      setSaveError(result?.message || result?.error || "Save failed. Please try again.");
+      return;
     }
-  };
+
+    setSaveStatus("success");
+    reloadSubmissions(true);
+
+    // Auto close after 1.5s on success
+    setTimeout(() => {
+      setSelectedSubmission(null);
+      setSurveyModel(null);
+      setSaveStatus("idle");
+    }, 1500);
+
+  } catch (error) {
+    console.error("Save error:", error);
+    setSaveStatus("error");
+    setSaveError("Network error. Please try again.");
+  }
+};
 
   const handleValidateSubmission = async (submission) => {
     const uuid = getSubmissionUUID(submission);
@@ -1502,14 +1524,22 @@ const handleEditSubmission = (submission) => {
     await fetchValidationResult(submission);
   };
 
-  const handleDelete = async (submission) => {
-    if (!window.confirm("Delete this submission?")) return;
+  const handleDelete = (submission) => {
+    setSubmissionToDelete(submission);
+    setDeleteStatus("confirm");
+  };
 
-    const uuid = getSubmissionUUID(submission);
+  const confirmDelete = async () => {
+    if (!submissionToDelete) return;
+
+    const uuid = getSubmissionUUID(submissionToDelete);
     if (!uuid) {
-      alert("Could not find submission UUID");
+      setDeleteStatus("error");
+      setDeleteError("Could not find submission UUID.");
       return;
     }
+
+    setDeleteStatus("deleting");
 
     try {
       const response = await fetch(
@@ -1521,16 +1551,30 @@ const handleEditSubmission = (submission) => {
           },
         },
       );
+
       const data = await response.json();
-      if (data.success) {
-        alert("Deleted!");
-        reloadSubmissions();
+
+      if (!response.ok) {
+        setDeleteStatus("error");
+        setDeleteError(data?.message || data?.error || "Delete failed. Please try again.");
+        return;
       }
+
+      setDeleteStatus("success");
+      reloadSubmissions(true);
+
+      // Auto close after 1.5s
+      setTimeout(() => {
+        setSubmissionToDelete(null);
+        setDeleteStatus("idle");
+      }, 1500);
+
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Server error");
+      setDeleteStatus("error");
+      setDeleteError("Network error. Please try again.");
     }
-  };
+};
 
   const handleGenerateDPR = async () => {
     if (!dprEmail || !selectedPlan) return;
@@ -2256,7 +2300,9 @@ const handleEditSubmission = (submission) => {
       {/* Modal for viewing/editing submission */}
       {selectedSubmission && surveyModel && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden relative">
+            
+            {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-black">
@@ -2274,27 +2320,176 @@ const handleEditSubmission = (submission) => {
                 onClick={() => {
                   setSelectedSubmission(null);
                   setSurveyModel(null);
+                  setSaveStatus("idle");
+                  setSaveError("");
                 }}
                 className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
+            {/* Survey content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               <Survey model={surveyModel} />
+            </div>
+
+            {/* Status overlay — covers form during save/success/error */}
+            {saveStatus !== "idle" && (
+              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10">
+                {saveStatus === "saving" && (
+                  <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-lg font-bold text-slate-700">Saving changes...</p>
+                    <p className="text-sm text-slate-500 mt-1">Please wait</p>
+                  </div>
+                )}
+
+                {saveStatus === "success" && (
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-bold text-slate-700">Saved successfully!</p>
+                    <p className="text-sm text-slate-500 mt-1">Closing automatically...</p>
+                  </div>
+                )}
+
+                {saveStatus === "error" && (
+                  <div className="text-center max-w-sm">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-bold text-slate-700">Save failed</p>
+                    <p className="text-sm text-red-600 mt-1 mb-5">{saveError}</p>
+                    <button
+                      onClick={() => {
+                        setSaveStatus("idle");
+                        setSaveError("");
+                      }}
+                      className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+                    >
+                      Go back
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation / status modal */}
+      {submissionToDelete && deleteStatus !== "idle" && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            
+            {/* Header */}
+            <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-6 flex items-center justify-between">
+              <h2 className="text-xl font-black">Delete Submission</h2>
+              {/* Only show close on confirm/error, not while deleting */}
+              {deleteStatus !== "deleting" && deleteStatus !== "success" && (
+                <button
+                  onClick={() => {
+                    setSubmissionToDelete(null);
+                    setDeleteStatus("idle");
+                    setDeleteError("");
+                  }}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <div className="p-8 text-center">
+
+              {/* Confirm state */}
+              {deleteStatus === "confirm" && (
+                <>
+                  <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trash2 className="w-8 h-8 text-rose-600" />
+                  </div>
+                  <p className="text-lg font-bold text-slate-800 mb-2">
+                    Are you sure?
+                  </p>
+                  <p className="text-sm text-slate-500 mb-6">
+                    This submission will be permanently deleted and cannot be recovered.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => {
+                        setSubmissionToDelete(null);
+                        setDeleteStatus("idle");
+                        setDeleteError("");
+                      }}
+                      className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmDelete}
+                      className="px-6 py-2.5 bg-rose-600 text-white rounded-xl font-semibold text-sm hover:bg-rose-700 transition-all"
+                    >
+                      Yes, delete it
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Deleting state */}
+              {deleteStatus === "deleting" && (
+                <>
+                  <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-lg font-bold text-slate-700">Deleting...</p>
+                  <p className="text-sm text-slate-500 mt-1">Please wait</p>
+                </>
+              )}
+
+              {/* Success state */}
+              {deleteStatus === "success" && (
+                <>
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-bold text-slate-700">Deleted successfully!</p>
+                  <p className="text-sm text-slate-500 mt-1">Closing automatically...</p>
+                </>
+              )}
+
+              {/* Error state */}
+              {deleteStatus === "error" && (
+                <>
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-bold text-slate-700">Delete failed</p>
+                  <p className="text-sm text-red-600 mt-1 mb-5">{deleteError}</p>
+                  <button
+                    onClick={() => {
+                      setDeleteStatus("confirm");
+                      setDeleteError("");
+                    }}
+                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+                  >
+                    Try again
+                  </button>
+                </>
+              )}
+
             </div>
           </div>
         </div>
