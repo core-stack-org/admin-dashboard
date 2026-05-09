@@ -2,8 +2,14 @@
   "title": "Propose Maintenance on Surface Water structures",
   "logoFit": "none",
   "logoPosition": "right",
-  "completedHtml": "<h3>Water Structure Maintenance proposal has been recorded!</h3>",
-  "loadingHtml": "<h3>Loading Form...</h3>",
+  "completedHtml": {
+    "default": "<h3>Propose Maintenance on Surface Water structures submitted Successfully</h3>",
+    "hi": "<h3>सतही जल संरचनाओं के रखरखाव के लिए प्रस्तावित प्रस्ताव सफलतापूर्वक प्रस्तुत किए गए</h3>"
+  },
+  "loadingHtml": {
+    "default": "<h3>Loading Propose Maintenance on Surface Water structures form...</h3>",
+    "hi": "<h3>सतही जल संरचनाओं पर रखरखाव के लिए प्रस्तावित प्रपत्र लोड हो रहा है...</h3>"
+  },
   "pages": [
     {
       "name": "page1",
@@ -11,22 +17,34 @@
         {
           "type": "text",
           "name": "beneficiary_settlement",
-          "title": "Name of Beneficiary's Settlement",
+          "title": {
+            "default": "Name of Beneficiary's Settlement",
+            "hi": "लाभ मिलने वाला टोला का नाम "
+          },
           "isRequired": true
         },
         {
           "type": "radiogroup",
           "name": "demand_type",
-          "title": "Type of demand",
+          "title": {
+            "default": "Type of demand",
+            "hi": "मांग का प्रकार"
+          },
           "isRequired": true,
           "choices": [
             {
               "value": "Community_demand",
-              "text": "Community Demand"
+              "text": {
+                "default": "Community Demand",
+                "hi": "सामुदायिक मांग"
+              }
             },
             {
               "value": "Individual_demand",
-              "text": "Individual Demand"
+              "text": {
+                "default": "Individual Demand",
+                "hi": "व्यक्तिगत मांग"
+              }
             }
           ]
         },
@@ -34,21 +52,56 @@
           "type": "text",
           "name": "Beneficiary_Name",
           "visibleIf": "{demand_type} = 'Individual_demand'",
-          "title": "Beneficiary's Name",
+          "title": {
+            "default": "Beneficiary's Name",
+            "hi": "लाभार्थी का नाम"
+          },
           "isRequired": true
+        },
+        {
+          "type": "radiogroup",
+          "name": "question1",
+          "visibleIf": "{demand_type} = 'Individual_demand'",
+          "title": {
+            "default": "Gender\n",
+            "hi": "लिंग"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Male",
+              "text": {
+                "default": "Male",
+                "hi": "पुरुष"
+              }
+            },
+            {
+              "value": "Female",
+              "text": {
+                "default": "Female",
+                "hi": "महिला"
+              }
+            }
+          ]
         },
         {
           "type": "text",
           "name": "ben_father",
           "visibleIf": "{demand_type} = 'Individual_demand'",
-          "title": "Beneficiary's father's name",
+          "title": {
+            "default": "Beneficiary's Father/Husband name\n",
+            "hi": "लाभार्थी के पिता/पति का नाम"
+          },
           "isRequired": true
         },
         {
           "type": "text",
           "name": "Beneficiary_Contact_Number",
           "visibleIf": "{demand_type} = 'Individual_demand'",
-          "title": "Beneficiary Contact Number",
+          "title": {
+            "default": "Beneficiary Contact Number",
+            "hi": "लाभार्थी का फोन नंबर"
+          },
           "validators": [
             {
               "type": "regex",
@@ -61,50 +114,229 @@
         {
           "type": "radiogroup",
           "name": "TYPE_OF_WORK",
-          "title": "Select the type of surface water structure repair work",
+          "visibleIf": "{demand_type} = 'Individual_demand' or {demand_type} = 'Community_demand'",
+          "title": {
+            "default": "Select the type of surface water structure repair work",
+            "hi": "कार्य का प्रकार चुनें"
+          },
           "isRequired": true,
           "choices": [
-            "Farm pond",
-            "Community Pond",
-            "Large water body",
-            "Canal",
-            "Check dam",
-            "Percolation tank",
-            "Rock fill dam",
-            "Loose boulder structure",
-            "5% Model structure",
-            "30-40 Model structure"
+            {
+              "value": "Farm pond",
+              "text": {
+                "default": "Farm pond",
+                "hi": "खेत का तालाब"
+              }
+            },
+            {
+              "value": "Community Pond",
+              "text": {
+                "default": "Community Pond",
+                "hi": "सामुदायिक तालाब"
+              }
+            },
+            {
+              "value": "Large water body",
+              "text": {
+                "default": "Large water body",
+                "hi": "बड़े जल स्रोत "
+              }
+            },
+            {
+              "value": "Canal",
+              "text": {
+                "default": "Canal",
+                "hi": "नहर"
+              }
+            },
+            {
+              "value": "Check dam",
+              "text": {
+                "default": "Check dam",
+                "hi": "चेक डैम"
+              }
+            },
+            {
+              "value": "Percolation tank",
+              "text": {
+                "default": "Percolation tank",
+                "hi": "परकोलेशन टैंक"
+              }
+            },
+            {
+              "value": "Rock fill dam",
+              "text": {
+                "default": "Rock fill dam",
+                "hi": "रॉक फिल बांध"
+              }
+            },
+            {
+              "value": "Loose boulder structure",
+              "text": {
+                "default": "Loose boulder structure",
+                "hi": "लूज बोल्डर संरचना"
+              }
+            },
+            {
+              "value": "5% Model structure",
+              "text": {
+                "default": "5% Model structure",
+                "hi": "5% मॉडल स्ट्रक्चर "
+              }
+            },
+            {
+              "value": "30-40 Model structure",
+              "text": {
+                "default": "30-40 Model structure",
+                "hi": "30-40 मॉडल स्ट्रक्चर "
+              }
+            }
           ]
         },
         {
           "type": "checkbox",
           "name": "select_one_farm_pond",
           "visibleIf": "{TYPE_OF_WORK} = 'Farm pond'",
-          "title": "Repair of farm pond",
+          "title": {
+            "default": "Repair of farm pond",
+            "hi": "खेत में बनाये गए तालाबों/डोभा की मरम्मत"
+          },
           "choices": [
             {
-              "value": "Removal_of_accumulated_sediments",
-              "text": "Removal of accumulated sediments"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Repairing_cracks_or_damage_in_embankments",
-              "text": "Repairing cracks or damage in embankments"
+              "text": {
+                "default": "Repairing cracks or damage in embankments",
+                "hi": "तटबंधों में दरारों या नुक़सान की मरम्मत"
+              }
             },
             {
               "value": "Controlling_seepage_or_leaks_in_the_pond_bed",
-              "text": "Controlling seepage or leaks in the pond bed"
+              "text": {
+                "default": "Controlling seepage or leaks in the pond bed",
+                "hi": "तालाब तल में रिसाव या लीक को नियंत्रित करना"
+              }
             },
             {
               "value": "Erosion_control_on_embankments",
-              "text": "Erosion control on embankments"
+              "text": {
+                "default": "Erosion control on embankments",
+                "hi": "तटबंधों पर कटाव नियंत्रण"
+              }
             },
             {
               "value": "Addressing_excessive_aquatic_vegetation_growth",
-              "text": "Addressing excessive aquatic vegetation growth"
+              "text": {
+                "default": "Addressing_excessive_aquatic_vegetation_growth",
+                "hi": "अधिक जलीय पौधों की वृद्धि को रोकना "
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_fp",
+          "visibleIf": "{select_one_farm_pond} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_fp",
+          "visibleIf": "{select_one_farm_pond} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
             }
           ]
         },
@@ -112,37 +344,61 @@
           "type": "text",
           "name": "select_one_farm_pond_other",
           "visibleIf": "{select_one_farm_pond} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
         },
         {
           "type": "checkbox",
           "name": "select_one_community_pond",
           "visibleIf": "{TYPE_OF_WORK} = 'Community Pond'",
-          "title": "Repair of community Pond",
+          "title": {
+            "default": "Repair of community Pond",
+            "hi": "सामुदायिक तालाब की मरम्मत"
+          },
           "choices": [
             {
-              "value": "Removal_of_accumulated_sediments",
-              "text": "Removal of accumulated sediments"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Shoreline_erosion_control",
-              "text": "Shoreline erosion control"
+              "text": {
+                "default": "Shoreline erosion control",
+                "hi": "किनारे का कटाव रोकना "
+              }
             },
             {
               "value": "Repairing_cracks_or_damage_in_embankments",
-              "text": "Repairing cracks or damage in embankments"
+              "text": {
+                "default": "Repairing cracks or damage in embankments",
+                "hi": "तटबंधों में दरारों या टूट की मरम्मत"
+              }
             },
             {
               "value": "Controlling_excessive_aquatic_vegetation_growth",
-              "text": "Controlling excessive aquatic vegetation growth"
+              "text": {
+                "default": "Controlling excessive aquatic vegetation growth",
+                "hi": "अधिक जलीय पौधों की वृद्धि को रोकना "
+              }
             },
             {
               "value": "Repair_or_cleaning_of_inlet_outlet_structures",
-              "text": "Repair or cleaning of inlet outlet structures"
+              "text": {
+                "default": "Repair or cleaning of inlet outlet structures",
+                "hi": "इनलेट/आउटलेट स्ट्रक्चर की मरम्मत या सफाई"
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -150,33 +406,148 @@
           "type": "text",
           "name": "select_one_community_pond_other",
           "visibleIf": "{select_one_community_pond} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_cp",
+          "visibleIf": "{select_one_community_pond} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_cp",
+          "visibleIf": "{select_one_community_pond} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
           "name": "select_one_repair_large_water_body",
           "visibleIf": "{TYPE_OF_WORK} = 'Large water body'",
-          "title": "Repair of large water body",
+          "title": {
+            "default": "Repair of large water body",
+            "hi": "बड़े जल स्रोत की मरम्मत "
+          },
           "choices": [
             {
-              "value": "Removal_of_accumulated_sediments",
-              "text": "Removal of accumulated sediments"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Shoreline_erosion_control",
-              "text": "Shoreline erosion control"
+              "text": {
+                "default": "Shoreline erosion control",
+                "hi": "किनारे का कटाव रोकना "
+              }
             },
             {
               "value": "Dam_repairs",
-              "text": "Dam repairs"
+              "text": {
+                "default": "Dam repairs",
+                "hi": "बांध की मरम्मत"
+              }
             },
             {
               "value": "Controlling_excessive_growth_of_aquatic_vegetation",
-              "text": "Controlling excessive growth of aquatic vegetation"
+              "text": {
+                "default": "Controlling excessive growth of aquatic vegetation",
+                "hi": "जलीय पौधों की वृद्धि को नियंत्रित करना"
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -184,57 +555,290 @@
           "type": "text",
           "name": "select_one_repair_large_water_body_other",
           "visibleIf": "{select_one_repair_large_water_body} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_lwb",
+          "visibleIf": "{select_one_repair_large_water_body} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_lwb",
+          "visibleIf": "{select_one_repair_large_water_body} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
           "name": "select_one_repair_canal",
           "visibleIf": "{TYPE_OF_WORK} = 'Canal'",
-          "title": "Repair of canal",
+          "title": {
+            "default": "Repair of canal",
+            "hi": "नहर की मरम्मत"
+          },
           "choices": [
             {
               "value": "Stabilizing_canal_banks_to_prevent_erosion",
-              "text": "Stabilizing canal banks to prevent erosion"
+              "text": {
+                "default": "Stabilizing canal banks to prevent erosion",
+                "hi": "कटाव को रोकने के लिए नहर के किनारों को मजबूत करना"
+              }
             },
             {
               "value": "Lining_repairs",
-              "text": "Lining repairs"
+              "text": {
+                "default": "Lining repairs",
+                "hi": "परत की मरम्मत"
+              }
             },
-            "Desilting",
+            {
+              "value": "Desilting",
+              "text": {
+                "default": "Desilting",
+                "hi": "डीसिल्टिंग"
+              }
+            },
             {
               "value": "Structural_repairs",
-              "text": "Structural repairs"
+              "text": {
+                "default": "Structural repairs",
+                "hi": "स्ट्रक्चर की मरम्मत"
+              }
             },
-            "other"
+            {
+              "value": "other",
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
+            }
           ]
         },
         {
           "type": "text",
           "name": "select_one_repair_canal_other",
           "visibleIf": "{select_one_repair_canal} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_canal",
+          "visibleIf": "{select_one_repair_canal} anyof ['Desilting']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_canal",
+          "visibleIf": "{select_one_repair_canal} anyof ['Desilting']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
           "name": "select_one_check_dam",
           "visibleIf": "{TYPE_OF_WORK} = 'Check dam'",
-          "title": "Repair of check dam",
+          "title": {
+            "default": "Repair of check dam",
+            "hi": "चेक डैम की मरम्मत"
+          },
           "choices": [
             {
               "value": "Erosion_on_the_check_dam",
-              "text": "Erosion on the check dam"
+              "text": {
+                "default": "Erosion on the check dam",
+                "hi": "चेक डैम पर कटाव"
+              }
             },
             {
-              "value": "Sediment_accumulated_in_the_check_dam",
-              "text": "Sediment accumulated in the check dam"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Structural_damage_on_the_check_dam",
-              "text": "Structural damage on the check dam"
+              "text": {
+                "default": "Structural damage on the check dam",
+                "hi": "चेक डैम के स्ट्रक्चर का नुकसान "
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -242,37 +846,155 @@
           "type": "text",
           "name": "select_one_check_dam_other",
           "visibleIf": "{select_one_check_dam} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_cd",
+          "visibleIf": "{select_one_check_dam} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_cd",
+          "visibleIf": "{select_one_check_dam} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
           "name": "select_one_percolation_tank",
           "visibleIf": "{TYPE_OF_WORK} = 'Percolation tank'",
-          "title": "Repair of Percolation tank",
+          "title": {
+            "default": "Repair of Percolation tank",
+            "hi": "परकोलेशन टैंक की मरम्मत"
+          },
           "choices": [
             {
-              "value": "Sediment_accumulation_reducing_infiltration_capacity",
-              "text": "Sediment accumulation reducing infiltration capacity"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Breach_in_embankments",
-              "text": "Breach in embankments"
+              "text": {
+                "default": "Breach in embankments",
+                "hi": "तटबंधों का टूटना"
+              }
             },
             {
               "value": "Erosion_on_tank_bund_or_inlet_outlet",
-              "text": "Erosion on tank bund or inlet outlet"
+              "text": {
+                "default": "Erosion on tank bund or inlet outlet",
+                "hi": "टैंक बांध या इनलेट/आउटलेट पर कटाव"
+              }
             },
             {
               "value": "Vegetation_growth_blocking_water_entry",
-              "text": "Vegetation growth blocking water entry"
+              "text": {
+                "default": "Vegetation growth blocking water entry",
+                "hi": "पौधों की वृद्धि से पानी का बहाव रुक रहा है"
+              }
             },
             {
               "value": "Damage_to_spillway_or_outlet_structure",
-              "text": "Damage to spillway or outlet structure"
+              "text": {
+                "default": "Damage to spillway or outlet structure",
+                "hi": "स्पिलवे या आउटलेट स्ट्रक्चर को नुकसान"
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -280,7 +1002,104 @@
           "type": "text",
           "name": "select_one_percolation_tank_other",
           "visibleIf": "{select_one_percolation_tank} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_pt",
+          "visibleIf": "{select_one_percolation_tank} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_pt",
+          "visibleIf": "{select_one_percolation_tank} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
@@ -289,20 +1108,32 @@
           "title": "Repair of rock fill dam",
           "choices": [
             {
-              "value": "Sediment_accumulation_reducing_water_storage",
-              "text": "Sediment accumulation reducing water storage"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Dislodged_or_loose_rocks",
-              "text": "Dislodged or loose rocks"
+              "text": {
+                "default": "Dislodged or loose rocks",
+                "hi": "उखड़ी हुई या ढीली चट्टानें"
+              }
             },
             {
               "value": "Erosion_around_or_under_the_dam_structure",
-              "text": "Erosion around or under the dam structure"
+              "text": {
+                "default": "Erosion around or under the dam structure",
+                "hi": "बांध स्ट्रक्चर के आसपास या नीचे कटाव"
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -310,20 +1141,141 @@
           "type": "text",
           "name": "select_one_rock_fill_dam_other",
           "visibleIf": "{select_one_rock_fill_dam} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_rfd",
+          "visibleIf": "{select_one_rock_fill_dam} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_rfd",
+          "visibleIf": "{select_one_rock_fill_dam} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
           "name": "select_one_loose_boulder_structure",
           "visibleIf": "{TYPE_OF_WORK} = 'Loose boulder structure'",
-          "title": "Repair of loose boulder structure",
+          "title": {
+            "default": "Repair of loose boulder structure",
+            "hi": "लूज बोल्डर स्ट्रक्चर की मरम्मत "
+          },
           "choices": [
-            "Dislodged_boulders",
-            "Grouting",
-            "Erosion_around_boulder_structure",
+            {
+              "value": "Dislodged_boulders",
+              "text": {
+                "default": "Dislodged boulders",
+                "hi": "उखड़े हुए पत्थर"
+              }
+            },
+            {
+              "value": "Grouting",
+              "text": {
+                "default": "Grouting",
+                "hi": "दरार को भरना "
+              }
+            },
+            {
+              "value": "Erosion_around_boulder_structure",
+              "text": {
+                "default": "Erosion around boulder structure",
+                "hi": "बोल्डर स्ट्रक्चर के आस-पास कटाव"
+              }
+            },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -331,29 +1283,47 @@
           "type": "text",
           "name": "select_one_loose_boulder_structure_other",
           "visibleIf": "{select_one_loose_boulder_structure} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
         },
         {
           "type": "checkbox",
           "name": "select_one_model5_structure",
           "visibleIf": "{TYPE_OF_WORK} = '5% Model structure'",
-          "title": "Repair of 5% Model structure",
+          "title": {
+            "default": "Repair of 5% Model structure",
+            "hi": "5% मॉडल स्ट्रक्चर की मरम्मत"
+          },
           "choices": [
             {
-              "value": "Sediment_accumulation_reducing_capacity",
-              "text": "Sediment accumulation reducing capacity"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Breaches_or_leaks_in_the_embankment",
-              "text": "Breaches or leaks in the embankment"
+              "text": {
+                "default": "Breaches or leaks in the embankment",
+                "hi": "तटबंध में दरारें या रिसाव"
+              }
             },
             {
               "value": "Erosion_on_sides_or_base",
-              "text": "Erosion on sides or base"
+              "text": {
+                "default": "Erosion on sides or base",
+                "hi": "किनारों या आधार पर कटाव"
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -361,29 +1331,141 @@
           "type": "text",
           "name": "select_one_model5_structure_other",
           "visibleIf": "{select_one_model5_structure} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_model5",
+          "visibleIf": "{select_one_model5_structure} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_model5",
+          "visibleIf": "{select_one_model5_structure} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
         },
         {
           "type": "checkbox",
           "name": "select_one_Model30_40_structure",
           "visibleIf": "{TYPE_OF_WORK} = '30-40 Model structure'",
-          "title": "Repair of 30-40 Model structure",
+          "title": {
+            "default": "Repair of 30-40 Model structure",
+            "hi": "30-40 मॉडल स्ट्रक्चर की मरम्मत"
+          },
           "choices": [
             {
-              "value": "Sediment_accumulation",
-              "text": "Sediment accumulation"
+              "value": "De_sitling",
+              "text": {
+                "default": "De sitling",
+                "hi": "डी सिटलिंग"
+              }
             },
             {
               "value": "Breaches_in_bunding_or_structure_walls",
-              "text": "Breaches in bunding or structure walls"
+              "text": {
+                "default": "Breaches in bunding or structure walls",
+                "hi": "बाँध या स्ट्रक्चर की दीवारों में दरारें"
+              }
             },
             {
               "value": "Erosion_along_trenches_or_bunds",
-              "text": "Erosion along trenches or bunds"
+              "text": {
+                "default": "Erosion along trenches or bunds",
+                "hi": "खाइयों या बांधों के किनारों पर कटाव"
+              }
             },
             {
               "value": "other",
-              "text": ""
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -391,7 +1473,190 @@
           "type": "text",
           "name": "select_one_Model30_40_structure_other",
           "visibleIf": "{select_one_Model30_40_structure} anyof ['other']",
-          "title": "Specify other"
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
+        },
+        {
+          "type": "radiogroup",
+          "name": "select_one_soil_model30",
+          "visibleIf": "{select_one_Model30_40_structure} anyof ['De_sitling']",
+          "title": {
+            "default": "Type of Soil",
+            "hi": "मिट्टी का प्रकार"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Black",
+              "text": {
+                "default": "Black",
+                "hi": "काली"
+              }
+            },
+            {
+              "value": "Red",
+              "text": {
+                "default": "Red",
+                "hi": "लाल"
+              }
+            },
+            {
+              "value": "Laterite",
+              "text": {
+                "default": "Laterite",
+                "hi": "लेटेराइट"
+              }
+            },
+            {
+              "value": "Alluvial",
+              "text": {
+                "default": "Alluvial",
+                "hi": "जलोढ़"
+              }
+            },
+            {
+              "value": "Sandy",
+              "text": {
+                "default": "Sandy",
+                "hi": "रेतीली"
+              }
+            },
+            {
+              "value": "Clay",
+              "text": {
+                "default": "Clay",
+                "hi": "मिट्टी"
+              }
+            },
+            {
+              "value": "Rocky",
+              "text": {
+                "default": "Rocky",
+                "hi": "चट्टानी"
+              }
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Select_one_silt_model30",
+          "visibleIf": "{select_one_Model30_40_structure} anyof ['De_sitling']",
+          "title": {
+            "default": "Amount of Silt\n",
+            "hi": "गाद का ढेर"
+          },
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Low",
+              "text": {
+                "default": "Low",
+                "hi": "कम"
+              }
+            },
+            {
+              "value": "Moderate",
+              "text": {
+                "default": "Moderate",
+                "hi": "मध्यम"
+              }
+            },
+            {
+              "value": "High",
+              "text": {
+                "default": "High",
+                "hi": "ज़्यादा"
+              }
+            }
+          ]
+        },
+        {
+          "type": "html",
+          "name": "rech_strc_note_1",
+          "html": {
+            "default": "<span style=\"font-size: large; font-weight: bold; color:red;\">DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span>",
+            "hi": "<span style=\"font-size: large; font-weight: bold; color:red;\">इस बिंदु के बाद कुछ भी न बदलें और अपना फॉर्म डेटा सबमिट करें</span>"
+          }
+        },
+        {
+          "type": "multipletext",
+          "name": "GPS_point",
+          "title": {
+            "default": "GPS point to be marked of the area",
+            "hi": "उस क्षेत्र का जीपीएस बिंदु चिह्नित किया जाना हैांतर,"
+          },
+          "readOnly": true,
+          "items": [
+            {
+              "name": "latitude",
+              "title": {
+                "default": "latitude (x.y °)",
+                "hi": "अक्षांश"
+              }
+            },
+            {
+              "name": "longitude",
+              "title": {
+                "default": "longitude (x.y °)",
+                "hi": "देशांतर"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "block_name",
+          "title": {
+            "default": "Block name",
+            "hi": "ब्लॉक का नाम "
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_id",
+          "title": {
+            "default": "Plan ID",
+            "hi": "योजना का आईडी"
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_name",
+          "title": {
+            "default": "Plan name",
+            "hi": "योजना का नाम "
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "corresponding_work_id",
+          "title": {
+            "default": "Corresponding Work ID",
+            "hi": "संबंधित कार्य आईडी "
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "user_latlon",
+          "title": {
+            "default": "Current location of the user",
+            "hi": "उपयोगकर्ता का वर्तमान स्थान"
+          }
+        },
+        {
+          "type": "text",
+          "name": "work_id",
+          "title": {
+            "default": "Work ID",
+            "hi": "कार्य आईडी"
+          },
+          "readOnly": true
         }
       ]
     }

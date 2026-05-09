@@ -787,167 +787,215 @@ const FormViewPage = ({
   };
 
   // Generic function to analyze form schema and identify field types
-  const analyzeFormSchema = (schema) => {
-    const fieldTypes = {};
+const analyzeFormSchema = (schema) => {
+  const fieldTypes = {};
 
-    const analyzeElement = (element, parentName = "") => {
-      const elementName = element.name.startsWith(parentName + "-")
+  const analyzeElement = (element, parentName = "") => {
+    const elementName =
+      element.name.startsWith(parentName + "-")
         ? element.name
         : parentName
           ? `${parentName}-${element.name}`
           : element.name;
 
-      if (element.type === "checkbox") {
-        fieldTypes[elementName] = "checkbox";
-      } else if (element.type === "radiogroup") {
-        fieldTypes[elementName] = "radio";
-      } else if (element.type === "multipletext") {
-        fieldTypes[elementName] = "multipletext";
-      } else if (element.type === "panel") {
-        if (element.elements) {
-          element.elements.forEach((child) => {
-            if (child.name.includes("-")) {
-              analyzeElement(child, "");
-            } else {
-              analyzeElement(child, element.name);
-            }
-          });
-        }
-      }
-
-      if (element.items && Array.isArray(element.items)) {
-        fieldTypes[elementName] = "multipletext";
-        element.items.forEach((item) => {
-          fieldTypes[`${elementName}.${item.name}`] = "multipletext_item";
+    if (element.type === "checkbox") {
+      fieldTypes[elementName] = "checkbox";
+      fieldTypes[element.name] = "checkbox"; // also register bare name
+    } else if (element.type === "radiogroup") {
+      fieldTypes[elementName] = "radio";
+      fieldTypes[element.name] = "radio";
+    } else if (element.type === "multipletext") {
+      fieldTypes[elementName] = "multipletext";
+      fieldTypes[element.name] = "multipletext";
+    } else if (element.type === "panel") {
+      if (element.elements) {
+        element.elements.forEach((child) => {
+          if (child.name.includes("-")) {
+            analyzeElement(child, "");
+          } else {
+            analyzeElement(child, element.name);
+          }
         });
       }
-    };
-
-    if (schema.pages) {
-      schema.pages.forEach((page) => {
-        if (page.elements) {
-          page.elements.forEach((element) => analyzeElement(element));
-        }
-      });
     }
 
-    return fieldTypes;
+    if (element.items && Array.isArray(element.items)) {
+      fieldTypes[elementName] = "multipletext";
+      fieldTypes[element.name] = "multipletext";
+    }
   };
 
-  // Transform API data to SurveyJS format
-  const transformApiToSurvey = (submission, formSchema) => {
-    const fieldTypes = analyzeFormSchema(formSchema);
-    const transformedData = { ...submission };
-
-    const processObject = (obj, parentKey = "") => {
-      Object.keys(obj).forEach((key) => {
-        const value = obj[key];
-        const fullKey = parentKey ? `${parentKey}-${key}` : key;
-
-        if (value && typeof value === "object" && !Array.isArray(value)) {
-          if (key === "GPS_point") {
-            const coordsObj =
-              value.point_mapsappearance || value.point_mapappearance;
-            if (coordsObj?.coordinates) {
-              const coords = coordsObj.coordinates;
-              transformedData["GPS_point"] = {
-                longitude: coords[0],
-                latitude: coords[1],
-              };
-              return;
-            }
-          } else if (
-            value.latitude !== undefined &&
-            value.longitude !== undefined
-          ) {
-            transformedData[fullKey] = value;
-          } else {
-            processObject(value, key);
-          }
-        } else {
-          if (typeof value === "string" && value.trim().length > 0) {
-            const fieldType = fieldTypes[fullKey] || fieldTypes[key];
-
-            if (fieldType === "checkbox" && value.includes(" ")) {
-              transformedData[fullKey] = value
-                .split(" ")
-                .filter((v) => v.trim().length > 0);
-            } else {
-              transformedData[fullKey] = value;
-            }
-          } else if (value === null || value === undefined) {
-            transformedData[fullKey] = value;
-          } else {
-            transformedData[fullKey] = value;
-          }
-        }
-      });
-    };
-
-    processObject(submission);
-
-    const legacyKeyMap = {
-      // LIVESTOCK
-      select_one_demand_promoting_livestock: "Livestock-is_demand_livestock",
-      select_one_promoting_livestock: "Livestock-demands_promoting_livestock",
-      select_one_promoting_livestock_other:
-        "Livestock-select_one_promoting_livestock_other",
-
-      // KITCHEN GARDENS
-      area_didi_badi: "kitchen_gardens-area_kg",
-      indi_assets: "kitchen_gardens-assets_kg",
-
-      // FISHERIES
-      select_one_demand_promoting_fisheries: "fisheries-is_demand_fisheries",
-      select_one_promoting_fisheries: "fisheries-demands_promoting_fisheries",
-      select_one_promoting_fisheries_other:
-        "fisheries-demands_promoting_fisheries_other",
-    };
-
-    Object.entries(legacyKeyMap).forEach(([oldKey, newKey]) => {
-      const oldValue = submission[oldKey];
-      const currentValue = transformedData[newKey];
-      const isCurrentEmpty =
-        currentValue === null ||
-        currentValue === undefined ||
-        currentValue === "";
-      const isOldValueReal =
-        oldValue !== null && oldValue !== undefined && oldValue !== "";
-      if (isCurrentEmpty && isOldValueReal) {
-        transformedData[newKey] = oldValue;
+  if (schema.pages) {
+    schema.pages.forEach((page) => {
+      if (page.elements) {
+        page.elements.forEach((element) => analyzeElement(element));
       }
     });
+  }
 
-    const legacyBeneficiaryName = submission["beneficiary_name"];
+  return fieldTypes;
+};
+
+  const buildChoiceMap = (schema) => {
+  const choiceMap = {};
+  const processElement = (element) => {
     if (
-      legacyBeneficiaryName !== null &&
-      legacyBeneficiaryName !== undefined &&
-      legacyBeneficiaryName !== ""
+      (element.type === "radiogroup" ||
+        element.type === "checkbox" ||
+        element.type === "dropdown") &&
+      Array.isArray(element.choices)
     ) {
-      const livestockDemand =
-        submission["select_one_demand_promoting_livestock"];
-      const fishDemand = submission["select_one_demand_promoting_fisheries"];
-      const kitchenDemand = submission["indi_assets"];
-
-      if (
-        livestockDemand === "Yes" &&
-        !transformedData["Livestock-ben_livestock"]
-      ) {
-        transformedData["Livestock-ben_livestock"] = legacyBeneficiaryName;
-      }
-      if (fishDemand === "Yes" && !transformedData["fisheries-ben_fisheries"]) {
-        transformedData["fisheries-ben_fisheries"] = legacyBeneficiaryName;
-      }
-      if (
-        kitchenDemand === "Yes" &&
-        !transformedData["kitchen_gardens-ben_kitchen_gardens"]
-      ) {
-        transformedData["kitchen_gardens-ben_kitchen_gardens"] =
-          legacyBeneficiaryName;
-      }
+      const map = {};
+      element.choices.forEach((choice) => {
+        if (typeof choice === "object" && choice.value !== undefined) {
+          map[String(choice.value).toLowerCase().trim()] = choice.value;
+          const text =
+            typeof choice.text === "object"
+              ? choice.text?.default ?? Object.values(choice.text)[0]
+              : choice.text;
+          if (text) map[String(text).toLowerCase().trim()] = choice.value;
+        } else if (typeof choice === "string") {
+          map[choice.toLowerCase().trim()] = choice;
+        }
+      });
+      choiceMap[element.name] = map;
     }
-    return transformedData;
+    if (element.elements) element.elements.forEach(processElement);
   };
+  if (schema.pages)
+    schema.pages.forEach((page) =>
+      (page.elements || []).forEach(processElement)
+    );
+  return choiceMap;
+};
+
+const resolveCheckboxValues = (rawString, fieldChoices) => {
+  if (!rawString || typeof rawString !== "string") return [];
+  const trimmed = rawString.trim();
+  if (!trimmed) return [];
+  if (!fieldChoices)
+    return trimmed.split(" ").filter((v) => v.trim().length > 0);
+
+  // Strategy 1: space-split — if ALL tokens match known values
+  const spaceSplit = trimmed.split(" ").filter((v) => v.trim().length > 0);
+  const allMatch = spaceSplit.every(
+    (t) => fieldChoices[t.toLowerCase().trim()] !== undefined
+  );
+  if (allMatch)
+    return spaceSplit.map((t) => fieldChoices[t.toLowerCase().trim()]);
+
+  // Strategy 2: capital-letter split for multi-word values
+  const capitalSplit = trimmed
+    .split(/(?=[A-Z])/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  return capitalSplit.map((t) => fieldChoices[t.toLowerCase().trim()] ?? t);
+};
+
+const resolveRadioValue = (rawValue, fieldChoices) => {
+  if (!rawValue || typeof rawValue !== "string") return rawValue;
+  if (!fieldChoices) return rawValue;
+  const resolved = fieldChoices[rawValue.toLowerCase().trim()];
+  return resolved !== undefined ? resolved : rawValue;
+};
+  // Transform API data to SurveyJS format
+const transformApiToSurvey = (submission, formSchema) => {
+  const fieldTypes = analyzeFormSchema(formSchema);
+  const choiceMap = buildChoiceMap(formSchema);
+  const transformedData = { ...submission };
+
+  const processObject = (obj, parentKey = "") => {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+      const fullKey = parentKey ? `${parentKey}-${key}` : key;
+
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        // GPS_point special handling
+        if (key === "GPS_point") {
+          const coordsObj =
+            value.point_mapsappearance || value.point_mapappearance;
+          if (coordsObj?.coordinates) {
+            const coords = coordsObj.coordinates;
+            transformedData["GPS_point"] = {
+              longitude: coords[0],
+              latitude: coords[1],
+            };
+            return;
+          }
+          if (value.latitude !== undefined && value.longitude !== undefined) {
+            transformedData["GPS_point"] = value;
+            return;
+          }
+        }
+
+        if (value.latitude !== undefined && value.longitude !== undefined) {
+          transformedData[fullKey] = value;
+          return;
+        }
+
+        // multipletext → keep as nested object, never flatten
+        const isMultipleText =
+          fieldTypes[key] === "multipletext" ||
+          fieldTypes[fullKey] === "multipletext";
+
+        if (isMultipleText) {
+          transformedData[key] = value;
+          return;
+        }
+
+        // Regular nested object (panel) → flatten with "-" separator
+        processObject(value, key);
+      } else {
+        if (typeof value === "string" && value.trim().length > 0) {
+          const fieldType = fieldTypes[fullKey] || fieldTypes[key];
+          const fieldChoices = choiceMap[fullKey] || choiceMap[key];
+
+          if (fieldType === "checkbox") {
+            transformedData[fullKey] = resolveCheckboxValues(value, fieldChoices);
+          } else if (fieldType === "radio") {
+            transformedData[fullKey] = resolveRadioValue(value, fieldChoices);
+          } else {
+            // text/number input — use as-is
+            transformedData[fullKey] = value;
+          }
+        } else {
+          // null, undefined, number, boolean — pass through directly
+          transformedData[fullKey] = value;
+        }
+      }
+    });
+  };
+
+  processObject(submission);
+
+  // Legacy key mappings
+  const legacyKeyMap = {
+    "Livestock-is_demand_livestock": "select_one_demand_promoting_livestock",
+    "Livestock-demands_promoting_livestock": "select_one_promoting_livestock",
+    "Livestock-select_one_promoting_livestock_other":
+      "select_one_promoting_livestock_other",
+    "kitchen_gardens-area_kg": "area_didi_badi",
+    "kitchen_gardens-assets_kg": "indi_assets",
+    "fisheries-is_demand_fisheries": "select_one_demand_promoting_fisheries",
+    "fisheries-demands_promoting_fisheries": "select_one_promoting_fisheries",
+    "fisheries-demands_promoting_fisheries_other":
+      "select_one_promoting_fisheries_other",
+  };
+
+  Object.entries(legacyKeyMap).forEach(([newKey, oldKey]) => {
+    const oldValue = submission[oldKey];
+    const currentValue = transformedData[newKey];
+    const isCurrentEmpty =
+      currentValue === null || currentValue === undefined || currentValue === "";
+    const isOldValueReal =
+      oldValue !== null && oldValue !== undefined && oldValue !== "";
+    if (isCurrentEmpty && isOldValueReal) {
+      transformedData[newKey] = oldValue;
+    }
+  });
+
+  return transformedData;
+};
 
   // Transform SurveyJS data back to API format
   const transformSurveyToApi = (surveyData, originalSubmission, formSchema) => {
@@ -1379,57 +1427,44 @@ const FormViewPage = ({
     };
   }, [submissions]);
 
-  const handleViewSubmission = (submission) => {
-    const formTemplate = FORM_TEMPLATES[selectedForm];
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
+const handleViewSubmission = (submission) => {
+  const formTemplate = FORM_TEMPLATES[selectedForm];
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
+  const transformedData = transformApiToSurvey(submission, formTemplate);
+  setSelectedSubmission(submission);
+  setIsEditing(false);
+  const model = new Model(formTemplate); 
+  model.mode = "display";
+  model.data = transformedData;
+  setSurveyModel(model);
+};
 
-    const transformedData = transformApiToSurvey(submission, formTemplate);
 
-    // Pass transformedData so it knows which fields have values
-    const smartTemplate = smartVisibleIf(formTemplate, transformedData, "view");
-
-    setSelectedSubmission(submission);
-    setIsEditing(false);
-
-    const model = new Model(smartTemplate);
-    model.mode = "display";
-    model.data = transformedData;
-    setSurveyModel(model);
-  };
-
-  const handleEditSubmission = (submission) => {
-    const formTemplate = FORM_TEMPLATES[selectedForm];
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
-
-    const transformedData = transformApiToSurvey(submission, formTemplate);
-
-    // Pass transformedData so it knows which fields have values
-    const smartTemplate = smartVisibleIf(formTemplate, transformedData, "edit");
-
-    setSelectedSubmission(submission);
-    setIsEditing(true);
-
-    const model = new Model(smartTemplate);
-    model.data = transformedData;
-
-    model.onComplete.add((sender) => {
-      const saveData = transformSurveyToApi(
-        sender.data,
-        submission,
-        formTemplate,
-      );
-      const uuid = getSubmissionUUID(submission);
-      handleSaveSubmission(uuid, saveData);
-    });
-
-    setSurveyModel(model);
-  };
+const handleEditSubmission = (submission) => {
+  const formTemplate = FORM_TEMPLATES[selectedForm];
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
+  const transformedData = transformApiToSurvey(submission, formTemplate);
+  setSelectedSubmission(submission);
+  setIsEditing(true);
+  const model = new Model(formTemplate); // raw template — no smartVisibleIf
+  model.data = transformedData;
+  model.onComplete.add((sender) => {
+    const saveData = transformSurveyToApi(
+      sender.data,
+      submission,
+      formTemplate,
+    );
+    const uuid = getSubmissionUUID(submission);
+    handleSaveSubmission(uuid, saveData);
+  });
+  setSurveyModel(model);
+};
 
   const handleSaveSubmission = async (uuid, data) => {
     try {
@@ -1630,47 +1665,6 @@ const FormViewPage = ({
     }
   };
 
-  const smartVisibleIf = (schema, submissionData, mode) => {
-    const hasValue = (elementName, data) => {
-      if (!data) return false;
-      const direct = data[elementName];
-      if (direct !== undefined && direct !== null && direct !== "") return true;
-      if (Array.isArray(direct) && direct.length > 0) return true;
-      if (elementName.includes("-")) {
-        const [parent, child] = elementName.split("-");
-        const nested = data[parent]?.[child];
-        if (nested !== undefined && nested !== null && nested !== "")
-          return true;
-      }
-      return false;
-    };
-
-    const processElements = (elements, data) =>
-      elements.map((el) => {
-        const processed = { ...el };
-
-        if (processed.visibleIf && hasValue(processed.name, data)) {
-          delete processed.visibleIf;
-          if (mode === "edit") {
-            delete processed.isRequired;
-          }
-        }
-
-        if (processed.elements) {
-          processed.elements = processElements(processed.elements, data);
-        }
-
-        return processed;
-      });
-
-    return {
-      ...schema,
-      pages: schema.pages.map((page) => ({
-        ...page,
-        elements: processElements(page.elements || [], submissionData),
-      })),
-    };
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">

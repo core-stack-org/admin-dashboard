@@ -2,8 +2,14 @@
   "title": "Cropping Pattern Form",
   "logoFit": "none",
   "logoPosition": "right",
-  "completedHtml": "<h3>Form submitted.</h3>",
-  "loadingHtml": "<h3>Loading Form...</h3>",
+  "completedHtml": {
+    "default": "<h3>Cropping Pattern Form submitted successfully</h3>",
+    "hi": "<h3>फसल पैटर्न फॉर्म सफलतापूर्वक जमा हो गया</h3>"
+  },
+  "loadingHtml": {
+    "default": "<h3>Loading Cropping Pattern Form...</h3>",
+    "hi": "<h3>क्रॉपिंग पैटर्न फॉर्म लोड हो रहा है...</h3>"
+  },
   "pages": [
     {
       "name": "page1",
@@ -11,39 +17,96 @@
         {
           "type": "html",
           "name": "crop_note_1",
-          "title": "",
-          "html": "<span style=\"font-size: large; color:red\">Note : Please provide information for crop patch on land owned by people in this settlement\n</span>"
+          "html": {
+            "default": "<span style=\"font-size: large; color:red\">Note : Please provide information for crop patch on land owned by people in this settlement</span>",
+            "hi": "<span style=\"font-size: large; color:red\"> कृपया इस बस्ती में फसल ग्रिड के लिए फसल पैटर्न की जानकारी प्रदान करेंारी प्रदान करें</span>"
+          }
         },
         {
           "type": "text",
           "name": "beneficiary_settlement",
-          "title": "Name of Beneficiary's Settlement",
+          "title": {
+            "default": "Name of Beneficiary's Settlement",
+            "hi": "लाभ मिलने वाले बस्ती का नाम"
+          },
           "isRequired": true
         },
         {
           "type": "radiogroup",
           "name": "Uncropped_barren_land",
-          "title": "Is this patch classified as uncropped or barren land?",
+          "title": {
+            "default": "Is this patch classified as uncropped or barren land?",
+            "hi": "क्या इस ग्रिड को परती खेत या बंजर भूमि के रूप में वर्गीकृत किया गया है?"
+          },
           "isRequired": true,
           "choices": [
-            "Yes",
-            "No"
+            {
+              "value": "Yes",
+              "text": {
+                "default": "Yes",
+                "hi": "हाँ"
+              }
+            },
+            {
+              "value": "No",
+              "text": {
+                "default": "No",
+                "hi": "नहीं"
+              }
+            }
           ]
         },
         {
           "type": "checkbox",
           "name": "select_multiple_widgets",
           "visibleIf": "{Uncropped_barren_land} = 'No'",
-          "title": "What is the main source of irrigation in this patch of the settlement?",
+          "title": {
+            "default": "What is the main source of irrigation in this patch of the settlement?",
+            "hi": "इस भूमि पर सिंचाई का मुख्य साधन क्या है?"
+          },
+          "isRequired": true,
           "choices": [
-            "Rainfall",
-            "Well",
-            "Borewell",
-            "Canal",
-            "Pond",
+            {
+              "value": "Rainfall",
+              "text": {
+                "default": "Rainfall",
+                "hi": "वर्षा"
+              }
+            },
+            {
+              "value": "Well",
+              "text": {
+                "default": "Well",
+                "hi": "कुआँ"
+              }
+            },
+            {
+              "value": "Borewell",
+              "text": {
+                "default": "Borewell",
+                "hi": "बोरवेल"
+              }
+            },
+            {
+              "value": "Canal",
+              "text": {
+                "default": "Canal",
+                "hi": "नहर"
+              }
+            },
+            {
+              "value": "Pond",
+              "text": {
+                "default": "Pond",
+                "hi": "तालाब"
+              }
+            },
             {
               "value": "don't_know",
-              "text": "Don't know"
+              "text": {
+                "default": "Don't know",
+                "hi": "पता नहीं"
+              }
             }
           ]
         },
@@ -51,13 +114,32 @@
           "type": "checkbox",
           "name": "select_one_classified",
           "visibleIf": "{Uncropped_barren_land} = 'No'",
-          "title": "What is this land classified as?",
+          "title": {
+            "default": "What is this land classified as?",
+            "hi": "इस भूमि को किस श्रेणी में वर्गीकृत किया गया है?"
+          },
+          "isRequired": true,
           "choices": [
-            "Upland",
-            "Midland",
+            {
+              "value": "Upland",
+              "text": {
+                "default": "Upland",
+                "hi": "ऊपरी भूमि "
+              }
+            },
+            {
+              "value": "Midland",
+              "text": {
+                "default": "Midland",
+                "hi": "मध्यभूमि"
+              }
+            },
             {
               "value": "lowland",
-              "text": "Lowland"
+              "text": {
+                "default": "Lowland",
+                "hi": "निचली भूमि"
+              }
             }
           ]
         },
@@ -65,191 +147,489 @@
           "type": "checkbox",
           "name": "select_one_practice",
           "visibleIf": "{Uncropped_barren_land} = 'No'",
-          "title": "Which cropping seasons do you practice in this settlement?",
+          "title": {
+            "default": "Which cropping seasons do you practice in this settlement?",
+            "hi": "आप इस खेत में किस मौसम में फसल उगाते हैं?"
+          },
           "isRequired": true,
           "choices": [
-            "Kharif",
-            "Rabi",
-            "Zaid"
+            {
+              "value": "Kharif",
+              "text": {
+                "default": "Kharif",
+                "hi": "खरीफ"
+              }
+            },
+            {
+              "value": "Rabi",
+              "text": {
+                "default": "Rabi",
+                "hi": "रबी"
+              }
+            },
+            {
+              "value": "Zaid",
+              "text": {
+                "default": "Zaid",
+                "hi": "ज़ैद"
+              }
+            }
           ]
         },
         {
           "type": "checkbox",
           "name": "select_multiple_cropping_kharif",
           "visibleIf": "{select_one_practice} contains 'Kharif'",
-          "title": "What are the main crops grown during Kharif season in this patch?",
+          "title": {
+            "default": "What are the main crops grown during Kharif season in this patch?",
+            "hi": "इस ग्रिड में ऐसी भूमि पर खरीफ सीजन के दौरान मुख्य फसलों के रूप में आमतौर पर लगाए जाने वाले फसल पैटर्न क्या है?"
+          },
+          "isRequired": true,
           "choices": [
             {
               "value": "paddy",
-              "text": "Paddy"
+              "text": {
+                "default": "Paddy",
+                "hi": "धान"
+              }
             },
-            "Millets",
-            "Pulses",
-            "Vegetables",
-            "Fruits",
+            {
+              "value": "Millets",
+              "text": {
+                "default": "Millets",
+                "hi": "मोटे अनाज / श्री अन्न"
+              }
+            },
+            {
+              "value": "Pulses",
+              "text": {
+                "default": "Pulses",
+                "hi": "दालें"
+              }
+            },
+            {
+              "value": "Vegetables",
+              "text": {
+                "default": "Vegetables",
+                "hi": "सब्जियां"
+              }
+            },
+            {
+              "value": "Fruits",
+              "text": {
+                "default": "Fruits",
+                "hi": "फल"
+              }
+            },
             {
               "value": "Oil_Seeds",
-              "text": "Oil Seeds"
+              "text": {
+                "default": "Oil Seeds",
+                "hi": "तिलहन"
+              }
             },
             {
               "value": "Fodder_crop",
-              "text": "Fodder crop"
+              "text": {
+                "default": "Fodder crop",
+                "hi": "चारा फसल"
+              }
             },
             {
               "value": "other",
-              "text": "Other"
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
         {
           "type": "text",
           "name": "select_multiple_cropping_kharif_other",
-          "visibleIf": "{select_multiple_cropping_kharif} allof ['other']",
-          "title": "Specify other."
+          "visibleIf": "{select_multiple_cropping_kharif} contains 'other'",
+          "title": {
+            "default": "Specify other.",
+            "hi": "अन्य विवरण दें"
+          }
         },
         {
           "type": "text",
           "name": "total_area_cultivation_kharif",
           "visibleIf": "{select_one_practice} contains 'Kharif'",
-          "title": "Total area under cultivation during the Kharif season",
-          "description": "In acres",
-          "validators": [
-            {
-              "type": "numeric"
-            }
-          ],
+          "title": {
+            "default": "Total area under cultivation during the Kharif season",
+            "hi": "खरीफ मौसम के दौरान खेती के अंतर्गत कुल क्षेत्रफल"
+          },
+          "description": {
+            "default": "In acres",
+            "hi": "एकड़ में"
+          },
+          "isRequired": true,
           "inputType": "number"
         },
         {
           "type": "checkbox",
           "name": "select_multiple_cropping_Rabi",
           "visibleIf": "{select_one_practice} contains 'Rabi'",
-          "title": "What are the main crops grown during Rabi season in this patch?\n",
+          "title": {
+            "default": "What are the main crops grown during Rabi season in this patch?",
+            "hi": "इस ग्रिड में ऐसी भूमि पर रबी मौसम के दौरान मुख्य फसल के रूप में आमतौर पर प्रचलित फसल पैटर्न क्या है?"
+          },
+          "isRequired": true,
           "choices": [
             {
               "value": "paddy",
-              "text": "Paddy"
+              "text": {
+                "default": "Paddy",
+                "hi": "धान"
+              }
             },
-            "Millets",
-            "Pulses",
-            "Vegetables",
-            "Fruits",
+            {
+              "value": "Millets",
+              "text": {
+                "default": "Millets",
+                "hi": "मोटे अनाज / श्री अन्न"
+              }
+            },
+            {
+              "value": "Pulses",
+              "text": {
+                "default": "Pulses",
+                "hi": "दालें"
+              }
+            },
+            {
+              "value": "Vegetables",
+              "text": {
+                "default": "Vegetables",
+                "hi": "सब्जियां"
+              }
+            },
+            {
+              "value": "Fruits",
+              "text": {
+                "default": "Fruits",
+                "hi": "फल"
+              }
+            },
             {
               "value": "Oil_Seeds",
-              "text": "Oil Seeds"
+              "text": {
+                "default": "Oil Seeds",
+                "hi": "तिलहन"
+              }
             },
             {
               "value": "Fodder_crop",
-              "text": "Fodder crop"
+              "text": {
+                "default": "Fodder crop",
+                "hi": "चारा फसल"
+              }
             },
             {
               "value": "other",
-              "text": "Other"
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
         {
           "type": "text",
           "name": "select_multiple_cropping_Rabi_other",
-          "visibleIf": "{select_multiple_cropping_Rabi} allof ['other']",
-          "title": "Specify other."
+          "visibleIf": "{select_multiple_cropping_Rabi} contains 'other'",
+          "title": {
+            "default": "Specify other.",
+            "hi": "अन्य विवरण दें"
+          }
         },
         {
           "type": "text",
           "name": "total_area_cultivation_Rabi",
           "visibleIf": "{select_one_practice} contains 'Rabi'",
-          "title": "Total area under cultivation during the Rabi season",
-          "description": "In acres",
-          "validators": [
-            {
-              "type": "numeric"
-            }
-          ],
+          "title": {
+            "default": "Total area under cultivation during the Rabi season",
+            "hi": "रबी मौसम के दौरान खेती के अंतर्गत आने वाला कुल क्षेत्रफल"
+          },
+          "description": {
+            "default": "In acres",
+            "hi": "एकड़ में"
+          },
+          "isRequired": true,
           "inputType": "number"
         },
         {
           "type": "checkbox",
           "name": "select_multiple_cropping_Zaid",
           "visibleIf": "{select_one_practice} contains 'Zaid'",
-          "title": "What are the main crops grown during Zaid season in this patch?",
+          "title": {
+            "default": "What are the main crops grown during Zaid season in this patch?",
+            "hi": "इस बस्ती के ग्रिड में ऐसी भूमि पर मुख्य फसलों के रूप में आमतौर पर जायद मौसम के दौरान कौन से फसल पैटर्न लगाये जाते हैं?"
+          },
+          "isRequired": true,
           "choices": [
             {
               "value": "paddy",
-              "text": "Paddy"
+              "text": {
+                "default": "Paddy",
+                "hi": "धान"
+              }
             },
-            "Millets",
-            "Pulses",
-            "Vegetables",
-            "Fruits",
+            {
+              "value": "Millets",
+              "text": {
+                "default": "Millets",
+                "hi": "मोटे अनाज / श्री अन्न"
+              }
+            },
+            {
+              "value": "Pulses",
+              "text": {
+                "default": "Pulses",
+                "hi": "दालें"
+              }
+            },
+            {
+              "value": "Vegetables",
+              "text": {
+                "default": "Vegetables",
+                "hi": "सब्जियां"
+              }
+            },
+            {
+              "value": "Fruits",
+              "text": {
+                "default": "Fruits",
+                "hi": "फल"
+              }
+            },
             {
               "value": "Oil_Seeds",
-              "text": "Oil Seeds"
+              "text": {
+                "default": "Oil Seeds",
+                "hi": "तिलहन"
+              }
             },
             {
               "value": "Fodder_crop",
-              "text": "Fodder crop"
+              "text": {
+                "default": "Fodder crop",
+                "hi": "चारा फसल"
+              }
             },
             {
               "value": "other",
-              "text": "Other"
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
         {
           "type": "text",
           "name": "select_multiple_cropping_Zaid_other",
-          "visibleIf": "{select_multiple_cropping_Zaid} allof ['other']",
-          "title": "Specify other."
+          "visibleIf": "{select_multiple_cropping_Zaid} contains 'other'",
+          "title": {
+            "default": "Specify other.",
+            "hi": "अन्य विवरण दें"
+          }
         },
         {
           "type": "text",
           "name": "total_area_cultivation_Zaid",
           "visibleIf": "{select_one_practice} contains 'Zaid'",
-          "title": "Total area under cultivation during the Zaid season",
-          "description": "In acres",
-          "validators": [
-            {
-              "type": "numeric"
-            }
-          ],
+          "title": {
+            "default": "Total area under cultivation during the Zaid season",
+            "hi": "ज़ैद के मौसम के दौरान खेती के अंतर्गत आने वाला कुल क्षेत्रफल"
+          },
+          "description": {
+            "default": "In acres",
+            "hi": "एकड़ में"
+          },
+          "isRequired": true,
           "inputType": "number"
         },
         {
           "type": "radiogroup",
           "name": "select_one_productivity",
           "visibleIf": "{Uncropped_barren_land} = 'No'",
-          "title": "How has cropping intensity changed over the last 3 years?",
+          "title": {
+            "default": "How has cropping intensity changed over the last 3 years?",
+            "hi": "पिछले तीन वर्षों में कृषि ऊपज में कैसा बदलाव आया है ?"
+          },
           "isRequired": true,
           "choices": [
-            "Increased",
-            "Decreased",
-            "Remain Same"
+            {
+              "value": "Increased",
+              "text": {
+                "default": "Increased",
+                "hi": "बढ़ा हुआ "
+              }
+            },
+            {
+              "value": "Decreased",
+              "text": {
+                "default": "Decreased",
+                "hi": "घटा हुआ "
+              }
+            },
+            {
+              "value": "Remain Same",
+              "text": {
+                "default": "Remain Same",
+                "hi": "बचा हुआ "
+              }
+            }
           ]
         },
         {
           "type": "radiogroup",
           "name": "soil_degraded",
-          "visibleIf": "{Uncropped_barren_land} = 'No'",
-          "title": "Has the soil degraded over the last 3 years in this patch?",
+          "visibleIf": "{Uncropped_barren_land} anyof ['Yes'] or {Uncropped_barren_land} anyof ['No']",
+          "title": {
+            "default": "Has the soil degraded over the last 3 years in this patch?",
+            "hi": "क्या इस ग्रिड में पिछले 3 वर्षों में मिट्टी का कटाव हुआ है"
+          },
           "isRequired": true,
           "choices": [
-            "Yes",
-            "No"
+            {
+              "value": "Yes",
+              "text": {
+                "default": "Yes",
+                "hi": "हाँ"
+              }
+            },
+            {
+              "value": "No",
+              "text": {
+                "default": "No",
+                "hi": "नहीं"
+              }
+            }
           ]
         },
         {
           "type": "checkbox",
           "name": "select_one_reason_degradation",
           "visibleIf": "{soil_degraded} = 'Yes'",
-          "title": "If degraded, what are the reasons for degradation?",
+          "title": {
+            "default": "If degraded, what are the reasons for degradation?",
+            "hi": "यदि कटाव हुआ है, तो कटाव के क्या कारण हैं ?"
+          },
           "isRequired": true,
           "choices": [
-            "Overuse of fertilizers",
-            "Heavy rains causing erosion",
-            "Deforestation",
-            "Overgrazing",
-            "Urbanization"
+            {
+              "value": "Overuse of fertilizers",
+              "text": {
+                "default": "Overuse of fertilizers",
+                "hi": "उर्वरकों का अत्यधिक उपयोग"
+              }
+            },
+            {
+              "value": "Heavy rains causing erosion",
+              "text": {
+                "default": "Heavy rains causing erosion",
+                "hi": "भारी बारिश के कारण कटाव"
+              }
+            },
+            {
+              "value": "Deforestation",
+              "text": {
+                "default": "Deforestation",
+                "hi": "वनों की कटाई"
+              }
+            },
+            {
+              "value": "Overgrazing",
+              "text": {
+                "default": "Overgrazing",
+                "hi": "अत्यधिक चराई"
+              }
+            },
+            {
+              "value": "Urbanization",
+              "text": {
+                "default": "Urbanization",
+                "hi": "शहरीकरण"
+              }
+            }
           ]
+        },
+        {
+          "type": "html",
+          "name": "crop_note_2",
+          "html": {
+            "default": "<span style=\"font-size: large; font-weight: bold; color:red;\"> DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span>",
+            "hi": "<span style=\"font-size: large; font-weight: bold; color:red;\"> इससे परे कुछ भी संशोधित न करें और अपना फॉर्म डेटा सबमिट करें जमा करें</span>"
+          }
+        },
+        {
+          "type": "multipletext",
+          "name": "GPS_point",
+          "title": {
+            "default": "GPS point to be marked of the area",
+            "hi": "उस क्षेत्र का जीपीएस बिंदु चिह्नित किया जाना हैांतर,"
+          },
+          "readOnly": true,
+          "items": [
+            {
+              "name": "latitude",
+              "title": {
+                "default": "latitude (x.y °)",
+                "hi": "अक्षांश"
+              }
+            },
+            {
+              "name": "longitude",
+              "title": {
+                "default": "longitude (x.y °)",
+                "hi": "देशांतर"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "question1",
+          "title": {
+            "default": "Block name",
+            "hi": "ब्लॉक का नाम"
+          }
+        },
+        {
+          "type": "text",
+          "name": "crop_Grid_id",
+          "title": {
+            "default": "Crop Grid ID",
+            "hi": "फसल ग्रिड आईडी"
+          }
+        },
+        {
+          "type": "text",
+          "name": "plan_id",
+          "title": {
+            "default": "Plan ID",
+            "hi": "योजना का आईडी "
+          }
+        },
+        {
+          "type": "text",
+          "name": "plan_name",
+          "title": {
+            "default": "Plan name",
+            "hi": "योजना का नाम "
+          }
+        },
+        {
+          "type": "text",
+          "name": "user_latlon",
+          "title": {
+            "default": "Current location of the user",
+            "hi": "उपयोगकर्ता का वर्तमान स्थान"
+          }
         }
       ]
     }

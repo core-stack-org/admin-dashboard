@@ -11,18 +11,27 @@
         {
           "type": "text",
           "name": "Settlements_id",
-          "title": "Settlement's ID",
+          "title": {
+            "default": "Settlement's ID",
+            "hi": "बस्ती का आईडी "
+          },
           "readOnly": true
         },
         {
           "type": "text",
           "name": "Settlements_name",
-          "title": "Settlement's name"
+          "title": {
+            "default": "Settlement's name",
+            "hi": "बस्ती का नाम"
+          }
         },
         {
           "type": "text",
           "name": "number_households",
-          "title": "How many households are there in this settlement?",
+          "title": {
+            "default": "How many households are there in this settlement?",
+            "hi": "इस बस्ती में कितने घर हैं?"
+          },
           "isRequired": true,
           "validators": [
             {
@@ -36,7 +45,10 @@
         {
           "type": "text",
           "name": "count_sc",
-          "title": "Total Households count under SC Category",
+          "title": {
+            "default": "Total Households count under SC Category",
+            "hi": "अनुसूचित जाति श्रेणी के अंतर्गत कुल परिवारों की संख्या"
+          },
           "isRequired": true,
           "validators": [
             {
@@ -50,29 +62,44 @@
         {
           "type": "text",
           "name": "count_st",
-          "title": "Total Households count under ST Category",
+          "title": {
+            "default": "Total Households count under ST Category",
+            "hi": "अनुसूचित जनजाति श्रेणी के अंतर्गत कुल परिवारों की संख्या"
+          },
           "isRequired": true,
           "inputType": "number"
         },
         {
           "type": "text",
           "name": "count_obc",
-          "title": "Total Households count under OBC Category",
+          "title": {
+            "default": "Total Households count under OBC Category",
+            "hi": "ओबीसी श्रेणी के अंतर्गत कुल परिवारों की संख्या"
+          },
           "isRequired": true,
           "inputType": "number"
         },
         {
           "type": "text",
           "name": "count_general",
-          "title": "Total Households count under General Category",
+          "title": {
+            "default": "Total Households count under General Category",
+            "hi": "सामान्य श्रेणी के अंतर्गत कुल परिवारों की संख्या"
+          },
           "isRequired": true,
           "inputType": "number"
         },
         {
           "type": "text",
           "name": "distance_settlement_block",
-          "title": "Distance of the settlement from the block headquarters",
-          "description": "In kilometers (kms)",
+          "title": {
+            "default": "Distance of the settlement from the block headquarters",
+            "hi": "ब्लॉक मुख्यालय से बस्ती की दूरी कितनी है (किलोमीटर में)"
+          },
+          "description": {
+            "default": "In kilometers (kms)",
+            "hi": "किलोमीटर में"
+          },
           "validators": [
             {
               "type": "numeric",
@@ -84,89 +111,177 @@
         {
           "type": "radiogroup",
           "name": "road_connected",
-          "title": "Is the settlement connected by road throughout the year?",
+          "title": {
+            "default": "Is the settlement connected by road throughout the year?",
+            "hi": "क्या यह बस्ती सालों भर सड़क मार्ग से जुड़ी रहती है?"
+          },
           "choices": [
-            "Yes",
-            "No"
+            {
+              "value": "Yes",
+              "text": {
+                "default": "Yes",
+                "hi": "हाँ"
+              }
+            },
+            {
+              "value": "No",
+              "text": {
+                "default": "No",
+                "hi": "नहीं"
+              }
+            }
           ]
         },
         {
           "type": "radiogroup",
           "name": "settlement_electricity",
-          "title": "Does the settlement have access to electricity?",
+          "title": {
+            "default": "Does the settlement have access to electricity?",
+            "hi": "क्या बस्ती में बिजली की सुविधा है ?"
+          },
           "choices": [
-            "Yes",
-            "No"
+            {
+              "value": "Yes",
+              "text": {
+                "default": "Yes",
+                "hi": "हाँ"
+              }
+            },
+            {
+              "value": "No",
+              "text": {
+                "default": "No",
+                "hi": "नहीं"
+              }
+            }
           ]
         },
         {
           "type": "multipletext",
           "name": "farmer_family",
-          "title": "Number of farmer families based on land ownership in this settlement",
+          "title": {
+            "default": "Number of farmer families based on land ownership in this settlement",
+            "hi": "इस बस्ती में जमींदारी के आधार पर किसान परिवारों की संख्या"
+          },
           "items": [
             {
               "name": "landless_farmers",
-              "title": "Number of farmers with no land"
+              "title": {
+                "default": "Number of farmers with no land",
+                "hi": "भूमिहीन किसान"
+              }
             },
             {
               "name": "marginal_farmers",
-              "title": "Number of farmers with land < 2.5 acres"
+              "title": {
+                "default": "Number of farmers with land < 2.5 acres",
+                "hi": "सीमांत किसान (<2.5 एकड़ से कम )"
+              }
             },
             {
               "name": "small_farmers",
-              "title": "Number of farmers with small land holdings (2.5 to 5 acres)"
+              "title": {
+                "default": "Number of farmers with small land holdings (2.5 to 5 acres)",
+                "hi": "छोटे किसान (2.5 से 5 एकड़)"
+              }
             },
             {
               "name": "medium_farmers",
-              "title": "Number of farmers with medium land holding (5 to 10 acres)"
+              "title": {
+                "default": "Number of farmers with medium land holding (5 to 10 acres)",
+                "hi": "मध्यम किसान (5 से 10 एकड़)"
+              }
             },
             {
               "name": "big_farmers",
-              "title": "Number of farmers with large land holdings (> 10 acres)"
+              "title": {
+                "default": "Number of farmers with large land holdings (> 10 acres)",
+                "hi": "बड़े किसान (>10 एकड़ से ज्यादा)"
+              }
             }
           ]
         },
         {
           "type": "multipletext",
           "name": "Livestock_Census",
-          "title": "Livestock Census in this settlement",
+          "title": {
+            "default": "Livestock Census in this settlement",
+            "hi": "पशुधन जनगणना"
+          },
           "items": [
             {
-              "name": "Cattle"
+              "name": "Cattle",
+              "title": {
+                "default": "Cattle",
+                "hi": "गाय/भैंस "
+              }
             },
             {
-              "name": "Goats"
+              "name": "Goats",
+              "title": {
+                "default": "Goats",
+                "hi": "बकरी"
+              }
             },
             {
-              "name": "Sheep"
+              "name": "Sheep",
+              "title": {
+                "default": "Sheep",
+                "hi": "भेड़"
+              }
             },
             {
-              "name": "Poultry"
+              "name": "Poultry",
+              "title": {
+                "default": "Poultry",
+                "hi": "मुर्गी "
+              }
             },
             {
-              "name": "Piggery"
+              "name": "Piggery",
+              "title": {
+                "default": "Piggery",
+                "hi": "शूकर पालन"
+              }
             },
             {
               "name": "Bail",
-              "title": "Ox"
+              "title": {
+                "default": "Ox",
+                "hi": "बैल"
+              }
             }
           ]
         },
         {
           "type": "panel",
           "name": "MNREGA_INFORMATION",
-          "title": "MGNREGA INFORMATION",
+          "title": {
+            "default": "MGNREGA INFORMATION",
+            "hi": "मनरेगा की जानकारी "
+          },
           "elements": [
             {
               "type": "text",
               "name": "MNREGA_INFORMATION-Households_BPL_cards",
-              "title": "Total number of households with BPL / PDS cards in this settlement",
-              "description": "Cannot exceed the total number of households"
+              "title": {
+                "default": "Total number of households with BPL / PDS cards in this settlement",
+                "hi": "इस बस्ती में बीपीएल/पीडीएस कार्ड धारक परिवारों की कुल संख्या"
+              },
+              "description": {
+                "default": "Cannot exceed the total number of households",
+                "hi": "घरों की कुल संख्या से अधिक नहीं हो सकती"
+              },
+              "isRequired": true
             },
             {
               "type": "text",
               "name": "MNREGA_INFORMATION-NREGA_applied",
-              "title": "How many households have applied for NREGA Job cards in this settlement?",
+              "title": {
+                "default": "How many households have applied for NREGA Job cards in this settlement?",
+                "hi": "इस बस्ती में कितने परिवारों ने मनरेगा जॉब कार्ड के लिए आवेदन किया है ?"
+              },
+              "isRequired": true,
               "validators": [
                 {
                   "type": "numeric",
@@ -178,7 +293,11 @@
             {
               "type": "text",
               "name": "MNREGA_INFORMATION-NREGA_have_job_card",
-              "title": "How many households have NREGA job cards in this settlement?",
+              "title": {
+                "default": "How many households have NREGA job cards in this settlement?",
+                "hi": "बस्ती में कितने परिवारों के पास मनरेगा जॉब कार्ड है ?"
+              },
+              "isRequired": true,
               "validators": [
                 {
                   "type": "numeric",
@@ -190,7 +309,11 @@
             {
               "type": "text",
               "name": "MNREGA_INFORMATION-NREGA_work_days",
-              "title": "On average, how many work days did a NREGA card holder get in the previous year?",
+              "title": {
+                "default": "On average, how many work days did a NREGA card holder get in the previous year?",
+                "hi": "इस बस्ती के परिवारों को पिछले साल मनरेगा के तहत कितने दिनों का काम मिला था ?"
+              },
+              "isRequired": true,
               "validators": [
                 {
                   "type": "numeric",
@@ -203,138 +326,248 @@
               "type": "checkbox",
               "name": "MNREGA_INFORMATION-reason_low_work",
               "visibleIf": "{MNREGA_INFORMATION-NREGA_work_days} < 50",
-              "title": "What were the reasons for low work uptake under NREGA?",
+              "title": {
+                "default": "What were the reasons for low work uptake under NREGA?",
+                "hi": "नरेगा के अंतर्गत कम कार्य प्राप्ति के क्या कारण थे?"
+              },
+              "isRequired": true,
               "choices": [
                 {
-                  "value": "yes, and many demands were fullfilled",
-                  "text": "Migration"
+                  "value": "Migration",
+                  "text": {
+                    "default": "Migration",
+                    "hi": "प्रवासन"
+                  }
                 },
                 {
-                  "value": "yes, but most of demands were not met",
-                  "text": "Poor wages"
+                  "value": "Poor wages",
+                  "text": {
+                    "default": "Poor wages",
+                    "hi": "कम वेतन"
+                  }
                 },
                 {
-                  "value": "No, did not make demands",
-                  "text": "Saturation of works"
+                  "value": "Saturation of works",
+                  "text": {
+                    "default": "Saturation of works",
+                    "hi": "कार्यों की संतृप्ति"
+                  }
                 },
                 {
-                  "value": "Item 1",
-                  "text": "Other"
+                  "value": "Other",
+                  "text": {
+                    "default": "Other",
+                    "hi": "अन्य"
+                  }
                 }
               ]
             },
             {
               "type": "text",
               "name": "MNREGA_INFORMATION-reason_low_work_other",
-              "visibleIf": "{MNREGA_INFORMATION-reason_low_work} allof ['Item 1']",
-              "title": "Specify other."
+              "visibleIf": "{MNREGA_INFORMATION-reason_low_work} allof ['other']",
+              "title": {
+                "default": "Specify other.",
+                "hi": "कृपया अन्य मुद्दा निर्दिष्ट करें"
+              }
             },
             {
               "type": "checkbox",
               "name": "MNREGA_INFORMATION-work_demands",
-              "title": "What kind of work demands did the settlement proposed in the past ?",
+              "title": {
+                "default": "What kind of work demands did the settlement proposed in the past ?",
+                "hi": "इसके पहले प्रस्तावित समझौते में किस तरह के कार्यों की मांग की गई थी ?"
+              },
+              "isRequired": true,
               "choices": [
                 {
                   "value": "Farm_pond",
-                  "text": "Farm pond"
+                  "text": {
+                    "default": "Farm pond",
+                    "hi": "खेत तालाब/ डोभा "
+                  }
                 },
-                "Canal",
+                {
+                  "value": "Canal",
+                  "text": {
+                    "default": "Canal",
+                    "hi": "नहर "
+                  }
+                },
                 {
                   "value": "Check_dam",
-                  "text": "Check dam"
+                  "text": {
+                    "default": "Check dam",
+                    "hi": "चेक डैम"
+                  }
                 },
                 {
                   "value": "Percolation_tank",
-                  "text": "Percolation Tank"
+                  "text": {
+                    "default": "Percolation Tank",
+                    "hi": "परकोलेशन टैंक "
+                  }
                 },
                 {
                   "value": "Earthern_gully_plugs",
-                  "text": "Earthern Gully plugs"
+                  "text": {
+                    "default": "Earthern Gully plugs",
+                    "hi": "एर्थन गली प्लग"
+                  }
                 },
                 {
                   "value": "Tree_plantations",
-                  "text": "Tree plantations"
+                  "text": {
+                    "default": "Tree plantations",
+                    "hi": "वृक्षारोपण"
+                  }
                 },
                 {
                   "value": "goat_and_cow_shelters",
-                  "text": "Goat and Cow shelters"
+                  "text": {
+                    "default": "Goat and Cow shelters",
+                    "hi": "बकरी एवं गौ शेड "
+                  }
                 },
                 {
                   "value": "Drainage_Soakage_channels",
-                  "text": "Drainage/ Soakage channels"
+                  "text": {
+                    "default": "Drainage/ Soakage channels",
+                    "hi": "नाली /सोख्ता नाली "
+                  }
                 },
                 {
                   "value": "Recharge_pits",
-                  "text": "Recharge pits"
+                  "text": {
+                    "default": "Recharge pits",
+                    "hi": "रिचार्ज पिट्स "
+                  }
                 },
                 {
                   "value": "Sokage_pits",
-                  "text": "Sokage pits"
+                  "text": {
+                    "default": "Sokage pits",
+                    "hi": "सोख्ता गड्ढे"
+                  }
                 },
                 {
                   "value": "Trench_cum_bund_network",
-                  "text": "Trench  cum bund Network"
+                  "text": {
+                    "default": "Trench  cum bund Network",
+                    "hi": "ट्रेंच/बाँध "
+                  }
                 },
                 {
                   "value": "Large_water_bodies",
-                  "text": "Large Water bodies"
+                  "text": {
+                    "default": "Large Water bodies",
+                    "hi": "बड़े जल स्रोत "
+                  }
                 },
                 {
                   "value": "Irrigation_channel",
-                  "text": "Irrigation Channel"
+                  "text": {
+                    "default": "Irrigation Channel",
+                    "hi": "सिंचाई चैनल"
+                  }
                 },
                 {
                   "value": "Continuous_contour_trenches",
-                  "text": "Continuous contour trenches (CCT)"
+                  "text": {
+                    "default": "Continuous contour trenches (CCT)",
+                    "hi": "कन्टिन्यूवस कंटूर ट्रेंच (CCT )"
+                  }
                 },
                 {
                   "value": "Staggered_contour_trenches(SCT)",
-                  "text": "Staggered Contour trenches (SCT)"
+                  "text": {
+                    "default": "Staggered Contour trenches (SCT)",
+                    "hi": "स्टैगर्ड कंटूर ट्रेंच (SCT )"
+                  }
                 },
                 {
                   "value": "Water_absorption_trenches(WAT)",
-                  "text": "Water absorption trenches (WAT)"
+                  "text": {
+                    "default": "Water absorption trenches (WAT)",
+                    "hi": "वॉटर ऑब्जॉप्सन ट्रेंच (WAT)"
+                  }
                 },
                 {
                   "value": "Rock_fill_dam",
-                  "text": "Rock fill Dam"
+                  "text": {
+                    "default": "Rock fill Dam",
+                    "hi": "रॉक फिल डैम"
+                  }
                 },
                 {
                   "value": "Loose_boulder_structure",
-                  "text": "Loose Boulder Structure"
+                  "text": {
+                    "default": "Loose Boulder Structure",
+                    "hi": "लूज बोल्डर स्ट्रक्चर "
+                  }
                 },
                 {
                   "value": "Stone_bunding",
-                  "text": "Stone bunding"
+                  "text": {
+                    "default": "Stone bunding",
+                    "hi": "पत्थर बांध "
+                  }
                 },
                 {
                   "value": "Diversion_drains",
-                  "text": "Diversion drains"
+                  "text": {
+                    "default": "Diversion drains",
+                    "hi": "डायवर्जन नालियाँ"
+                  }
                 },
                 {
                   "value": "Bunding",
-                  "text": "Bunding: Contour bunds / graded bunds"
+                  "text": {
+                    "default": "Bunding: Contour bunds / graded bunds",
+                    "hi": "मेड़बंदी: कंटूर बांध/ग्रेड बांध"
+                  }
                 },
                 {
                   "value": "Farm_bund",
-                  "text": "Farm bund"
+                  "text": {
+                    "default": "Farm bund",
+                    "hi": "खेत का मेड़"
+                  }
                 },
-                "Well",
+                {
+                  "value": "Well",
+                  "text": {
+                    "default": "Well",
+                    "hi": "कुंआ"
+                  }
+                },
                 {
                   "value": "5%_Model",
-                  "text": "5% Model"
+                  "text": {
+                    "default": "5% Model",
+                    "hi": "5% मॉडल"
+                  }
                 },
                 {
                   "value": "30-40_Model",
-                  "text": "30-40 Model"
+                  "text": {
+                    "default": "30-40 Model",
+                    "hi": "30-40 मॉडल"
+                  }
                 },
                 {
                   "value": "other",
-                  "text": "Other"
+                  "text": {
+                    "default": "Other",
+                    "hi": "अन्य"
+                  }
                 },
                 {
                   "value": "No_demands_were_raised",
-                  "text": "No demands were raised"
+                  "text": {
+                    "default": "No demands were raised",
+                    "hi": "कोई मांग नहीं उठाई गई"
+                  }
                 }
               ]
             },
@@ -342,41 +575,68 @@
               "type": "text",
               "name": "MNREGA_INFORMATION-work_demands_other",
               "visibleIf": "{MNREGA_INFORMATION-work_demands} anyof ['other']",
-              "title": "Specify other.",
-              "isRequired": true
+              "title": {
+                "default": "Specify other.",
+                "hi": "कृपया अन्य मुद्दा निर"
+              }
             },
             {
               "type": "checkbox",
               "name": "MNREGA_INFORMATION-select_multiple_issues",
-              "title": "What are the three main issues with NREGA?",
+              "title": {
+                "default": "What are the three main issues with NREGA?",
+                "hi": "मनरेगा में तीन मुख्य समस्याएं क्या है?"
+              },
+              "isRequired": true,
               "choices": [
                 {
                   "value": "Delayed_reimbursements_for_expenses_made",
-                  "text": "Delayed reimbursements for expenses made"
+                  "text": {
+                    "default": "Delayed reimbursements for expenses made",
+                    "hi": "किये गए ख़र्चे की रिबरस्मेंट में देरी "
+                  }
                 },
                 {
                   "value": "finding_labour_for_NREGA",
-                  "text": "Finding labour for NREGA"
+                  "text": {
+                    "default": "Finding labour for NREGA",
+                    "hi": "मनरेगा के लिए श्रमिक ढूँढना "
+                  }
                 },
                 {
                   "value": "demands_for_new_works_are_not_met",
-                  "text": "Demands for new works are not met"
+                  "text": {
+                    "default": "Demands for new works are not met",
+                    "hi": "नए काम की मांग पूरी नहीं होती है "
+                  }
                 },
                 {
                   "value": "not_aware_of_NREGA_details_and_how_to_get_work",
-                  "text": "Not aware of NREGA details and how to get work"
+                  "text": {
+                    "default": "Not aware of NREGA details and how to get work",
+                    "hi": "मनरेगा में कैसे काम मिलेगा इसके बारे में विस्तृत जानकारी नहीं है "
+                  }
                 },
                 {
                   "value": "want_work_but_do_not_get_support_to_register_demands",
-                  "text": "Want work but do not get support to register demands"
+                  "text": {
+                    "default": "Want work but do not get support to register demands",
+                    "hi": "काम चाहिए लेकिन काम की मांग करने के लिए सहयोग नहीं मिलता है "
+                  }
                 },
                 {
                   "value": "Mismatch_in_the_online_attendance_due_to_lack_of_internet_or_no_smart_phones",
-                  "text": "Mismatch in the online attendance due to lack of internet or no smart phones"
+                  "text": {
+                    "default": "Mismatch in the online attendance due to lack of internet or no smart phones",
+                    "hi": "इंटरनेट की कमी या स्मार्ट फोन न होने के कारण ऑनलाइन हाजरी बनाने में गड़बड़ियां "
+                  }
                 },
                 {
                   "value": "other",
-                  "text": "Other"
+                  "text": {
+                    "default": "Other",
+                    "hi": "अन्य"
+                  }
                 }
               ],
               "maxSelectedChoices": 3
@@ -385,23 +645,41 @@
               "type": "text",
               "name": "MNREGA_INFORMATION-other_issue",
               "visibleIf": "{MNREGA_INFORMATION-select_multiple_issues} anyof ['other']",
-              "title": "Please specify other issue",
+              "title": {
+                "default": "Please specify other issue",
+                "hi": "कृपया अन्य मुद्दा निर्दिष्ट करें"
+              },
               "isRequired": true
             },
             {
               "type": "radiogroup",
               "name": "MNREGA_INFORMATION-select_one_contributions",
-              "title": "Is the community willing to come together collectively to raise the work demands such as water structures",
+              "title": {
+                "default": "Is the community willing to come together collectively to raise the work demands such as water structures",
+                "hi": "क्या समुदाय के लोग जल स्रोत जैसी कार्यों की मांग सामूहिक रूप से करते हैं "
+              },
               "choices": [
                 {
                   "value": "yes,almost all",
-                  "text": "Yes, almost all"
+                  "text": {
+                    "default": "Yes, almost all",
+                    "hi": "हां , लगभग सभी लोग "
+                  }
                 },
                 {
                   "value": "some",
-                  "text": "Some"
+                  "text": {
+                    "default": "Some",
+                    "hi": "कुछ लोग "
+                  }
                 },
-                "Mostly none"
+                {
+                  "value": "Mostly none",
+                  "text": {
+                    "default": "Mostly none",
+                    "hi": "अधिकतर लोग नहीं "
+                  }
+                }
               ]
             }
           ]
@@ -409,7 +687,69 @@
         {
           "type": "text",
           "name": "Other_information",
-          "title": "Any Other Information"
+          "title": {
+            "default": "Any Other Information",
+            "hi": "अन्य जानकारी"
+          }
+        },
+        {
+          "type": "html",
+          "name": "sett_note_3",
+          "title": "",
+          "html": "<span style=\"font-size: large; font-weight: bold; color:red;\"> DO NOT MODIFY ANYTHING BEYOND THIS POINT AND SUBMIT YOUR FORM DATA</span>"
+        },
+        {
+          "type": "multipletext",
+          "name": "GPS_point",
+          "title": "GPS point to be marked of the area",
+          "description": "Take a GPS point",
+          "isRequired": true,
+          "readOnly": true,
+          "items": [
+            {
+              "name": "latitude",
+              "title": "latitude (x.y °)"
+            },
+            {
+              "name": "longitude",
+              "title": "longitude (x.y °)"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "block_name",
+          "title": {
+            "default": "Block name",
+            "hi": "ब्लॉक का नाम"
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_id",
+          "title": {
+            "default": "Plan ID",
+            "hi": "योजना आईडी "
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "plan_name",
+          "title": {
+            "default": "Plan name",
+            "hi": "योजना का नाम "
+          },
+          "readOnly": true
+        },
+        {
+          "type": "text",
+          "name": "user_latlon",
+          "title": {
+            "default": "Current location of the user",
+            "hi": "उपयोगकर्ता का वर्तमान स्थान"
+          }
         }
       ]
     }

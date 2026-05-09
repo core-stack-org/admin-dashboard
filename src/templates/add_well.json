@@ -2,35 +2,72 @@
   "title": "Add Well Form",
   "logoFit": "none",
   "logoPosition": "right",
-  "completedHtml": "<h3>Form submitted.</h3>",
-  "loadingHtml": "<h3>Loading Form...</h3>",
+  "completedHtml": {
+    "default": "<h3>Add Well Form submitted Successfully</h3>",
+    "hi": "<h3>कुआँ जोड़ने का फॉर्म सफलतापूर्वक जमा हो गया</h3>"
+  },
+  "loadingHtml": {
+    "default": "<h3>Loading Add Well Form...</h3>",
+    "hi": "<h3>वेल ऐड फॉर्म लोड हो रहा है...</h3>"
+  },
   "pages": [
     {
-      "name": "page1",
+      "name": "Add_well_page",
+      "description": "Well Information",
       "elements": [
         {
           "type": "text",
           "name": "well_id",
-          "title": "Well ID",
+          "title": {
+            "default": "Well ID",
+            "hi": "कुआँ का आईडी"
+          },
           "readOnly": true
         },
         {
           "type": "text",
           "name": "beneficiary_settlement",
-          "title": "Name of Beneficiary's Settlement"
+          "title": {
+            "default": "Name of Beneficiary's Settlement",
+            "hi": "लाभार्थी के बस्ती का नाम"
+          }
         },
         {
           "type": "radiogroup",
           "name": "select_one_well_type",
-          "title": "Well type",
+          "title": {
+            "default": "Well type",
+            "hi": "कुआं का प्रकार"
+          },
           "isRequired": true,
           "choices": [
-            "Hand pump",
-            "Borewell",
-            "Open well",
+            {
+              "value": "Hand pump",
+              "text": {
+                "default": "Hand pump",
+                "hi": "चापाकल"
+              }
+            },
+            {
+              "value": "Borewell",
+              "text": {
+                "default": "Borewell",
+                "hi": "बोरवेल"
+              }
+            },
+            {
+              "value": "Open well",
+              "text": {
+                "default": "Open well",
+                "hi": "खुला कुआँ"
+              }
+            },
             {
               "value": "other",
-              "text": "Other"
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -38,44 +75,86 @@
           "type": "text",
           "name": "select_one_well_type_other",
           "visibleIf": "{select_one_well_type} = 'other'",
-          "title": "Specify other."
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष्ट करें"
+          }
         },
         {
           "type": "radiogroup",
           "name": "select_one_y_n",
           "visibleIf": "{select_one_well_type} = 'Borewell'",
-          "title": "Is the bore well electrified?",
+          "title": {
+            "default": "Is the bore well electrified?",
+            "hi": "क्या बोरवेल बिजली से चलता है?"
+          },
           "choices": [
-            "Yes",
-            "No"
+            {
+              "value": "Yes",
+              "text": {
+                "default": "Yes",
+                "hi": "हाँ"
+              }
+            },
+            {
+              "value": "No",
+              "text": {
+                "default": "No",
+                "hi": "नहीं"
+              }
+            }
           ]
         },
         {
           "type": "radiogroup",
           "name": "select_one_owns",
-          "title": "Who owns the well?",
+          "title": {
+            "default": "Who owns the well?",
+            "hi": "कुआँ का मालिक कौन है ?"
+          },
           "isRequired": true,
           "choices": [
             {
               "value": "Public well",
-              "text": "Community Well"
+              "text": {
+                "default": "Community Well",
+                "hi": "सामुदायिक कुआँ"
+              }
             },
-            "Privately owned",
-            "Shared amongst families"
+            {
+              "value": "Privately owned",
+              "text": {
+                "default": "Privately owned",
+                "hi": "निजी कुँआ "
+              }
+            },
+            {
+              "value": "Shared amongst families",
+              "text": {
+                "default": "Shared amongst families",
+                "hi": "परिवारों के बीच साझा किया गया"
+              }
+            }
           ]
         },
         {
           "type": "text",
           "name": "Beneficiary_name",
           "visibleIf": "{select_one_owns} = 'Privately owned'",
-          "title": "Beneficiary's name",
+          "title": {
+            "default": "Beneficiary's name",
+            "hi": "लाभार्थी का नाम"
+          },
           "isRequired": true
         },
         {
           "type": "text",
           "name": "ben_father",
           "visibleIf": "{select_one_owns} = 'Privately owned'",
-          "title": "Beneficiary's father's name",
+          "title": {
+            "default": "Beneficiary's father's name",
+            "hi": "लाभार्थी के पिता का नाम"
+          },
           "isRequired": true,
           "validators": [
             {
@@ -89,12 +168,15 @@
           "type": "text",
           "name": "Beneficiary_contact_number",
           "visibleIf": "{select_one_owns} = 'Privately owned'",
-          "title": "Beneficiary's contact number",
+          "title": {
+            "default": "Beneficiary's contact number",
+            "hi": "लाभार्थी का फोन नंबर"
+          },
           "validators": [
             {
               "type": "regex",
-              "text": "Enter a phone number (format: 9876543210)",
-              "regex": "^(\\+?91[ -]?)?0?[6-9][0-9]{2}[ -]?[0-9]{3}[ -]?[0-9]{4}$"
+              "text": "Enter valid phone number",
+              "regex": "^(\\+?91[ -]?)?0?[6-9][0-9]{9}$"
             }
           ],
           "inputType": "tel"
@@ -102,30 +184,99 @@
         {
           "type": "checkbox",
           "name": "select_multiple_caste_use",
-          "title": "Which caste groups use the well in this settlement?",
+          "title": {
+            "default": "Which caste groups use the well in this settlement?",
+            "hi": "इस बस्ती में कौन सी जाति समूह कुएं का उपयोग करते हैं?"
+          },
           "isRequired": true,
           "choices": [
-            "GC",
-            "SC",
-            "ST",
-            "OBC"
+            {
+              "value": "GC",
+              "text": {
+                "default": "General",
+                "hi": "सामान्य वर्ग "
+              }
+            },
+            {
+              "value": "SC",
+              "text": {
+                "default": "SC",
+                "hi": "अनुसूचित जाति वर्ग "
+              }
+            },
+            {
+              "value": "ST",
+              "text": {
+                "default": "ST",
+                "hi": "अनुसूचित जनजाति वर्ग "
+              }
+            },
+            {
+              "value": "OBC",
+              "text": {
+                "default": "OBC",
+                "hi": "अन्य पिछड़ा वर्ग "
+              }
+            }
           ]
         },
         {
           "type": "radiogroup",
           "name": "select_one_scheme",
-          "title": "Under which scheme were funds made available for the construction of this well in this settlement?",
+          "title": {
+            "default": "Under which scheme were funds made available for the construction of  this well in this settlement?\n",
+            "hi": "इस बस्ती में इस कुएँ के निर्माण के लिए किस योजना के तहत पैसे मिले थे ?"
+          },
           "isRequired": true,
           "choices": [
-            "MGNREGA",
-            "PM-KUSUM",
-            "PMGSY",
-            "NRLM",
-            "Self funded",
-            "Don't know",
+            {
+              "value": "MGNREGA",
+              "text": {
+                "default": "MGNREGA",
+                "hi": "मनरेगा"
+              }
+            },
+            {
+              "value": "PM-KUSUM",
+              "text": {
+                "default": "PM-KUSUM",
+                "hi": "पीएम कुसुम"
+              }
+            },
+            {
+              "value": "PMGSY",
+              "text": {
+                "default": "PMGSY",
+                "hi": "पीएमजीएसवाई"
+              }
+            },
+            {
+              "value": "NRLM",
+              "text": {
+                "default": "NRLM",
+                "hi": "एनआरएलएम"
+              }
+            },
+            {
+              "value": "Self funded",
+              "text": {
+                "default": "Self funded",
+                "hi": "अपने खर्च पर चलाना "
+              }
+            },
+            {
+              "value": "Don't know",
+              "text": {
+                "default": "Don't know",
+                "hi": "पता नहीं"
+              }
+            },
             {
               "value": "other",
-              "text": "Other"
+              "text": {
+                "default": "Other",
+                "hi": "अन्य"
+              }
             }
           ]
         },
@@ -133,32 +284,113 @@
           "type": "text",
           "name": "select_one_scheme_other",
           "visibleIf": "{select_one_scheme} = 'other'",
-          "title": "Specify other."
+          "title": {
+            "default": "Specify other",
+            "hi": "अन्य निर्दिष"
+          }
         },
         {
           "type": "radiogroup",
           "name": "select_one_year",
-          "title": "Until which month of the year is water available in the well, with July as the reference?",
+          "title": {
+            "default": "Until which month of the year is water available in the well, with July as the reference? \n",
+            "hi": "वर्ष के किस महीने तक कुएं में पानी रहता है, जुलाई महीने को संदर्भ में ले?"
+          },
           "isRequired": true,
           "choices": [
-            "July",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "June"
+            {
+              "value": "July",
+              "text": {
+                "default": "July",
+                "hi": "जुलाई"
+              }
+            },
+            {
+              "value": "Aug",
+              "text": {
+                "default": "Aug",
+                "hi": "अगस्त"
+              }
+            },
+            {
+              "value": "Sep",
+              "text": {
+                "default": "Sep",
+                "hi": "सितंबर"
+              }
+            },
+            {
+              "value": "Oct",
+              "text": {
+                "default": "Oct",
+                "hi": "अक्टूबर"
+              }
+            },
+            {
+              "value": "Nov",
+              "text": {
+                "default": "Nov",
+                "hi": "नवंबर"
+              }
+            },
+            {
+              "value": "Dec",
+              "text": {
+                "default": "Dec",
+                "hi": "दिसंबर"
+              }
+            },
+            {
+              "value": "Jan",
+              "text": {
+                "default": "Jan",
+                "hi": "जनवरी"
+              }
+            },
+            {
+              "value": "Feb",
+              "text": {
+                "default": "Feb",
+                "hi": "फ़रवरी"
+              }
+            },
+            {
+              "value": "Mar",
+              "text": {
+                "default": "Mar",
+                "hi": "मार्च"
+              }
+            },
+            {
+              "value": "Apr",
+              "text": {
+                "default": "Apr",
+                "hi": "अप्रैल"
+              }
+            },
+            {
+              "value": "May",
+              "text": {
+                "default": "May",
+                "hi": "मई"
+              }
+            },
+            {
+              "value": "June",
+              "text": {
+                "default": "June",
+                "hi": "जून"
+              }
+            }
           ]
         },
         {
           "type": "text",
           "name": "households_benefited",
-          "title": "Total number of households benefited from this well in this settlement?",
+          "title": {
+            "default": "Total number of households benefited from this well in this settlement?",
+            "hi": "इस बस्ती में कुएं से लाभान्वित परिवारों की कुल संख्या कितनी है ?"
+          },
           "isRequired": true,
           "validators": [
             {
@@ -171,142 +403,475 @@
         {
           "type": "panel",
           "name": "Well_usage",
-          "title": "Well usage and condition",
+          "title": {
+            "default": "Well usage and condition",
+            "hi": "कुएं का उपयोग"
+          },
           "elements": [
             {
               "type": "radiogroup",
-              "name": "Well_usage-Is_water_from_well_used",
-              "title": "Is the water from the well used",
+              "name": "water_used",
+              "title": {
+                "default": "Is the water from the well used?",
+                "hi": "क्या कुएं का पानी इस्तेमाल किया जाता है?"
+              },
               "isRequired": true,
               "choices": [
-                "Yes",
-                "No"
+                {
+                  "value": "Yes",
+                  "text": {
+                    "default": "Yes",
+                    "hi": "हाँ"
+                  }
+                },
+                {
+                  "value": "No",
+                  "text": {
+                    "default": "No",
+                    "hi": "नहीं"
+                  }
+                }
               ]
             },
             {
               "type": "radiogroup",
-              "name": "Well_usage-select_one_well_used",
-              "visibleIf": "{Well_usage-Is_water_from_well_used} = 'Yes'",
-              "title": "Well used for",
+              "name": "select_one_well_used",
+              "visibleIf": "{water_used} = 'Yes'",
+              "title": {
+                "default": "Well used for",
+                "hi": "कुएं का प्रयोग किस लिए किया जाता है ?"
+              },
               "isRequired": true,
               "choices": [
-                "Irrigation",
+                {
+                  "value": "Irrigation",
+                  "text": {
+                    "default": "Irrigation",
+                    "hi": "सिंचाई"
+                  }
+                },
                 {
                   "value": "Domestic Purpose",
-                  "text": "Drinking"
+                  "text": {
+                    "default": "Domestic Purpose",
+                    "hi": "पीना "
+                  }
                 },
-                "Both",
+                {
+                  "value": "Both",
+                  "text": {
+                    "default": "Both",
+                    "hi": "दोनों"
+                  }
+                },
                 {
                   "value": "other",
-                  "text": "Other"
+                  "text": {
+                    "default": "Other",
+                    "hi": "अन्य"
+                  }
                 }
               ]
             },
             {
               "type": "text",
               "name": "Well_usage-select_one_well_used_other",
-              "visibleIf": "{Well_usage-select_one_well_used} = 'other'",
-              "title": "Specify other."
+              "visibleIf": "{select_one_well_used} = 'other'",
+              "title": {
+                "default": "Specify Other",
+                "hi": "अन्य निर्दिष"
+              }
             },
             {
               "type": "radiogroup",
-              "name": "Well_usage-is_maintenance_required",
-              "title": "Does the well require maintenance?",
+              "name": "is_maintenance_required",
+              "title": {
+                "default": "Does the well required maintenance?",
+                "hi": "क्या कुएं के देखभाल की जरुरत है?"
+              },
               "isRequired": true,
               "choices": [
-                "Yes",
-                "No"
+                {
+                  "value": "Yes",
+                  "text": {
+                    "default": "Yes",
+                    "hi": "हाँ"
+                  }
+                },
+                {
+                  "value": "No",
+                  "text": {
+                    "default": "No",
+                    "hi": "नहीं"
+                  }
+                }
               ]
             },
             {
               "type": "checkbox",
               "name": "Well_usage-repairs_type",
-              "visibleIf": "{Well_usage-is_maintenance_required} = 'Yes'",
-              "title": "Type of repairs needed in the well",
+              "visibleIf": "{is_maintenance_required} = 'Yes'",
+              "title": {
+                "default": "Type of repairs needed in the well",
+                "hi": "कुंआ मरम्मत के प्रकार"
+              },
               "isRequired": true,
               "choices": [
                 {
-                  "value": "Repairing_cracks_or_damage_to_the_surface_seal_around_the_well_casing",
-                  "text": "Repairing cracks or damage to the surface seal around the well casing"
+                  "value": "Desilting",
+                  "text": {
+                    "default": "Desilting",
+                    "hi": "डी सिटलिंग"
+                  }
                 },
                 {
-                  "value": "Well_rehabilitation_like_Chemical_treatment_removing_material_that_clogs_the_Well",
-                  "text": "Well rehabilitation like Chemical treatment , removing material that clogs the Well"
+                  "value": "Repairing cracks or damage to well walls",
+                  "text": {
+                    "default": "Repairing cracks or damage to well walls",
+                    "hi": "कुएं की दीवारों में दरारें या नुकसान की मरम्मत,"
+                  }
                 },
                 {
-                  "value": "Repairing_handpumps_or_other_pumping_devices",
-                  "text": "Repairing handpumps or other pumping devices"
+                  "value": "Deepening the well to enhance water availability",
+                  "text": {
+                    "default": "Deepening the well to enhance water availability",
+                    "hi": "पानी की उपलब्धता बढ़ाने के लिए कुएं को गहरा करना"
+                  }
                 },
                 {
-                  "value": "Constructing_soil_bunds_around_the_well_to_prevent_surface_runoff",
-                  "text": "Constructing soil bunds/platform around the well to prevent surface runoff"
+                  "value": "Repair or replacement of well cover or structure",
+                  "text": {
+                    "default": "Repair or replacement of well cover or structure",
+                    "hi": "कुएं के कवर या स्ट्रक्चर की मरम्मत या बदलना"
+                  }
                 },
                 {
-                  "value": "other",
-                  "text": "Other"
+                  "value": "Installing or repairing pumping mechanisms",
+                  "text": {
+                    "default": "Installing or repairing pumping mechanisms",
+                    "hi": "पंपिंग मैकेनिज्म लगाना या मरम्मत करना"
+                  }
+                },
+                {
+                  "value": "Other",
+                  "text": {
+                    "default": "Other",
+                    "hi": "अन्य"
+                  }
                 }
-              ],
-              "minSelectedChoices": 1
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-select_one_soil",
+              "visibleIf": "{Well_usage-repairs_type} anyof ['Desilting']",
+              "title": {
+                "default": "Type of Soil",
+                "hi": "मिट्टी का प्रकार"
+              },
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Black",
+                  "text": {
+                    "default": "Black",
+                    "hi": "काला"
+                  }
+                },
+                {
+                  "value": "Red",
+                  "text": {
+                    "default": "Red",
+                    "hi": "लाल"
+                  }
+                },
+                {
+                  "value": "Laterite",
+                  "text": {
+                    "default": "Laterite",
+                    "hi": "लैटेराइट"
+                  }
+                },
+                {
+                  "value": "Alluvial",
+                  "text": {
+                    "default": "Alluvial",
+                    "hi": "जलोढ़"
+                  }
+                },
+                {
+                  "value": "Sandy",
+                  "text": {
+                    "default": "Sandy",
+                    "hi": "रेतीला"
+                  }
+                },
+                {
+                  "value": "Clay",
+                  "text": {
+                    "default": "Clay",
+                    "hi": "मिट्टी"
+                  }
+                },
+                {
+                  "value": "Rocky",
+                  "text": {
+                    "default": "Rocky",
+                    "hi": "चट्टानी"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "radiogroup",
+              "name": "Well_usage-Select_one_silt",
+              "visibleIf": "{Well_usage-repairs_type} anyof ['Desilting']",
+              "title": {
+                "default": "Amount of silt",
+                "hi": "गाद का ढेर"
+              },
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "Low",
+                  "text": {
+                    "default": "Low",
+                    "hi": "कम"
+                  }
+                },
+                {
+                  "value": "Moderate",
+                  "text": {
+                    "default": "Moderate",
+                    "hi": "मध्यम"
+                  }
+                },
+                {
+                  "value": "High",
+                  "text": {
+                    "default": "High",
+                    "hi": "ज़्यादा"
+                  }
+                }
+              ]
             },
             {
               "type": "text",
               "name": "Well_usage-repairs_type_other",
               "visibleIf": "{Well_usage-repairs_type} anyof ['other']",
-              "title": "Specify other."
+              "title": {
+                "default": "Specify other",
+                "hi": "अन्य निर्दिष"
+              }
             },
             {
               "type": "radiogroup",
               "name": "Well_usage-select_one_change_water_quality",
-              "title": "Have you observed any changes in the water quality (clarity, taste, color) in the past five years?",
+              "title": {
+                "default": "Have you observed any changes in the water quality (clarity, taste, color) in the past five years?",
+                "hi": "क्या आपने पिछले पांच वर्षों में पानी की गुणवत्ता (स्पष्टता, स्वाद, रंग) में कोई बदलाव देखा है?"
+              },
               "choices": [
-                "Significant deterioration (e.g., murky, bad taste, discoloration)",
-                "Minor deterioration (e.g., slight change in clarity or taste)",
-                "No noticeable change",
-                "Minor improvement (e.g., clearer water, better taste)",
-                "Significant improvement (e.g., clear water, restored natural color and taste)"
+                {
+                  "value": "Significant deterioration",
+                  "text": {
+                    "default": "Significant deterioration (e.g., murky, bad taste, discoloration)",
+                    "hi": "बहुत गंदा (जैसे, धुंधलापन, खराब स्वाद, रंग उड़ना)"
+                  }
+                },
+                {
+                  "value": "Minor deterioration",
+                  "text": {
+                    "default": "Minor deterioration (e.g., slight change in clarity or taste)",
+                    "hi": "मामूली गंदा (जैसे, स्पष्टता या स्वाद में मामूली परिवर्तन)"
+                  }
+                },
+                {
+                  "value": "No noticeable change",
+                  "text": {
+                    "default": "No noticeable change",
+                    "hi": "कोई बदलाव नहींहीं"
+                  }
+                },
+                {
+                  "value": "Minor improvement",
+                  "text": {
+                    "default": "Minor improvement (e.g., clearer water, better taste)",
+                    "hi": "मामूली सुधार (जैसे, साफ पानी, कड़वा स्वाद)"
+                  }
+                },
+                {
+                  "value": "Significant improvement",
+                  "text": {
+                    "default": "Significant improvement (e.g., clear water, restored natural color and taste)",
+                    "hi": "बहुत सुधार (जैसे, साफ़ पानी, प्राकृतिक रंग और स्वाद )"
+                  }
+                }
               ]
             },
             {
               "type": "radiogroup",
-              "name": "Well_usage-select_one_pollutants_groundwater",
-              "title": "Are there any noticeable pollutants or contamination in the groundwater?",
+              "name": "question3",
+              "title": {
+                "default": "Are there any noticeable pollutants or contamination in the groundwater?",
+                "hi": "क्या भूजल में गंदगी या मैलेपन पर आपका ध्यान गया है ? "
+              },
               "choices": [
-                "Yes, visible pollutants (e.g., oil slick)",
-                "Yes, chemical contamination (e.g., unpleasant odor, unusual color)",
-                "Yes, agricultural runoff (e.g., fertilizers, pesticides)",
-                "No, no noticeable pollutants or contamination",
-                "Unsure/Not sure"
+                {
+                  "value": "Visible pollutants",
+                  "text": {
+                    "default": "Yes, visible pollutants (e.g., oil slick)",
+                    "hi": "हाँ, ध्यान देने लायक गंदगी (जैसे, तेल की परत)"
+                  }
+                },
+                {
+                  "value": "Chemical contamination",
+                  "text": {
+                    "default": "Yes, chemical contamination (e.g., unpleasant odor, unusual color)",
+                    "hi": "हां, रासायनिक गंदगी (जैसे, गंध, असामान्य रंग)"
+                  }
+                },
+                {
+                  "value": "Agricultural runoff",
+                  "text": {
+                    "default": "Yes, agricultural runoff (e.g., fertilizers, pesticides)",
+                    "hi": "हाँ, कृषि अपवाह (जैसे, उर्वरक, कीटनाशक)"
+                  }
+                },
+                {
+                  "value": "No pollutants",
+                  "text": {
+                    "default": "No, no noticeable pollutants or contamination",
+                    "hi": "नहीं, कोई गंदगी या मैलापन नहीं है"
+                  }
+                },
+                {
+                  "value": "Unsure",
+                  "text": {
+                    "default": "Unsure / Not sure",
+                    "hi": "अनिश्चित/निश्चित नहीं"
+                  }
+                }
               ]
             },
             {
               "type": "radiogroup",
               "name": "Well_usage-select_one_water_structure_near_you",
-              "title": "Are there any rainwater harvesting or groundwater recharge structures (e.g., ponds, check dams) near your wells?",
+              "title": {
+                "default": "Are there any rainwater harvesting or groundwater recharge structures (e.g., ponds, check dams) near your wells?",
+                "hi": "क्या आपके कुएं के पास कोई वर्षा जल एकत्रित करने या भूजल रिचार्ज स्ट्रक्चर (जैसे, तालाब, चेक डैम) हैं?"
+              },
               "choices": [
-                "Yes",
-                "No"
+                {
+                  "value": "Yes",
+                  "text": {
+                    "default": "Yes",
+                    "hi": "हाँ"
+                  }
+                },
+                {
+                  "value": "No",
+                  "text": {
+                    "default": "No",
+                    "hi": "नहीं"
+                  }
+                }
               ]
             },
             {
               "type": "radiogroup",
               "name": "Well_usage-select_one_change_observed",
-              "title": "Changes observed in depth of this well over the past 5 years?",
+              "title": {
+                "default": "Changes observed in depth of this well over the past 5 years?",
+                "hi": "पिछले 5 वर्षों में इस कुएं की गहराई में क्या परिवर्तन देखे गए?"
+              },
               "choices": [
                 {
                   "value": "Decreasing_levels",
-                  "text": "Decreasing levels"
+                  "text": {
+                    "default": "Decreasing levels",
+                    "hi": "स्तर घट रहे हैं"
+                  }
                 },
                 {
                   "value": "Increasing_levels",
-                  "text": "Increasing levels"
+                  "text": {
+                    "default": "Increasing levels",
+                    "hi": "स्तर बढ़ रहे हैं"
+                  }
                 },
                 {
                   "value": "Not_observed_changes",
-                  "text": "Not observed any changes"
+                  "text": {
+                    "default": "Not observed any changes",
+                    "hi": "कोई परिवर्तन नहीं देखा गया"
+                  }
                 }
               ]
             }
           ]
+        },
+        {
+          "type": "html",
+          "name": "question1",
+          "html": "<span style='color:red;font-weight:bold'>DO NOT MODIFY ANYTHING BEYOND THIS POINT</span>"
+        },
+        {
+          "type": "multipletext",
+          "name": "GPS_point",
+          "title": {
+            "default": "GPS point to be marked of the area",
+            "hi": "उस क्षेत्र का जीपीएस बिंदु चिह्नित किया जाना हैांतर,"
+          },
+          "readOnly": true,
+          "items": [
+            {
+              "name": "latitude",
+              "title": {
+                "default": "latitude (x.y °)",
+                "hi": "अक्षांश"
+              }
+            },
+            {
+              "name": "longitude",
+              "title": {
+                "default": "longitude (x.y °)",
+                "hi": "देशांतर"
+              }
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "block_name",
+          "title": {
+            "default": "Block name",
+            "hi": "ब्लॉक का नाम "
+          }
+        },
+        {
+          "type": "text",
+          "name": "plan_id",
+          "title": {
+            "default": "Plan ID",
+            "hi": "योजना का आईडी"
+          }
+        },
+        {
+          "type": "text",
+          "name": "plan_name",
+          "title": {
+            "default": "Plan name",
+            "hi": "योजना का नाम "
+          }
+        },
+        {
+          "type": "text",
+          "name": "user_latlon",
+          "title": {
+            "default": "Current location of the user",
+            "hi": "उपयोगकर्ता का वर्तमान स्थान"
+          }
         }
       ]
     }
