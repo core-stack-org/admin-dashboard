@@ -1,18 +1,4 @@
 // constants.js
-
-import SettlementForm from "../../templates/add_settlements.json";
-import WellForm from "../../templates/add_well.json";
-import WaterbodyForm from "../../templates/water_structure.json";
-import CropForm from "../../templates/cropping_pattern.json";
-import GroundwaterForm from "../../templates/recharge_structure.json";
-import LivelihoodForm from "../../templates/livelihood.json";
-import AgriForm from "../../templates/irrigation_work.json";
-import AgriMaintenanceForm from "../../templates/maintenance_irr.json";
-import GroundwaterMaintenanceForm from "../../templates/maintenance_recharge_st.json";
-import WaterStructureMaintenanceForm from "../../templates/maintenance_water_structures.json";
-import SWBRemotelySensedForm from "../../templates/maintenance_rs_swb.json";
-import Agrohorticulture from "../../templates/agrohorticulture.json";
-
 import SettlementIcon from "../../icons/settlement_icon.svg";
 import WellIcon from "../../icons/well_icon.svg";
 import WaterBodyIcon from "../../icons/waterbodiesScreenIcon.svg";
@@ -21,6 +7,25 @@ import IrrigationIcon from "../../icons/irrigation_icon.svg";
 import LivelihoodIcon from "../../icons/livelihood_proposed.svg";
 import CropIcon from "../../icons/crops-svgrepo-com.svg";
 import AgrohorticultureIcon from "../../icons/Plantation.svg";
+
+const S3_BASE = `${process.env.REACT_APP_S3_FORM_TEMPLATE}`;
+
+const FORM_S3_KEYS = {
+  Settlement: "add_settlements.json",
+  Well: "add_well.json",
+  Waterbody: "water_structure.json",
+  Crop: "cropping_pattern.json",
+  Groundwater: "recharge_structure.json",
+  Livelihood: "livelihood.json",
+  Agri: "irrigation_work.json",
+  "Agri Maintenance": "maintenance_irr.json",
+  "GroundWater Maintenance": "maintenance_recharge_st.json",
+  "Surface Water Body Maintenance": "maintenance_water_structures.json",
+  "Surface Water Body Remotely Sensed Maintenance": "maintenance_rs_swb.json",
+  Agrohorticulture: "agrohorticulture.json",
+};
+
+const formTemplateCache = {};
 
 export const ICONS = {
   Settlement: SettlementIcon,
@@ -77,19 +82,23 @@ export const FORM_CATEGORY_ORDER = [
   "Feedback",
 ];
 
-export const FORM_TEMPLATES = {
-  Settlement: SettlementForm,
-  Well: WellForm,
-  Waterbody: WaterbodyForm,
-  Crop: CropForm,
-  Groundwater: GroundwaterForm,
-  Livelihood: LivelihoodForm,
-  Agri: AgriForm,
-  "Agri Maintenance": AgriMaintenanceForm,
-  "GroundWater Maintenance": GroundwaterMaintenanceForm,
-  "Surface Water Body Maintenance": WaterStructureMaintenanceForm,
-  "Surface Water Body Remotely Sensed Maintenance": SWBRemotelySensedForm,
-  Agrohorticulture: Agrohorticulture,
+export const getFormTemplate = async (formName) => {
+  // Return from cache if already fetched
+  if (formTemplateCache[formName]) return formTemplateCache[formName];
+
+  const filename = FORM_S3_KEYS[formName];
+  if (!filename) return null;
+
+  try {
+    const res = await fetch(`${S3_BASE}/${filename}`);
+    if (!res.ok) throw new Error(`Failed to fetch ${filename}`);
+    const json = await res.json();
+    formTemplateCache[formName] = json; 
+    return json;
+  } catch (err) {
+    console.error(`Form template fetch error for ${formName}:`, err);
+    return null;
+  }
 };
 
 export const CARD_DISPLAY_FIELDS = {
@@ -314,3 +323,47 @@ export const structureRules = {
   "Farm bund":"farm_bund",
   "Large water body":"large_water_body"
 }
+
+// Config: if this field has this value → hide Beneficiary_Name in card
+export const BENEFICIARY_VISIBILITY_RULES = {
+  Well: {
+    field: "select_one_owns",
+    hideWhenValue: "Public well",
+  },
+  Groundwater: {
+    field: "demand_type", 
+    hideWhenValue: "Community_demand",
+  },
+  Agrohorticulture: {
+    field: "demand_type_plantations",
+    hideWhenValue: "Community_demand",
+  },
+  "Surface Water Body Maintenance": {
+    field: "demand_type",
+    hideWhenValue: "Community_demand",
+  },
+  Agri: {
+    field: "demand_type_irrigation",
+    hideWhenValue: "Community_demand",
+  },
+  "Surface Water Body Remotely Sensed Maintenance": {
+    field: "demand_type",
+    hideWhenValue: "Community_demand",
+  },
+  "Agri Maintenance": {
+    field: "demand_type",
+    hideWhenValue: "Community_demand",
+  },
+  "GroundWater Maintenance": {
+    field: "demand_type",
+    hideWhenValue: "Community_demand",
+  },
+};
+
+export const shouldHideBeneficiaryName = (formName, submission) => {
+  const rule = BENEFICIARY_VISIBILITY_RULES[formName];
+  if (!rule) return false;
+
+  const fieldValue = submission[rule.field];
+  return fieldValue === rule.hideWhenValue;
+};

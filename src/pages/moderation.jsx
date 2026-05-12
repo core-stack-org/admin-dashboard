@@ -37,13 +37,14 @@ import "ol/ol.css";
 
 import {
   BASEURL,
-  FORM_TEMPLATES,
   CARD_DISPLAY_FIELDS,
   ICONS,
   FORM_CATEGORY_MAP,
   FORM_CATEGORY_ORDER,
   FORM_DISPLAY_NAMES,
   structureRules,
+  getFormTemplate,
+  shouldHideBeneficiaryName,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -552,6 +553,7 @@ const FormViewPage = ({
   const [deleteStatus, setDeleteStatus] = useState("idle"); 
   const [deleteError, setDeleteError] = useState("");
   const [submissionToDelete, setSubmissionToDelete] = useState(null);
+  const [formTemplateLoading, setFormTemplateLoading] = useState(false);
 
 
   useEffect(() => {
@@ -1174,23 +1176,20 @@ const transformApiToSurvey = (submission, formSchema) => {
 
       const data = await res.json();
 
-      const submissionsWithFlags = (data.data || []).map((item) =>
-        Array.isArray(item) ? { ...item[0], _moderated: item[1] } : item,
-      );
-
-      const sortedData = submissionsWithFlags.sort((a, b) => {
-        const dateA = new Date(
-          a.submission_time || a.__system?.submissionDate || 0,
-        );
-        const dateB = new Date(
-          b.submission_time || b.__system?.submissionDate || 0,
-        );
-        return dateB - dateA;
+      const submissionsWithFlags = (data.data || []).map((item) => {
+        if (Array.isArray(item)) {
+          const submission = { ...item[0], _moderated: item[1] };
+          if (!submission.__id && item[2]) {
+            submission.__id = item[2];
+          }
+          return submission;
+        }
+        return item;
       });
 
-      setSubmissions(sortedData);
+      setSubmissions(submissionsWithFlags);
 
-      // pagination sirf card ke liye
+      // pagination is only for card
       if (mode === "card") {
         setPage(data.page || pg);
         setTotalPages(data.total_pages || 1);
@@ -1409,16 +1408,12 @@ const transformApiToSurvey = (submission, formSchema) => {
   useEffect(() => {
     window.viewSubmissionFromMap = (uuid) => {
       const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
-      if (submission) {
-        handleViewSubmission(submission);
-      }
+      if (submission) handleViewSubmission(submission); // async, fine to call without await
     };
 
     window.editSubmissionFromMap = (uuid) => {
       const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
-      if (submission) {
-        handleEditSubmission(submission);
-      }
+      if (submission) handleEditSubmission(submission);
     };
 
     window.deleteSubmissionFromMap = (uuid) => {
@@ -1435,8 +1430,10 @@ const transformApiToSurvey = (submission, formSchema) => {
     };
   }, [submissions]);
 
-const handleViewSubmission = (submission) => {
-  const formTemplate = FORM_TEMPLATES[selectedForm];
+const handleViewSubmission = async (submission) => {
+  setFormTemplateLoading(true);
+  const formTemplate = await getFormTemplate(selectedForm);
+  setFormTemplateLoading(false);
   if (!formTemplate) {
     alert(`No template found for form: ${selectedForm}`);
     return;
@@ -1444,15 +1441,15 @@ const handleViewSubmission = (submission) => {
   const transformedData = transformApiToSurvey(submission, formTemplate);
   setSelectedSubmission(submission);
   setIsEditing(false);
-  const model = new Model(formTemplate); 
+  const model = new Model(formTemplate);
   model.mode = "display";
   model.data = transformedData;
   setSurveyModel(model);
 };
 
 
-const handleEditSubmission = (submission) => {
-  const formTemplate = FORM_TEMPLATES[selectedForm];
+const handleEditSubmission = async (submission) => {
+  const formTemplate = await getFormTemplate(selectedForm);
   if (!formTemplate) {
     alert(`No template found for form: ${selectedForm}`);
     return;
@@ -1460,15 +1457,11 @@ const handleEditSubmission = (submission) => {
   const transformedData = transformApiToSurvey(submission, formTemplate);
   setSelectedSubmission(submission);
   setIsEditing(true);
-  const model = new Model(formTemplate); 
-  model.data = transformedData;
+  const model = new Model(formTemplate);
   model.showCompletedPage = false;
+  model.data = transformedData;
   model.onComplete.add((sender) => {
-    const saveData = transformSurveyToApi(
-      sender.data,
-      submission,
-      formTemplate,
-    );
+    const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
     const uuid = getSubmissionUUID(submission);
     handleSaveSubmission(uuid, saveData);
   });
@@ -2355,7 +2348,6 @@ const handleSaveSubmission = async (uuid, data) => {
                       </svg>
                     </div>
                     <p className="text-lg font-bold text-slate-700">Saved successfully!</p>
-                    <p className="text-sm text-slate-500 mt-1">Closing automatically...</p>
                   </div>
                 )}
 
@@ -2648,7 +2640,7 @@ const handleSaveSubmission = async (uuid, data) => {
 
                         {/* Dynamic data fields */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3 mb-4">
-                          {displayFields.map((field) => (
+                          {/* {displayFields.map((field) => (
                             <div key={field.key} className="min-w-0">
                               <div className="text-xs text-slate-400 font-medium mb-0.5 truncate">
                                 {field.label}
@@ -2657,6 +2649,37 @@ const handleSaveSubmission = async (uuid, data) => {
                                 {getFieldValue(submission, field.key)}
                               </div>
                             </div>
+                          ))} */}
+
+                          {displayFields
+                            .map((field) => ({
+                              field,
+                              value: getFieldValue(submission, field.key),
+                            }))
+                            .filter(({ field, value }) => {
+                              // Hide Beneficiary_Name based on form-specific rules
+                              if (
+                                field.key === "Beneficiary_Name" ||
+                                field.key === "beneficiary_name" ||
+                                field.key === "Beneficiary_name" ||
+                                field.label?.toLowerCase().includes("beneficiary's name") ||
+                                field.label?.toLowerCase().includes("beneficiary name")
+                              ) {
+                                if (shouldHideBeneficiaryName(selectedForm, submission)) return false;
+                              }
+
+                              // Hide empty fields
+                              return value !== "-" && value !== null && value !== undefined && value !== "";
+                            })
+                            .map(({ field, value }) => (
+                              <div key={field.key} className="min-w-0">
+                                <div className="text-xs text-slate-400 font-medium mb-0.5 truncate">
+                                  {field.label}
+                                </div>
+                                <div className="text-sm font-semibold text-slate-800 truncate">
+                                  {value}
+                                </div>
+                              </div>
                           ))}
                         </div>
                       </div>
@@ -2720,6 +2743,7 @@ const handleSaveSubmission = async (uuid, data) => {
                       <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/60">
                         <button
                           onClick={() => handleViewSubmission(submission)}
+                          disabled={formTemplateLoading}
                           className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all"
                         >
                           <Eye size={13} />
