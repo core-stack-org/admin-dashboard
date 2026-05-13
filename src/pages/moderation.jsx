@@ -37,13 +37,14 @@ import "ol/ol.css";
 
 import {
   BASEURL,
-  FORM_TEMPLATES,
   CARD_DISPLAY_FIELDS,
   ICONS,
   FORM_CATEGORY_MAP,
   FORM_CATEGORY_ORDER,
   FORM_DISPLAY_NAMES,
   structureRules,
+  getFormTemplate,
+  shouldHideBeneficiaryName,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -547,6 +548,13 @@ const FormViewPage = ({
   const showActions = isAdmin || isModerator || isSuperAdmin;
   const [validationResults, setValidationResults] = useState({});
   const [validationLoading, setValidationLoading] = useState({});
+  const [saveStatus, setSaveStatus] = useState("idle");
+  const [saveError, setSaveError] = useState("");
+  const [deleteStatus, setDeleteStatus] = useState("idle"); 
+  const [deleteError, setDeleteError] = useState("");
+  const [submissionToDelete, setSubmissionToDelete] = useState(null);
+  const [formTemplateLoading, setFormTemplateLoading] = useState(false);
+
 
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
@@ -627,11 +635,13 @@ const FormViewPage = ({
       });
   }, [selectedPlan]);
 
-  const reloadSubmissions = () => {
+    const reloadSubmissions = (resetToPage1 = false) => {
     if (viewMode === "map") {
       fetchSubmissions(1, "map");
     } else {
-      fetchSubmissions(page, "card");
+      const targetPage = resetToPage1 ? 1 : page;
+      if (resetToPage1) setPage(1);
+      fetchSubmissions(targetPage, "card");
     }
   };
 
@@ -787,167 +797,215 @@ const FormViewPage = ({
   };
 
   // Generic function to analyze form schema and identify field types
-  const analyzeFormSchema = (schema) => {
-    const fieldTypes = {};
+const analyzeFormSchema = (schema) => {
+  const fieldTypes = {};
 
-    const analyzeElement = (element, parentName = "") => {
-      const elementName = element.name.startsWith(parentName + "-")
+  const analyzeElement = (element, parentName = "") => {
+    const elementName =
+      element.name.startsWith(parentName + "-")
         ? element.name
         : parentName
           ? `${parentName}-${element.name}`
           : element.name;
 
-      if (element.type === "checkbox") {
-        fieldTypes[elementName] = "checkbox";
-      } else if (element.type === "radiogroup") {
-        fieldTypes[elementName] = "radio";
-      } else if (element.type === "multipletext") {
-        fieldTypes[elementName] = "multipletext";
-      } else if (element.type === "panel") {
-        if (element.elements) {
-          element.elements.forEach((child) => {
-            if (child.name.includes("-")) {
-              analyzeElement(child, "");
-            } else {
-              analyzeElement(child, element.name);
-            }
-          });
-        }
-      }
-
-      if (element.items && Array.isArray(element.items)) {
-        fieldTypes[elementName] = "multipletext";
-        element.items.forEach((item) => {
-          fieldTypes[`${elementName}.${item.name}`] = "multipletext_item";
+    if (element.type === "checkbox") {
+      fieldTypes[elementName] = "checkbox";
+      fieldTypes[element.name] = "checkbox"; // also register bare name
+    } else if (element.type === "radiogroup") {
+      fieldTypes[elementName] = "radio";
+      fieldTypes[element.name] = "radio";
+    } else if (element.type === "multipletext") {
+      fieldTypes[elementName] = "multipletext";
+      fieldTypes[element.name] = "multipletext";
+    } else if (element.type === "panel") {
+      if (element.elements) {
+        element.elements.forEach((child) => {
+          if (child.name.includes("-")) {
+            analyzeElement(child, "");
+          } else {
+            analyzeElement(child, element.name);
+          }
         });
       }
-    };
-
-    if (schema.pages) {
-      schema.pages.forEach((page) => {
-        if (page.elements) {
-          page.elements.forEach((element) => analyzeElement(element));
-        }
-      });
     }
 
-    return fieldTypes;
+    if (element.items && Array.isArray(element.items)) {
+      fieldTypes[elementName] = "multipletext";
+      fieldTypes[element.name] = "multipletext";
+    }
   };
 
-  // Transform API data to SurveyJS format
-  const transformApiToSurvey = (submission, formSchema) => {
-    const fieldTypes = analyzeFormSchema(formSchema);
-    const transformedData = { ...submission };
-
-    const processObject = (obj, parentKey = "") => {
-      Object.keys(obj).forEach((key) => {
-        const value = obj[key];
-        const fullKey = parentKey ? `${parentKey}-${key}` : key;
-
-        if (value && typeof value === "object" && !Array.isArray(value)) {
-          if (key === "GPS_point") {
-            const coordsObj =
-              value.point_mapsappearance || value.point_mapappearance;
-            if (coordsObj?.coordinates) {
-              const coords = coordsObj.coordinates;
-              transformedData["GPS_point"] = {
-                longitude: coords[0],
-                latitude: coords[1],
-              };
-              return;
-            }
-          } else if (
-            value.latitude !== undefined &&
-            value.longitude !== undefined
-          ) {
-            transformedData[fullKey] = value;
-          } else {
-            processObject(value, key);
-          }
-        } else {
-          if (typeof value === "string" && value.trim().length > 0) {
-            const fieldType = fieldTypes[fullKey] || fieldTypes[key];
-
-            if (fieldType === "checkbox" && value.includes(" ")) {
-              transformedData[fullKey] = value
-                .split(" ")
-                .filter((v) => v.trim().length > 0);
-            } else {
-              transformedData[fullKey] = value;
-            }
-          } else if (value === null || value === undefined) {
-            transformedData[fullKey] = value;
-          } else {
-            transformedData[fullKey] = value;
-          }
-        }
-      });
-    };
-
-    processObject(submission);
-
-    const legacyKeyMap = {
-      // LIVESTOCK
-      select_one_demand_promoting_livestock: "Livestock-is_demand_livestock",
-      select_one_promoting_livestock: "Livestock-demands_promoting_livestock",
-      select_one_promoting_livestock_other:
-        "Livestock-select_one_promoting_livestock_other",
-
-      // KITCHEN GARDENS
-      area_didi_badi: "kitchen_gardens-area_kg",
-      indi_assets: "kitchen_gardens-assets_kg",
-
-      // FISHERIES
-      select_one_demand_promoting_fisheries: "fisheries-is_demand_fisheries",
-      select_one_promoting_fisheries: "fisheries-demands_promoting_fisheries",
-      select_one_promoting_fisheries_other:
-        "fisheries-demands_promoting_fisheries_other",
-    };
-
-    Object.entries(legacyKeyMap).forEach(([oldKey, newKey]) => {
-      const oldValue = submission[oldKey];
-      const currentValue = transformedData[newKey];
-      const isCurrentEmpty =
-        currentValue === null ||
-        currentValue === undefined ||
-        currentValue === "";
-      const isOldValueReal =
-        oldValue !== null && oldValue !== undefined && oldValue !== "";
-      if (isCurrentEmpty && isOldValueReal) {
-        transformedData[newKey] = oldValue;
+  if (schema.pages) {
+    schema.pages.forEach((page) => {
+      if (page.elements) {
+        page.elements.forEach((element) => analyzeElement(element));
       }
     });
+  }
 
-    const legacyBeneficiaryName = submission["beneficiary_name"];
+  return fieldTypes;
+};
+
+  const buildChoiceMap = (schema) => {
+  const choiceMap = {};
+  const processElement = (element) => {
     if (
-      legacyBeneficiaryName !== null &&
-      legacyBeneficiaryName !== undefined &&
-      legacyBeneficiaryName !== ""
+      (element.type === "radiogroup" ||
+        element.type === "checkbox" ||
+        element.type === "dropdown") &&
+      Array.isArray(element.choices)
     ) {
-      const livestockDemand =
-        submission["select_one_demand_promoting_livestock"];
-      const fishDemand = submission["select_one_demand_promoting_fisheries"];
-      const kitchenDemand = submission["indi_assets"];
-
-      if (
-        livestockDemand === "Yes" &&
-        !transformedData["Livestock-ben_livestock"]
-      ) {
-        transformedData["Livestock-ben_livestock"] = legacyBeneficiaryName;
-      }
-      if (fishDemand === "Yes" && !transformedData["fisheries-ben_fisheries"]) {
-        transformedData["fisheries-ben_fisheries"] = legacyBeneficiaryName;
-      }
-      if (
-        kitchenDemand === "Yes" &&
-        !transformedData["kitchen_gardens-ben_kitchen_gardens"]
-      ) {
-        transformedData["kitchen_gardens-ben_kitchen_gardens"] =
-          legacyBeneficiaryName;
-      }
+      const map = {};
+      element.choices.forEach((choice) => {
+        if (typeof choice === "object" && choice.value !== undefined) {
+          map[String(choice.value).toLowerCase().trim()] = choice.value;
+          const text =
+            typeof choice.text === "object"
+              ? choice.text?.default ?? Object.values(choice.text)[0]
+              : choice.text;
+          if (text) map[String(text).toLowerCase().trim()] = choice.value;
+        } else if (typeof choice === "string") {
+          map[choice.toLowerCase().trim()] = choice;
+        }
+      });
+      choiceMap[element.name] = map;
     }
-    return transformedData;
+    if (element.elements) element.elements.forEach(processElement);
   };
+  if (schema.pages)
+    schema.pages.forEach((page) =>
+      (page.elements || []).forEach(processElement)
+    );
+  return choiceMap;
+};
+
+const resolveCheckboxValues = (rawString, fieldChoices) => {
+  if (!rawString || typeof rawString !== "string") return [];
+  const trimmed = rawString.trim();
+  if (!trimmed) return [];
+  if (!fieldChoices)
+    return trimmed.split(" ").filter((v) => v.trim().length > 0);
+
+  // Strategy 1: space-split — if ALL tokens match known values
+  const spaceSplit = trimmed.split(" ").filter((v) => v.trim().length > 0);
+  const allMatch = spaceSplit.every(
+    (t) => fieldChoices[t.toLowerCase().trim()] !== undefined
+  );
+  if (allMatch)
+    return spaceSplit.map((t) => fieldChoices[t.toLowerCase().trim()]);
+
+  // Strategy 2: capital-letter split for multi-word values
+  const capitalSplit = trimmed
+    .split(/(?=[A-Z])/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  return capitalSplit.map((t) => fieldChoices[t.toLowerCase().trim()] ?? t);
+};
+
+const resolveRadioValue = (rawValue, fieldChoices) => {
+  if (!rawValue || typeof rawValue !== "string") return rawValue;
+  if (!fieldChoices) return rawValue;
+  const resolved = fieldChoices[rawValue.toLowerCase().trim()];
+  return resolved !== undefined ? resolved : rawValue;
+};
+  // Transform API data to SurveyJS format
+const transformApiToSurvey = (submission, formSchema) => {
+  const fieldTypes = analyzeFormSchema(formSchema);
+  const choiceMap = buildChoiceMap(formSchema);
+  const transformedData = { ...submission };
+
+  const processObject = (obj, parentKey = "") => {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+      const fullKey = parentKey ? `${parentKey}-${key}` : key;
+
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        // GPS_point special handling
+        if (key === "GPS_point") {
+          const coordsObj =
+            value.point_mapsappearance || value.point_mapappearance;
+          if (coordsObj?.coordinates) {
+            const coords = coordsObj.coordinates;
+            transformedData["GPS_point"] = {
+              longitude: coords[0],
+              latitude: coords[1],
+            };
+            return;
+          }
+          if (value.latitude !== undefined && value.longitude !== undefined) {
+            transformedData["GPS_point"] = value;
+            return;
+          }
+        }
+
+        if (value.latitude !== undefined && value.longitude !== undefined) {
+          transformedData[fullKey] = value;
+          return;
+        }
+
+        // multipletext → keep as nested object, never flatten
+        const isMultipleText =
+          fieldTypes[key] === "multipletext" ||
+          fieldTypes[fullKey] === "multipletext";
+
+        if (isMultipleText) {
+          transformedData[key] = value;
+          return;
+        }
+
+        // Regular nested object (panel) → flatten with "-" separator
+        processObject(value, key);
+      } else {
+        if (typeof value === "string" && value.trim().length > 0) {
+          const fieldType = fieldTypes[fullKey] || fieldTypes[key];
+          const fieldChoices = choiceMap[fullKey] || choiceMap[key];
+
+          if (fieldType === "checkbox") {
+            transformedData[fullKey] = resolveCheckboxValues(value, fieldChoices);
+          } else if (fieldType === "radio") {
+            transformedData[fullKey] = resolveRadioValue(value, fieldChoices);
+          } else {
+            // text/number input — use as-is
+            transformedData[fullKey] = value;
+          }
+        } else {
+          // null, undefined, number, boolean — pass through directly
+          transformedData[fullKey] = value;
+        }
+      }
+    });
+  };
+
+  processObject(submission);
+
+  // Legacy key mappings
+  const legacyKeyMap = {
+    "Livestock-is_demand_livestock": "select_one_demand_promoting_livestock",
+    "Livestock-demands_promoting_livestock": "select_one_promoting_livestock",
+    "Livestock-select_one_promoting_livestock_other":
+      "select_one_promoting_livestock_other",
+    "kitchen_gardens-area_kg": "area_didi_badi",
+    "kitchen_gardens-assets_kg": "indi_assets",
+    "fisheries-is_demand_fisheries": "select_one_demand_promoting_fisheries",
+    "fisheries-demands_promoting_fisheries": "select_one_promoting_fisheries",
+    "fisheries-demands_promoting_fisheries_other":
+      "select_one_promoting_fisheries_other",
+  };
+
+  Object.entries(legacyKeyMap).forEach(([newKey, oldKey]) => {
+    const oldValue = submission[oldKey];
+    const currentValue = transformedData[newKey];
+    const isCurrentEmpty =
+      currentValue === null || currentValue === undefined || currentValue === "";
+    const isOldValueReal =
+      oldValue !== null && oldValue !== undefined && oldValue !== "";
+    if (isCurrentEmpty && isOldValueReal) {
+      transformedData[newKey] = oldValue;
+    }
+  });
+
+  return transformedData;
+};
 
   // Transform SurveyJS data back to API format
   const transformSurveyToApi = (surveyData, originalSubmission, formSchema) => {
@@ -1118,23 +1176,20 @@ const FormViewPage = ({
 
       const data = await res.json();
 
-      const submissionsWithFlags = (data.data || []).map((item) =>
-        Array.isArray(item) ? { ...item[0], _moderated: item[1] } : item,
-      );
-
-      const sortedData = submissionsWithFlags.sort((a, b) => {
-        const dateA = new Date(
-          a.submission_time || a.__system?.submissionDate || 0,
-        );
-        const dateB = new Date(
-          b.submission_time || b.__system?.submissionDate || 0,
-        );
-        return dateB - dateA;
+      const submissionsWithFlags = (data.data || []).map((item) => {
+        if (Array.isArray(item)) {
+          const submission = { ...item[0], _moderated: item[1] };
+          if (!submission.__id && item[2]) {
+            submission.__id = item[2];
+          }
+          return submission;
+        }
+        return item;
       });
 
-      setSubmissions(sortedData);
+      setSubmissions(submissionsWithFlags);
 
-      // pagination sirf card ke liye
+      // pagination is only for card
       if (mode === "card") {
         setPage(data.page || pg);
         setTotalPages(data.total_pages || 1);
@@ -1353,16 +1408,12 @@ const FormViewPage = ({
   useEffect(() => {
     window.viewSubmissionFromMap = (uuid) => {
       const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
-      if (submission) {
-        handleViewSubmission(submission);
-      }
+      if (submission) handleViewSubmission(submission); // async, fine to call without await
     };
 
     window.editSubmissionFromMap = (uuid) => {
       const submission = submissions.find((s) => getSubmissionUUID(s) === uuid);
-      if (submission) {
-        handleEditSubmission(submission);
-      }
+      if (submission) handleEditSubmission(submission);
     };
 
     window.deleteSubmissionFromMap = (uuid) => {
@@ -1379,85 +1430,84 @@ const FormViewPage = ({
     };
   }, [submissions]);
 
-  const handleViewSubmission = (submission) => {
-    const formTemplate = FORM_TEMPLATES[selectedForm];
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
+const handleViewSubmission = async (submission) => {
+  setFormTemplateLoading(true);
+  const formTemplate = await getFormTemplate(selectedForm);
+  setFormTemplateLoading(false);
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
+  const transformedData = transformApiToSurvey(submission, formTemplate);
+  setSelectedSubmission(submission);
+  setIsEditing(false);
+  const model = new Model(formTemplate);
+  model.mode = "display";
+  model.data = transformedData;
+  setSurveyModel(model);
+};
 
-    const transformedData = transformApiToSurvey(submission, formTemplate);
 
-    // Pass transformedData so it knows which fields have values
-    const smartTemplate = smartVisibleIf(formTemplate, transformedData, "view");
+const handleEditSubmission = async (submission) => {
+  const formTemplate = await getFormTemplate(selectedForm);
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
+  const transformedData = transformApiToSurvey(submission, formTemplate);
+  setSelectedSubmission(submission);
+  setIsEditing(true);
+  const model = new Model(formTemplate);
+  model.showCompletedPage = false;
+  model.data = transformedData;
+  model.onComplete.add((sender) => {
+    const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
+    const uuid = getSubmissionUUID(submission);
+    handleSaveSubmission(uuid, saveData);
+  });
+  setSurveyModel(model);
+};
 
-    setSelectedSubmission(submission);
-    setIsEditing(false);
-
-    const model = new Model(smartTemplate);
-    model.mode = "display";
-    model.data = transformedData;
-    setSurveyModel(model);
-  };
-
-  const handleEditSubmission = (submission) => {
-    const formTemplate = FORM_TEMPLATES[selectedForm];
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
-
-    const transformedData = transformApiToSurvey(submission, formTemplate);
-
-    // Pass transformedData so it knows which fields have values
-    const smartTemplate = smartVisibleIf(formTemplate, transformedData, "edit");
-
-    setSelectedSubmission(submission);
-    setIsEditing(true);
-
-    const model = new Model(smartTemplate);
-    model.data = transformedData;
-
-    model.onComplete.add((sender) => {
-      const saveData = transformSurveyToApi(
-        sender.data,
-        submission,
-        formTemplate,
-      );
-      const uuid = getSubmissionUUID(submission);
-      handleSaveSubmission(uuid, saveData);
-    });
-
-    setSurveyModel(model);
-  };
-
-  const handleSaveSubmission = async (uuid, data) => {
-    try {
-      const response = await fetch(
-        `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify(data),
+const handleSaveSubmission = async (uuid, data) => {
+  setSaveStatus("saving");
+  setSaveError("");
+  try {
+    const response = await fetch(
+      `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
         },
-      );
-      const result = await response.json();
-      if (result.success) {
-        alert("Saved successfully!");
-        setSelectedSubmission(null);
-        setSurveyModel(null);
-        reloadSubmissions();
-      } else {
-        alert("Save failed");
-      }
-    } catch (error) {
-      console.error("Save error:", error);
-      alert("Server error");
+        body: JSON.stringify(data),
+      },
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      setSaveStatus("error");
+      setSaveError(result?.message || result?.error || "Save failed. Please try again.");
+      return;
     }
-  };
+
+    setSaveStatus("success");
+    reloadSubmissions(true);
+
+    // Auto close after 1.5s on success
+    setTimeout(() => {
+      setSelectedSubmission(null);
+      setSurveyModel(null);
+      setSaveStatus("idle");
+    }, 1500);
+
+  } catch (error) {
+    console.error("Save error:", error);
+    setSaveStatus("error");
+    setSaveError("Network error. Please try again.");
+  }
+};
 
   const handleValidateSubmission = async (submission) => {
     const uuid = getSubmissionUUID(submission);
@@ -1467,14 +1517,22 @@ const FormViewPage = ({
     await fetchValidationResult(submission);
   };
 
-  const handleDelete = async (submission) => {
-    if (!window.confirm("Delete this submission?")) return;
+  const handleDelete = (submission) => {
+    setSubmissionToDelete(submission);
+    setDeleteStatus("confirm");
+  };
 
-    const uuid = getSubmissionUUID(submission);
+  const confirmDelete = async () => {
+    if (!submissionToDelete) return;
+
+    const uuid = getSubmissionUUID(submissionToDelete);
     if (!uuid) {
-      alert("Could not find submission UUID");
+      setDeleteStatus("error");
+      setDeleteError("Could not find submission UUID.");
       return;
     }
+
+    setDeleteStatus("deleting");
 
     try {
       const response = await fetch(
@@ -1486,16 +1544,30 @@ const FormViewPage = ({
           },
         },
       );
+
       const data = await response.json();
-      if (data.success) {
-        alert("Deleted!");
-        reloadSubmissions();
+
+      if (!response.ok) {
+        setDeleteStatus("error");
+        setDeleteError(data?.message || data?.error || "Delete failed. Please try again.");
+        return;
       }
+
+      setDeleteStatus("success");
+      reloadSubmissions(true);
+
+      // Auto close after 1.5s
+      setTimeout(() => {
+        setSubmissionToDelete(null);
+        setDeleteStatus("idle");
+      }, 1500);
+
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Server error");
+      setDeleteStatus("error");
+      setDeleteError("Network error. Please try again.");
     }
-  };
+};
 
   const handleGenerateDPR = async () => {
     if (!dprEmail || !selectedPlan) return;
@@ -1628,47 +1700,6 @@ const FormViewPage = ({
     }
   };
 
-  const smartVisibleIf = (schema, submissionData, mode) => {
-    const hasValue = (elementName, data) => {
-      if (!data) return false;
-      const direct = data[elementName];
-      if (direct !== undefined && direct !== null && direct !== "") return true;
-      if (Array.isArray(direct) && direct.length > 0) return true;
-      if (elementName.includes("-")) {
-        const [parent, child] = elementName.split("-");
-        const nested = data[parent]?.[child];
-        if (nested !== undefined && nested !== null && nested !== "")
-          return true;
-      }
-      return false;
-    };
-
-    const processElements = (elements, data) =>
-      elements.map((el) => {
-        const processed = { ...el };
-
-        if (processed.visibleIf && hasValue(processed.name, data)) {
-          delete processed.visibleIf;
-          if (mode === "edit") {
-            delete processed.isRequired;
-          }
-        }
-
-        if (processed.elements) {
-          processed.elements = processElements(processed.elements, data);
-        }
-
-        return processed;
-      });
-
-    return {
-      ...schema,
-      pages: schema.pages.map((page) => ({
-        ...page,
-        elements: processElements(page.elements || [], submissionData),
-      })),
-    };
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
@@ -2262,7 +2293,9 @@ const FormViewPage = ({
       {/* Modal for viewing/editing submission */}
       {selectedSubmission && surveyModel && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden relative">
+            
+            {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-black">
@@ -2280,27 +2313,175 @@ const FormViewPage = ({
                 onClick={() => {
                   setSelectedSubmission(null);
                   setSurveyModel(null);
+                  setSaveStatus("idle");
+                  setSaveError("");
                 }}
                 className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
+            {/* Survey content */}
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               <Survey model={surveyModel} />
+            </div>
+
+            {/* Status overlay — covers form during save/success/error */}
+            {saveStatus !== "idle" && (
+              <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10">
+                {saveStatus === "saving" && (
+                  <div className="text-center">
+                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-lg font-bold text-slate-700">Saving changes...</p>
+                    <p className="text-sm text-slate-500 mt-1">Please wait</p>
+                  </div>
+                )}
+
+                {saveStatus === "success" && (
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-bold text-slate-700">Saved successfully!</p>
+                  </div>
+                )}
+
+                {saveStatus === "error" && (
+                  <div className="text-center max-w-sm">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p className="text-lg font-bold text-slate-700">Save failed</p>
+                    <p className="text-sm text-red-600 mt-1 mb-5">{saveError}</p>
+                    <button
+                      onClick={() => {
+                        setSaveStatus("idle");
+                        setSaveError("");
+                      }}
+                      className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+                    >
+                      Go back
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation / status modal */}
+      {submissionToDelete && deleteStatus !== "idle" && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            
+            {/* Header */}
+            <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-6 flex items-center justify-between">
+              <h2 className="text-xl font-black">Delete Submission</h2>
+              {/* Only show close on confirm/error, not while deleting */}
+              {deleteStatus !== "deleting" && deleteStatus !== "success" && (
+                <button
+                  onClick={() => {
+                    setSubmissionToDelete(null);
+                    setDeleteStatus("idle");
+                    setDeleteError("");
+                  }}
+                  className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+
+            <div className="p-8 text-center">
+
+              {/* Confirm state */}
+              {deleteStatus === "confirm" && (
+                <>
+                  <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Trash2 className="w-8 h-8 text-rose-600" />
+                  </div>
+                  <p className="text-lg font-bold text-slate-800 mb-2">
+                    Are you sure?
+                  </p>
+                  <p className="text-sm text-slate-500 mb-6">
+                    This submission will be permanently deleted and cannot be recovered.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => {
+                        setSubmissionToDelete(null);
+                        setDeleteStatus("idle");
+                        setDeleteError("");
+                      }}
+                      className="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold text-sm hover:bg-slate-200 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmDelete}
+                      className="px-6 py-2.5 bg-rose-600 text-white rounded-xl font-semibold text-sm hover:bg-rose-700 transition-all"
+                    >
+                      Yes, delete it
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {/* Deleting state */}
+              {deleteStatus === "deleting" && (
+                <>
+                  <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin mx-auto mb-4" />
+                  <p className="text-lg font-bold text-slate-700">Deleting...</p>
+                  <p className="text-sm text-slate-500 mt-1">Please wait</p>
+                </>
+              )}
+
+              {/* Success state */}
+              {deleteStatus === "success" && (
+                <>
+                  <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-bold text-slate-700">Deleted successfully!</p>
+                  <p className="text-sm text-slate-500 mt-1">Closing automatically...</p>
+                </>
+              )}
+
+              {/* Error state */}
+              {deleteStatus === "error" && (
+                <>
+                  <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <p className="text-lg font-bold text-slate-700">Delete failed</p>
+                  <p className="text-sm text-red-600 mt-1 mb-5">{deleteError}</p>
+                  <button
+                    onClick={() => {
+                      setDeleteStatus("confirm");
+                      setDeleteError("");
+                    }}
+                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+                  >
+                    Try again
+                  </button>
+                </>
+              )}
+
             </div>
           </div>
         </div>
@@ -2459,7 +2640,7 @@ const FormViewPage = ({
 
                         {/* Dynamic data fields */}
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3 mb-4">
-                          {displayFields.map((field) => (
+                          {/* {displayFields.map((field) => (
                             <div key={field.key} className="min-w-0">
                               <div className="text-xs text-slate-400 font-medium mb-0.5 truncate">
                                 {field.label}
@@ -2468,6 +2649,37 @@ const FormViewPage = ({
                                 {getFieldValue(submission, field.key)}
                               </div>
                             </div>
+                          ))} */}
+
+                          {displayFields
+                            .map((field) => ({
+                              field,
+                              value: getFieldValue(submission, field.key),
+                            }))
+                            .filter(({ field, value }) => {
+                              // Hide Beneficiary_Name based on form-specific rules
+                              if (
+                                field.key === "Beneficiary_Name" ||
+                                field.key === "beneficiary_name" ||
+                                field.key === "Beneficiary_name" ||
+                                field.label?.toLowerCase().includes("beneficiary's name") ||
+                                field.label?.toLowerCase().includes("beneficiary name")
+                              ) {
+                                if (shouldHideBeneficiaryName(selectedForm, submission)) return false;
+                              }
+
+                              // Hide empty fields
+                              return value !== "-" && value !== null && value !== undefined && value !== "";
+                            })
+                            .map(({ field, value }) => (
+                              <div key={field.key} className="min-w-0">
+                                <div className="text-xs text-slate-400 font-medium mb-0.5 truncate">
+                                  {field.label}
+                                </div>
+                                <div className="text-sm font-semibold text-slate-800 truncate">
+                                  {value}
+                                </div>
+                              </div>
                           ))}
                         </div>
                       </div>
@@ -2531,6 +2743,7 @@ const FormViewPage = ({
                       <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-slate-100 bg-slate-50/60">
                         <button
                           onClick={() => handleViewSubmission(submission)}
+                          disabled={formTemplateLoading}
                           className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all"
                         >
                           <Eye size={13} />
