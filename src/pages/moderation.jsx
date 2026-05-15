@@ -45,6 +45,7 @@ import {
   structureRules,
   getFormTemplate,
   shouldHideBeneficiaryName,
+  stripSystemFields,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -1438,10 +1439,14 @@ const handleViewSubmission = async (submission) => {
     alert(`No template found for form: ${selectedForm}`);
     return;
   }
+
+  const cleanTemplate = stripSystemFields(formTemplate);
   const transformedData = transformApiToSurvey(submission, formTemplate);
+
   setSelectedSubmission(submission);
   setIsEditing(false);
-  const model = new Model(formTemplate);
+
+  const model = new Model(cleanTemplate);
   model.mode = "display";
   model.data = transformedData;
   setSurveyModel(model);
@@ -1449,22 +1454,34 @@ const handleViewSubmission = async (submission) => {
 
 
 const handleEditSubmission = async (submission) => {
+  setFormTemplateLoading(true);
   const formTemplate = await getFormTemplate(selectedForm);
+  setFormTemplateLoading(false);
   if (!formTemplate) {
     alert(`No template found for form: ${selectedForm}`);
     return;
   }
+
+  const cleanTemplate = stripSystemFields(formTemplate);
   const transformedData = transformApiToSurvey(submission, formTemplate);
+
   setSelectedSubmission(submission);
   setIsEditing(true);
-  const model = new Model(formTemplate);
+
+  const model = new Model(cleanTemplate);
   model.showCompletedPage = false;
   model.data = transformedData;
+
   model.onComplete.add((sender) => {
-    const saveData = transformSurveyToApi(sender.data, submission, formTemplate);
+    const saveData = transformSurveyToApi(
+      sender.data,
+      submission,
+      formTemplate,
+    );
     const uuid = getSubmissionUUID(submission);
     handleSaveSubmission(uuid, saveData);
   });
+
   setSurveyModel(model);
 };
 
