@@ -367,3 +367,51 @@ export const shouldHideBeneficiaryName = (formName, submission) => {
   const fieldValue = submission[rule.field];
   return fieldValue === rule.hideWhenValue;
 };
+
+const SYSTEM_FIELD_NAMES = new Set([
+  "GPS_point",
+  "block_name",
+  "plan_id",
+  "plan_name",
+  "user_latlon",
+  "sett_note_3",
+  "sett_note_4",
+  "well_note_1",
+  "rech_strc_note_1",
+  "crop_note_1",
+  "crop_note_2",
+  "note",
+  "question1", 
+  "crop_Grid_id",
+  "work_id",
+  "corresponding_work_id"
+]);
+
+
+const SYSTEM_FIELD_TYPES = new Set(["html"]);
+
+export const stripSystemFields = (schema) => {
+  if (!schema?.pages) return schema;
+
+  const filterElements = (elements) =>
+    elements
+      .filter(
+        (el) =>
+          !SYSTEM_FIELD_NAMES.has(el.name) &&
+          !SYSTEM_FIELD_TYPES.has(el.type)
+      )
+      .map((el) => {
+        if (el.type === "panel" && Array.isArray(el.elements)) {
+          return { ...el, elements: filterElements(el.elements) };
+        }
+        return el;
+      });
+
+  return {
+    ...schema,
+    pages: schema.pages.map((page) => ({
+      ...page,
+      elements: filterElements(page.elements || []),
+    })),
+  };
+};
