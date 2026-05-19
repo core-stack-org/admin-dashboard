@@ -2513,7 +2513,6 @@ const handleSaveSubmission = async (uuid, data) => {
                     </svg>
                   </div>
                   <p className="text-lg font-bold text-slate-700">Deleted successfully!</p>
-                  <p className="text-sm text-slate-500 mt-1">Closing automatically...</p>
                 </>
               )}
 
@@ -2845,7 +2844,6 @@ const handleSaveSubmission = async (uuid, data) => {
                               </button>
                             )}
 
-                            {(isAdmin || isSuperAdmin) && (
                               <button
                                 onClick={() => handleDelete(submission)}
                                 className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all"
@@ -2853,7 +2851,6 @@ const handleSaveSubmission = async (uuid, data) => {
                                 <Trash2 size={13} />
                                 Delete
                               </button>
-                            )}
                           </>
                         )}
                       </div>
