@@ -486,6 +486,12 @@ const OrgAdminDashboard = ({ currentUser }) => {
     },
   };
 
+  const handleViewPlans = () => {
+    navigate(
+      `/yuktdhara/organizations/${organizationId}/plans`
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-00 p-4 md:p-8">
       <motion.div
@@ -1036,6 +1042,39 @@ const OrgAdminDashboard = ({ currentUser }) => {
                 </div>
               </div>
 
+              {/* Plan Management */}
+              <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
+                Plan Management
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <motion.div
+                  variants={buttonVariants}
+                  whileHover="hover"
+                  whileTap="tap"
+                  className="cursor-pointer"
+                  onClick={handleViewPlans}
+                >
+                  <div className="relative group bg-white border-2 border-gray-200 rounded-[15px] p-5 text-center transition-all duration-300 overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.05)] hover:scale-[1.02] hover:border-[#4285f4] hover:shadow-[0_15px_30px_rgba(66,133,244,0.2)] min-h-[200px] z-10">
+                    <div className="absolute inset-0 pointer-events-none z-0">
+                      <div className="absolute top-1/2 left-1/2 w-0 h-0 group-hover:w-[300px] group-hover:h-[300px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.08)_0%,transparent_70%)] transform -translate-x-1/2 -translate-y-1/2 transition-all duration-500" />
+                    </div>
+
+                    <div className="relative z-10 flex flex-col items-center">
+                      <div className="bg-blue-500 p-2 rounded-full mb-2">
+                        <Eye className="h-5 w-5 text-white" />
+                      </div>
+                      <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
+                        View
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        View Plans
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+              
               <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 relative after:content-[''] after:absolute after:bottom-[-10px] after:left-1/2 after:-translate-x-1/2 after:w-24 after:h-1 after:bg-gradient-to-r after:from-blue-600 after:to-purple-600">
                 Organization Management
               </h2>
