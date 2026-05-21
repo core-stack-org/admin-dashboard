@@ -1,20 +1,21 @@
-export const getPlans = async (organizationId) => {
-  const token = sessionStorage.getItem("accessToken");
+export const getPlans = async (
+    organizationId,
+    page = 1
+    ) => {
+    const token = sessionStorage.getItem("accessToken");
 
-  const res = await fetch(
-    `${process.env.REACT_APP_BASEURL}api/v1/organizations/${organizationId}/watershed/plans/?filter_test_plan=true`,
+    const res = await fetch(
+    `${process.env.REACT_APP_BASEURL}api/v1/organizations/${organizationId}/watershed/plans/?page=${page}&filter_test_plan=true`,
     {
-      headers: {
+        headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
         "ngrok-skip-browser-warning": "1",
-      },
+        },
     }
-  );
+    );
 
-  const data = await res.json();
-
-  return data.results || data;
+    return await res.json();
 };
 
 export const getStates = async () => {

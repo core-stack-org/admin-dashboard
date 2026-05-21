@@ -27,6 +27,10 @@ const PlansPage = () => {
   const [gpOptions, setGpOptions] = useState([]);
   const [selectedGP, setSelectedGP] = useState("");
   const [showGPModal, setShowGPModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const handleExport = async (plan) => {
     try {
@@ -112,7 +116,15 @@ const PlansPage = () => {
 
   useEffect(() => {
     fetchPlans();
-  }, [organizationId]);
+  }, [organizationId, currentPage]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const loadStates = async () => {
     try {
@@ -132,9 +144,18 @@ const PlansPage = () => {
 
   const fetchPlans = async () => {
     try {
-      const data = await getPlans(organizationId);
+      const response = await getPlans(
+        organizationId,
+        currentPage
+      );
+
+      const data = response.results || [];
 
       setPlans(data);
+
+      setTotalPages(
+        Math.ceil(response.count / 10)
+      );
 
       // Fetch districts
       const uniqueStates = [
@@ -185,17 +206,40 @@ const PlansPage = () => {
   };
 
 
+  const searchFields = [
+    "plan",
+  ];
+
+  const filteredPlans = plans.filter((plan) =>
+    searchFields.some((field) =>
+      String(plan[field] || "")
+        .toLowerCase()
+        .includes(debouncedSearch.toLowerCase())
+    )
+  );
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Organization Plans
-        </h1>
+      <div className="flex justify-between items-center mb-6 mt-12">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Organization Plans
+          </h1>
 
-        <div className="text-sm text-gray-500">
-          Total Plans: {plans.length}
+          {/* <div className="text-sm text-gray-500">
+            Total Plans: {filteredPlans.length}
+          </div> */}
         </div>
+
+        <input
+          type="text"
+          placeholder="Search plans..."
+          value={searchTerm}
+          onChange={(e) =>
+            setSearchTerm(e.target.value)
+          }
+          className="border border-gray-300 rounded-lg px-4 py-2 w-72 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       {loading ? (
@@ -236,7 +280,7 @@ const PlansPage = () => {
             </thead>
 
             <tbody>
-            {plans.map((plan) => {
+            {filteredPlans.map((plan) => {
               const isGPMapped =
                 plan.gp &&
                 plan.gp !== "-";
@@ -301,6 +345,39 @@ const PlansPage = () => {
             })}
           </tbody>
           </table>
+          <div className="flex justify-center items-center gap-4 p-4">
+            <button
+              disabled={currentPage === 1}
+              onClick={() =>
+                setCurrentPage((prev) => prev - 1)
+              }
+              className={`px-4 py-2 rounded-lg transition ${
+                currentPage === 1
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600 text-white"
+              }`}
+            >
+              Previous
+            </button>
+
+            <span className="text-sm font-semibold text-gray-700">
+              Page {currentPage} of {totalPages}
+            </span>
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() =>
+                setCurrentPage((prev) => prev + 1)
+              }
+              className={`px-4 py-2 rounded-lg transition ${
+                currentPage === totalPages
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-blue-500 hover:bg-blue-600 text-white"
+              }`}
+            >
+              Next
+            </button>
+          </div>
           {showGPModal && (
             <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
               <div className="bg-white rounded-xl p-6 w-full max-w-md">
@@ -349,7 +426,7 @@ const PlansPage = () => {
           )}
           <ToastContainer position="top-right" />
 
-          {!plans.length && (
+          {!filteredPlans.length && (
             <div className="text-center py-10 text-gray-500">
               No plans found
             </div>
