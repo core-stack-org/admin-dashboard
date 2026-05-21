@@ -50,7 +50,7 @@ const PlansPage = () => {
 
       window.URL.revokeObjectURL(url);
 
-      toast.success("Download started");
+      toast.success("Download Available");
     } catch (err) {
       console.error(err);
       toast.error("Export failed");
@@ -89,8 +89,7 @@ const PlansPage = () => {
             plan.id === selectedPlan.id
               ? {
                   ...plan,
-                  gram_panchayat:
-                    response.data.gp_name,
+                  gp: response.data.gp_name,
                 }
               : plan
           )
@@ -285,7 +284,7 @@ const PlansPage = () => {
                       <button
                         disabled={!isGPMapped}
                         onClick={() =>
-                          handleExport(plan.id)
+                          handleExport(plan)
                         }
                         className={`px-3 py-1.5 text-white rounded-lg transition ${
                           !isGPMapped
