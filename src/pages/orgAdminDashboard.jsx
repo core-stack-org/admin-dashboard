@@ -15,6 +15,7 @@ import {
   UserPlus,
   UserMinus,
   Plug,
+  Map ,
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faUserCog } from "@fortawesome/free-solid-svg-icons";
@@ -1062,13 +1063,13 @@ const OrgAdminDashboard = ({ currentUser }) => {
 
                     <div className="relative z-10 flex flex-col items-center">
                       <div className="bg-blue-500 p-2 rounded-full mb-2">
-                        <Eye className="h-5 w-5 text-white" />
+                        <Map />
                       </div>
                       <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                        View
+                        Map
                       </h3>
                       <p className="text-sm text-gray-600">
-                        View Plans
+                        Map Plan To GP
                       </p>
                     </div>
                   </div>

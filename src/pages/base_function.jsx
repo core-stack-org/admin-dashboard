@@ -5,7 +5,7 @@ export const getPlans = async (
     const token = sessionStorage.getItem("accessToken");
 
     const res = await fetch(
-    `${process.env.REACT_APP_BASEURL}api/v1/organizations/${organizationId}/watershed/plans/?page=${page}&filter_test_plan=true`,
+    `${process.env.REACT_APP_BASEURL}api/v1/organizations/${organizationId}/watershed/plans/?page=${page}&filter_test_plan=true&is_dpr_reviewed=true`,
     {
         headers: {
         "Content-Type": "application/json",
@@ -101,11 +101,11 @@ export const mapPlanToGP = async (payload) => {
 };
 
 
-export const exportYuktdharaData = async (planId) => {
+export const exportYuktdharaData = async (gp_Id) => {
   const token = sessionStorage.getItem("accessToken");
 
   const response = await fetch(
-    `${process.env.REACT_APP_BASEURL}api/v1/yuktdhara_data/?plan_id=${planId}`,
+    `${process.env.REACT_APP_BASEURL}api/v1/yuktdhara_data/?gp_id=${gp_Id}`,
     {
       method: "GET",
       headers: {
@@ -119,4 +119,84 @@ export const exportYuktdharaData = async (planId) => {
   }
 
   return response.blob();
+};
+
+export const getGPByCode = async (gpCode) => {
+  const token = sessionStorage.getItem("accessToken");
+
+  const res = await fetch(
+    `${process.env.REACT_APP_BASEURL}api/v1/get_gp?gram_panchayat_code=${gpCode}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await res.json();
+
+  return data.data || [];
+};
+
+export const getGPMapped = async (organizationId, tehsilId) => {
+  const token = sessionStorage.getItem("accessToken");
+
+  const res = await fetch(
+    `${process.env.REACT_APP_BASEURL}api/v1/get_gp_mapped_with_plan?org_id=${organizationId}&tehsil_id=${tehsilId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await res.json();
+
+  return data.data || [];
+};
+
+
+export const getDistrictOrg = async (
+  organizationId
+) => {
+  const token =
+    sessionStorage.getItem("accessToken");
+
+  const res = await fetch(
+    `${process.env.REACT_APP_BASEURL}api/v1/get_district_org?org_id=${organizationId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await res.json();
+};
+
+export const getTehsilOrg = async (
+  organizationId,
+  districtId
+) => {
+  const token =
+    sessionStorage.getItem("accessToken");
+
+  const res = await fetch(
+    `${process.env.REACT_APP_BASEURL}api/v1/get_tehsil_org?org_id=${organizationId}&district_id=${districtId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  return await res.json();
 };
