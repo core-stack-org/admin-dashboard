@@ -1066,10 +1066,10 @@ const OrgAdminDashboard = ({ currentUser }) => {
                         <Map />
                       </div>
                       <h3 className="text-[1.1rem] font-semibold text-gray-800 mb-1">
-                        Map
+                        Yuktdhara 
                       </h3>
                       <p className="text-sm text-gray-600">
-                        Map Plan To GP
+                        Map Plan To GP & export Yuktdhara format Data
                       </p>
                     </div>
                   </div>
