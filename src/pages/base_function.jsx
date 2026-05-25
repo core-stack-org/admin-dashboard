@@ -5,7 +5,7 @@ export const getPlans = async (
     const token = sessionStorage.getItem("accessToken");
 
     const res = await fetch(
-    `${process.env.REACT_APP_BASEURL}api/v1/organizations/${organizationId}/watershed/plans/?page=${page}&filter_test_plan=true&is_dpr_reviewed=true`,
+    `${process.env.REACT_APP_BASEURL}api/v1/organizations/${organizationId}/watershed/plans/?page=${page}&filter_test_plan=true&is_dpr_reviewed=true&is_completed=true`,
     {
         headers: {
         "Content-Type": "application/json",
