@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, Eye, EyeOff } from "lucide-react";
+import { LogOut, Eye, EyeOff ,  PanelLeftClose,  PanelLeftOpen,} from "lucide-react";
 import { Bell } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,7 +17,7 @@ import {
   faShieldAlt,
 } from "@fortawesome/free-solid-svg-icons";
 
-import logo from "../assets/core-stack logo.png";
+import logo from "../assets/core_stack_logo.jpeg";
 import { useNavigate } from "react-router-dom";
 import layersData from "../jsons/layers.json";
 import { toast } from "react-toastify";
@@ -38,6 +38,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showProfileDetails, setShowProfileDetails] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -444,10 +446,40 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-64 bg-gray-800 text-white overflow-y-auto scrollbar-hide">
-        <div className="flex items-center justify-center h-16 bg-gray-800">
-          <img src={logo} alt="Logo" className="h-24 w-24 mt-10 rounded-full" />
-        </div>
+<div
+  className={`fixed top-0 left-0 h-screen bg-gray-800 text-white overflow-y-auto scrollbar-hide transition-all duration-300 ${
+    isSidebarCollapsed ? "w-20" : "w-64"
+  }`}
+>        <div
+  className={`flex items-center h-16 border-b border-gray-700 transition-all duration-300 ${
+    isSidebarCollapsed
+      ? "justify-center"
+      : "justify-between px-4"
+  }`}
+>
+  {/* Logo */}
+  {!isSidebarCollapsed && (
+    <img
+      src={logo}
+      alt="Logo"
+      className="h-12 w-12 rounded-full"
+    />
+  )}
+
+  {/* Collapse Button */}
+  <button
+    onClick={() =>
+      setIsSidebarCollapsed(!isSidebarCollapsed)
+    }
+    className="p-2 rounded-lg hover:bg-gray-700 transition"
+  >
+    {isSidebarCollapsed ? (
+      <PanelLeftOpen size={20} />
+    ) : (
+      <PanelLeftClose size={20} />
+    )}
+  </button>
+</div>
         <nav className="flex-1 px-4 py-6">
           <ul className="space-y-2 mt-10">
             {menuItems.map((item, index) => (
@@ -468,9 +500,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
                         </div>
+                      {!isSidebarCollapsed && (
                         <span className="text-sm font-medium">
                           {item.label}
                         </span>
+                      )}
                       </div>
                     </a>
                   ) : (
@@ -489,9 +523,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
                         </div>
-                        <span className="text-sm font-medium">
-                          {item.label}
-                        </span>
+                        {!isSidebarCollapsed && (
+                          <span className="text-sm font-medium">
+                            {item.label}
+                          </span>
+                        )}
                       </div>
                     </button>
                   )
@@ -509,9 +545,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
                         </div>
+                      {!isSidebarCollapsed && (
                         <span className="text-sm font-medium">
                           {item.label}
                         </span>
+                      )}
                         <span className="ml-auto">
                           {isLayerOpen ? "▲" : "▼"}
                         </span>
@@ -548,13 +586,6 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       <nav className="fixed top-0 left-64 right-0 bg-gray-800 text-white h-16 z-20">
         <div className="flex items-center h-full px-4 relative">
           <h1 className="text-xl font-bold mx-auto">CoRE Stack dashboard</h1>
-
-          <div className="relative mr-4">
-            <button className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors">
-              <Bell size={20} className="text-white" />
-              {/* <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-gray-800"></span> */}
-            </button>
-          </div>
           <div className="relative">
             <button
               className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
@@ -585,7 +616,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-12 right-0 w-56 bg-white shadow-lg rounded-lg z-30 text-gray-800 overflow-hidden">
+              <div className="absolute top-12 right-0 w-56 bg-white shadow-lg rounded-lg z-30 text-gray-800 overflow-hidden border animate-in fade-in duration-200">
                 {/* User info header */}
                 <div className="px-4 py-3 bg-gray-50 border-b">
                   <p className="text-sm font-medium">
@@ -598,8 +629,14 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                 </div>
 
                 <ul>
-                  <li className="hover:bg-gray-50">
-                    <button className="flex items-center w-full px-4 py-2 text-sm">
+                 <li className="hover:bg-gray-50">
+                  <button
+                    onClick={() =>
+                      setShowProfileDetails(!showProfileDetails)
+                    }
+                    className="flex items-center justify-between w-full px-4 py-2 text-sm"
+                  >
+                    <div className="flex items-center">
                       <svg
                         className="w-4 h-4 mr-3 text-gray-500"
                         fill="none"
@@ -613,9 +650,89 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                           d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                         />
                       </svg>
+
                       Profile
-                    </button>
-                  </li>
+                    </div>
+
+                    <span className="text-xs">
+                      {showProfileDetails ? "▲" : "▼"}
+                    </span>
+                  </button>
+                </li>
+              {showProfileDetails && (
+                <div className="px-4 py-4 bg-gray-50 border-t border-b text-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
+
+                  {/* Username */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-500">
+                      Username
+                    </p>
+
+                    <span className="mx-2 text-gray-400">
+                      -
+                    </span>
+
+                    <p className="font-medium text-right">
+                      {currentuser?.user?.username || "-"}
+                    </p>
+                  </div>
+
+                  {/* Email */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-500">
+                      Email
+                    </p>
+
+                    <span className="mx-2 text-gray-400">
+                      -
+                    </span>
+
+                    <p className="font-medium text-right break-all">
+                      {currentuser?.user?.email || "-"}
+                    </p>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-500">
+                      Contact
+                    </p>
+
+                    <span className="mx-2 text-gray-400">
+                      -
+                    </span>
+
+                    <p className="font-medium text-right">
+                      {currentuser?.user?.contact_number || "1234567890"}
+                    </p>
+                  </div>
+
+                  {/* Roles */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-gray-500">
+                      Roles
+                    </p>
+
+                    <span className="mx-2 text-gray-400">
+                      -
+                    </span>
+
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      {currentuser?.user?.groups?.map(
+                        (group, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                          >
+                            {group.name}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              )}
                   {/* New Change Password option */}
                   <li className="hover:bg-gray-50">
                     <button
