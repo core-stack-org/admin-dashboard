@@ -447,14 +447,13 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
 
       {/* Sidebar */}
 <div
-  className={`fixed top-0 left-0 h-screen bg-gray-800 text-white overflow-y-auto scrollbar-hide transition-all duration-300 ${
+  className={`fixed top-0 left-0 h-screen bg-purple-600 text-white overflow-y-auto scrollbar-hide transition-all duration-300 ${
     isSidebarCollapsed ? "w-20" : "w-64"
   }`}
->        <div
-  className={`flex items-center h-16 border-b border-gray-700 transition-all duration-300 ${
-    isSidebarCollapsed
-      ? "justify-center"
-      : "justify-between px-4"
+>      
+<div
+  className={`relative flex items-center h-20 border-b border-purple-600 transition-all duration-300 ${
+    isSidebarCollapsed ? "justify-center" : "justify-center"
   }`}
 >
   {/* Logo */}
@@ -462,17 +461,17 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     <img
       src={logo}
       alt="Logo"
-      className="h-12 w-12 rounded-full"
+      className="h-16 w-16 object-contain"
     />
   )}
 
   {/* Collapse Button */}
-  <button
-    onClick={() =>
-      setIsSidebarCollapsed(!isSidebarCollapsed)
-    }
-    className="p-2 rounded-lg hover:bg-gray-700 transition"
-  >
+<button
+  onClick={() =>
+    setIsSidebarCollapsed(!isSidebarCollapsed)
+  }
+  className="absolute right-3 p-2 rounded-lg hover:bg-purple-700 transition"
+>
     {isSidebarCollapsed ? (
       <PanelLeftOpen size={20} />
     ) : (
@@ -492,8 +491,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                       rel="noopener noreferrer"
                       className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
                         activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
+                          ? "bg-purple-700"
+                          : "hover:bg-purple-700"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -515,8 +514,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                       }}
                       className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
                         activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
+                          ? "bg-purple-700"
+                          : "hover:bg-purple-700"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -537,8 +536,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                       onClick={() => setIsLayerOpen(!isLayerOpen)}
                       className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
                         activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
+                          ? "bg-purple-700"
+                          : "hover:bg-purple-700"
                       }`}
                     >
                       <div className="flex items-center gap-3">
@@ -564,8 +563,8 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                               onClick={() => handleLayerClick(layer)}
                               className={`block px-2 py-1 w-full rounded-lg text-left text-sm ${
                                 activeItem === layer
-                                  ? "bg-gray-600"
-                                  : "hover:bg-gray-600"
+                                  ? "bg-purple-600"
+                                  : "hover:bg-purple-600"
                               }`}
                             >
                               {layer}
@@ -583,15 +582,19 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       </div>
 
       {/* Top Navbar */}
-      <nav className="fixed top-0 left-64 right-0 bg-gray-800 text-white h-16 z-20">
+      <nav
+        className={`fixed top-0 right-0 bg-purple-600 text-white h-16 z-20 transition-all duration-300 ${
+          isSidebarCollapsed ? "left-20" : "left-64"
+        }`}
+      >      
         <div className="flex items-center h-full px-4 relative">
-          <h1 className="text-xl font-bold mx-auto">CoRE Stack dashboard</h1>
-          <div className="relative">
+          
+          <div className=" ml-auto relative">
             <button
-              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-purple-500 transition-colors"
               onClick={toggleDropdown}
             >
-              <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center">
+              <div className="w-9 h-9 rounded-full bg-purple-700 flex items-center justify-center">
                 <span className="text-sm font-bold">
                   {currentuser?.user?.first_name?.charAt(0)?.toUpperCase() ||
                     ""}
@@ -599,7 +602,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                 </span>
               </div>
               <svg
-                className={`w-4 h-4 text-gray-300 transition-transform duration-200 ${
+                className={`w-4 h-4 text-purple-300 transition-transform duration-200 ${
                   isDropdownOpen ? "rotate-180" : ""
                 }`}
                 fill="none"
@@ -616,20 +619,20 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-12 right-0 w-56 bg-white shadow-lg rounded-lg z-30 text-gray-800 overflow-hidden border animate-in fade-in duration-200">
+              <div className="absolute top-12 right-0 w-56 bg-white shadow-lg rounded-lg z-30 text-purple-800 overflow-hidden border animate-in fade-in duration-200">
                 {/* User info header */}
-                <div className="px-4 py-3 bg-gray-50 border-b">
+                <div className="px-4 py-3 bg-purple-50 border-b">
                   <p className="text-sm font-medium">
                     {currentuser?.user?.first_name}{" "}
                     {currentuser?.user?.last_name}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-purple-500 truncate">
                     {currentuser?.user?.email || "user@example.com"}
                   </p>
                 </div>
 
                 <ul>
-                 <li className="hover:bg-gray-50">
+                 <li className="hover:bg-purple-50">
                   <button
                     onClick={() =>
                       setShowProfileDetails(!showProfileDetails)
@@ -660,7 +663,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   </button>
                 </li>
               {showProfileDetails && (
-                <div className="px-4 py-4 bg-gray-50 border-t border-b text-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
+                <div className="px-4 py-4 bg-purple-50 border-t border-b text-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
 
                   {/* Username */}
                   <div className="flex items-center justify-between">
@@ -734,7 +737,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                 </div>
               )}
                   {/* New Change Password option */}
-                  <li className="hover:bg-gray-50">
+                  <li className="hover:bg-purple-50">
                     <button
                       className="flex items-center w-full px-4 py-2 text-sm text-blue-600"
                       onClick={openChangePasswordModal}
@@ -814,7 +817,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   <button
                     type="button"
                     onClick={() => setShowOldPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-purple-500"
                   >
                     {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -837,7 +840,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   <button
                     type="button"
                     onClick={() => setShowNewPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-purple-500"
                   >
                     {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -860,7 +863,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-purple-500"
                   >
                     {showConfirmPassword ? (
                       <EyeOff size={20} />
@@ -875,7 +878,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  className="mr-4 px-4 py-2 rounded bg-gray-200 text-gray-700"
+                  className="mr-4 px-4 py-2 rounded bg-purple-200 text-purple-700"
                   onClick={() => setIsChangeModalOpen(false)}
                 >
                   Cancel
