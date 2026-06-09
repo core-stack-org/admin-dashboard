@@ -36,6 +36,7 @@ import RequestLocationForm from "./pages/requestLocationForm";
 import Moderation from "./pages/moderation";
 import ForgotPassword from "./pages/forgot-password";
 import PlansPage from "./pages/organizationPlans";
+import ProjectsList from "./pages/projectsList";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -104,6 +105,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/projects"
                   element={<AllProjects currentUser={currentUser} />}
+                />
+                 <Route
+                  path="/projectsList"
+                  element={<ProjectsList currentUser={currentUser} />}
                 />
                 <Route
                   path="/organizations"

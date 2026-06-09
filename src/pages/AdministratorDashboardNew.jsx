@@ -15,7 +15,7 @@ import {
   UserPlus,
   UserMinus,
   Plug,
-  Map ,
+  Map,
 } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBuilding, faUserCog } from "@fortawesome/free-solid-svg-icons";
@@ -32,6 +32,7 @@ import GenerateApiKeyPage from "./GenerateApiKeyPage.jsx";
 import AllProjects from "./allProjects.jsx";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
+import ProjectsList from "./projectsList.jsx";
 
 const AdministratorDashboardNew = ({ currentUser }) => {
   const organizationName = currentUser?.user?.organization_name;
@@ -501,13 +502,15 @@ const AdministratorDashboardNew = ({ currentUser }) => {
         variants={containerVariants}
         className="max-w-7xl mx-auto space-y-8"
       >
-        <div className="text-center mb-10 mt-4">
+        <div className="text-center">
           <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
             {organizationName}
           </h1>
         </div>
 
-  
+        <div>
+          <ProjectsList statesList={statesList} currentUser={currentUser} />
+        </div>
       </motion.div>
     </div>
   );
