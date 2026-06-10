@@ -93,7 +93,7 @@ export const getFormTemplate = async (formName) => {
     const res = await fetch(`${S3_BASE}/${filename}`);
     if (!res.ok) throw new Error(`Failed to fetch ${filename}`);
     const json = await res.json();
-    formTemplateCache[formName] = json; 
+    formTemplateCache[formName] = json;
     return json;
   } catch (err) {
     console.error(`Form template fetch error for ${formName}:`, err);
@@ -177,39 +177,39 @@ export const CARD_DISPLAY_FIELDS = {
   ],
 
   Livelihood: [
-  {
-    key: "beneficiary_settlement",
-    label: "Name of Beneficiary's Settlement",
-  },
-  {
-    key: "beneficiary_name",
-    label: "Beneficiary's Name",
-  },
-  {
-    key: "Livestock-is_demand_livestock",
-    label: "Livestock Demand?",
-  },
-  {
-    key: "Livestock-ben_livestock",
-    label: "Livestock Beneficiary",
-  },
-  {
-    key: "kitchen_gardens-assets_kg",
-    label: "Kitchen Garden Demand?",
-  },
-  {
-    key: "kitchen_gardens-ben_kitchen_gardens",
-    label: "Kitchen Garden Beneficiary",
-  },
-  {
-    key: "fisheries-is_demand_fisheries",
-    label: "Fisheries Demand?",
-  },
-  {
-    key: "fisheries-ben_fisheries",
-    label: "Fisheries Beneficiary",
-  },
-],
+    {
+      key: "beneficiary_settlement",
+      label: "Name of Beneficiary's Settlement",
+    },
+    {
+      key: "beneficiary_name",
+      label: "Beneficiary's Name",
+    },
+    {
+      key: "Livestock-is_demand_livestock",
+      label: "Livestock Demand?",
+    },
+    {
+      key: "Livestock-ben_livestock",
+      label: "Livestock Beneficiary",
+    },
+    {
+      key: "kitchen_gardens-assets_kg",
+      label: "Kitchen Garden Demand?",
+    },
+    {
+      key: "kitchen_gardens-ben_kitchen_gardens",
+      label: "Kitchen Garden Beneficiary",
+    },
+    {
+      key: "fisheries-is_demand_fisheries",
+      label: "Fisheries Demand?",
+    },
+    {
+      key: "fisheries-ben_fisheries",
+      label: "Fisheries Beneficiary",
+    },
+  ],
 
   Agri: [
     {
@@ -299,29 +299,29 @@ export const CARD_DISPLAY_FIELDS = {
 
 
 export const structureRules = {
-  "Staggered Contour trenches (SCT)":"staggered_contour_trenches_sct",
-  "Check dam":"check_dam",
-  "Percolation tank":"percolation_tank",
-  "Earthen gully plug":"earthen_gully_plug",
-  "Drainage/soakage channels":"drainage_soakage_channels",
-  "Recharge pits":"recharge_pits",
-  "Soakage pits":"soakage_pits",
-  "Trench cum bund network":"trench_cum_bund_network",
-  "Continuous contour trenches (CCT)":"continuous_contour_trenches_cct",
-  "Water absorption trenches (WAT)":"water_absorption_trenches_wat",
-  "Loose Boulder Structure":"loose_boulder_structure",
-  "Rock fill dam":"rock_fill_dam",
-  "Stone bunding":"stone_bunding",
-  "Diversion drains":"diversion_drains",
-  "Bunding:Contour bunds/ graded bunds":"contour_bund",
-  "5% model structure":"5_percent_model_structure",
-  "30-40 model structure":"30_40_model_structure",
-  "Farm pond":"farm_pond",
-  "Community Pond":"community_pond",
-  "Well":"well",
-  "Canal":"canal",
-  "Farm bund":"farm_bund",
-  "Large water body":"large_water_body"
+  "Staggered Contour trenches (SCT)": "staggered_contour_trenches_sct",
+  "Check dam": "check_dam",
+  "Percolation tank": "percolation_tank",
+  "Earthen gully plug": "earthen_gully_plug",
+  "Drainage/soakage channels": "drainage_soakage_channels",
+  "Recharge pits": "recharge_pits",
+  "Soakage pits": "soakage_pits",
+  "Trench cum bund network": "trench_cum_bund_network",
+  "Continuous contour trenches (CCT)": "continuous_contour_trenches_cct",
+  "Water absorption trenches (WAT)": "water_absorption_trenches_wat",
+  "Loose Boulder Structure": "loose_boulder_structure",
+  "Rock fill dam": "rock_fill_dam",
+  "Stone bunding": "stone_bunding",
+  "Diversion drains": "diversion_drains",
+  "Bunding:Contour bunds/ graded bunds": "contour_bund",
+  "5% model structure": "5_percent_model_structure",
+  "30-40 model structure": "30_40_model_structure",
+  "Farm pond": "farm_pond",
+  "Community Pond": "community_pond",
+  "Well": "well",
+  "Canal": "canal",
+  "Farm bund": "farm_bund",
+  "Large water body": "large_water_body"
 }
 
 // Config: if this field has this value → hide Beneficiary_Name in card
@@ -331,7 +331,7 @@ export const BENEFICIARY_VISIBILITY_RULES = {
     hideWhenValue: "Public well",
   },
   Groundwater: {
-    field: "demand_type", 
+    field: "demand_type",
     hideWhenValue: "Community_demand",
   },
   Agrohorticulture: {
@@ -381,7 +381,7 @@ const SYSTEM_FIELD_NAMES = new Set([
   "crop_note_1",
   "crop_note_2",
   "note",
-  "question1", 
+  "question1",
   "crop_Grid_id",
   "work_id",
   "corresponding_work_id"
@@ -414,4 +414,12 @@ export const stripSystemFields = (schema) => {
       elements: filterElements(page.elements || []),
     })),
   };
+};
+
+export const LANGUAGE_MAP = {
+  "en": "English",
+  "hi": "Hindi",
+  "gu": "Gujarati",
+  "kn": "Kannada",
+  "or": "Odia",
 };
