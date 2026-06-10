@@ -48,6 +48,7 @@ import {
   stripSystemFields,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
+import { getBlocks } from "./base_function";
 
 const getToken = () => sessionStorage.getItem("accessToken");
 
@@ -134,6 +135,7 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
+  const [blocksMap, setBlocksMap] = useState({});
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -216,6 +218,34 @@ const SelectionPage = ({
     }
   }, [plans, initialPlan]);
 
+  useEffect(() => {
+    if (!plans || plans.length === 0) return;
+
+    const uniqueDistricts = [
+      ...new Set(plans.map((p) => p.district_soi).filter(Boolean)),
+    ];
+
+    const fetchAllBlocks = async () => {
+      for (const districtCode of uniqueDistricts) {
+        try {
+          const blocks = await getBlocks(districtCode);
+          const blockObj = {};
+          blocks.forEach((block) => {
+            blockObj[block.id] = block.block_name;
+          });
+          setBlocksMap((prev) => ({
+            ...prev,
+            ...blockObj,
+          }));
+        } catch (err) {
+          console.error(`Failed to fetch blocks for district ${districtCode}`, err);
+        }
+      }
+    };
+
+    fetchAllBlocks();
+  }, [plans]);
+
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
       plan_id: p.id || p.plan_id,
@@ -224,6 +254,8 @@ const SelectionPage = ({
       year: p.created_at ? new Date(p.created_at).getFullYear() : "",
       village: p.village || p.village_name || "",
       created_at: p.created_at || "",
+      tehsil_soi: p.tehsil_soi,
+      district_soi: p.district_soi,
     }));
 
   const handleProjectChange = (e) => {
@@ -461,6 +493,24 @@ const SelectionPage = ({
                             />
                           </svg>
                           {date}
+                        </span>
+                      )}
+                      {plan.tehsil_soi && (
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <svg
+                            className="w-3 h-3 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            />
+                          </svg>
+                          {blocksMap[plan.tehsil_soi] || `Tehsil (${plan.tehsil_soi})`}
                         </span>
                       )}
                     </div>
