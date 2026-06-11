@@ -1881,8 +1881,8 @@ const FormViewPage = ({
               <button
                 onClick={() => setViewMode("card")}
                 className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${viewMode === "card"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                  ? "bg-indigo-600 text-white shadow-md"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                   }`}
               >
                 <Grid size={15} />
@@ -1891,8 +1891,8 @@ const FormViewPage = ({
               <button
                 onClick={() => setViewMode("map")}
                 className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${viewMode === "map"
-                    ? "bg-indigo-600 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                  ? "bg-indigo-600 text-white shadow-md"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                   }`}
               >
                 <MapIcon size={15} />
@@ -1955,8 +1955,8 @@ const FormViewPage = ({
                     <button
                       onClick={() => setDprExpanded(!dprExpanded)}
                       className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${dprExpanded
-                          ? "bg-violet-600 text-white border-violet-600 shadow-md"
-                          : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
+                        ? "bg-violet-600 text-white border-violet-600 shadow-md"
+                        : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
                         }`}
                     >
                       <FileText size={15} />
@@ -2063,8 +2063,8 @@ const FormViewPage = ({
                             }
                             disabled={planReviewLoading}
                             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${planDetails?.is_completed
-                                ? "bg-blue-700"
-                                : "bg-slate-300"
+                              ? "bg-blue-700"
+                              : "bg-slate-300"
                               } ${planReviewLoading
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
@@ -2074,8 +2074,8 @@ const FormViewPage = ({
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${planDetails?.is_completed
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
+                                ? "translate-x-6"
+                                : "translate-x-1"
                                 }`}
                             />
                           </button>
@@ -2100,8 +2100,8 @@ const FormViewPage = ({
                             }
                             disabled={planReviewLoading}
                             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${planDetails?.is_reviewed
-                                ? "bg-blue-700"
-                                : "bg-slate-300"
+                              ? "bg-blue-700"
+                              : "bg-slate-300"
                               } ${planReviewLoading
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
@@ -2111,8 +2111,8 @@ const FormViewPage = ({
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${planDetails?.is_reviewed
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
+                                ? "translate-x-6"
+                                : "translate-x-1"
                                 }`}
                             />
                           </button>
@@ -2123,8 +2123,8 @@ const FormViewPage = ({
                     {planReviewNotification && (
                       <div
                         className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${planReviewNotification.type === "success"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                            : "border-red-200 bg-red-50 text-red-800"
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                          : "border-red-200 bg-red-50 text-red-800"
                           }`}
                       >
                         <CheckCircle2 size={16} className="shrink-0" />
@@ -2163,8 +2163,8 @@ const FormViewPage = ({
                               dprWorkflowLoading === "status-submitted"
                             }
                             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${dprWorkflowStatus?.status === "SUBMITTED"
-                                ? "bg-blue-700"
-                                : "bg-slate-300"
+                              ? "bg-blue-700"
+                              : "bg-slate-300"
                               } ${dprWorkflowMissing ||
                                 dprWorkflowLoading === "status-submitted"
                                 ? "cursor-not-allowed opacity-60"
@@ -2177,8 +2177,8 @@ const FormViewPage = ({
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${dprWorkflowStatus?.status === "SUBMITTED"
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
+                                ? "translate-x-6"
+                                : "translate-x-1"
                                 }`}
                             />
                           </button>
@@ -2225,8 +2225,8 @@ const FormViewPage = ({
                                 dprWorkflowLoading === "status-approved"
                               }
                               className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${dprWorkflowStatus?.status === "APPROVED"
-                                  ? "bg-emerald-700"
-                                  : "bg-slate-300"
+                                ? "bg-emerald-700"
+                                : "bg-slate-300"
                                 } ${dprWorkflowMissing ||
                                   dprWorkflowLoading === "status-approved"
                                   ? "cursor-not-allowed opacity-60"
@@ -2239,8 +2239,8 @@ const FormViewPage = ({
                             >
                               <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${dprWorkflowStatus?.status === "APPROVED"
-                                    ? "translate-x-6"
-                                    : "translate-x-1"
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
                                   }`}
                               />
                             </button>
@@ -2269,8 +2269,8 @@ const FormViewPage = ({
                                 dprWorkflowLoading === "status-rejected"
                               }
                               className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${dprWorkflowStatus?.status === "REJECTED"
-                                  ? "bg-red-700"
-                                  : "bg-slate-300"
+                                ? "bg-red-700"
+                                : "bg-slate-300"
                                 } ${dprWorkflowMissing ||
                                   dprWorkflowLoading === "status-rejected"
                                   ? "cursor-not-allowed opacity-60"
@@ -2283,8 +2283,8 @@ const FormViewPage = ({
                             >
                               <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${dprWorkflowStatus?.status === "REJECTED"
-                                    ? "translate-x-6"
-                                    : "translate-x-1"
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
                                   }`}
                               />
                             </button>
@@ -2304,8 +2304,8 @@ const FormViewPage = ({
                 {dprWorkflowNotification && (
                   <div
                     className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${dprWorkflowNotification.type === "success"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-red-50 text-red-700"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-red-50 text-red-700"
                       }`}
                   >
                     <CheckCircle2 size={16} className="shrink-0" />
@@ -2322,14 +2322,14 @@ const FormViewPage = ({
       {dprNotification && (
         <div
           className={`fixed top-6 right-6 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm transition-all animate-in fade-in slide-in-from-top-3 duration-300 ${dprNotification.type === "success"
-              ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
-              : "bg-red-50/90 border-red-200 text-red-900"
+            ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+            : "bg-red-50/90 border-red-200 text-red-900"
             }`}
         >
           <div
             className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${dprNotification.type === "success"
-                ? "bg-emerald-500"
-                : "bg-red-500"
+              ? "bg-emerald-500"
+              : "bg-red-500"
               }`}
           >
             {dprNotification.type === "success" ? (
@@ -2717,8 +2717,8 @@ const FormViewPage = ({
                         <div className="flex items-center justify-between mb-4">
                           <span
                             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${isModerated
-                                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                                : "bg-amber-50 text-amber-700 ring-amber-200"
+                              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                              : "bg-amber-50 text-amber-700 ring-amber-200"
                               }`}
                           >
                             <span
@@ -2791,9 +2791,9 @@ const FormViewPage = ({
                             </div>
                             <span
                               className={`px-2 py-1 text-xs rounded-md font-bold ${validationResults[uuid].finalDecision ===
-                                  "Recommended"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-red-50 text-red-700"
+                                "Recommended"
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-red-50 text-red-700"
                                 }`}
                             >
                               {validationResults[uuid].finalDecision}
@@ -2806,10 +2806,10 @@ const FormViewPage = ({
                               <span
                                 key={param}
                                 className={`px-2 py-1 text-xs rounded-md font-semibold ${category === "accepted"
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : category === "partially_accepted"
-                                      ? "bg-amber-50 text-amber-700"
-                                      : "bg-red-50 text-red-700"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : category === "partially_accepted"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-red-50 text-red-700"
                                   }`}
                               >
                                 {param} → {category.replace("_", " ")}
@@ -2919,8 +2919,8 @@ const FormViewPage = ({
                 key={i}
                 onClick={() => fetchSubmissions(i + 1)}
                 className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${page === i + 1
-                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
-                    : "bg-white border-2 border-slate-300 hover:bg-slate-50"
+                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+                  : "bg-white border-2 border-slate-300 hover:bg-slate-50"
                   }`}
               >
                 {i + 1}
