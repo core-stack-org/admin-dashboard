@@ -137,6 +137,9 @@ const SelectionPage = ({
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
   const [blocksMap, setBlocksMap] = useState({});
+  const [orgPlanCounts, setOrgPlanCounts] = useState({});
+  const [projectPlanCounts, setProjectPlanCounts] = useState({});
+  const [formSubmissionCounts, setFormSubmissionCounts] = useState({});
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -145,7 +148,32 @@ const SelectionPage = ({
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.results || data;
-        setOrganizations(Array.isArray(list) ? list : []);
+        const orgList = Array.isArray(list) ? list : [];
+        setOrganizations(orgList);
+
+        // Fetch plan counts for each org
+        orgList.forEach((org) => {
+          Promise.all([
+            fetch(
+              `${BASEURL}api/v1/plan_count/?org_id=${org.id}`,
+              { headers: getHeaders() }
+            ).then((r) => r.json()),
+            fetch(
+              `${BASEURL}api/v1/plan_count/?org_id=${org.id}&is_completed=true`,
+              { headers: getHeaders() }
+            ).then((r) => r.json())
+          ])
+            .then(([totalData, completedData]) => {
+              const total = totalData.plan_count || 0;
+              const completed = completedData.plan_count || 0;
+
+              setOrgPlanCounts((prev) => ({
+                ...prev,
+                [org.id]: { total, completed },
+              }));
+            })
+            .catch(() => { });
+        });
       })
       .catch((err) => console.error("Org fetch error", err));
   }, [isSuperAdmin]);
@@ -157,7 +185,33 @@ const SelectionPage = ({
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.projects || data;
-        setProjects(Array.isArray(list) ? list : []);
+        const projList = Array.isArray(list) ? list : [];
+        setProjects(projList);
+
+        // Fetch plan counts for each project
+        projList.forEach((proj) => {
+          const pid = proj.id || proj.project_id;
+          Promise.all([
+            fetch(
+              `${BASEURL}api/v1/plan_count/?project_id=${pid}`,
+              { headers: getHeaders() }
+            ).then((r) => r.json()),
+            fetch(
+              `${BASEURL}api/v1/plan_count/?project_id=${pid}&is_completed=true`,
+              { headers: getHeaders() }
+            ).then((r) => r.json())
+          ])
+            .then(([totalData, completedData]) => {
+              const total = totalData.plan_count || 0;
+              const completed = completedData.plan_count || 0;
+
+              setProjectPlanCounts((prev) => ({
+                ...prev,
+                [pid]: { total, completed },
+              }));
+            })
+            .catch(() => { });
+        });
       })
       .catch((err) => console.log(err));
   }, [isSuperAdmin]);
@@ -175,7 +229,33 @@ const SelectionPage = ({
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.projects || data;
-        setProjects(Array.isArray(list) ? list : []);
+        const projList = Array.isArray(list) ? list : [];
+        setProjects(projList);
+
+        // Fetch plan counts for each project
+        projList.forEach((proj) => {
+          const pid = proj.id || proj.project_id;
+          Promise.all([
+            fetch(
+              `${BASEURL}api/v1/plan_count/?project_id=${pid}`,
+              { headers: getHeaders() }
+            ).then((r) => r.json()),
+            fetch(
+              `${BASEURL}api/v1/plan_count/?project_id=${pid}&is_completed=true`,
+              { headers: getHeaders() }
+            ).then((r) => r.json())
+          ])
+            .then(([totalData, completedData]) => {
+              const total = totalData.plan_count || 0;
+              const completed = completedData.plan_count || 0;
+
+              setProjectPlanCounts((prev) => ({
+                ...prev,
+                [pid]: { total, completed },
+              }));
+            })
+            .catch(() => { });
+        });
       })
       .catch((err) => console.log(err));
   }, [isSuperAdmin, selectedOrg]);
@@ -257,6 +337,9 @@ const SelectionPage = ({
       created_at: p.created_at || "",
       tehsil_soi: p.tehsil_soi,
       district_soi: p.district_soi,
+      is_completed: p.is_completed ?? false,
+      is_dpr_reviewed: p.is_dpr_reviewed ?? false,
+      is_dpr_approved: p.is_dpr_approved ?? false,
     }));
 
   const handleProjectChange = (e) => {
@@ -300,6 +383,29 @@ const SelectionPage = ({
       );
   };
 
+  // Fetch submission counts for all forms when a plan is selected
+  useEffect(() => {
+    if (!selectedPlan) {
+      setFormSubmissionCounts({});
+      return;
+    }
+
+    forms.forEach((form) => {
+      fetch(
+        `${BASEURL}api/v1/submissions/${form.name}/${selectedPlan}/`,
+        { headers: getHeaders() },
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          setFormSubmissionCounts((prev) => ({
+            ...prev,
+            [form.name]: data.total_objects ?? data.data?.length ?? 0,
+          }));
+        })
+        .catch(() => { });
+    });
+  }, [selectedPlan, forms]);
+
   const handleLoadSubmissions = () => {
     if (!selectedForm || !selectedPlan) return;
 
@@ -308,6 +414,27 @@ const SelectionPage = ({
       "Unknown Plan";
 
     onLoadSubmissions(selectedProject, selectedPlan, selectedForm, planName);
+  };
+
+  const getPlanCategory = (plan) => {
+    if (plan.is_completed) return "Completed";
+    return "In Progress";
+  };
+
+  const PLAN_CATEGORY_ORDER = ["Completed", "In Progress"];
+
+  const groupPlansForDropdown = (plans) => {
+    const groups = {};
+
+    plans.forEach((plan) => {
+      const category = getPlanCategory(plan);
+      if (!groups[category]) groups[category] = [];
+      groups[category].push({ value: plan.plan_id, label: plan.plan, plan });
+    });
+
+    return PLAN_CATEGORY_ORDER
+      .filter((cat) => groups[cat])
+      .map((cat) => ({ label: cat, options: groups[cat] }));
   };
 
   return (
@@ -334,11 +461,12 @@ const SelectionPage = ({
                 options={organizations.map((org) => ({
                   value: org.id,
                   label: org.name,
+                  org,
                 }))}
                 value={
                   selectedOrg
                     ? organizations
-                      .map((org) => ({ value: org.id, label: org.name }))
+                      .map((org) => ({ value: org.id, label: org.name, org }))
                       .find((o) => o.value === selectedOrg)
                     : null
                 }
@@ -346,6 +474,40 @@ const SelectionPage = ({
                   setSelectedOrg(opt?.value || "");
                   setSelectedProject("");
                   setPlans([]);
+                }}
+                formatOptionLabel={({ org, label }, { context }) => {
+                  const counts = orgPlanCounts[org?.id];
+                  if (context === "value") {
+                    return (
+                      <span className="font-semibold text-slate-800">
+                        {label}
+                        {counts && (
+                          <span className="ml-2 text-xs font-medium text-slate-500">
+                            ({counts.total} plans, {counts.completed} completed)
+                          </span>
+                        )}
+                      </span>
+                    );
+                  }
+                  return (
+                    <div className="py-0.5">
+                      <div className="font-semibold text-slate-800 text-sm leading-snug">
+                        {label}
+                      </div>
+                      {counts && (
+                        <div className="flex gap-3 mt-1">
+                          <span className="flex items-center gap-1 text-xs text-slate-500">
+                            <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
+                            {counts.total} Plans
+                          </span>
+                          <span className="flex items-center gap-1 text-xs text-emerald-600">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                            {counts.completed} Completed
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
                 }}
                 isClearable
               />
@@ -362,6 +524,7 @@ const SelectionPage = ({
               options={projects.map((p) => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
+                project: p,
               }))}
               value={
                 selectedProject
@@ -369,6 +532,7 @@ const SelectionPage = ({
                     .map((p) => ({
                       value: p.id || p.project_id,
                       label: p.project_name || p.name,
+                      project: p,
                     }))
                     .find((p) => p.value === selectedProject)
                   : null
@@ -376,6 +540,41 @@ const SelectionPage = ({
               onChange={(opt) =>
                 handleProjectChange({ target: { value: opt?.value || "" } })
               }
+              formatOptionLabel={({ project, label }, { context }) => {
+                const pid = project?.id || project?.project_id;
+                const counts = projectPlanCounts[pid];
+                if (context === "value") {
+                  return (
+                    <span className="font-semibold text-slate-800">
+                      {label}
+                      {counts && (
+                        <span className="ml-2 text-xs font-medium text-slate-500">
+                          ({counts.total} plans, {counts.completed} completed)
+                        </span>
+                      )}
+                    </span>
+                  );
+                }
+                return (
+                  <div className="py-0.5">
+                    <div className="font-semibold text-slate-800 text-sm leading-snug">
+                      {label}
+                    </div>
+                    {counts && (
+                      <div className="flex gap-3 mt-1">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
+                          {counts.total} Plans
+                        </span>
+                        <span className="flex items-center gap-1 text-xs text-emerald-600">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+                          {counts.completed} Completed
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
               isClearable
             />
           </div>
@@ -399,11 +598,7 @@ const SelectionPage = ({
                 }),
               }}
               placeholder="-- Choose Plan --"
-              options={plans.map((plan) => ({
-                value: plan.plan_id,
-                label: plan.plan,
-                plan,
-              }))}
+              options={groupPlansForDropdown(plans)}
               value={
                 selectedPlan
                   ? plans
@@ -541,6 +736,36 @@ const SelectionPage = ({
                   : null
               }
               onChange={(opt) => setSelectedForm(opt?.value || "")}
+              formatOptionLabel={({ value, label }, { context }) => {
+                const count = formSubmissionCounts[value];
+                if (context === "value") {
+                  return (
+                    <span className="font-semibold text-slate-800">
+                      {label}
+                      {count !== undefined && (
+                        <span className="ml-2 text-xs font-medium text-slate-500">
+                          ({count} submissions)
+                        </span>
+                      )}
+                    </span>
+                  );
+                }
+                return (
+                  <div className="py-0.5">
+                    <div className="font-semibold text-slate-800 text-sm leading-snug">
+                      {label}
+                    </div>
+                    {count !== undefined && (
+                      <div className="flex gap-2 mt-1">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
+                          {count} Submissions
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
               isClearable
             />
           </div>
