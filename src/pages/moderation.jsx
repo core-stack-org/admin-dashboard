@@ -332,9 +332,9 @@ const SelectionPage = ({
       plan_id: p.id || p.plan_id,
       plan: p.plan,
       facilitator_name: p.facilitator_name || "",
-      year: p.created_at ? new Date(p.created_at).getFullYear() : "",
+      year: p.updated_at ? new Date(p.updated_at).getFullYear() : "",
       village: p.village || p.village_name || "",
-      created_at: p.created_at || "",
+      updated_at: p.updated_at || "",
       tehsil_soi: p.tehsil_soi,
       district_soi: p.district_soi,
       is_completed: p.is_completed ?? false,
@@ -619,8 +619,8 @@ const SelectionPage = ({
                     </span>
                   );
                 }
-                const date = plan.created_at
-                  ? new Date(plan.created_at).toLocaleDateString("en-IN", {
+                const date = plan.updated_at
+                  ? new Date(plan.updated_at).toLocaleDateString("en-IN", {
                     day: "2-digit",
                     month: "short",
                     year: "numeric",
