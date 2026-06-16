@@ -419,7 +419,7 @@ export const stripSystemFields = (schema) => {
 export const LANGUAGE_MAP = {
   "en": "English",
   "hi": "Hindi",
-  "gu": "Gujarati",
-  "kn": "Kannada",
-  "or": "Odia",
+  // "gu": "Gujarati",
+  // "kn": "Kannada",
+  // "or": "Odia",
 };
