@@ -1877,7 +1877,7 @@ const FormViewPage = ({
         body: JSON.stringify({
           plan_id: Number(selectedPlan),
           email_id: dprEmail,
-          // language: dprLanguage,
+          language: dprLanguage,
         }),
       });
       const data = await response.json();
@@ -2224,7 +2224,7 @@ const FormViewPage = ({
                         />
                       </div>
 
-                      {/* <div className="relative shrink-0 min-w-[140px]">
+                      <div className="relative shrink-0 min-w-[140px]">
                         <select
                           value={dprLanguage}
                           onChange={(e) => setDprLanguage(e.target.value)}
@@ -2236,7 +2236,7 @@ const FormViewPage = ({
                             </option>
                           ))}
                         </select>
-                      </div> */}
+                      </div>
 
                       <button
                         onClick={handleGenerateDPR}
