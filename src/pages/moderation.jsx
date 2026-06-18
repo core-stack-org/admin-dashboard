@@ -2031,14 +2031,14 @@ const handleSaveSubmission = async (uuid, data) => {
                             type="button"
                             onClick={() =>
                               handlePlanStatusToggle(
-                                "is_reviewed",
-                                !planDetails?.is_reviewed,
+                                "is_dpr_reviewed",
+                                !planDetails?.is_dpr_reviewed,
                                 "Plan reviewed",
                               )
                             }
                             disabled={planReviewLoading}
                             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                              planDetails?.is_reviewed
+                              planDetails?.is_dpr_reviewed
                                 ? "bg-blue-700"
                                 : "bg-slate-300"
                             } ${
@@ -2046,12 +2046,12 @@ const handleSaveSubmission = async (uuid, data) => {
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
                             }`}
-                            aria-pressed={Boolean(planDetails?.is_reviewed)}
+                            aria-pressed={Boolean(planDetails?.is_dpr_reviewed)}
                             aria-label="Is DPR Reviewed?"
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                planDetails?.is_reviewed
+                                planDetails?.is_dpr_reviewed
                                   ? "translate-x-6"
                                   : "translate-x-1"
                               }`}
