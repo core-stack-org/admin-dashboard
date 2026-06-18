@@ -129,7 +129,9 @@ const SelectionPage = ({
   initialForm = "",
 }) => {
   const [projects, setProjects] = useState([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(false);
   const [forms, setForms] = useState([]);
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
@@ -150,13 +152,15 @@ const SelectionPage = ({
   // Non-superadmin: fetch all projects once on mount
   useEffect(() => {
     if (isSuperAdmin) return;
+    setProjectsLoading(true);
     fetch(`${BASEURL}api/v1/projects`, { headers: getHeaders() })
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.projects || data;
         setProjects(Array.isArray(list) ? list : []);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err))
+      .finally(() => setProjectsLoading(false));
   }, [isSuperAdmin]);
 
   // Superadmin: fetch projects filtered by org whenever selectedOrg changes
@@ -166,16 +170,63 @@ const SelectionPage = ({
       setProjects([]);
       return;
     }
-    fetch(`${BASEURL}api/v1/projects?organization=${selectedOrg}`, {
+
+    // Guard against out-of-order responses: a slower, earlier request must
+    // never overwrite the projects for the currently selected org.
+    const controller = new AbortController();
+    const requestedOrg = selectedOrg;
+
+    // Clear stale projects so the previous org's list never shows while the
+    // filtered request is in flight.
+    setProjects([]);
+    setProjectsLoading(true);
+
+    fetch(`${BASEURL}api/v1/projects?organization=${requestedOrg}`, {
       headers: getHeaders(),
+      signal: controller.signal,
     })
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.projects || data;
-        setProjects(Array.isArray(list) ? list : []);
+        const all = Array.isArray(list) ? list : [];
+
+        // Never trust the backend to scope results — filter client-side so
+        // we only ever show projects belonging to the selected org. We exclude
+        // anything we cannot positively confirm, so an unfiltered backend
+        // response can never leak other orgs' projects into the dropdown.
+        const norm = (v) => String(v ?? "").trim().toLowerCase();
+        const orgName = organizations.find(
+          (o) => String(o.id) === String(requestedOrg),
+        )?.name;
+
+        const scoped = all.filter((p) => {
+          const projectOrgId =
+            p.organization ?? p.organization_id ?? p.org ?? p.org_id;
+          if (projectOrgId != null && String(projectOrgId) !== "") {
+            return String(projectOrgId) === String(requestedOrg);
+          }
+          if (orgName) {
+            return (
+              norm(p.organization_name ?? p.organization?.name) ===
+              norm(orgName)
+            );
+          }
+          return false;
+        });
+
+        setProjects(scoped);
       })
-      .catch((err) => console.log(err));
-  }, [isSuperAdmin, selectedOrg]);
+      .catch((err) => {
+        if (err.name !== "AbortError") console.log(err);
+      })
+      .finally(() => {
+        // Ignore the stale request's completion so loading state reflects
+        // only the latest org selection.
+        if (!controller.signal.aborted) setProjectsLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [isSuperAdmin, selectedOrg, organizations]);
 
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
@@ -190,6 +241,7 @@ const SelectionPage = ({
   useEffect(() => {
     if (!initialProject) return;
 
+    setPlansLoading(true);
     fetch(`${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`, {
       headers: getHeaders(),
     })
@@ -203,7 +255,8 @@ const SelectionPage = ({
       .catch((err) => {
         console.error("Plan Fetch Error", err);
         setPlans([]);
-      });
+      })
+      .finally(() => setPlansLoading(false));
   }, [initialProject]);
 
   useEffect(() => {
@@ -235,6 +288,7 @@ const SelectionPage = ({
 
     if (!id) return;
 
+    setPlansLoading(true);
     fetch(`${BASEURL}api/v1/projects/${id}/watershed/plans/`, {
       headers: getHeaders(),
     })
@@ -248,7 +302,8 @@ const SelectionPage = ({
       .catch((err) => {
         console.error("Plan Fetch Error", err);
         setPlans([]);
-      });
+      })
+      .finally(() => setPlansLoading(false));
   };
 
   const groupFormsByCategory = (forms) => {
@@ -312,6 +367,8 @@ const SelectionPage = ({
                 onChange={(opt) => {
                   setSelectedOrg(opt?.value || "");
                   setSelectedProject("");
+                  setSelectedPlan("");
+                  setSelectedForm("");
                   setPlans([]);
                 }}
                 isClearable
@@ -326,6 +383,13 @@ const SelectionPage = ({
             <Select
               styles={selectStyles}
               placeholder="-- Choose Project --"
+              isLoading={projectsLoading}
+              loadingMessage={() => "Loading projects…"}
+              noOptionsMessage={() =>
+                isSuperAdmin && !selectedOrg
+                  ? "Select an organization first"
+                  : "No projects found"
+              }
               options={projects.map((p) => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
@@ -366,6 +430,11 @@ const SelectionPage = ({
                 }),
               }}
               placeholder="-- Choose Plan --"
+              isLoading={plansLoading}
+              loadingMessage={() => "Loading plans…"}
+              noOptionsMessage={() =>
+                selectedProject ? "No plans found" : "Select a project first"
+              }
               options={plans.map((plan) => ({
                 value: plan.plan_id,
                 label: plan.plan,
@@ -532,9 +601,12 @@ const FormViewPage = ({
   const [dprLoading, setDprLoading] = useState(false);
   const [dprNotification, setDprNotification] = useState(null);
   const [planDetails, setPlanDetails] = useState(null);
+  const [planDetailsLoading, setPlanDetailsLoading] = useState(false);
   const [planReviewLoading, setPlanReviewLoading] = useState(false);
   const [planReviewNotification, setPlanReviewNotification] = useState(null);
   const [dprWorkflowStatus, setDprWorkflowStatus] = useState(null);
+  const [dprWorkflowStatusLoading, setDprWorkflowStatusLoading] =
+    useState(false);
   const [dprWorkflowMissing, setDprWorkflowMissing] = useState(false);
   const [dprWorkflowLoading, setDprWorkflowLoading] = useState("");
   const [dprWorkflowNotification, setDprWorkflowNotification] = useState(null);
@@ -583,6 +655,7 @@ const FormViewPage = ({
 
   useEffect(() => {
     if (!selectedProject || !selectedPlan) return;
+    setPlanDetailsLoading(true);
     fetch(`${BASEURL}api/v1/projects/${selectedProject}/watershed/plans/`, {
       headers: getHeaders(),
     })
@@ -594,7 +667,8 @@ const FormViewPage = ({
         );
         if (match) setPlanDetails(match);
       })
-      .catch((err) => console.error("Plan details fetch error", err));
+      .catch((err) => console.error("Plan details fetch error", err))
+      .finally(() => setPlanDetailsLoading(false));
   }, [selectedProject, selectedPlan]);
 
   useEffect(() => {
@@ -603,6 +677,7 @@ const FormViewPage = ({
     setDprWorkflowStatus(null);
     setDprWorkflowMissing(false);
     setDprWorkflowNotification(null);
+    setDprWorkflowStatusLoading(true);
 
     fetch(`${BASEURL}api/v1/dpr_data/${selectedPlan}/report-status/`, {
       headers: getHeaders(),
@@ -633,7 +708,8 @@ const FormViewPage = ({
           type: "error",
           message: err.message || "Failed to fetch DPR workflow status.",
         });
-      });
+      })
+      .finally(() => setDprWorkflowStatusLoading(false));
   }, [selectedPlan]);
 
     const reloadSubmissions = (resetToPage1 = false) => {
@@ -1970,7 +2046,15 @@ const handleSaveSubmission = async (uuid, data) => {
                 </div>
 
                 <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    {planDetailsLoading && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-xl bg-white/70 backdrop-blur-[1px]">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          Updating…
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
                       <div>
                         <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
@@ -2075,7 +2159,15 @@ const handleSaveSubmission = async (uuid, data) => {
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+                  <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                    {dprWorkflowStatusLoading && (
+                      <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-xl bg-white/70 backdrop-blur-[1px]">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
+                        <span className="text-sm font-medium text-slate-600">
+                          Updating…
+                        </span>
+                      </div>
+                    )}
                     <div className="border-b border-slate-200 px-5 py-4">
                       <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
                         DPR workflow
@@ -2909,7 +3001,16 @@ const Moderation = () => {
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
+    try {
+      const sessionUser = JSON.parse(
+        sessionStorage.getItem("currentUser") || "{}",
+      );
+      return !!sessionUser?.user?.is_superadmin;
+    } catch {
+      return false;
+    }
+  });
   const [currentUser, setCurrentUser] = useState({});
   const [userId, setUserId] = useState(null);
 
