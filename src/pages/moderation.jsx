@@ -34,6 +34,8 @@ import Point from "ol/geom/Point";
 import { Style, Circle, Fill, Stroke, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
 import "ol/ol.css";
+import { toast } from "react-toastify";
+
 
 import {
   BASEURL,
@@ -784,7 +786,10 @@ const FormViewPage = ({
 
   const fetchValidationResult = async (submission) => {
     const coords = getCoordinates(submission);
-    if (!coords) return;
+    if (!coords) {
+      toast.error("Latitude and Longitude are missing.");
+      return;
+    }
 
     const [lon, lat] = coords;
 
@@ -795,7 +800,15 @@ const FormViewPage = ({
     const structureType = getStructureType(submission);
     const structureRule = structureRules[structureType];
 
-    if (!structureRule) return;
+    if (!lat || !lon) {
+      toast.error("Latitude and Longitude are required.");
+      return;
+    }
+
+    if (!structureRule) {
+      toast.error("Structure type is missing or invalid.");
+      return;
+    }
 
     setValidationLoading((prev) => ({
       ...prev,
