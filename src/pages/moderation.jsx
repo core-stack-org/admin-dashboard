@@ -35,7 +35,7 @@ import { Style, Circle, Fill, Stroke, Icon } from "ol/style";
 import Overlay from "ol/Overlay";
 import "ol/ol.css";
 import { toast } from "react-toastify";
-
+import { getBlocks } from "./base_function";
 
 import {
   BASEURL,
@@ -138,6 +138,7 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
+  const [blocksMap, setBlocksMap] = useState({});
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -271,14 +272,47 @@ const SelectionPage = ({
     }
   }, [plans, initialPlan]);
 
+  useEffect(() => {
+    if (!plans || plans.length === 0) return;
+
+    const uniqueDistricts = [
+      ...new Set(plans.map((p) => p.district_soi).filter(Boolean)),
+    ];
+
+    const fetchAllBlocks = async () => {
+      for (const districtCode of uniqueDistricts) {
+        try {
+          const blocks = await getBlocks(districtCode);
+          const blockObj = {};
+          blocks.forEach((block) => {
+            blockObj[block.id] = block.block_name;
+          });
+          setBlocksMap((prev) => ({
+            ...prev,
+            ...blockObj,
+          }));
+        } catch (err) {
+          console.error(`Failed to fetch blocks for district ${districtCode}`, err);
+        }
+      }
+    };
+
+    fetchAllBlocks();
+  }, [plans]);
+
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
       plan_id: p.id || p.plan_id,
       plan: p.plan,
       facilitator_name: p.facilitator_name || "",
-      year: p.created_at ? new Date(p.created_at).getFullYear() : "",
+      year: p.updated_at ? new Date(p.updated_at).getFullYear() : "",
       village: p.village || p.village_name || "",
-      created_at: p.created_at || "",
+      updated_at: p.updated_at || "",
+      tehsil_soi: p.tehsil_soi,
+      district_soi: p.district_soi,
+      is_completed: p.is_completed ?? false,
+      is_dpr_reviewed: p.is_dpr_reviewed ?? false,
+      is_dpr_approved: p.is_dpr_approved ?? false,
     }));
 
   const handleProjectChange = (e) => {
@@ -334,6 +368,27 @@ const SelectionPage = ({
     onLoadSubmissions(selectedProject, selectedPlan, selectedForm, planName);
   };
 
+  const getPlanCategory = (plan) => {
+    if (plan.is_completed) return "Completed";
+    return "In Progress";
+  };
+
+  const PLAN_CATEGORY_ORDER = ["Completed", "In Progress"];
+
+  const groupPlansForDropdown = (plans) => {
+    const groups = {};
+
+    plans.forEach((plan) => {
+      const category = getPlanCategory(plan);
+      if (!groups[category]) groups[category] = [];
+      groups[category].push({ value: plan.plan_id, label: plan.plan, plan });
+    });
+
+    return PLAN_CATEGORY_ORDER
+      .filter((cat) => groups[cat])
+      .map((cat) => ({ label: cat, options: groups[cat] }));
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
@@ -358,12 +413,13 @@ const SelectionPage = ({
                 options={organizations.map((org) => ({
                   value: org.id,
                   label: org.name,
+                  org
                 }))}
                 value={
                   selectedOrg
                     ? organizations
-                        .map((org) => ({ value: org.id, label: org.name }))
-                        .find((o) => o.value === selectedOrg)
+                      .map((org) => ({ value: org.id, label: org.name, org }))
+                      .find((o) => o.value === selectedOrg)
                     : null
                 }
                 onChange={(opt) => {
@@ -372,6 +428,33 @@ const SelectionPage = ({
                   setSelectedPlan("");
                   setSelectedForm("");
                   setPlans([]);
+                }}
+                formatOptionLabel={({ org, label }, { context }) => {
+                  if (context === "value") {
+                    return (
+                      <span className="font-semibold text-slate-800">
+                        {label}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <div className="py-0.5">
+                      <div className="font-semibold text-slate-800 text-sm leading-snug">
+                        {org.name}
+                      </div>
+
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          Total Plans: {org.total_plan ?? 0}
+                        </span>
+
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          Completed: {org.completed_plan ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                  );
                 }}
                 isClearable
               />
@@ -395,20 +478,49 @@ const SelectionPage = ({
               options={projects.map((p) => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
+                p
               }))}
               value={
                 selectedProject
                   ? projects
-                      .map((p) => ({
-                        value: p.id || p.project_id,
-                        label: p.project_name || p.name,
-                      }))
-                      .find((p) => p.value === selectedProject)
+                    .map((p) => ({
+                      value: p.id || p.project_id,
+                      label: p.project_name || p.name,
+                      p
+                    }))
+                    .find((p) => p.value === selectedProject)
                   : null
               }
               onChange={(opt) =>
                 handleProjectChange({ target: { value: opt?.value || "" } })
               }
+              formatOptionLabel={({ p, label }, { context }) => {
+                  if (context === "value") {
+                    return (
+                      <span className="font-semibold text-slate-800">
+                        {label}
+                      </span>
+                    );
+                  }
+
+                  return (
+                    <div className="py-0.5">
+                      <div className="font-semibold text-slate-800 text-sm leading-snug">
+                        {p.name}
+                      </div>
+
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          Total Plans: {p.total_plan ?? 0}
+                        </span>
+
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          Completed: {p.completed_plan ?? 0}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                }}
               isClearable
             />
           </div>
@@ -437,11 +549,7 @@ const SelectionPage = ({
               noOptionsMessage={() =>
                 selectedProject ? "No plans found" : "Select a project first"
               }
-              options={plans.map((plan) => ({
-                value: plan.plan_id,
-                label: plan.plan,
-                plan,
-              }))}
+              options={groupPlansForDropdown(plans)}
               value={
                 selectedPlan
                   ? plans
@@ -462,8 +570,8 @@ const SelectionPage = ({
                     </span>
                   );
                 }
-                const date = plan.created_at
-                  ? new Date(plan.created_at).toLocaleDateString("en-IN", {
+                const date = plan.updated_at
+                  ? new Date(plan.updated_at).toLocaleDateString("en-IN", {
                       day: "2-digit",
                       month: "short",
                       year: "numeric",
@@ -532,6 +640,24 @@ const SelectionPage = ({
                             />
                           </svg>
                           {date}
+                        </span>
+                      )}
+                      {plan.tehsil_soi && (
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          <svg
+                            className="w-3 h-3 shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            />
+                          </svg>
+                          {blocksMap[plan.tehsil_soi] || `Tehsil (${plan.tehsil_soi})`}
                         </span>
                       )}
                     </div>
