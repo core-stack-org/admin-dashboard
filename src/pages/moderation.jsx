@@ -46,10 +46,8 @@ import {
   getFormTemplate,
   shouldHideBeneficiaryName,
   stripSystemFields,
-  LANGUAGE_MAP,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
-import { getBlocks } from "./base_function";
 
 const getToken = () => sessionStorage.getItem("accessToken");
 
@@ -136,10 +134,6 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
-  const [blocksMap, setBlocksMap] = useState({});
-  const [orgPlanCounts, setOrgPlanCounts] = useState({});
-  const [projectPlanCounts, setProjectPlanCounts] = useState({});
-  const [formSubmissionCounts, setFormSubmissionCounts] = useState({});
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -148,32 +142,7 @@ const SelectionPage = ({
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.results || data;
-        const orgList = Array.isArray(list) ? list : [];
-        setOrganizations(orgList);
-
-        // Fetch plan counts for each org
-        orgList.forEach((org) => {
-          Promise.all([
-            fetch(
-              `${BASEURL}api/v1/plan_count/?org_id=${org.id}`,
-              { headers: getHeaders() }
-            ).then((r) => r.json()),
-            fetch(
-              `${BASEURL}api/v1/plan_count/?org_id=${org.id}&is_completed=true`,
-              { headers: getHeaders() }
-            ).then((r) => r.json())
-          ])
-            .then(([totalData, completedData]) => {
-              const total = totalData.plan_count || 0;
-              const completed = completedData.plan_count || 0;
-
-              setOrgPlanCounts((prev) => ({
-                ...prev,
-                [org.id]: { total, completed },
-              }));
-            })
-            .catch(() => { });
-        });
+        setOrganizations(Array.isArray(list) ? list : []);
       })
       .catch((err) => console.error("Org fetch error", err));
   }, [isSuperAdmin]);
@@ -185,33 +154,7 @@ const SelectionPage = ({
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.projects || data;
-        const projList = Array.isArray(list) ? list : [];
-        setProjects(projList);
-
-        // Fetch plan counts for each project
-        projList.forEach((proj) => {
-          const pid = proj.id || proj.project_id;
-          Promise.all([
-            fetch(
-              `${BASEURL}api/v1/plan_count/?project_id=${pid}`,
-              { headers: getHeaders() }
-            ).then((r) => r.json()),
-            fetch(
-              `${BASEURL}api/v1/plan_count/?project_id=${pid}&is_completed=true`,
-              { headers: getHeaders() }
-            ).then((r) => r.json())
-          ])
-            .then(([totalData, completedData]) => {
-              const total = totalData.plan_count || 0;
-              const completed = completedData.plan_count || 0;
-
-              setProjectPlanCounts((prev) => ({
-                ...prev,
-                [pid]: { total, completed },
-              }));
-            })
-            .catch(() => { });
-        });
+        setProjects(Array.isArray(list) ? list : []);
       })
       .catch((err) => console.log(err));
   }, [isSuperAdmin]);
@@ -229,33 +172,7 @@ const SelectionPage = ({
       .then((res) => res.json())
       .then((data) => {
         const list = data.data || data.projects || data;
-        const projList = Array.isArray(list) ? list : [];
-        setProjects(projList);
-
-        // Fetch plan counts for each project
-        projList.forEach((proj) => {
-          const pid = proj.id || proj.project_id;
-          Promise.all([
-            fetch(
-              `${BASEURL}api/v1/plan_count/?project_id=${pid}`,
-              { headers: getHeaders() }
-            ).then((r) => r.json()),
-            fetch(
-              `${BASEURL}api/v1/plan_count/?project_id=${pid}&is_completed=true`,
-              { headers: getHeaders() }
-            ).then((r) => r.json())
-          ])
-            .then(([totalData, completedData]) => {
-              const total = totalData.plan_count || 0;
-              const completed = completedData.plan_count || 0;
-
-              setProjectPlanCounts((prev) => ({
-                ...prev,
-                [pid]: { total, completed },
-              }));
-            })
-            .catch(() => { });
-        });
+        setProjects(Array.isArray(list) ? list : []);
       })
       .catch((err) => console.log(err));
   }, [isSuperAdmin, selectedOrg]);
@@ -299,47 +216,14 @@ const SelectionPage = ({
     }
   }, [plans, initialPlan]);
 
-  useEffect(() => {
-    if (!plans || plans.length === 0) return;
-
-    const uniqueDistricts = [
-      ...new Set(plans.map((p) => p.district_soi).filter(Boolean)),
-    ];
-
-    const fetchAllBlocks = async () => {
-      for (const districtCode of uniqueDistricts) {
-        try {
-          const blocks = await getBlocks(districtCode);
-          const blockObj = {};
-          blocks.forEach((block) => {
-            blockObj[block.id] = block.block_name;
-          });
-          setBlocksMap((prev) => ({
-            ...prev,
-            ...blockObj,
-          }));
-        } catch (err) {
-          console.error(`Failed to fetch blocks for district ${districtCode}`, err);
-        }
-      }
-    };
-
-    fetchAllBlocks();
-  }, [plans]);
-
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
       plan_id: p.id || p.plan_id,
       plan: p.plan,
       facilitator_name: p.facilitator_name || "",
-      year: p.updated_at ? new Date(p.updated_at).getFullYear() : "",
+      year: p.created_at ? new Date(p.created_at).getFullYear() : "",
       village: p.village || p.village_name || "",
-      updated_at: p.updated_at || "",
-      tehsil_soi: p.tehsil_soi,
-      district_soi: p.district_soi,
-      is_completed: p.is_completed ?? false,
-      is_dpr_reviewed: p.is_dpr_reviewed ?? false,
-      is_dpr_approved: p.is_dpr_approved ?? false,
+      created_at: p.created_at || "",
     }));
 
   const handleProjectChange = (e) => {
@@ -383,29 +267,6 @@ const SelectionPage = ({
       );
   };
 
-  // Fetch submission counts for all forms when a plan is selected
-  useEffect(() => {
-    if (!selectedPlan) {
-      setFormSubmissionCounts({});
-      return;
-    }
-
-    forms.forEach((form) => {
-      fetch(
-        `${BASEURL}api/v1/submissions/${form.name}/${selectedPlan}/`,
-        { headers: getHeaders() },
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setFormSubmissionCounts((prev) => ({
-            ...prev,
-            [form.name]: data.total_objects ?? data.data?.length ?? 0,
-          }));
-        })
-        .catch(() => { });
-    });
-  }, [selectedPlan, forms]);
-
   const handleLoadSubmissions = () => {
     if (!selectedForm || !selectedPlan) return;
 
@@ -414,27 +275,6 @@ const SelectionPage = ({
       "Unknown Plan";
 
     onLoadSubmissions(selectedProject, selectedPlan, selectedForm, planName);
-  };
-
-  const getPlanCategory = (plan) => {
-    if (plan.is_completed) return "Completed";
-    return "In Progress";
-  };
-
-  const PLAN_CATEGORY_ORDER = ["Completed", "In Progress"];
-
-  const groupPlansForDropdown = (plans) => {
-    const groups = {};
-
-    plans.forEach((plan) => {
-      const category = getPlanCategory(plan);
-      if (!groups[category]) groups[category] = [];
-      groups[category].push({ value: plan.plan_id, label: plan.plan, plan });
-    });
-
-    return PLAN_CATEGORY_ORDER
-      .filter((cat) => groups[cat])
-      .map((cat) => ({ label: cat, options: groups[cat] }));
   };
 
   return (
@@ -461,53 +301,18 @@ const SelectionPage = ({
                 options={organizations.map((org) => ({
                   value: org.id,
                   label: org.name,
-                  org,
                 }))}
                 value={
                   selectedOrg
                     ? organizations
-                      .map((org) => ({ value: org.id, label: org.name, org }))
-                      .find((o) => o.value === selectedOrg)
+                        .map((org) => ({ value: org.id, label: org.name }))
+                        .find((o) => o.value === selectedOrg)
                     : null
                 }
                 onChange={(opt) => {
                   setSelectedOrg(opt?.value || "");
                   setSelectedProject("");
                   setPlans([]);
-                }}
-                formatOptionLabel={({ org, label }, { context }) => {
-                  const counts = orgPlanCounts[org?.id];
-                  if (context === "value") {
-                    return (
-                      <span className="font-semibold text-slate-800">
-                        {label}
-                        {counts && (
-                          <span className="ml-2 text-xs font-medium text-slate-500">
-                            ({counts.total} plans, {counts.completed} completed)
-                          </span>
-                        )}
-                      </span>
-                    );
-                  }
-                  return (
-                    <div className="py-0.5">
-                      <div className="font-semibold text-slate-800 text-sm leading-snug">
-                        {label}
-                      </div>
-                      {counts && (
-                        <div className="flex gap-3 mt-1">
-                          <span className="flex items-center gap-1 text-xs text-slate-500">
-                            <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
-                            {counts.total} Plans
-                          </span>
-                          <span className="flex items-center gap-1 text-xs text-emerald-600">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-                            {counts.completed} Completed
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
                 }}
                 isClearable
               />
@@ -524,57 +329,20 @@ const SelectionPage = ({
               options={projects.map((p) => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
-                project: p,
               }))}
               value={
                 selectedProject
                   ? projects
-                    .map((p) => ({
-                      value: p.id || p.project_id,
-                      label: p.project_name || p.name,
-                      project: p,
-                    }))
-                    .find((p) => p.value === selectedProject)
+                      .map((p) => ({
+                        value: p.id || p.project_id,
+                        label: p.project_name || p.name,
+                      }))
+                      .find((p) => p.value === selectedProject)
                   : null
               }
               onChange={(opt) =>
                 handleProjectChange({ target: { value: opt?.value || "" } })
               }
-              formatOptionLabel={({ project, label }, { context }) => {
-                const pid = project?.id || project?.project_id;
-                const counts = projectPlanCounts[pid];
-                if (context === "value") {
-                  return (
-                    <span className="font-semibold text-slate-800">
-                      {label}
-                      {counts && (
-                        <span className="ml-2 text-xs font-medium text-slate-500">
-                          ({counts.total} plans, {counts.completed} completed)
-                        </span>
-                      )}
-                    </span>
-                  );
-                }
-                return (
-                  <div className="py-0.5">
-                    <div className="font-semibold text-slate-800 text-sm leading-snug">
-                      {label}
-                    </div>
-                    {counts && (
-                      <div className="flex gap-3 mt-1">
-                        <span className="flex items-center gap-1 text-xs text-slate-500">
-                          <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block" />
-                          {counts.total} Plans
-                        </span>
-                        <span className="flex items-center gap-1 text-xs text-emerald-600">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
-                          {counts.completed} Completed
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              }}
               isClearable
             />
           </div>
@@ -598,16 +366,20 @@ const SelectionPage = ({
                 }),
               }}
               placeholder="-- Choose Plan --"
-              options={groupPlansForDropdown(plans)}
+              options={plans.map((plan) => ({
+                value: plan.plan_id,
+                label: plan.plan,
+                plan,
+              }))}
               value={
                 selectedPlan
                   ? plans
-                    .map((plan) => ({
-                      value: plan.plan_id,
-                      label: plan.plan,
-                      plan,
-                    }))
-                    .find((p) => p.value === Number(selectedPlan))
+                      .map((plan) => ({
+                        value: plan.plan_id,
+                        label: plan.plan,
+                        plan,
+                      }))
+                      .find((p) => p.value === Number(selectedPlan))
                   : null
               }
               onChange={(opt) => setSelectedPlan(opt?.value || "")}
@@ -619,12 +391,12 @@ const SelectionPage = ({
                     </span>
                   );
                 }
-                const date = plan.updated_at
-                  ? new Date(plan.updated_at).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
+                const date = plan.created_at
+                  ? new Date(plan.created_at).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
                   : null;
                 return (
                   <div className="py-0.5">
@@ -691,24 +463,6 @@ const SelectionPage = ({
                           {date}
                         </span>
                       )}
-                      {plan.tehsil_soi && (
-                        <span className="flex items-center gap-1 text-xs text-slate-500">
-                          <svg
-                            className="w-3 h-3 shrink-0"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                            />
-                          </svg>
-                          {blocksMap[plan.tehsil_soi] || `Tehsil (${plan.tehsil_soi})`}
-                        </span>
-                      )}
                     </div>
                   </div>
                 );
@@ -728,44 +482,14 @@ const SelectionPage = ({
               value={
                 selectedForm
                   ? forms
-                    .map((form) => ({
-                      value: form.name,
-                      label: FORM_DISPLAY_NAMES[form.name] || form.name,
-                    }))
-                    .find((f) => f.value === selectedForm)
+                      .map((form) => ({
+                        value: form.name,
+                        label: FORM_DISPLAY_NAMES[form.name] || form.name,
+                      }))
+                      .find((f) => f.value === selectedForm)
                   : null
               }
               onChange={(opt) => setSelectedForm(opt?.value || "")}
-              formatOptionLabel={({ value, label }, { context }) => {
-                const count = formSubmissionCounts[value];
-                if (context === "value") {
-                  return (
-                    <span className="font-semibold text-slate-800">
-                      {label}
-                      {count !== undefined && (
-                        <span className="ml-2 text-xs font-medium text-slate-500">
-                          ({count} submissions)
-                        </span>
-                      )}
-                    </span>
-                  );
-                }
-                return (
-                  <div className="py-0.5">
-                    <div className="font-semibold text-slate-800 text-sm leading-snug">
-                      {label}
-                    </div>
-                    {count !== undefined && (
-                      <div className="flex gap-2 mt-1">
-                        <span className="flex items-center gap-1 text-xs text-slate-500">
-                          <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
-                          {count} Submissions
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                );
-              }}
               isClearable
             />
           </div>
@@ -805,7 +529,6 @@ const FormViewPage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [dprExpanded, setDprExpanded] = useState(false);
   const [dprEmail, setDprEmail] = useState("");
-  const [dprLanguage, setDprLanguage] = useState("en");
   const [dprLoading, setDprLoading] = useState(false);
   const [dprNotification, setDprNotification] = useState(null);
   const [planDetails, setPlanDetails] = useState(null);
@@ -828,7 +551,7 @@ const FormViewPage = ({
   const [validationLoading, setValidationLoading] = useState({});
   const [saveStatus, setSaveStatus] = useState("idle");
   const [saveError, setSaveError] = useState("");
-  const [deleteStatus, setDeleteStatus] = useState("idle");
+  const [deleteStatus, setDeleteStatus] = useState("idle"); 
   const [deleteError, setDeleteError] = useState("");
   const [submissionToDelete, setSubmissionToDelete] = useState(null);
   const [formTemplateLoading, setFormTemplateLoading] = useState(false);
@@ -893,8 +616,8 @@ const FormViewPage = ({
         if (!res.ok) {
           throw new Error(
             data?.message ||
-            data?.error ||
-            "Failed to fetch DPR workflow status.",
+              data?.error ||
+              "Failed to fetch DPR workflow status.",
           );
         }
         return data;
@@ -913,7 +636,7 @@ const FormViewPage = ({
       });
   }, [selectedPlan]);
 
-  const reloadSubmissions = (resetToPage1 = false) => {
+    const reloadSubmissions = (resetToPage1 = false) => {
     if (viewMode === "map") {
       fetchSubmissions(1, "map");
     } else {
@@ -1075,215 +798,215 @@ const FormViewPage = ({
   };
 
   // Generic function to analyze form schema and identify field types
-  const analyzeFormSchema = (schema) => {
-    const fieldTypes = {};
+const analyzeFormSchema = (schema) => {
+  const fieldTypes = {};
 
-    const analyzeElement = (element, parentName = "") => {
-      const elementName =
-        element.name.startsWith(parentName + "-")
-          ? element.name
-          : parentName
-            ? `${parentName}-${element.name}`
-            : element.name;
+  const analyzeElement = (element, parentName = "") => {
+    const elementName =
+      element.name.startsWith(parentName + "-")
+        ? element.name
+        : parentName
+          ? `${parentName}-${element.name}`
+          : element.name;
 
-      if (element.type === "checkbox") {
-        fieldTypes[elementName] = "checkbox";
-        fieldTypes[element.name] = "checkbox"; // also register bare name
-      } else if (element.type === "radiogroup") {
-        fieldTypes[elementName] = "radio";
-        fieldTypes[element.name] = "radio";
-      } else if (element.type === "multipletext") {
-        fieldTypes[elementName] = "multipletext";
-        fieldTypes[element.name] = "multipletext";
-      } else if (element.type === "panel") {
-        if (element.elements) {
-          element.elements.forEach((child) => {
-            if (child.name.includes("-")) {
-              analyzeElement(child, "");
-            } else {
-              analyzeElement(child, element.name);
-            }
-          });
-        }
-      }
-
-      if (element.items && Array.isArray(element.items)) {
-        fieldTypes[elementName] = "multipletext";
-        fieldTypes[element.name] = "multipletext";
-      }
-    };
-
-    if (schema.pages) {
-      schema.pages.forEach((page) => {
-        if (page.elements) {
-          page.elements.forEach((element) => analyzeElement(element));
-        }
-      });
-    }
-
-    return fieldTypes;
-  };
-
-  const buildChoiceMap = (schema) => {
-    const choiceMap = {};
-    const processElement = (element) => {
-      if (
-        (element.type === "radiogroup" ||
-          element.type === "checkbox" ||
-          element.type === "dropdown") &&
-        Array.isArray(element.choices)
-      ) {
-        const map = {};
-        element.choices.forEach((choice) => {
-          if (typeof choice === "object" && choice.value !== undefined) {
-            map[String(choice.value).toLowerCase().trim()] = choice.value;
-            const text =
-              typeof choice.text === "object"
-                ? choice.text?.default ?? Object.values(choice.text)[0]
-                : choice.text;
-            if (text) map[String(text).toLowerCase().trim()] = choice.value;
-          } else if (typeof choice === "string") {
-            map[choice.toLowerCase().trim()] = choice;
+    if (element.type === "checkbox") {
+      fieldTypes[elementName] = "checkbox";
+      fieldTypes[element.name] = "checkbox"; // also register bare name
+    } else if (element.type === "radiogroup") {
+      fieldTypes[elementName] = "radio";
+      fieldTypes[element.name] = "radio";
+    } else if (element.type === "multipletext") {
+      fieldTypes[elementName] = "multipletext";
+      fieldTypes[element.name] = "multipletext";
+    } else if (element.type === "panel") {
+      if (element.elements) {
+        element.elements.forEach((child) => {
+          if (child.name.includes("-")) {
+            analyzeElement(child, "");
+          } else {
+            analyzeElement(child, element.name);
           }
         });
-        choiceMap[element.name] = map;
       }
-      if (element.elements) element.elements.forEach(processElement);
-    };
-    if (schema.pages)
-      schema.pages.forEach((page) =>
-        (page.elements || []).forEach(processElement)
-      );
-    return choiceMap;
+    }
+
+    if (element.items && Array.isArray(element.items)) {
+      fieldTypes[elementName] = "multipletext";
+      fieldTypes[element.name] = "multipletext";
+    }
   };
 
-  const resolveCheckboxValues = (rawString, fieldChoices) => {
-    if (!rawString || typeof rawString !== "string") return [];
-    const trimmed = rawString.trim();
-    if (!trimmed) return [];
-    if (!fieldChoices)
-      return trimmed.split(" ").filter((v) => v.trim().length > 0);
-
-    // Strategy 1: space-split — if ALL tokens match known values
-    const spaceSplit = trimmed.split(" ").filter((v) => v.trim().length > 0);
-    const allMatch = spaceSplit.every(
-      (t) => fieldChoices[t.toLowerCase().trim()] !== undefined
-    );
-    if (allMatch)
-      return spaceSplit.map((t) => fieldChoices[t.toLowerCase().trim()]);
-
-    // Strategy 2: capital-letter split for multi-word values
-    const capitalSplit = trimmed
-      .split(/(?=[A-Z])/)
-      .map((t) => t.trim())
-      .filter((t) => t.length > 0);
-    return capitalSplit.map((t) => fieldChoices[t.toLowerCase().trim()] ?? t);
-  };
-
-  const resolveRadioValue = (rawValue, fieldChoices) => {
-    if (!rawValue || typeof rawValue !== "string") return rawValue;
-    if (!fieldChoices) return rawValue;
-    const resolved = fieldChoices[rawValue.toLowerCase().trim()];
-    return resolved !== undefined ? resolved : rawValue;
-  };
-  // Transform API data to SurveyJS format
-  const transformApiToSurvey = (submission, formSchema) => {
-    const fieldTypes = analyzeFormSchema(formSchema);
-    const choiceMap = buildChoiceMap(formSchema);
-    const transformedData = { ...submission };
-
-    const processObject = (obj, parentKey = "") => {
-      Object.keys(obj).forEach((key) => {
-        const value = obj[key];
-        const fullKey = parentKey ? `${parentKey}-${key}` : key;
-
-        if (value && typeof value === "object" && !Array.isArray(value)) {
-          // GPS_point special handling
-          if (key === "GPS_point") {
-            const coordsObj =
-              value.point_mapsappearance || value.point_mapappearance;
-            if (coordsObj?.coordinates) {
-              const coords = coordsObj.coordinates;
-              transformedData["GPS_point"] = {
-                longitude: coords[0],
-                latitude: coords[1],
-              };
-              return;
-            }
-            if (value.latitude !== undefined && value.longitude !== undefined) {
-              transformedData["GPS_point"] = value;
-              return;
-            }
-          }
-
-          if (value.latitude !== undefined && value.longitude !== undefined) {
-            transformedData[fullKey] = value;
-            return;
-          }
-
-          // multipletext → keep as nested object, never flatten
-          const isMultipleText =
-            fieldTypes[key] === "multipletext" ||
-            fieldTypes[fullKey] === "multipletext";
-
-          if (isMultipleText) {
-            transformedData[key] = value;
-            return;
-          }
-
-          // Regular nested object (panel) → flatten with "-" separator
-          processObject(value, key);
-        } else {
-          if (typeof value === "string" && value.trim().length > 0) {
-            const fieldType = fieldTypes[fullKey] || fieldTypes[key];
-            const fieldChoices = choiceMap[fullKey] || choiceMap[key];
-
-            if (fieldType === "checkbox") {
-              transformedData[fullKey] = resolveCheckboxValues(value, fieldChoices);
-            } else if (fieldType === "radio") {
-              transformedData[fullKey] = resolveRadioValue(value, fieldChoices);
-            } else {
-              // text/number input — use as-is
-              transformedData[fullKey] = value;
-            }
-          } else {
-            // null, undefined, number, boolean — pass through directly
-            transformedData[fullKey] = value;
-          }
-        }
-      });
-    };
-
-    processObject(submission);
-
-    // Legacy key mappings
-    const legacyKeyMap = {
-      "Livestock-is_demand_livestock": "select_one_demand_promoting_livestock",
-      "Livestock-demands_promoting_livestock": "select_one_promoting_livestock",
-      "Livestock-select_one_promoting_livestock_other":
-        "select_one_promoting_livestock_other",
-      "kitchen_gardens-area_kg": "area_didi_badi",
-      "kitchen_gardens-assets_kg": "indi_assets",
-      "fisheries-is_demand_fisheries": "select_one_demand_promoting_fisheries",
-      "fisheries-demands_promoting_fisheries": "select_one_promoting_fisheries",
-      "fisheries-demands_promoting_fisheries_other":
-        "select_one_promoting_fisheries_other",
-    };
-
-    Object.entries(legacyKeyMap).forEach(([newKey, oldKey]) => {
-      const oldValue = submission[oldKey];
-      const currentValue = transformedData[newKey];
-      const isCurrentEmpty =
-        currentValue === null || currentValue === undefined || currentValue === "";
-      const isOldValueReal =
-        oldValue !== null && oldValue !== undefined && oldValue !== "";
-      if (isCurrentEmpty && isOldValueReal) {
-        transformedData[newKey] = oldValue;
+  if (schema.pages) {
+    schema.pages.forEach((page) => {
+      if (page.elements) {
+        page.elements.forEach((element) => analyzeElement(element));
       }
     });
+  }
 
-    return transformedData;
+  return fieldTypes;
+};
+
+  const buildChoiceMap = (schema) => {
+  const choiceMap = {};
+  const processElement = (element) => {
+    if (
+      (element.type === "radiogroup" ||
+        element.type === "checkbox" ||
+        element.type === "dropdown") &&
+      Array.isArray(element.choices)
+    ) {
+      const map = {};
+      element.choices.forEach((choice) => {
+        if (typeof choice === "object" && choice.value !== undefined) {
+          map[String(choice.value).toLowerCase().trim()] = choice.value;
+          const text =
+            typeof choice.text === "object"
+              ? choice.text?.default ?? Object.values(choice.text)[0]
+              : choice.text;
+          if (text) map[String(text).toLowerCase().trim()] = choice.value;
+        } else if (typeof choice === "string") {
+          map[choice.toLowerCase().trim()] = choice;
+        }
+      });
+      choiceMap[element.name] = map;
+    }
+    if (element.elements) element.elements.forEach(processElement);
   };
+  if (schema.pages)
+    schema.pages.forEach((page) =>
+      (page.elements || []).forEach(processElement)
+    );
+  return choiceMap;
+};
+
+const resolveCheckboxValues = (rawString, fieldChoices) => {
+  if (!rawString || typeof rawString !== "string") return [];
+  const trimmed = rawString.trim();
+  if (!trimmed) return [];
+  if (!fieldChoices)
+    return trimmed.split(" ").filter((v) => v.trim().length > 0);
+
+  // Strategy 1: space-split — if ALL tokens match known values
+  const spaceSplit = trimmed.split(" ").filter((v) => v.trim().length > 0);
+  const allMatch = spaceSplit.every(
+    (t) => fieldChoices[t.toLowerCase().trim()] !== undefined
+  );
+  if (allMatch)
+    return spaceSplit.map((t) => fieldChoices[t.toLowerCase().trim()]);
+
+  // Strategy 2: capital-letter split for multi-word values
+  const capitalSplit = trimmed
+    .split(/(?=[A-Z])/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  return capitalSplit.map((t) => fieldChoices[t.toLowerCase().trim()] ?? t);
+};
+
+const resolveRadioValue = (rawValue, fieldChoices) => {
+  if (!rawValue || typeof rawValue !== "string") return rawValue;
+  if (!fieldChoices) return rawValue;
+  const resolved = fieldChoices[rawValue.toLowerCase().trim()];
+  return resolved !== undefined ? resolved : rawValue;
+};
+  // Transform API data to SurveyJS format
+const transformApiToSurvey = (submission, formSchema) => {
+  const fieldTypes = analyzeFormSchema(formSchema);
+  const choiceMap = buildChoiceMap(formSchema);
+  const transformedData = { ...submission };
+
+  const processObject = (obj, parentKey = "") => {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+      const fullKey = parentKey ? `${parentKey}-${key}` : key;
+
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        // GPS_point special handling
+        if (key === "GPS_point") {
+          const coordsObj =
+            value.point_mapsappearance || value.point_mapappearance;
+          if (coordsObj?.coordinates) {
+            const coords = coordsObj.coordinates;
+            transformedData["GPS_point"] = {
+              longitude: coords[0],
+              latitude: coords[1],
+            };
+            return;
+          }
+          if (value.latitude !== undefined && value.longitude !== undefined) {
+            transformedData["GPS_point"] = value;
+            return;
+          }
+        }
+
+        if (value.latitude !== undefined && value.longitude !== undefined) {
+          transformedData[fullKey] = value;
+          return;
+        }
+
+        // multipletext → keep as nested object, never flatten
+        const isMultipleText =
+          fieldTypes[key] === "multipletext" ||
+          fieldTypes[fullKey] === "multipletext";
+
+        if (isMultipleText) {
+          transformedData[key] = value;
+          return;
+        }
+
+        // Regular nested object (panel) → flatten with "-" separator
+        processObject(value, key);
+      } else {
+        if (typeof value === "string" && value.trim().length > 0) {
+          const fieldType = fieldTypes[fullKey] || fieldTypes[key];
+          const fieldChoices = choiceMap[fullKey] || choiceMap[key];
+
+          if (fieldType === "checkbox") {
+            transformedData[fullKey] = resolveCheckboxValues(value, fieldChoices);
+          } else if (fieldType === "radio") {
+            transformedData[fullKey] = resolveRadioValue(value, fieldChoices);
+          } else {
+            // text/number input — use as-is
+            transformedData[fullKey] = value;
+          }
+        } else {
+          // null, undefined, number, boolean — pass through directly
+          transformedData[fullKey] = value;
+        }
+      }
+    });
+  };
+
+  processObject(submission);
+
+  // Legacy key mappings
+  const legacyKeyMap = {
+    "Livestock-is_demand_livestock": "select_one_demand_promoting_livestock",
+    "Livestock-demands_promoting_livestock": "select_one_promoting_livestock",
+    "Livestock-select_one_promoting_livestock_other":
+      "select_one_promoting_livestock_other",
+    "kitchen_gardens-area_kg": "area_didi_badi",
+    "kitchen_gardens-assets_kg": "indi_assets",
+    "fisheries-is_demand_fisheries": "select_one_demand_promoting_fisheries",
+    "fisheries-demands_promoting_fisheries": "select_one_promoting_fisheries",
+    "fisheries-demands_promoting_fisheries_other":
+      "select_one_promoting_fisheries_other",
+  };
+
+  Object.entries(legacyKeyMap).forEach(([newKey, oldKey]) => {
+    const oldValue = submission[oldKey];
+    const currentValue = transformedData[newKey];
+    const isCurrentEmpty =
+      currentValue === null || currentValue === undefined || currentValue === "";
+    const isOldValueReal =
+      oldValue !== null && oldValue !== undefined && oldValue !== "";
+    if (isCurrentEmpty && isOldValueReal) {
+      transformedData[newKey] = oldValue;
+    }
+  });
+
+  return transformedData;
+};
 
   // Transform SurveyJS data back to API format
   const transformSurveyToApi = (surveyData, originalSubmission, formSchema) => {
@@ -1708,100 +1431,100 @@ const FormViewPage = ({
     };
   }, [submissions]);
 
-  const handleViewSubmission = async (submission) => {
-    setFormTemplateLoading(true);
-    const formTemplate = await getFormTemplate(selectedForm);
-    setFormTemplateLoading(false);
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
+const handleViewSubmission = async (submission) => {
+  setFormTemplateLoading(true);
+  const formTemplate = await getFormTemplate(selectedForm);
+  setFormTemplateLoading(false);
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
 
-    const cleanTemplate = stripSystemFields(formTemplate);
-    const transformedData = transformApiToSurvey(submission, formTemplate);
+  const cleanTemplate = stripSystemFields(formTemplate);
+  const transformedData = transformApiToSurvey(submission, formTemplate);
 
-    setSelectedSubmission(submission);
-    setIsEditing(false);
+  setSelectedSubmission(submission);
+  setIsEditing(false);
 
-    const model = new Model(cleanTemplate);
-    model.mode = "display";
-    model.data = transformedData;
-    setSurveyModel(model);
-  };
+  const model = new Model(cleanTemplate);
+  model.mode = "display";
+  model.data = transformedData;
+  setSurveyModel(model);
+};
 
 
-  const handleEditSubmission = async (submission) => {
-    setFormTemplateLoading(true);
-    const formTemplate = await getFormTemplate(selectedForm);
-    setFormTemplateLoading(false);
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
-    }
+const handleEditSubmission = async (submission) => {
+  setFormTemplateLoading(true);
+  const formTemplate = await getFormTemplate(selectedForm);
+  setFormTemplateLoading(false);
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
 
-    const cleanTemplate = stripSystemFields(formTemplate);
-    const transformedData = transformApiToSurvey(submission, formTemplate);
+  const cleanTemplate = stripSystemFields(formTemplate);
+  const transformedData = transformApiToSurvey(submission, formTemplate);
 
-    setSelectedSubmission(submission);
-    setIsEditing(true);
+  setSelectedSubmission(submission);
+  setIsEditing(true);
 
-    const model = new Model(cleanTemplate);
-    model.showCompletedPage = false;
-    model.data = transformedData;
+  const model = new Model(cleanTemplate);
+  model.showCompletedPage = false;
+  model.data = transformedData;
 
-    model.onComplete.add((sender) => {
-      const saveData = transformSurveyToApi(
-        sender.data,
-        submission,
-        formTemplate,
-      );
-      const uuid = getSubmissionUUID(submission);
-      handleSaveSubmission(uuid, saveData);
-    });
+  model.onComplete.add((sender) => {
+    const saveData = transformSurveyToApi(
+      sender.data,
+      submission,
+      formTemplate,
+    );
+    const uuid = getSubmissionUUID(submission);
+    handleSaveSubmission(uuid, saveData);
+  });
 
-    setSurveyModel(model);
-  };
+  setSurveyModel(model);
+};
 
-  const handleSaveSubmission = async (uuid, data) => {
-    setSaveStatus("saving");
-    setSaveError("");
-    try {
-      const response = await fetch(
-        `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
-          },
-          body: JSON.stringify(data),
+const handleSaveSubmission = async (uuid, data) => {
+  setSaveStatus("saving");
+  setSaveError("");
+  try {
+    const response = await fetch(
+      `${BASEURL}api/v1/submissions/${selectedForm}/${uuid}/modify/`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
         },
-      );
+        body: JSON.stringify(data),
+      },
+    );
 
-      const result = await response.json();
+    const result = await response.json();
 
-      if (!response.ok) {
-        setSaveStatus("error");
-        setSaveError(result?.message || result?.error || "Save failed. Please try again.");
-        return;
-      }
-
-      setSaveStatus("success");
-      reloadSubmissions(true);
-
-      // Auto close after 1.5s on success
-      setTimeout(() => {
-        setSelectedSubmission(null);
-        setSurveyModel(null);
-        setSaveStatus("idle");
-      }, 1500);
-
-    } catch (error) {
-      console.error("Save error:", error);
+    if (!response.ok) {
       setSaveStatus("error");
-      setSaveError("Network error. Please try again.");
+      setSaveError(result?.message || result?.error || "Save failed. Please try again.");
+      return;
     }
-  };
+
+    setSaveStatus("success");
+    reloadSubmissions(true);
+
+    // Auto close after 1.5s on success
+    setTimeout(() => {
+      setSelectedSubmission(null);
+      setSurveyModel(null);
+      setSaveStatus("idle");
+    }, 1500);
+
+  } catch (error) {
+    console.error("Save error:", error);
+    setSaveStatus("error");
+    setSaveError("Network error. Please try again.");
+  }
+};
 
   const handleValidateSubmission = async (submission) => {
     const uuid = getSubmissionUUID(submission);
@@ -1861,7 +1584,7 @@ const FormViewPage = ({
       setDeleteStatus("error");
       setDeleteError("Network error. Please try again.");
     }
-  };
+};
 
   const handleGenerateDPR = async () => {
     if (!dprEmail || !selectedPlan) return;
@@ -1877,7 +1600,6 @@ const FormViewPage = ({
         body: JSON.stringify({
           plan_id: Number(selectedPlan),
           email_id: dprEmail,
-          language: dprLanguage,
         }),
       });
       const data = await response.json();
@@ -1887,7 +1609,6 @@ const FormViewPage = ({
           message: data.message || "DPR generation request sent successfully!",
         });
         setDprEmail("");
-        setDprLanguage("en");
         setDprExpanded(false);
       } else {
         setDprNotification({
@@ -1928,8 +1649,8 @@ const FormViewPage = ({
       if (!response.ok) {
         throw new Error(
           data?.message ||
-          data?.error ||
-          "Failed to update DPR workflow status.",
+            data?.error ||
+            "Failed to update DPR workflow status.",
         );
       }
 
@@ -2105,20 +1826,22 @@ const FormViewPage = ({
             <div className="flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
               <button
                 onClick={() => setViewMode("card")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${viewMode === "card"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                  }`}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "card"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
               >
                 <Grid size={15} />
                 Card
               </button>
               <button
                 onClick={() => setViewMode("map")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${viewMode === "map"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                  }`}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "map"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
               >
                 <MapIcon size={15} />
                 Map
@@ -2179,10 +1902,11 @@ const FormViewPage = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setDprExpanded(!dprExpanded)}
-                      className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${dprExpanded
-                        ? "bg-violet-600 text-white border-violet-600 shadow-md"
-                        : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
-                        }`}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${
+                        dprExpanded
+                          ? "bg-violet-600 text-white border-violet-600 shadow-md"
+                          : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
+                      }`}
                     >
                       <FileText size={15} />
                       Generate DPR
@@ -2222,20 +1946,6 @@ const FormViewPage = ({
                           }
                           className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm shadow-sm"
                         />
-                      </div>
-
-                      <div className="relative shrink-0 min-w-[140px]">
-                        <select
-                          value={dprLanguage}
-                          onChange={(e) => setDprLanguage(e.target.value)}
-                          className="px-4 pr-10 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm font-medium text-slate-700 shadow-sm cursor-pointer"
-                        >
-                          {Object.entries(LANGUAGE_MAP).map(([key, val]) => (
-                            <option key={key} value={key}>
-                              {val}
-                            </option>
-                          ))}
-                        </select>
                       </div>
 
                       <button
@@ -2287,21 +1997,24 @@ const FormViewPage = ({
                               )
                             }
                             disabled={planReviewLoading}
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${planDetails?.is_completed
-                              ? "bg-blue-700"
-                              : "bg-slate-300"
-                              } ${planReviewLoading
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+                              planDetails?.is_completed
+                                ? "bg-blue-700"
+                                : "bg-slate-300"
+                            } ${
+                              planReviewLoading
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
-                              }`}
+                            }`}
                             aria-pressed={Boolean(planDetails?.is_completed)}
                             aria-label="Is Plan Completed?"
                           >
                             <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${planDetails?.is_completed
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                                }`}
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                planDetails?.is_completed
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
                             />
                           </button>
                         </div>
@@ -2324,21 +2037,24 @@ const FormViewPage = ({
                               )
                             }
                             disabled={planReviewLoading}
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${planDetails?.is_reviewed
-                              ? "bg-blue-700"
-                              : "bg-slate-300"
-                              } ${planReviewLoading
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+                              planDetails?.is_reviewed
+                                ? "bg-blue-700"
+                                : "bg-slate-300"
+                            } ${
+                              planReviewLoading
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
-                              }`}
+                            }`}
                             aria-pressed={Boolean(planDetails?.is_reviewed)}
                             aria-label="Is DPR Reviewed?"
                           >
                             <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${planDetails?.is_reviewed
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                                }`}
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                planDetails?.is_reviewed
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
                             />
                           </button>
                         </div>
@@ -2347,10 +2063,11 @@ const FormViewPage = ({
 
                     {planReviewNotification && (
                       <div
-                        className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${planReviewNotification.type === "success"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-red-200 bg-red-50 text-red-800"
-                          }`}
+                        className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
+                          planReviewNotification.type === "success"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : "border-red-200 bg-red-50 text-red-800"
+                        }`}
                       >
                         <CheckCircle2 size={16} className="shrink-0" />
                         <span>{planReviewNotification.message}</span>
@@ -2387,24 +2104,27 @@ const FormViewPage = ({
                               dprWorkflowMissing ||
                               dprWorkflowLoading === "status-submitted"
                             }
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${dprWorkflowStatus?.status === "SUBMITTED"
-                              ? "bg-blue-700"
-                              : "bg-slate-300"
-                              } ${dprWorkflowMissing ||
-                                dprWorkflowLoading === "status-submitted"
+                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+                              dprWorkflowStatus?.status === "SUBMITTED"
+                                ? "bg-blue-700"
+                                : "bg-slate-300"
+                            } ${
+                              dprWorkflowMissing ||
+                              dprWorkflowLoading === "status-submitted"
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
-                              }`}
+                            }`}
                             aria-pressed={
                               dprWorkflowStatus?.status === "SUBMITTED"
                             }
                             aria-label="DPR submitted"
                           >
                             <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${dprWorkflowStatus?.status === "SUBMITTED"
-                                ? "translate-x-6"
-                                : "translate-x-1"
-                                }`}
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                dprWorkflowStatus?.status === "SUBMITTED"
+                                  ? "translate-x-6"
+                                  : "translate-x-1"
+                              }`}
                             />
                           </button>
                         </div>
@@ -2449,24 +2169,27 @@ const FormViewPage = ({
                                 dprWorkflowMissing ||
                                 dprWorkflowLoading === "status-approved"
                               }
-                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${dprWorkflowStatus?.status === "APPROVED"
-                                ? "bg-emerald-700"
-                                : "bg-slate-300"
-                                } ${dprWorkflowMissing ||
-                                  dprWorkflowLoading === "status-approved"
+                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+                                dprWorkflowStatus?.status === "APPROVED"
+                                  ? "bg-emerald-700"
+                                  : "bg-slate-300"
+                              } ${
+                                dprWorkflowMissing ||
+                                dprWorkflowLoading === "status-approved"
                                   ? "cursor-not-allowed opacity-60"
                                   : "cursor-pointer"
-                                }`}
+                              }`}
                               aria-pressed={
                                 dprWorkflowStatus?.status === "APPROVED"
                               }
                               aria-label="DPR approved"
                             >
                               <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${dprWorkflowStatus?.status === "APPROVED"
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                                  }`}
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                  dprWorkflowStatus?.status === "APPROVED"
+                                    ? "translate-x-6"
+                                    : "translate-x-1"
+                                }`}
                               />
                             </button>
                           </div>
@@ -2493,24 +2216,27 @@ const FormViewPage = ({
                                 dprWorkflowMissing ||
                                 dprWorkflowLoading === "status-rejected"
                               }
-                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${dprWorkflowStatus?.status === "REJECTED"
-                                ? "bg-red-700"
-                                : "bg-slate-300"
-                                } ${dprWorkflowMissing ||
-                                  dprWorkflowLoading === "status-rejected"
+                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+                                dprWorkflowStatus?.status === "REJECTED"
+                                  ? "bg-red-700"
+                                  : "bg-slate-300"
+                              } ${
+                                dprWorkflowMissing ||
+                                dprWorkflowLoading === "status-rejected"
                                   ? "cursor-not-allowed opacity-60"
                                   : "cursor-pointer"
-                                }`}
+                              }`}
                               aria-pressed={
                                 dprWorkflowStatus?.status === "REJECTED"
                               }
                               aria-label="DPR rejected"
                             >
                               <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${dprWorkflowStatus?.status === "REJECTED"
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                                  }`}
+                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+                                  dprWorkflowStatus?.status === "REJECTED"
+                                    ? "translate-x-6"
+                                    : "translate-x-1"
+                                }`}
                               />
                             </button>
                           </div>
@@ -2528,10 +2254,11 @@ const FormViewPage = ({
 
                 {dprWorkflowNotification && (
                   <div
-                    className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${dprWorkflowNotification.type === "success"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-red-50 text-red-700"
-                      }`}
+                    className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
+                      dprWorkflowNotification.type === "success"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-700"
+                    }`}
                   >
                     <CheckCircle2 size={16} className="shrink-0" />
                     <span>{dprWorkflowNotification.message}</span>
@@ -2546,16 +2273,18 @@ const FormViewPage = ({
       {/* Floating toast notification */}
       {dprNotification && (
         <div
-          className={`fixed top-6 right-6 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm transition-all animate-in fade-in slide-in-from-top-3 duration-300 ${dprNotification.type === "success"
-            ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
-            : "bg-red-50/90 border-red-200 text-red-900"
-            }`}
+          className={`fixed top-6 right-6 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm transition-all animate-in fade-in slide-in-from-top-3 duration-300 ${
+            dprNotification.type === "success"
+              ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+              : "bg-red-50/90 border-red-200 text-red-900"
+          }`}
         >
           <div
-            className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${dprNotification.type === "success"
-              ? "bg-emerald-500"
-              : "bg-red-500"
-              }`}
+            className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+              dprNotification.type === "success"
+                ? "bg-emerald-500"
+                : "bg-red-500"
+            }`}
           >
             {dprNotification.type === "success" ? (
               <svg
@@ -2622,7 +2351,7 @@ const FormViewPage = ({
       {selectedSubmission && surveyModel && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden relative">
-
+            
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 flex items-center justify-between">
               <div>
@@ -2633,7 +2362,7 @@ const FormViewPage = ({
                   Submitted:{" "}
                   {formatToIST(
                     selectedSubmission.__system?.submissionDate ||
-                    selectedSubmission.submission_time,
+                      selectedSubmission.submission_time,
                   )}
                 </p>
               </div>
@@ -2710,7 +2439,7 @@ const FormViewPage = ({
       {submissionToDelete && deleteStatus !== "idle" && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-
+            
             {/* Header */}
             <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-6 flex items-center justify-between">
               <h2 className="text-xl font-black">Delete Submission</h2>
@@ -2933,22 +2662,25 @@ const FormViewPage = ({
                     >
                       {/* Left accent stripe */}
                       <div
-                        className={`absolute left-0 top-0 bottom-0 w-1 ${isModerated ? "bg-emerald-400" : "bg-amber-400"
-                          }`}
+                        className={`absolute left-0 top-0 bottom-0 w-1 ${
+                          isModerated ? "bg-emerald-400" : "bg-amber-400"
+                        }`}
                       />
 
                       <div className="pl-6 pr-5 pt-4 pb-0">
                         {/* Top row: status badge + date */}
                         <div className="flex items-center justify-between mb-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${isModerated
-                              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                              : "bg-amber-50 text-amber-700 ring-amber-200"
-                              }`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${
+                              isModerated
+                                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                                : "bg-amber-50 text-amber-700 ring-amber-200"
+                            }`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${isModerated ? "bg-emerald-500" : "bg-amber-400"
-                                }`}
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                isModerated ? "bg-emerald-500" : "bg-amber-400"
+                              }`}
                             />
                             {isModerated ? "Moderated" : ""}
                           </span>
@@ -2957,7 +2689,7 @@ const FormViewPage = ({
                             <Calendar size={12} />
                             {formatToIST(
                               submission.__system?.submissionDate ||
-                              submission.submission_time,
+                                submission.submission_time,
                             )}
                           </div>
                         </div>
@@ -3004,7 +2736,7 @@ const FormViewPage = ({
                                   {value}
                                 </div>
                               </div>
-                            ))}
+                          ))}
                         </div>
                       </div>
 
@@ -3015,11 +2747,12 @@ const FormViewPage = ({
                               Site Validation
                             </div>
                             <span
-                              className={`px-2 py-1 text-xs rounded-md font-bold ${validationResults[uuid].finalDecision ===
+                              className={`px-2 py-1 text-xs rounded-md font-bold ${
+                                validationResults[uuid].finalDecision ===
                                 "Recommended"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-red-50 text-red-700"
-                                }`}
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-red-50 text-red-700"
+                              }`}
                             >
                               {validationResults[uuid].finalDecision}
                             </span>
@@ -3030,12 +2763,13 @@ const FormViewPage = ({
                             ).map(([param, category]) => (
                               <span
                                 key={param}
-                                className={`px-2 py-1 text-xs rounded-md font-semibold ${category === "accepted"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : category === "partially_accepted"
-                                    ? "bg-amber-50 text-amber-700"
-                                    : "bg-red-50 text-red-700"
-                                  }`}
+                                className={`px-2 py-1 text-xs rounded-md font-semibold ${
+                                  category === "accepted"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : category === "partially_accepted"
+                                      ? "bg-amber-50 text-amber-700"
+                                      : "bg-red-50 text-red-700"
+                                }`}
                               >
                                 {param} → {category.replace("_", " ")}
                               </span>
@@ -3092,31 +2826,31 @@ const FormViewPage = ({
                               "Surface Water Body Remotely Sensed Maintenance",
                               "Well",
                             ].includes(selectedForm) && (
-                                <button
-                                  onClick={() =>
-                                    handleValidateSubmission(submission)
-                                  }
-                                  disabled={validationLoading[uuid]}
-                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-60"
-                                >
-                                  {validationLoading[uuid] ? (
-                                    <>
-                                      <div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div>
-                                      Validating...
-                                    </>
-                                  ) : (
-                                    <>Validate</>
-                                  )}
-                                </button>
-                              )}
+                              <button
+                                onClick={() =>
+                                  handleValidateSubmission(submission)
+                                }
+                                disabled={validationLoading[uuid]}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-60"
+                              >
+                                {validationLoading[uuid] ? (
+                                  <>
+                                    <div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div>
+                                    Validating...
+                                  </>
+                                ) : (
+                                  <>Validate</>
+                                )}
+                              </button>
+                            )}
 
-                            <button
-                              onClick={() => handleDelete(submission)}
-                              className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all"
-                            >
-                              <Trash2 size={13} />
-                              Delete
-                            </button>
+                              <button
+                                onClick={() => handleDelete(submission)}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 rounded-lg transition-all"
+                              >
+                                <Trash2 size={13} />
+                                Delete
+                              </button>
                           </>
                         )}
                       </div>
@@ -3143,10 +2877,11 @@ const FormViewPage = ({
               <button
                 key={i}
                 onClick={() => fetchSubmissions(i + 1)}
-                className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${page === i + 1
-                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
-                  : "bg-white border-2 border-slate-300 hover:bg-slate-50"
-                  }`}
+                className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${
+                  page === i + 1
+                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+                    : "bg-white border-2 border-slate-300 hover:bg-slate-50"
+                }`}
               >
                 {i + 1}
               </button>
