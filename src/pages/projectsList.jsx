@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import {
   CircularProgress,
   IconButton,
@@ -26,55 +27,48 @@ import {
   Settings,
   BarChart3,
   FilterX,
-  Plus
+  Plus,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Vector as VectorSource } from "ol/source";
-import GeoJSON from "ol/format/GeoJSON";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import ProjectMemberRegistration from "./ProjectMemberRegistration";
 
-const ProjectsList = ({ statesList, currentUser }) => {
+const ProjectsList = ({ currentUser }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  // filters
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [plans, setPlans] = useState([]);
+  const [selectedProjectForPlans, setSelectedProjectForPlans] = useState("");
+  const [loadingPlans, setLoadingPlans] = useState(false);
+ const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
+ const [selectedState, setSelectedState] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState("");
+    const [selectedAppType, setSelectedAppType] = useState("");
+    const [selectedOrganization, setSelectedOrganization] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [searchText, setSearchText] = useState("");
-  const [selectedState, setSelectedState] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedAppType, setSelectedAppType] = useState("");
-  const [selectedOrganization, setSelectedOrganization] = useState("");
-  const [bbox, setBBox] = useState(null);
-  const [openCEDialog, setOpenCEDialog] = useState(false);
-  const [selectedCEProject, setSelectedCEProject] = useState(null);
-  const [selectedCEFiles, setSelectedCEFiles] = useState([]);
-  // Waterbody Excel Upload
-  const [openWBDialog, setOpenWBDialog] = useState(false);
-  const [selectedWBProject, setSelectedWBProject] = useState(null);
-  const [selectedWBFiles, setSelectedWBFiles] = useState([]);
-  const [openWBComputeDialog, setOpenWBComputeDialog] = useState(false);
-  const [selectedWBComputeProject, setSelectedWBComputeProject] = useState(null);
-  const [computeFiles, setComputeFiles] = useState([]);
-  const [isClosestWP, setIsClosestWP] = useState(true);
-  const [geeAccounts, setGeeAccounts] = useState([]);
-  const [selectedGEEAccount, setSelectedGEEAccount] = useState("");
-  const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
-
-  const [settingsMenuAnchor, setSettingsMenuAnchor] = useState(null);
-  const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
+   const [searchText, setSearchText] = useState("");
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [statesList, setStatesList] = useState([]);
+    const [districtsCache, setDistrictsCache] = useState({});
+    const [blocksCache, setBlocksCache] = useState({});
+    const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
+const [selectedProject, setSelectedProject] = useState(null);
+const [showProjects, setShowProjects] = useState(true);
+const [showPlans, setShowPlans] = useState(false);
+const [compactProjects, setCompactProjects] = useState(false);
+ const location = useLocation();
+  const currentPageFromState = location.state?.currentPage;
+  const [page, setPage] = useState(currentPageFromState || 1);
+  const rowsPerPage = 5;
 
   const navigate = useNavigate();
   const isSuperAdmin = currentUser?.user?.is_superadmin;
+  const selectedProjectId = location.state?.selectedProjectId;    
 
 
-  const [toast, setToast] = useState({
-    open: false,
-    message: "",
-    severity: "success",
-  });
-
+  console.log(statesList);
   // fetch projects
   useEffect(() => {
     const fetchProjects = async () => {
@@ -156,34 +150,171 @@ const ProjectsList = ({ statesList, currentUser }) => {
   }, []);
 
 
+
+
   useEffect(() => {
-    const fetchGEEAccounts = async () => {
-      const token = sessionStorage.getItem("accessToken");
+  setPage(1);
+}, [
+  selectedState,
+  selectedStatus,
+  selectedAppType,
+  selectedOrganization,
+]);
+
+  useEffect(() => {
+    const fetchStates = async () => {
       try {
-        const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              "ngrok-skip-browser-warning": "420",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        const token = sessionStorage.getItem("accessToken");
+        const res = await fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
+          { headers: { Authorization: `Bearer ${token}` } },
         );
-        const data = await response.json();
-        setGeeAccounts(data);
-      } catch (error) {
-        console.error("Error fetching GEE accounts:", error);
+        const data = await res.json();
+        setStatesList(data.states || data.results || []);
+      } catch (err) {
+        console.error(err);
       }
     };
-
-    fetchGEEAccounts();
+    fetchStates();
   }, []);
 
-  const handleGEEAccountChange = (e) => {
-    setSelectedGEEAccount(e.target.value);
+
+  // Fetch districts for a state and cache them
+  const fetchDistricts = async (stateCode) => {
+    if (districtsCache[stateCode]) return;
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateCode}/`,
+        { headers: { "content-type": "application/json" } },
+      );
+      const data = await res.json();
+      const districts = (data.districts || []).map((d) => ({
+        ...d,
+        district_name: normalizeName(d.district_name),
+      }));
+      setDistrictsCache((prev) => ({ ...prev, [stateCode]: districts }));
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  // Resolve district name from cache
+  const getDistrictName = (stateCode, districtCode) => {
+    const districts = districtsCache[stateCode] || [];
+
+    return (
+      districts.find((d) => String(d.id) === String(districtCode))
+        ?.district_name || "Unknown District"
+    );
+  };
+
+  // Resolve state name
+  const getStateName = (stateCode) =>
+    statesList.find((s) => String(s.id) === String(stateCode))?.state_name ||
+    "Unknown State";
+
+    const normalizeName = (str) =>
+  str
+    ? str
+        .toLowerCase()
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ")
+    : "";
+
+  const fetchBlocks = async (districtCode) => {
+    if (blocksCache[districtCode]) return; // already cached
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtCode}/`,
+        {
+          method: "GET",
+          headers: {
+            "content-type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+        },
+      );
+
+      const data = await response.json();
+      const blocks = (data.blocks || []).map((b) => ({
+        ...b,
+        block_name: normalizeName(b.block_name),
+      }));
+
+      setBlocksCache((prev) => ({ ...prev, [districtCode]: blocks }));
+    } catch (error) {
+      console.error("Error fetching blocks:", error);
+    }
+  };
+
+  // Resolve block name from cache
+  const getBlockName = (districtCode, blockCode) => {
+    const blocks = blocksCache[districtCode] || [];
+
+    return (
+      blocks.find((b) => String(b.id) === String(blockCode))?.block_name ||
+      "Unknown Block"
+    );
+  };
+
+useEffect(() => {
+  const fetchPlans = async () => {
+    if (!selectedProjectForPlans) {
+      setPlans([]);
+      return;
+    }
+
+    try {
+      setLoadingPlans(true);
+
+      const token = sessionStorage.getItem("accessToken");
+
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProjectForPlans}/watershed/plans/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch plans");
+      }
+
+      const data = await response.json();
+
+      console.log("PLANS RESPONSE", data);
+     for (const plan of data) {
+  if (plan.state_soi) {
+    await fetchDistricts(plan.state_soi);
+  }
+
+  if (plan.district_soi) {
+    await fetchBlocks(plan.district_soi);
+  }
+}
+      setPlans(data);
+    } catch (error) {
+      console.error("Plans Error:", error);
+      setPlans([]);
+    } finally {
+      setLoadingPlans(false);
+    }
+  };
+
+  fetchPlans();
+}, [selectedProjectForPlans]);
+
+useEffect(() => {
+  if (currentPageFromState) {
+    setPage(currentPageFromState);
+  }
+}, [currentPageFromState]);
+
+
 
 
   // memoized filter lists
@@ -245,6 +376,13 @@ const ProjectsList = ({ statesList, currentUser }) => {
     return filteredProjects.filter(p => p.enabled === false);
   }, [filteredProjects]);
 
+  const totalPages = Math.ceil(enabledProjects.length / rowsPerPage);
+
+  const paginatedProjects = enabledProjects.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage
+  );
+
   // popover handlers
   const handleFilterClick = (e, type) => {
     setAnchorEl(e.currentTarget);
@@ -267,439 +405,7 @@ const ProjectsList = ({ statesList, currentUser }) => {
     setAnchorEl(null);
   };
 
-  const handleViewGeoJSON = async (project) => {
-    const organizationName = project.organization_name;
-    const projectName = project.name;
-
-    const formattedOrganizationName = organizationName
-      .replace(/\s+/g, "_")
-      .toLowerCase();
-    const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
-
-    const wfsurl = `${process.env.REACT_APP_IMAGE_LAYER_URL}plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&outputFormat=application%2Fjson`;
-
-    let dynamicBbox = "";
-    try {
-      const response = await fetch(wfsurl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      const adminLayer = await response.json();
-
-      const vectorSource = new VectorSource({
-        features: new GeoJSON().readFeatures(adminLayer),
-      });
-      const extent = vectorSource.getExtent();
-
-      dynamicBbox =
-        extent[0] + "%2C" + extent[1] + "%2C" + extent[2] + "%2C" + extent[3];
-      setBBox(extent);
-      const layerName = `plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability`;
-
-      const geojsonViewUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/wms?service=WMS&version=1.1.0&request=GetMap&layers=${layerName}&bbox=${dynamicBbox}&width=768&height=330&srs=EPSG%3A4326&styles=&format=application/openlayers`;
-      window.open(geojsonViewUrl, "_blank");
-    } catch (error) {
-      console.error("Error generating GeoJSON view URL:", error);
-    }
-  };
-
-  const handleDownloadGeoJSON = async (project) => {
-    const organizationName = project.organization_name;
-    const projectName = project.name;
-    const formattedOrganizationName = organizationName
-      .replace(/\s+/g, "_")
-      .toLowerCase();
-    const formattedProjectName = projectName.replace(/\s+/g, "_").toLowerCase();
-    const geojsonUrl = `https://geoserver.core-stack.org:8443/geoserver/plantation/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=plantation%3A${formattedOrganizationName}_${formattedProjectName}_suitability&maxFeatures=50&outputFormat=application%2Fjson`;
-
-    try {
-      const response = await fetch(geojsonUrl);
-      const contentType = response.headers.get("content-type");
-
-      if (!response.ok) throw new Error("Failed to fetch GeoJSON");
-
-      if (contentType && contentType.includes("text/xml")) {
-        console.warn("Received XML response instead of JSON.");
-        alert("Layer not available yet. Please check after some time.");
-        return;
-      }
-
-      const data = await response.json();
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-      const fileName = `${formattedOrganizationName}_${formattedProjectName}_${timestamp}.geojson`;
-
-      const blob = new Blob([JSON.stringify(data)], {
-        type: "application/json",
-      });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Error downloading GeoJSON:", error);
-      alert("Something went wrong while downloading the file.");
-    }
-  };
-
-  const handleCompute = async (project) => {
-    if (!project) {
-      console.error("No project selected.");
-      alert("Please select a project first.");
-      return;
-    }
-    const matchedProject = projects.find((p) => p.id === project.id);
-
-    if (!matchedProject) {
-      console.error("Project not found in updated projects state.");
-      alert("Something went wrong. Please refresh and try again.");
-      return;
-    }
-    // Extract required fields
-    const { state, appTypes, id } = project;
-    const state_name = matchedProject.state_name;
-    const appTypeId = appTypes?.length > 0 ? appTypes[0].id : null;
-
-    if (!state_name || !matchedProject.id) {
-      console.error("Missing required project details.");
-      alert("Project data is incomplete. Please check.");
-      return;
-    }
-
-    // Construct the formData object
-    const formData = {
-      project_id: matchedProject.id,
-      state: state_name,
-      start_year: 2017,
-      end_year: 2023,
-    };
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/plantation_site_suitability/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      setToast({
-        open: true,
-        message:
-          "Task initiated successfully! Please wait to view the layer or download the Geojson.",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Error calling compute API:", error);
-      alert("Failed to compute. Please try again.");
-    }
-  };
-
-  const handleOpenCE = (project) => {
-    setSelectedCEProject(project);
-    setSelectedCEFiles([]);
-    setOpenCEDialog(true);
-  };
-
-  const handleCEFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    const valid = files.filter(f => f.name.endsWith(".csv"));
-
-    if (!valid.length) return alert("Please upload valid CSV files");
-
-    setSelectedCEFiles(valid);
-  };
-
-  const handleRemoveCEFile = (index) => {
-    setSelectedCEFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleUploadCE = async () => {
-    if (selectedCEFiles.length === 0) {
-      return alert("Please select CSV files first");
-    }
-
-    const formData = new FormData();
-    selectedCEFiles.forEach((f) => formData.append("files[]", f));
-    formData.append("project_id", selectedCEProject.id);
-
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/map_users_to_community/`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      setToast({
-        open: true,
-        message: "Members uploaded successfully!",
-        severity: "success",
-      });
-
-      setOpenCEDialog(false);
-    } catch (err) {
-      setToast({
-        open: true,
-        message: "Failed to upload members!",
-        severity: "error",
-      });
-    }
-  };
-
-  const handleOpenWB = (project) => {
-    setSelectedWBProject(project);
-    setSelectedWBFiles([]);
-    setOpenWBDialog(true);
-  };
-
-  const handleWBFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    const valid = files.filter(
-      (f) => f.name.endsWith(".xlsx") || f.name.endsWith(".xls")
-    );
-
-    if (!valid.length) {
-      alert("Please upload valid Excel files (.xls / .xlsx)");
-      return;
-    }
-
-    setSelectedWBFiles(valid);
-  };
-
-  const handleRemoveWBFile = (index) => {
-    setSelectedWBFiles((prev) => prev.filter((_, i) => i !== index));
-  };
-
-
-
-  const handleUploadWB = async () => {
-    if (!selectedWBFiles.length) {
-      alert("Please select Excel files first");
-      return;
-    }
-
-    if (!selectedGEEAccount) {
-      alert("Please select GEE account.");
-      return;
-    }
-
-    const formData = new FormData();
-    selectedWBFiles.forEach((f) => formData.append("files", f));
-    formData.append("gee_account_id", selectedGEEAccount);
-    formData.append("project_id", selectedWBProject.id);
-    formData.append("is_closest_wp", true);
-    formData.append("is_lulc_required", true);
-    formData.append("is_processing_required", true);
-
-
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBProject.id}/waterrejuvenation/excel/`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      setToast({
-        open: true,
-        message: "Excel uploaded successfully!",
-        severity: "success",
-      });
-
-      setOpenWBDialog(false);
-    } catch (err) {
-      setToast({
-        open: true,
-        message: "Failed to upload Excel!",
-        severity: "error",
-      });
-    }
-  };
-
-  const handleOpenSettings = (e, project) => {
-    setSelectedSettingsProject(project);
-    setSettingsMenuAnchor(e.currentTarget);
-  };
-
-  const handleCloseSettings = () => {
-    setSettingsMenuAnchor(null);
-    setSelectedSettingsProject(null);
-  };
-
-
-  const handleToggleProject = async () => {
-    if (!selectedSettingsProject) return;
-
-    const token = sessionStorage.getItem("accessToken");
-    const isEnabled = selectedSettingsProject.enabled;
-    const endpoint = isEnabled ? "disable" : "enable";
-
-    try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedSettingsProject.id}/${endpoint}/`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) throw new Error("Failed to toggle project");
-
-      const updatedProject = await res.json();
-
-      if (updatedProject.enabled === true) {
-        //  Disabled → Enabled
-        setDisabledProjectsApi(prev =>
-          prev.filter(p => p.id !== updatedProject.id)
-        );
-
-        setProjects(prev => [...prev, updatedProject]);
-      } else {
-        //  Enabled → Disabled
-        setProjects(prev =>
-          prev.filter(p => p.id !== updatedProject.id)
-        );
-
-        setDisabledProjectsApi(prev => [...prev, updatedProject]);
-      }
-
-      handleCloseSettings();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update project status");
-    }
-  };
-
-  const handleOpenWBCompute = (project) => {
-    setSelectedWBComputeProject(project);
-    setComputeFiles([]);
-    setIsClosestWP(true);
-    setOpenWBComputeDialog(true);
-  };
-
-  const handleComputeFileSelect = (e) => {
-    const files = Array.from(e.target.files);
-    const valid = files.filter(
-      (f) => f.name.endsWith(".xlsx") || f.name.endsWith(".xls")
-    );
-
-    if (!valid.length) return alert("Please upload valid Excel files");
-    setComputeFiles(valid);
-  };
-
-  const handleRemoveComputeFile = (index) => {
-    setComputeFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleComputeWaterbody = async () => {
-    if (!computeFiles.length) return alert("Please select an Excel file!");
-
-    const formData = new FormData();
-    computeFiles.forEach((f) => formData.append("file", f));
-    formData.append("gee_account_id", selectedGEEAccount);
-    formData.append("is_closest_wp", true);
-    formData.append("is_processing_required", true);
-    formData.append("is_lulc_required", true);
-    formData.append("is_compute", true);
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/projects/${selectedWBComputeProject.id}/waterrejuvenation/excel/`,
-        {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-
-      if (!res.ok) throw new Error("Compute failed");
-
-      alert("Compute started successfully!");
-      setOpenWBComputeDialog(false);
-    } catch (err) {
-      alert("Failed to initiate compute");
-    }
-  };
-
-  const handleViewStats = async () => {
-    if (!selectedSettingsProject) return;
-
-    try {
-      const token = sessionStorage.getItem("accessToken");
-
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_uploaded_result/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            project_id: selectedSettingsProject.id,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to download stats file");
-      }
-
-      const blob = await response.blob();
-
-      // Create download link
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-
-      // Optional dynamic filename
-      const fileName = `${selectedSettingsProject.name}_stats.xlsx`;
-      a.download = fileName;
-
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-
-      handleCloseSettings();
-
-    } catch (error) {
-      console.error("Error downloading stats:", error);
-      alert("Failed to download stats file");
-    }
-  };
+ 
 
   const exportProjectsToExcel = () => {
     const dataToExport = filteredProjects.map((p, index) => ({
@@ -745,11 +451,26 @@ const ProjectsList = ({ statesList, currentUser }) => {
       <div className="flex flex-col">
         {/* Header */}
         <div className="bg-white rounded-xl flex items-center justify-between px-6 py-3">
-          <h2 className="text-2xl font-bold text-purple-600">
-            Projects
-          </h2>
+        <div
+            className="flex items-center gap-2 cursor-pointer"
+            // onClick={() => setShowProjects(!showProjects)}
+            onClick={() => {
+              setShowProjects(true);
+              setCompactProjects(false);
+            }}
+          >
+            {showProjects ? (
+              <ChevronDown size={22} className="text-purple-600" />
+            ) : (
+              <ChevronRight size={22} className="text-purple-600" />
+            )}
+
+            <h2 className="text-2xl font-bold text-purple-600">
+              Projects ({enabledProjects.length})
+            </h2>
+          </div>
           {(selectedState || selectedAppType || selectedOrganization || selectedStatus) && (
-            <div className="flex flex-wrap gap-2 mt-3">
+            <div className="flex flex-wrap gap-2 mt-1">
               {selectedState && (
                 <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full">
                   State: {selectedState}
@@ -791,31 +512,16 @@ const ProjectsList = ({ statesList, currentUser }) => {
           <div className="flex items-center gap-3">
             <Tooltip title="Add Project">
               <IconButton
-                onClick={() => navigate("/projects/create")}
-                sx={{
-                  color: "#9333ea",
-                  "&:hover": {
-                    backgroundColor: "rgba(147,51,234,0.1)",
-                  },
-                }}
+                  onClick={() => navigate("/projects/add")}                
+                    sx={{ color: "#9333ea",
+                          "&:hover": {
+                          backgroundColor: "rgba(147,51,234,0.1)",
+                          },
+                        }}
               >
                 <Plus size={22} />
               </IconButton>
             </Tooltip>
-            <Tooltip title="Clear All Filters">
-              <IconButton
-                onClick={clearAllFilters}
-                sx={{
-                  color: "#2563eb",
-                  "&:hover": {
-                    backgroundColor: "rgba(37,99,235,0.1)",
-                  },
-                }}
-              >
-                <FilterX size={20} />
-              </IconButton>
-            </Tooltip>
-
             <Tooltip title="Export Excel">
               <IconButton
                 onClick={exportProjectsToExcel}
@@ -831,9 +537,34 @@ const ProjectsList = ({ statesList, currentUser }) => {
             </Tooltip>
           </div>
         </div>
+        {compactProjects && (
+  <div className="mx-4 mt-3 p-4 bg-purple-50 border border-purple-100 rounded-xl flex justify-between items-center">
+    <div>
+      <p className="font-semibold text-gray-700">
+        Showing {paginatedProjects.length} of {enabledProjects.length} projects
+      </p>
+
+      <p className="text-sm text-gray-500">
+        Page {page} of {totalPages}
+      </p>
+    </div>
+
+    <Button
+      variant="outlined"
+      onClick={() => {
+        setCompactProjects(false);
+        setShowProjects(true);
+        setShowPlans(false);
+      }}
+    >
+      View Projects
+    </Button>
+  </div>
+)}
 
         {/* Table container */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {showProjects && !compactProjects &&(
+        <div className="flex-1 overflow-y-auto p-2">
           <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto h-full">
             {loading ? (
               <div className="flex justify-center items-center h-full">
@@ -844,9 +575,9 @@ const ProjectsList = ({ statesList, currentUser }) => {
                 <table className="min-w-full text-md text-left border-collapse">
                   <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
                     <tr>
-                      <th className="px-6 py-4">S. No.</th>
-                      <th className="px-6 py-4">Name</th>
-                      <th className="px-6 py-4">
+                      <th className="px-6 py-2">S. No.</th>
+                      <th className="px-6 py-2">Name</th>
+                      <th className="px-6 py-2">
                         <div className="flex items-center">
                           App Type
                           <IconButton
@@ -857,7 +588,7 @@ const ProjectsList = ({ statesList, currentUser }) => {
                           </IconButton>
                         </div>
                       </th>
-                      <th className="px-6 py-4">
+                      <th className="px-6 py-2">
                         <div className="flex items-center">
                           State
                           <IconButton
@@ -868,7 +599,7 @@ const ProjectsList = ({ statesList, currentUser }) => {
                           </IconButton>
                         </div>
                       </th>
-                      <th className="px-6 py-4">
+                      <th className="px-6 py-2">
                         <div className="flex items-center">
                           Organization
                           <IconButton
@@ -879,244 +610,346 @@ const ProjectsList = ({ statesList, currentUser }) => {
                           </IconButton>
                         </div>
                       </th>
-                      <th className="px-6 py-3">Actions</th>
+                      <th className="px-6 py-3">User Management</th>
                     </tr>
                   </thead>
 
                   <tbody className="divide-y divide-gray-200">
                     {enabledProjects.length > 0 ? (
-                      enabledProjects.map((p, i) => (
+                      paginatedProjects.map((p, i) => (
                         <tr
                           key={p.id}
-                          className="hover:bg-gray-50 transition duration-200 text-gray-700"
-                        >
-                          <td className="px-6 py-4 font-medium">{i + 1}</td>
-                          <td className="px-6 py-4 font-medium">{p.name}</td>
-                          <td className="px-6 py-4 font-medium">
-                            {p.app_type_display || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 font-medium">
-                            {p.state_name}
-                          </td>
-                          <td className="px-6 py-4 font-medium">
-                            {p.organization_name || "N/A"}
-                          </td>
-                          <td className="px-6 py-4 flex gap-2">
-                            {/* Plantation */}
-                            {p.app_type === "plantation" && (
-                              <>
-                                <Tooltip title="Edit">
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: "#4f46e5",
-                                      "&:hover": {
-                                        color: "#4338ca",
-                                        backgroundColor: "rgba(79,70,229,0.1)",
-                                      },
-                                    }}
-                                    onClick={() =>
-                                      navigate(`/projects/${p.id}/action`, {
-                                        state: { project: p },
-                                      })
-                                    }
-                                  >
-                                    <Edit2 size={24} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="View Layer">
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: "#059669", // Emerald
-                                      "&:hover": {
-                                        color: "#047857",
-                                        backgroundColor: "rgba(5,150,105,0.1)",
-                                      },
-                                    }}
-                                    onClick={() => handleViewGeoJSON(p)}
-                                  >
-                                    <Eye size={24} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Download GeoJSON">
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: "#f59e0b", // Amber
-                                      "&:hover": {
-                                        color: "#d97706",
-                                        backgroundColor: "rgba(245,158,11,0.1)",
-                                      },
-                                    }}
-                                    onClick={handleDownloadGeoJSON}
-                                  >
-                                    <Download size={24} />
-                                  </IconButton>
-                                </Tooltip>
-                              </>
-                            )}
-                            {/* Waterbody */}
-                            {p.app_type === "waterbody" && (
-                              <>
-                                {/* Upload Excel – ALL users */}
-                                <Tooltip title="Upload Excel">
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: "#2563eb",
-                                      "&:hover": {
-                                        color: "#1d4ed8",
-                                        backgroundColor: "rgba(37,99,235,0.1)",
-                                      },
-                                    }}
-                                    onClick={() => handleOpenWB(p)}
-                                  >
-                                    <Upload size={24} />
-                                  </IconButton>
-                                </Tooltip>
+                          onClick={() =>
+                            navigate(`/projects/${p.id}/members`, {
+                              state: {
+                                project: p,
+                                selectedProjectId: p.id,
+                                currentPage: page,
+                              },
+                            })
+                          }
+                          className={`cursor-pointer hover:bg-purple-50 transition duration-200 text-gray-700 ${
+                            selectedProjectId === p.id
+                              ? "bg-purple-50 border-l-4 border-purple-600"
+                              : ""
+                          }`}>                          
+                          <td
+                            className={`px-6 py-2 font-medium ${
+                              selectedProjectId === p.id
+                                ? "border-l-4 border-purple-600 bg-purple-50"
+                                : ""
+                            }`}
+                          >
+                            {(page - 1) * rowsPerPage + i + 1}</td>
+                          <td className="px-6 py-2 font-medium">{p.name}</td>
+                          <td className="px-6 py-2 font-medium"> {p.app_type_display === "Watershed Planning" ? "NRM Plans via Commons connect"
+    : p.app_type_display || "N/A"} </td>
+                          <td className="px-6 py-2 font-medium"> {p.state_name} </td>
+                          <td className="px-6 py-2 font-medium"> {p.organization_name || "N/A"} </td>
+                         <td className="px-6 py-2">
+                        <div className="flex gap-2">
+  <button
+    className="px-3 py-1 text-xs border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 whitespace-nowrap"
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedProject(p);
+      setOpenAddMemberModal(true);
+    }}
+  >
+    Register New User
+  </button>
 
-                                {/* Compute – ONLY Super Admin */}
-                                {isSuperAdmin && (
-                                  <Tooltip title="Compute">
-                                    <IconButton
-                                      size="small"
-                                      sx={{
-                                        color: "#059669",
-                                        "&:hover": {
-                                          color: "#047857",
-                                          backgroundColor: "rgba(5,150,105,0.1)",
-                                        },
-                                      }}
-                                      onClick={() => handleOpenWBCompute(p)}
-                                    >
-                                      <FilePlus size={24} />
-                                    </IconButton>
-                                  </Tooltip>
-                                )}
-                              </>
-                            )}
-
-
-
-                            {/* Watershed */}
-                            {p.app_type === "watershed" && (
-                              <>
-                                <Tooltip title="Create Plan(s)">
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: "#d946ef", // Pink/Purple
-                                      "&:hover": {
-                                        color: "#c026d3",
-                                        backgroundColor: "rgba(217,70,239,0.1)",
-                                      },
-                                    }}
-                                    onClick={() => {
-                                      navigate(`/projects/${p.id}/planCreation`, {
-                                        state: {
-                                          projectName: p.name,
-                                          projectId: p.id,
-                                          stateName: p.state_soi_name,
-                                          stateId: p.state_soi,
-                                          districtId: p.district_soi,
-                                          districtName: p.district_soi_name,
-                                          blockId: p.block,
-                                          blockName: p.block_name,
-                                        },
-                                      });
-                                    }}
-                                  >
-                                    <FilePlus size={24} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title="View Plans">
-                                  <IconButton
-                                    size="small"
-                                    sx={{
-                                      color: "#f43f5e",
-                                      "&:hover": {
-                                        color: "#e11d48",
-                                        backgroundColor: "rgba(244,63,94,0.1)",
-                                      },
-                                    }}
-                                    onClick={() => {
-                                      navigate(`/projects/${p.id}/plans`, {
-                                        state: {
-                                          projectName: p.name,
-                                          projectId: p.id,
-                                        },
-                                      });
-                                    }}
-                                  >
-                                    <Eye size={24} />
-                                  </IconButton>
-                                </Tooltip>
-                              </>
-                            )}
-                            {/* Community Engagement */}
-                            {p.app_type === "community_engagement" && (
-                              <Tooltip title="Manage Community Engagement">
-                                <IconButton
-                                  size="small"
-                                  sx={{
-                                    color: "#0ea5e9", // Sky blue
-                                    "&:hover": {
-                                      color: "#0284c7",
-                                      backgroundColor: "rgba(14,165,233,0.1)",
-                                    },
-                                  }}
-                                  onClick={() => handleOpenCE(p)}
-                                >
-                                  <Upload size={24} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-                            {(p.app_type === "plantation" || p.app_type === "waterbody") && isSuperAdmin && (
-                              <Tooltip title="Project Settings">
-                                <IconButton
-                                  size="small"
-                                  sx={{
-                                    color: "#6b7280", // gray
-                                    "&:hover": {
-                                      color: "#374151",
-                                      backgroundColor: "rgba(107,114,128,0.1)",
-                                    },
-                                  }}
-                                  onClick={(e) => handleOpenSettings(e, p)}
-
-                                >
-                                  <Settings size={24} />
-                                </IconButton>
-                              </Tooltip>
-                            )}
-
-
+  <button
+    className="px-3 py-1 text-xs bg-purple-600 text-white rounded-md hover:bg-purple-700 whitespace-nowrap"
+    onClick={(e) => {
+      e.stopPropagation();
+      navigate(`/projects/${p.id}/members`, {
+        state: {
+          project: p,
+          selectedProjectId: p.id,
+          currentPage: page,
+        },
+      });
+    }}
+  >
+    Edit User Details
+  </button>
+</div>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td
-                          colSpan={7}
-                          className="text-center py-6 text-gray-500"
-                        >
-                          No projects found.
-                        </td>
+                        <td colSpan={7} className="text-center py-6 text-gray-500">No projects found.</td>
                       </tr>
                     )}
                   </tbody>
-                </table>
 
+                </table>
+                <div className="flex justify-end items-center gap-2 p-4 border-t">
+                    <button
+                      onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={page === 1}
+                      className={`px-3 py-1 rounded ${page === 1
+                          ? "bg-gray-200 cursor-not-allowed"
+                          : "bg-purple-500 text-white hover:bg-purple-600"}`}
+                    >
+                      Previous
+                    </button>
+
+                    <span className="px-3">
+                      Page {page} of {totalPages}
+                    </span>
+
+                    <button
+                      onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={page === totalPages}
+                      className={`px-3 py-1 rounded ${page === totalPages
+                          ? "bg-gray-200 cursor-not-allowed"
+                          : "bg-purple-500 text-white hover:bg-purple-600"}`}
+                    >
+                      Next
+                    </button>
+                  </div>
               </div>
 
             )}
           </div>
         </div>
+        )}
       </div>
 
-      {/* Shared Popover */}
-      <Popover
+      {/* Plans Section */}
+<div className="mt-3">
+  <div className="bg-white rounded-xl flex items-center justify-between px-6 py-3 mb-4">
+    <div
+        className="flex items-center gap-2 cursor-pointer"
+        // onClick={() => setShowPlans(!showPlans)}
+         onClick={() => {
+          if (!showPlans) {
+            setShowPlans(true);
+            setCompactProjects(true);
+          } else {
+            setShowPlans(false);
+            setCompactProjects(false);
+          }
+        }}
+      >
+        {showPlans ? (
+          <ChevronDown size={22} className="text-purple-600" />
+        ) : (
+          <ChevronRight size={22} className="text-purple-600" />
+        )}
+
+        <h2 className="text-2xl font-bold text-purple-600">
+          Plans ({plans.length})
+        </h2>
+      </div>
+  </div>
+{showPlans && (
+  <>
+ <div className="flex items-center gap-4 justify-between">
+  <div className="flex items-center gap-4">
+    <label className="font-medium text-gray-700">
+      Select Project
+    </label>
+
+    <select
+      value={selectedProjectForPlans}
+      onChange={(e) => setSelectedProjectForPlans(e.target.value)}
+      className="border border-gray-300 rounded-lg px-4 py-2 min-w-[300px]"
+    >
+      <option value="">Select Project</option>
+
+      {projects
+        .filter((project) => project.app_type === "watershed")
+        .map((project) => (
+          <option key={project.id} value={project.id}>
+            {project.name}
+          </option>
+        ))}
+    </select>
+  </div>
+
+<Button
+  variant="contained"
+  startIcon={<Plus size={18} />}
+  disabled={!selectedProjectForPlans}
+  sx={{
+    backgroundColor: "#9333ea",
+    "&:hover": {
+      backgroundColor: "#7e22ce",
+    },
+    "&.Mui-disabled": {
+      backgroundColor: "#d8b4fe",
+      color: "#fff",
+    },
+  }}
+  onClick={() => {
+    const project = projects.find(
+      (p) => String(p.id) === String(selectedProjectForPlans)
+    );
+
+    if (!project) return;
+
+    navigate(`/projects/${project.id}/createProjectPlans`, {
+      state: {
+        projectName: project.name,
+        projectId: project.id,
+        stateName: project.state_soi_name,
+        stateId: project.state_soi,
+        districtId: project.district_soi,
+        districtName: project.district_soi_name,
+        blockId: project.block,
+        blockName: project.block_name,
+      },
+    });
+  }}
+>
+  Add Plan
+</Button>
+</div>
+
+  {selectedProjectForPlans && (
+  <div className="mt-6 rounded-2xl shadow-lg border border-gray-200 bg-white overflow-hidden">
+    {loadingPlans ? (
+      <div className="flex justify-center items-center py-10">
+        <CircularProgress />
+      </div>
+    ) : plans.length > 0 ? (
+      <table className="min-w-full text-md text-left border-collapse">
+        <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black">
+          <tr>
+            <th className="px-6 py-2">S. No.</th>
+            <th className="px-6 py-2">Plan Name</th>
+            <th className="px-6 py-2">Facilitator</th>
+            <th className="px-6 py-2">State</th>
+            <th className="px-6 py-2">District</th>
+            <th className="px-6 py-2">Tehsil</th>
+            <th className="px-6 py-2">Village</th>
+            <th className="px-6 py-2">Gram Panchayat</th>
+            <th className="px-6 py-2">Created By</th>
+            <th className="px-6 py-2 text-center">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody className="divide-y divide-gray-200">
+          {plans.map((plan, index) => (
+            <tr
+              key={plan.id}
+              className="hover:bg-purple-50 transition duration-200"
+            >
+              <td className="px-6 py-2">{index + 1}</td>
+
+              <td className="px-6 py-2 font-medium">
+                {plan.plan || "-"}
+              </td>
+
+              <td className="px-6 py-2">
+                {plan.facilitator_name || "-"}
+              </td>
+
+              <td className="px-6 py-2">
+                {getStateName(plan.state_soi)}
+              </td>
+
+              <td className="px-6 py-2">
+                {getDistrictName(plan.state_soi, plan.district_soi  )}
+              </td>
+
+              <td className="px-6 py-2">
+                {getBlockName(plan.district_soi, plan.tehsil_soi)}
+              </td>
+
+              <td className="px-6 py-2">
+                {plan.village_name || "-"}
+              </td>
+                <td className="px-6 py-2">
+                {plan.gram_panchayat || "-"}
+              </td>
+
+              <td className="px-6 py-2">
+                {plan.created_by_name || "-"}
+              </td>
+             <td className="px-6 py-2 text-center">
+              <button
+                onClick={() =>
+                  navigate(`/projects/${selectedProjectForPlans}/createProjectPlans`, {
+                    state: {
+                      projectName:
+                        projects.find(
+                          (p) =>
+                            String(p.id) === String(selectedProjectForPlans)
+                        )?.name,
+                      projectId: selectedProjectForPlans,
+                      planId: plan.id,
+                      stateId: plan.state_soi,
+                      districtId: plan.district_soi,
+                      blockId: plan.tehsil_soi,
+                    },
+                  })
+                }
+                className="
+                  inline-flex
+                  items-center
+                  gap-1
+                  px-3
+                  py-1.5
+                  rounded-lg
+                  bg-purple-50
+                  text-purple-600
+                  hover:bg-purple-100
+                  transition
+                "
+              >
+                <Edit2 size={16} />
+                Edit
+              </button>
+            </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <div className="p-10 text-center">
+        <p className="text-gray-500 mb-4">
+          No plans found for this project
+        </p>
+
+        {/* <Button
+          variant="contained"
+          onClick={() => {
+            const project = projects.find(
+              (p) => String(p.id) === String(selectedProjectForPlans)
+            );
+
+            if (!project) return;
+
+            navigate(`/projects/${project.id}/createProjectPlans`, {
+              state: {
+                projectName: project.name,
+                projectId: project.id,
+                stateName: project.state_soi_name,
+                stateId: project.state_soi,
+                districtId: project.district_soi,
+                districtName: project.district_soi_name,
+                blockId: project.block,
+                blockName: project.block_name,
+              },
+            });
+          }}
+        >
+          Create Plan
+        </Button> */}
+      </div>
+    )}
+  </div>
+)}
+ </>
+)}
+</div>
+
+ <Popover
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
         onClose={handleFilterClose}
@@ -1216,271 +1049,22 @@ const ProjectsList = ({ statesList, currentUser }) => {
               ))}
         </Box>
       </Popover>
-      <Menu
-        anchorEl={settingsMenuAnchor}
-        open={Boolean(settingsMenuAnchor)}
-        onClose={handleCloseSettings}
-        anchorOrigin={{
-          vertical: "bottom",
-          horizontal: "right",
-        }}
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
-        PaperProps={{
-          elevation: 3,
-          sx: { borderRadius: 2, minWidth: 220 }
-        }}
-      >
-        <MenuItem disabled sx={{ fontWeight: 600 }}>
-          {selectedSettingsProject?.name}
-        </MenuItem>
-
-        <MenuItem sx={{ display: "flex", justifyContent: "space-between" }}>
-          <span className="text-gray-700 text-sm">Enabled</span>
-          <Switch
-            checked={selectedSettingsProject?.enabled === true}
-            onChange={handleToggleProject}
-            color="primary"
-          />
-
-        </MenuItem>
-        <MenuItem onClick={handleViewStats}>
-          <BarChart3 size={18} className="mr-2 text-blue-600" />
-          View Stats
-        </MenuItem>
-
-      </Menu>
 
 
-
-
-
-
-      <Dialog
-        open={openCEDialog}
-        onClose={() => setOpenCEDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Manage Community – {selectedCEProject?.name}
-        </DialogTitle>
-
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2}>
-
-            {/* File Input */}
-            <input
-              id="ce-upload"
-              type="file"
-              accept=".csv"
-              multiple
-              hidden
-              onChange={handleCEFileSelect}
-            />
-            <label htmlFor="ce-upload">
-              <Box
-                className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50"
-              >
-                Select CSV Files
-              </Box>
-            </label>
-
-            {/* Selected Files */}
-            {selectedCEFiles.length > 0 && (
-              <Box className="bg-gray-100 p-3 rounded-lg">
-                {selectedCEFiles.map((f, i) => (
-                  <Box
-                    key={i}
-                    className="flex justify-between items-center p-2 border-b last:border-none"
-                  >
-                    {f.name}
-                    <IconButton size="small" color="error" onClick={() => handleRemoveCEFile(i)}>
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={selectedCEFiles.length === 0}
-              onClick={handleUploadCE}
-            >
-              Upload Members
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={openWBDialog}
-        onClose={() => setOpenWBDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Upload Waterbody Excel – {selectedWBProject?.name}
-        </DialogTitle>
-
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2}>
-
-            {/* File Input */}
-            <input
-              id="wb-upload"
-              type="file"
-              accept=".xls,.xlsx"
-              multiple
-              hidden
-              onChange={handleWBFileSelect}
-            />
-
-            <label htmlFor="wb-upload">
-              <Box className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50">
-                Select Excel Files
-              </Box>
-            </label>
-
-            {/* Selected Files */}
-            {selectedWBFiles.length > 0 && (
-              <Box className="bg-gray-100 p-3 rounded-lg">
-                {selectedWBFiles.map((f, i) => (
-                  <Box
-                    key={i}
-                    className="flex justify-between items-center p-2 border-b last:border-none"
-                  >
-                    {f.name}
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveWBFile(i)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={selectedWBFiles.length === 0}
-              onClick={handleUploadWB}
-            >
-              Upload Excel
-            </Button>
-
-          </Box>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={openWBComputeDialog}
-        onClose={() => setOpenWBComputeDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>
-          Compute Waterbody – {selectedWBComputeProject?.name}
-        </DialogTitle>
-
-        <DialogContent>
-          <Box display="flex" flexDirection="column" gap={2}>
-            {/* Upload */}
-            <input
-              id="wb-compute-upload"
-              type="file"
-              accept=".xls,.xlsx"
-              multiple
-              hidden
-              onChange={handleComputeFileSelect}
-            />
-
-            <label htmlFor="wb-compute-upload">
-              <Box className="cursor-pointer border border-blue-400 text-blue-600 p-3 rounded-lg text-center hover:bg-blue-50">
-                Select Excel Files
-              </Box>
-            </label>
-
-            {/* Selected Files */}
-            {computeFiles.length > 0 && (
-              <Box className="bg-gray-100 p-3 rounded-lg">
-                {computeFiles.map((f, i) => (
-                  <Box
-                    key={i}
-                    className="flex justify-between items-center p-2 border-b last:border-none"
-                  >
-                    {f.name}
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleRemoveComputeFile(i)}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ))}
-              </Box>
-            )}
-
-            {/* Toggle */}
-            <Box display="flex" justifyContent="space-between" alignItems="center">
-              <span>Use Closest WP</span>
-              <Switch
-                checked={isClosestWP}
-                onChange={() => setIsClosestWP(!isClosestWP)}
-              />
-            </Box>
-
-            {/* Select GEE Account */}
-            <Box display="flex" flexDirection="column" gap={1}>
-              <label className="text-lg font-semibold mb-1">
-                Select GEE Account:
-              </label>
-
-              <select
-                value={selectedGEEAccount}
-                onChange={handleGEEAccountChange}
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              >
-                <option value="">Select GEE Account</option>
-
-                {geeAccounts &&
-                  Object.entries(geeAccounts).map(([email, accounts]) => (
-                    <optgroup key={email} label={email}>
-                      {accounts.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-              </select>
-            </Box>
-
-
-            {/* Compute */}
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              disabled={!computeFiles.length}
-              onClick={handleComputeWaterbody}
-            >
-              Compute
-            </Button>
-          </Box>
-        </DialogContent>
-      </Dialog>
-
+<Dialog
+  open={openAddMemberModal}
+  onClose={() => setOpenAddMemberModal(false)}
+  maxWidth="md"
+  fullWidth
+>
+  <DialogContent>
+    <ProjectMemberRegistration
+      project={selectedProject}
+      currentUser={currentUser}
+      onClose={() => setOpenAddMemberModal(false)}
+    />
+  </DialogContent>
+</Dialog>
 
 
     </Box>

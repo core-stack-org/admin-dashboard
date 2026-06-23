@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, Eye, EyeOff, PanelLeftClose, PanelLeftOpen, } from "lucide-react";
-import { Bell } from "lucide-react";
+import { LogOut, Eye, EyeOff, PanelLeftClose, PanelLeftOpen,Bell,KeyRound } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTachometerAlt,
@@ -15,6 +14,7 @@ import {
   faMapMarkerAlt,
   faLocationArrow,
   faShieldAlt,
+  faProjectDiagram,
 } from "@fortawesome/free-solid-svg-icons";
 
 import logo from "../assets/core_stack_logo.jpeg";
@@ -44,6 +44,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
+  console.log("currentuser", currentuser);
 
   const [activeItem, setActiveItem] = useState(
     sessionStorage.getItem("activeItem") || "Dashboard",
@@ -232,6 +233,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Moderation Dashboard",
         href: "/moderation",
       },
+           {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Integration into Yuktdhara",
+        href: "/yuktdhara/organizations/",
+      },
       {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
         label: "Activate Location",
@@ -267,25 +273,39 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     menuItems = [
       {
         icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
-        label: "Dashboard",
+        label: "Manage Projects",
         href: "/dashboard",
       },
-      {
-        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-        label: "How to use",
-        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-        external: true,
+       {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Moderate Plans",
+        href: "/moderation",
+      },
+            {
+        icon: <FontAwesomeIcon icon={faProjectDiagram} size="lg" />,
+        label: "Integration into Yuktdhara",
+          onClick: () =>
+          navigate(
+            `/yuktdhara/organizations/${currentuser.user.organization}/plans`
+          ),
       },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
         label: "Request data layers",
         href: "/locationForm",
       },
-      {
-        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-        label: "Moderation Dashboard",
-        href: "/moderation",
+            {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "Quick tutorial",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
       },
+      {
+        icon: <KeyRound size={18} />,
+        label: "Generate API Key",
+        href: "/generateApiKey",
+      },
+     
     ];
   }
 
@@ -294,20 +314,21 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     menuItems = [
       {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-        label: "Moderation Dashboard",
+        label: "Moderate Plans",
         href: "/moderation",
-      },
-      {
-        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-        label: "How to use",
-        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-        external: true,
       },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
         label: "Request data layers",
         href: "/locationForm",
       },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "Quick Tutorial",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
+      },
+
     ];
   }
 

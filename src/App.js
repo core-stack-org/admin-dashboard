@@ -37,6 +37,11 @@ import Moderation from "./pages/moderation";
 import ForgotPassword from "./pages/forgot-password";
 import PlansPage from "./pages/organizationPlans";
 import ProjectsList from "./pages/projectsList";
+import AddProjects from "./pages/AddProjects";
+import ProjectMembers from "./pages/ProjectMembers";
+import createProjectPlans from "./pages/createProjectPlans";
+import CreateProjectPlans from "./pages/createProjectPlans";
+
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -73,6 +78,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/projects/:projectId/planCreation"
                   element={<PlanCreation />}
+                />
+                   <Route
+                  path="/projects/:projectId/createProjectPlans"
+                  element={<CreateProjectPlans />}
                 />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
                 <Route
@@ -118,6 +127,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/create-project"
                   element={<Project currentUser={currentUser} />}
                 />
+                <Route path="/projects/add" element={<AddProjects currentUser={currentUser} />} />
                 <Route
                   path="/create-user"
                   element={
@@ -131,6 +141,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/projects/:projectId/action"
                   element={<PlantationActions currentUser={currentUser} />}
                 />
+                
                 <Route
                   path="/projects/:projectId/plans"
                   element={<AllPlans />}
@@ -143,6 +154,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/yuktdhara/organizations/:organizationId/plans"
                   element={<PlansPage />}
+                />
+                <Route
+                  path="/projects/:projectId/members"
+                  element={<ProjectMembers currentUser={currentUser} />}
                 />
               </>
             ) : (

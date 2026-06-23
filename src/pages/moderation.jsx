@@ -281,11 +281,11 @@ const SelectionPage = ({
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-black text-slate-900 mb-3 tracking-tight mt-10">
+          <h1 className="text-5xl text-purple-900 mb-3 tracking-tight mt-10">
             Moderation Dashboard
           </h1>
           <p className="text-slate-600 text-lg">
-            Select project, plan, and form to review Forms
+            Select project, plan, and form
           </p>
         </div>
 
@@ -496,7 +496,7 @@ const SelectionPage = ({
           <button
             onClick={handleLoadSubmissions}
             disabled={!selectedPlan || !selectedForm}
-            className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-purple-700 text-white py-4 rounded-xl font-bold text-lg disabled:bg-purple-300 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
             Submit
           </button>

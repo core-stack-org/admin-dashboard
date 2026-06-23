@@ -495,7 +495,7 @@ const AdministratorDashboardNew = ({ currentUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-00 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-50 dark:to-slate-00 p-2 md:p-4">
       <motion.div
         initial="hidden"
         animate="visible"
@@ -503,7 +503,7 @@ const AdministratorDashboardNew = ({ currentUser }) => {
         className="max-w-7xl mx-auto space-y-8"
       >
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
             {organizationName}
           </h1>
         </div>
