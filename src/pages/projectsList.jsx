@@ -58,6 +58,7 @@ const [selectedProject, setSelectedProject] = useState(null);
 const [showProjects, setShowProjects] = useState(true);
 const [showPlans, setShowPlans] = useState(false);
 const [compactProjects, setCompactProjects] = useState(false);
+const [activeTab, setActiveTab] = useState("projects");
  const location = useLocation();
   const currentPageFromState = location.state?.currentPage;
   const [page, setPage] = useState(currentPageFromState || 1);
@@ -448,95 +449,113 @@ useEffect(() => {
 
   return (
     <Box>
+<div className="flex items-center justify-between px-2">
+
+  {/* Left Side - Tabs */}
+  <div className="flex items-center gap-6">
+
+    <button
+      onClick={() => setActiveTab("projects")}
+      className={`px-10 py-4 rounded-xl border ${
+        activeTab === "projects"
+          ? "bg-purple-50 border-purple-500 text-purple-700"
+          : "bg-white border-gray-200"
+      }`}
+    >
+      Projects 
+    </button>
+
+    <button
+      onClick={() => setActiveTab("plans")}
+      className={`px-10 py-4 rounded-xl border ${
+        activeTab === "plans"
+          ? "bg-purple-50 border-purple-500 text-purple-700"
+          : "bg-white border-gray-200"
+      }`}
+    >
+      Plans
+    </button>
+
+  </div>
+
+  {/* Center - Applied Filters */}
+  <div className="flex flex-wrap items-center gap-2">
+
+    {selectedState && (
+      <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full">
+        State: {selectedState}
+        <button
+          onClick={() => setSelectedState("")}
+          className="ml-1 font-bold hover:text-red-500"
+        >
+          ×
+        </button>
+      </span>
+    )}
+
+    {selectedAppType && (
+      <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full">
+        App Type: {selectedAppType}
+        <button
+          onClick={() => setSelectedAppType("")}
+          className="ml-1 font-bold hover:text-red-500"
+        >
+          ×
+        </button>
+      </span>
+    )}
+
+    {selectedOrganization && (
+      <span className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full">
+        Org: {selectedOrganization}
+        <button
+          onClick={() => setSelectedOrganization("")}
+          className="ml-1 font-bold hover:text-red-500"
+        >
+          ×
+        </button>
+      </span>
+    )}
+
+  </div>
+
+  {/* Right Side - Actions */}
+  {activeTab === "projects" && (
+  <div className="flex items-center gap-3">
+
+    <Tooltip title="Add Project">
+      <IconButton
+        onClick={() => navigate("/projects/add")}
+        sx={{
+          color: "#9333ea",
+          "&:hover": {
+            backgroundColor: "rgba(147,51,234,0.1)",
+          },
+        }}
+      >
+        <Plus size={22} />
+      </IconButton>
+    </Tooltip>
+
+    <Tooltip title="Export Excel">
+      <IconButton
+        onClick={exportProjectsToExcel}
+        sx={{
+          color: "#16a34a",
+          "&:hover": {
+            backgroundColor: "rgba(22,163,74,0.1)",
+          },
+        }}
+      >
+        <Download size={22} />
+      </IconButton>
+    </Tooltip>
+
+  </div>
+  )}
+
+</div>
       <div className="flex flex-col">
-        {/* Header */}
-        <div className="bg-white rounded-xl flex items-center justify-between px-6 py-3">
-        <div
-            className="flex items-center gap-2 cursor-pointer"
-            // onClick={() => setShowProjects(!showProjects)}
-            onClick={() => {
-              setShowProjects(true);
-              setCompactProjects(false);
-            }}
-          >
-            {showProjects ? (
-              <ChevronDown size={22} className="text-purple-600" />
-            ) : (
-              <ChevronRight size={22} className="text-purple-600" />
-            )}
-
-            <h2 className="text-2xl font-bold text-purple-600">
-              Projects ({enabledProjects.length})
-            </h2>
-          </div>
-          {(selectedState || selectedAppType || selectedOrganization || selectedStatus) && (
-            <div className="flex flex-wrap gap-2 mt-1">
-              {selectedState && (
-                <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full">
-                  State: {selectedState}
-                  <button
-                    onClick={() => setSelectedState("")}
-                    className="font-bold hover:text-red-500"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-
-              {selectedAppType && (
-                <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full">
-                  App Type: {selectedAppType}
-                  <button
-                    onClick={() => setSelectedAppType("")}
-                    className="font-bold hover:text-red-500"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-
-              {selectedOrganization && (
-                <span className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full">
-                  Org: {selectedOrganization}
-                  <button
-                    onClick={() => setSelectedOrganization("")}
-                    className="font-bold hover:text-red-500"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-            </div>
-          )}
-          {/* Clear All Filters */}
-          <div className="flex items-center gap-3">
-            <Tooltip title="Add Project">
-              <IconButton
-                  onClick={() => navigate("/projects/add")}                
-                    sx={{ color: "#9333ea",
-                          "&:hover": {
-                          backgroundColor: "rgba(147,51,234,0.1)",
-                          },
-                        }}
-              >
-                <Plus size={22} />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Export Excel">
-              <IconButton
-                onClick={exportProjectsToExcel}
-                sx={{
-                  color: "#16a34a",
-                  "&:hover": {
-                    backgroundColor: "rgba(22,163,74,0.1)",
-                  },
-                }}
-              >
-                <Download size={22} />
-              </IconButton>
-            </Tooltip>
-          </div>
-        </div>
         {compactProjects && (
   <div className="mx-4 mt-3 p-4 bg-purple-50 border border-purple-100 rounded-xl flex justify-between items-center">
     <div>
@@ -563,8 +582,8 @@ useEffect(() => {
 )}
 
         {/* Table container */}
-        {showProjects && !compactProjects &&(
-        <div className="flex-1 overflow-y-auto p-2">
+{activeTab === "projects" && (
+          <div className="flex-1 overflow-y-auto p-2">
           <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto h-full">
             {loading ? (
               <div className="flex justify-center items-center h-full">
@@ -721,33 +740,9 @@ useEffect(() => {
 
       {/* Plans Section */}
 <div className="mt-3">
-  <div className="bg-white rounded-xl flex items-center justify-between px-6 py-3 mb-4">
-    <div
-        className="flex items-center gap-2 cursor-pointer"
-        // onClick={() => setShowPlans(!showPlans)}
-         onClick={() => {
-          if (!showPlans) {
-            setShowPlans(true);
-            setCompactProjects(true);
-          } else {
-            setShowPlans(false);
-            setCompactProjects(false);
-          }
-        }}
-      >
-        {showPlans ? (
-          <ChevronDown size={22} className="text-purple-600" />
-        ) : (
-          <ChevronRight size={22} className="text-purple-600" />
-        )}
 
-        <h2 className="text-2xl font-bold text-purple-600">
-          Plans ({plans.length})
-        </h2>
-      </div>
-  </div>
-{showPlans && (
-  <>
+{activeTab === "plans" && (
+    <>
  <div className="flex items-center gap-4 justify-between">
   <div className="flex items-center gap-4">
     <label className="font-medium text-gray-700">
