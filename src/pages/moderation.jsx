@@ -139,6 +139,8 @@ const SelectionPage = ({
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
   const [blocksMap, setBlocksMap] = useState({});
+  const [formCounts, setFormCounts] = useState({});
+  const [formCountsLoading, setFormCountsLoading] = useState(false);
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -151,6 +153,52 @@ const SelectionPage = ({
       })
       .catch((err) => console.error("Org fetch error", err));
   }, [isSuperAdmin]);
+
+  useEffect(() => {
+    if (!selectedPlan || forms.length === 0) {
+      setFormCounts({});
+      return;
+    }
+
+    let isMounted = true;
+    setFormCountsLoading(true);
+
+    const fetchCounts = async () => {
+      const counts = {};
+
+      await Promise.all(
+        forms.map(async (form) => {
+          try {
+            const res = await fetch(
+              `${BASEURL}api/v1/submissions/${form.name}/${selectedPlan}/?page=1`,
+              {
+                headers: getHeaders(),
+              }
+            );
+            if (res.ok) {
+              const data = await res.json();
+              counts[form.name] = data.total_objects || 0;
+            } else {
+              counts[form.name] = 0;
+            }
+          } catch (e) {
+            counts[form.name] = 0;
+          }
+        })
+      );
+
+      if (isMounted) {
+        setFormCounts(counts);
+        setFormCountsLoading(false);
+      }
+    };
+
+    fetchCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedPlan, forms]);
 
   // Non-superadmin: fetch all projects once on mount
   useEffect(() => {
@@ -348,7 +396,7 @@ const SelectionPage = ({
       const category = FORM_CATEGORY_MAP[form.name] || "Other";
       if (!groups[category]) groups[category] = [];
       const displayName = FORM_DISPLAY_NAMES[form.name] || form.name;
-      groups[category].push({ value: form.name, label: displayName });
+      groups[category].push({ value: form.name, label: displayName, form });
     });
 
     return FORM_CATEGORY_ORDER.filter((cat) => groups[cat])
@@ -682,11 +730,37 @@ const SelectionPage = ({
                     .map((form) => ({
                       value: form.name,
                       label: FORM_DISPLAY_NAMES[form.name] || form.name,
+                      form
                     }))
                     .find((f) => f.value === selectedForm)
                   : null
               }
               onChange={(opt) => setSelectedForm(opt?.value || "")}
+              formatOptionLabel={({ form, label }, { context }) => {
+                if (context === "value") {
+                  return (
+                    <span className="font-semibold text-slate-800">
+                      {label}
+                    </span>
+                  );
+                }
+
+                return (
+                  <div className="py-0.5">
+                    <div className="font-semibold text-slate-800 text-sm leading-snug">
+                      {label}
+                    </div>
+
+                    {form && (
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
+                          Total Submissions: {formCountsLoading ? "Loading..." : (formCounts[form.name] ?? 0)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              }}
               isClearable
             />
           </div>
