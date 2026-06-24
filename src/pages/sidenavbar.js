@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LogOut, Eye, EyeOff } from "lucide-react";
-import { Bell } from "lucide-react";
+import { LogOut, Eye, EyeOff, PanelLeftClose, PanelLeftOpen,Bell,KeyRound } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTachometerAlt,
@@ -15,16 +14,17 @@ import {
   faMapMarkerAlt,
   faLocationArrow,
   faShieldAlt,
+  faProjectDiagram,
 } from "@fortawesome/free-solid-svg-icons";
 
-import logo from "../assets/core-stack logo.png";
+import logo from "../assets/core_stack_logo.jpeg";
 import { useNavigate } from "react-router-dom";
 import layersData from "../jsons/layers.json";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
-const SideNavbar = ({ currentuser, setCurrentUser }) => {
+const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSidebarCollapsed, }) => {
   const navigate = useNavigate();
   const [isLayerOpen, setIsLayerOpen] = useState(false);
   const [selectedLayer, setSelectedLayer] = useState(null);
@@ -38,10 +38,13 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showProfileDetails, setShowProfileDetails] = useState(false);
+  // const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
+  console.log("currentuser", currentuser);
 
   const [activeItem, setActiveItem] = useState(
     sessionStorage.getItem("activeItem") || "Dashboard",
@@ -230,6 +233,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Moderation Dashboard",
         href: "/moderation",
       },
+           {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Integration into Yuktdhara",
+        href: "/yuktdhara/organizations/",
+      },
       {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
         label: "Activate Location",
@@ -265,25 +273,39 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     menuItems = [
       {
         icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
-        label: "Dashboard",
+        label: "Manage Projects",
         href: "/dashboard",
       },
-      {
-        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-        label: "How to use",
-        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-        external: true,
+       {
+        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
+        label: "Moderate Plans",
+        href: "/moderation",
+      },
+            {
+        icon: <FontAwesomeIcon icon={faProjectDiagram} size="lg" />,
+        label: "Integration into Yuktdhara",
+          onClick: () =>
+          navigate(
+            `/yuktdhara/organizations/${currentuser.user.organization}/plans`
+          ),
       },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
         label: "Request data layers",
         href: "/locationForm",
       },
-      {
-        icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-        label: "Moderation Dashboard",
-        href: "/moderation",
+            {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "Quick tutorial",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
       },
+      {
+        icon: <KeyRound size={18} />,
+        label: "Generate API Key",
+        href: "/generateApiKey",
+      },
+     
     ];
   }
 
@@ -292,20 +314,21 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
     menuItems = [
       {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
-        label: "Moderation Dashboard",
+        label: "Moderate Plans",
         href: "/moderation",
-      },
-      {
-        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
-        label: "How to use",
-        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
-        external: true,
       },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
         label: "Request data layers",
         href: "/locationForm",
       },
+      {
+        icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+        label: "Quick Tutorial",
+        href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+        external: true,
+      },
+
     ];
   }
 
@@ -444,34 +467,63 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Sidebar */}
-      <div className="fixed top-0 left-0 h-screen w-64 bg-gray-800 text-white overflow-y-auto scrollbar-hide">
-        <div className="flex items-center justify-center h-16 bg-gray-800">
-          <img src={logo} alt="Logo" className="h-24 w-24 mt-10 rounded-full" />
-        </div>
+      <div
+        className={`fixed top-0 left-0 h-screen bg-white text-purple-600 border-r border-purple-100 overflow-y-auto scrollbar-hide transition-all duration-300 ${isSidebarCollapsed ? "w-20" : "w-64"
+          }`}
+      >
         <nav className="flex-1 px-4 py-6">
-          <ul className="space-y-2 mt-10">
+            <div className={`flex mb-2 pb-2 border-b border-purple-100 mt-16 ${isSidebarCollapsed ? "justify-center" : "justify-end"}`}>
+    <button
+      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      className="p-1.5 rounded-lg hover:bg-purple-50 transition"
+      title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+    >
+      {isSidebarCollapsed ? (
+        <PanelLeftOpen size={18} className="text-purple-500" />
+      ) : (
+        <PanelLeftClose size={18} className="text-purple-500" />
+      )}
+    </button>
+  </div>
+          {/* <div className="mb-4 flex justify-end">
+  <button
+    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+    className="p-2 rounded-lg hover:bg-purple-50 transition mt-16"
+  >
+    {isSidebarCollapsed ? (
+      <PanelLeftOpen size={20} />
+    ) : (
+      <PanelLeftClose size={20} />
+    )}
+  </button>
+</div> */}
+          <ul className="space-y-2 mt-2">
             {menuItems.map((item, index) => (
-              <li key={index}>
+              <li key={index} className="relative group">
                 {!item.isSubmenu ? (
                   item.external ? (
                     <a
                       href={item.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
-                        activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
-                      }`}
+                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${activeItem === item.label
+                        ? "bg-purple-100 text-purple-700"
+                        : "hover:bg-purple-50"
+                        }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-5 h-5 flex items-center justify-center">
-                          {item.icon}
-                        </div>
-                        <span className="text-sm font-medium">
-                          {item.label}
-                        </span>
-                      </div>
+                   <div className="flex items-center w-full">
+  <div className="flex items-center gap-3">
+    <div className="w-5 h-5 flex items-center justify-center">
+      {item.icon}
+    </div>
+
+    {!isSidebarCollapsed && (
+      <span className="text-sm font-medium">
+        {item.label}
+      </span>
+    )}
+  </div>
+</div>
                     </a>
                   ) : (
                     <button
@@ -479,39 +531,42 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                         setActiveItem(item.label);
                         item.onClick ? item.onClick() : navigate(item.href);
                       }}
-                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
-                        activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
-                      }`}
+                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${activeItem === item.label
+                        ? "bg-purple-100 text-purple-700"
+                        : "hover:bg-purple-50"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
                         </div>
-                        <span className="text-sm font-medium">
-                          {item.label}
-                        </span>
+                        {!isSidebarCollapsed && (
+                          <span className="text-sm font-medium">
+                            {item.label}
+                          </span>
+                        )}
                       </div>
+                     
                     </button>
                   )
                 ) : (
                   <div>
                     <button
                       onClick={() => setIsLayerOpen(!isLayerOpen)}
-                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${
-                        activeItem === item.label
-                          ? "bg-gray-700"
-                          : "hover:bg-gray-700"
-                      }`}
+                      className={`flex items-center w-full px-2 py-2 rounded-lg transition-colors ${activeItem === item.label
+                        ? "bg-purple-100 text-purple-700"
+                        : "hover:bg-purple-50"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-5 h-5 flex items-center justify-center">
                           {item.icon}
                         </div>
-                        <span className="text-sm font-medium">
-                          {item.label}
-                        </span>
+                        {!isSidebarCollapsed && (
+                          <span className="text-sm font-medium">
+                            {item.label}
+                          </span>
+                        )}
                         <span className="ml-auto">
                           {isLayerOpen ? "▲" : "▼"}
                         </span>
@@ -524,11 +579,10 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                           <li key={idx}>
                             <button
                               onClick={() => handleLayerClick(layer)}
-                              className={`block px-2 py-1 w-full rounded-lg text-left text-sm ${
-                                activeItem === layer
-                                  ? "bg-gray-600"
-                                  : "hover:bg-gray-600"
-                              }`}
+                              className={`block px-2 py-1 w-full rounded-lg text-left text-sm ${activeItem === layer
+                                ? "bg-purple-100 text-purple-700"
+                                : "hover:bg-purple-50"
+                                }`}
                             >
                               {layer}
                             </button>
@@ -545,32 +599,37 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       </div>
 
       {/* Top Navbar */}
-      <nav className="fixed top-0 left-64 right-0 bg-gray-800 text-white h-16 z-20">
+    <nav
+  className="fixed top-0 left-0 right-0 bg-white text-purple-600 h-16 z-20 border-b border-purple-100"
+>
         <div className="flex items-center h-full px-4 relative">
-          <h1 className="text-xl font-bold mx-auto">CoRE Stack dashboard</h1>
+          <div className="flex items-center gap-3 mt-4">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="h-20 w-20 object-contain"
+                />
 
-          <div className="relative mr-4">
-            <button className="flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full hover:bg-gray-600 transition-colors">
-              <Bell size={20} className="text-white" />
-              {/* <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-gray-800"></span> */}
-            </button>
-          </div>
-          <div className="relative">
+                <span className="text-lg font-semibold text-purple-700">
+                  CoRE Stack
+                </span>
+              </div>
+
+          <div className=" ml-auto relative">
             <button
-              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-gray-700 transition-colors"
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-purple-50 transition-colors"
               onClick={toggleDropdown}
             >
-              <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center">
-                <span className="text-sm font-bold">
+              <div className="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center">
+                <span className="text-sm font-bold text-purple-700">
                   {currentuser?.user?.first_name?.charAt(0)?.toUpperCase() ||
                     ""}
                   {currentuser?.user?.last_name?.charAt(0)?.toUpperCase() || ""}
                 </span>
               </div>
               <svg
-                className={`w-4 h-4 text-gray-300 transition-transform duration-200 ${
-                  isDropdownOpen ? "rotate-180" : ""
-                }`}
+                className={`w-4 h-4 text-purple-600 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""
+                  }`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -585,39 +644,125 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
             </button>
 
             {isDropdownOpen && (
-              <div className="absolute top-12 right-0 w-56 bg-white shadow-lg rounded-lg z-30 text-gray-800 overflow-hidden">
+              <div className="absolute top-12 right-0 w-56 bg-white shadow-lg rounded-lg z-30 text-purple-800 overflow-hidden border animate-in fade-in duration-200">
                 {/* User info header */}
-                <div className="px-4 py-3 bg-gray-50 border-b">
+                <div className="px-4 py-3 bg-purple-50 border-b">
                   <p className="text-sm font-medium">
                     {currentuser?.user?.first_name}{" "}
                     {currentuser?.user?.last_name}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-purple-500 truncate">
                     {currentuser?.user?.email || "user@example.com"}
                   </p>
                 </div>
 
                 <ul>
-                  <li className="hover:bg-gray-50">
-                    <button className="flex items-center w-full px-4 py-2 text-sm">
-                      <svg
-                        className="w-4 h-4 mr-3 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                      Profile
+                  <li className="hover:bg-purple-50">
+                    <button
+                      onClick={() =>
+                        setShowProfileDetails(!showProfileDetails)
+                      }
+                      className="flex items-center justify-between w-full px-4 py-2 text-sm"
+                    >
+                      <div className="flex items-center">
+                        <svg
+                          className="w-4 h-4 mr-3 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+
+                        Profile
+                      </div>
+
+                      <span className="text-xs">
+                        {showProfileDetails ? "▲" : "▼"}
+                      </span>
                     </button>
                   </li>
+                  {showProfileDetails && (
+                    <div className="px-4 py-4 bg-purple-50 border-t border-b text-sm space-y-4 animate-in slide-in-from-top-2 duration-200">
+
+                      {/* Username */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-500">
+                          Username
+                        </p>
+
+                        <span className="mx-2 text-gray-400">
+                          -
+                        </span>
+
+                        <p className="font-medium text-right">
+                          {currentuser?.user?.username || "-"}
+                        </p>
+                      </div>
+
+                      {/* Email */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-500">
+                          Email
+                        </p>
+
+                        <span className="mx-2 text-gray-400">
+                          -
+                        </span>
+
+                        <p className="font-medium text-right break-all">
+                          {currentuser?.user?.email || "-"}
+                        </p>
+                      </div>
+
+                      {/* Contact */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-500">
+                          Contact
+                        </p>
+
+                        <span className="mx-2 text-gray-400">
+                          -
+                        </span>
+
+                        <p className="font-medium text-right">
+                          {currentuser?.user?.contact_number || "1234567890"}
+                        </p>
+                      </div>
+
+                      {/* Roles */}
+                      <div className="flex items-center justify-between">
+                        <p className="text-gray-500">
+                          Roles
+                        </p>
+
+                        <span className="mx-2 text-gray-400">
+                          -
+                        </span>
+
+                        <div className="flex flex-wrap gap-2 justify-end">
+                          {currentuser?.user?.groups?.map(
+                            (group, index) => (
+                              <span
+                                key={index}
+                                className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+                              >
+                                {group.name}
+                              </span>
+                            ),
+                          )}
+                        </div>
+                      </div>
+
+                    </div>
+                  )}
                   {/* New Change Password option */}
-                  <li className="hover:bg-gray-50">
+                  <li className="hover:bg-purple-50">
                     <button
                       className="flex items-center w-full px-4 py-2 text-sm text-blue-600"
                       onClick={openChangePasswordModal}
@@ -697,7 +842,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   <button
                     type="button"
                     onClick={() => setShowOldPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-purple-500"
                   >
                     {showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -720,7 +865,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   <button
                     type="button"
                     onClick={() => setShowNewPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-purple-500"
                   >
                     {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
@@ -743,7 +888,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-purple-500"
                   >
                     {showConfirmPassword ? (
                       <EyeOff size={20} />
@@ -758,7 +903,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
               <div className="flex justify-end">
                 <button
                   type="button"
-                  className="mr-4 px-4 py-2 rounded bg-gray-200 text-gray-700"
+                  className="mr-4 px-4 py-2 rounded bg-purple-200 text-purple-700"
                   onClick={() => setIsChangeModalOpen(false)}
                 >
                   Cancel
