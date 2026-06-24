@@ -45,6 +45,7 @@ import CreateProjectPlans from "./pages/createProjectPlans";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const showSidebar = currentUser && location.pathname !== "/";
 
   return (
@@ -55,12 +56,22 @@ function AppLayout({ currentUser, setCurrentUser }) {
           <SideNavbar
             currentuser={currentUser}
             setCurrentUser={setCurrentUser}
+            isSidebarCollapsed={isSidebarCollapsed}
+            setIsSidebarCollapsed={setIsSidebarCollapsed}
           />
         )}
 
         {/* Add a main content div */}
-        <div className={`flex-1 ${showSidebar ? "ml-64" : ""}`}>
-          <Routes>
+            <div
+              className={`flex-1 transition-all duration-300 ${
+                showSidebar
+                  ? isSidebarCollapsed
+                    ? "ml-20"
+                    : "ml-64"
+                  : ""
+              }`}
+            >          
+            <Routes>
             <Route
               path="/"
               element={<Login setCurrentUser={setCurrentUser} />}

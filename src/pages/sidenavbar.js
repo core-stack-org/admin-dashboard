@@ -24,7 +24,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
-const SideNavbar = ({ currentuser, setCurrentUser }) => {
+const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSidebarCollapsed, }) => {
   const navigate = useNavigate();
   const [isLayerOpen, setIsLayerOpen] = useState(false);
   const [selectedLayer, setSelectedLayer] = useState(null);
@@ -39,7 +39,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showProfileDetails, setShowProfileDetails] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  // const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -471,37 +471,35 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         className={`fixed top-0 left-0 h-screen bg-white text-purple-600 border-r border-purple-100 overflow-y-auto scrollbar-hide transition-all duration-300 ${isSidebarCollapsed ? "w-20" : "w-64"
           }`}
       >
-        <div
-          className={`relative flex items-center h-16 border-b border-purple-100 transition-all duration-300 ${isSidebarCollapsed ? "justify-center" : "justify-center"
-            }`}
-        >
-          {/* Logo */}
-          {!isSidebarCollapsed && (
-            <img
-              src={logo}
-              alt="Logo"
-              className="h-16 w-16 object-contain"
-            />
-          )}
-
-          {/* Collapse Button */}
-          <button
-            onClick={() =>
-              setIsSidebarCollapsed(!isSidebarCollapsed)
-            }
-            className="absolute right-3 p-2 rounded-lg hover:bg-purple-50 transition"
-          >
-            {isSidebarCollapsed ? (
-              <PanelLeftOpen size={20} />
-            ) : (
-              <PanelLeftClose size={20} />
-            )}
-          </button>
-        </div>
         <nav className="flex-1 px-4 py-6">
-          <ul className="space-y-2 mt-10">
+            <div className={`flex mb-2 pb-2 border-b border-purple-100 mt-16 ${isSidebarCollapsed ? "justify-center" : "justify-end"}`}>
+    <button
+      onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+      className="p-1.5 rounded-lg hover:bg-purple-50 transition"
+      title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+    >
+      {isSidebarCollapsed ? (
+        <PanelLeftOpen size={18} className="text-purple-500" />
+      ) : (
+        <PanelLeftClose size={18} className="text-purple-500" />
+      )}
+    </button>
+  </div>
+          {/* <div className="mb-4 flex justify-end">
+  <button
+    onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+    className="p-2 rounded-lg hover:bg-purple-50 transition mt-16"
+  >
+    {isSidebarCollapsed ? (
+      <PanelLeftOpen size={20} />
+    ) : (
+      <PanelLeftClose size={20} />
+    )}
+  </button>
+</div> */}
+          <ul className="space-y-2 mt-2">
             {menuItems.map((item, index) => (
-              <li key={index}>
+              <li key={index} className="relative group">
                 {!item.isSubmenu ? (
                   item.external ? (
                     <a
@@ -513,16 +511,19 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                         : "hover:bg-purple-50"
                         }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-5 h-5 flex items-center justify-center">
-                          {item.icon}
-                        </div>
-                        {!isSidebarCollapsed && (
-                          <span className="text-sm font-medium">
-                            {item.label}
-                          </span>
-                        )}
-                      </div>
+                   <div className="flex items-center w-full">
+  <div className="flex items-center gap-3">
+    <div className="w-5 h-5 flex items-center justify-center">
+      {item.icon}
+    </div>
+
+    {!isSidebarCollapsed && (
+      <span className="text-sm font-medium">
+        {item.label}
+      </span>
+    )}
+  </div>
+</div>
                     </a>
                   ) : (
                     <button
@@ -545,6 +546,7 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
                           </span>
                         )}
                       </div>
+                     
                     </button>
                   )
                 ) : (
@@ -597,11 +599,21 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
       </div>
 
       {/* Top Navbar */}
-      <nav
-        className={`fixed top-0 right-0 bg-white text-purple-600 h-16 z-20 border-b border-purple-100 transition-all duration-300 ${isSidebarCollapsed ? "left-20" : "left-64"
-          }`}
-      >
+    <nav
+  className="fixed top-0 left-0 right-0 bg-white text-purple-600 h-16 z-20 border-b border-purple-100"
+>
         <div className="flex items-center h-full px-4 relative">
+          <div className="flex items-center gap-3 mt-4">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="h-20 w-20 object-contain"
+                />
+
+                <span className="text-lg font-semibold text-purple-700">
+                  CoRE Stack
+                </span>
+              </div>
 
           <div className=" ml-auto relative">
             <button
