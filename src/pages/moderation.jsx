@@ -48,6 +48,7 @@ import {
   getFormTemplate,
   shouldHideBeneficiaryName,
   stripSystemFields,
+  LANGUAGE_MAP,
 } from "./moderation/constants";
 import { getDynamicMarkerIcon } from "./moderation/helper";
 
@@ -800,6 +801,7 @@ const FormViewPage = ({
   const [isEditing, setIsEditing] = useState(false);
   const [dprExpanded, setDprExpanded] = useState(false);
   const [dprEmail, setDprEmail] = useState("");
+  const [dprLanguage, setDprLanguage] = useState("en");
   const [dprLoading, setDprLoading] = useState(false);
   const [dprNotification, setDprNotification] = useState(null);
   const [planDetails, setPlanDetails] = useState(null);
@@ -1889,6 +1891,7 @@ const FormViewPage = ({
         body: JSON.stringify({
           plan_id: Number(selectedPlan),
           email_id: dprEmail,
+          language: dprLanguage,
         }),
       });
       const data = await response.json();
@@ -1898,6 +1901,7 @@ const FormViewPage = ({
           message: data.message || "DPR generation request sent successfully!",
         });
         setDprEmail("");
+        setDprLanguage("en");
         setDprExpanded(false);
       } else {
         setDprNotification({
@@ -2232,6 +2236,20 @@ const FormViewPage = ({
                           }
                           className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm shadow-sm"
                         />
+                      </div>
+
+                      <div className="relative shrink-0 min-w-[140px]">
+                        <select
+                          value={dprLanguage}
+                          onChange={(e) => setDprLanguage(e.target.value)}
+                          className="px-4 pr-10 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-violet-400 focus:ring-2 focus:ring-violet-100 focus:outline-none transition-all text-sm font-medium text-slate-700 shadow-sm cursor-pointer"
+                        >
+                          {Object.entries(LANGUAGE_MAP).map(([key, val]) => (
+                            <option key={key} value={key}>
+                              {val}
+                            </option>
+                          ))}
+                        </select>
                       </div>
 
                       <button
