@@ -347,7 +347,7 @@ const PlansPage = () => {
           <div className="relative inline-block">
             <button
               onClick={handleExportDropdown}
-              className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg shadow"
             >
               Export Yuktdhara Data
             </button>
@@ -395,9 +395,16 @@ const PlansPage = () => {
         </div>
       </div>
 
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
+  {loading ? (
+  <div className="fixed inset-0 flex items-center justify-center bg-white z-50">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-14 h-14 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+      <p className="text-gray-600 font-medium">
+        Loading plans...
+      </p>
+    </div>
+  </div>
+) : (
         <div className="bg-white rounded-2xl shadow border border-gray-200 overflow-visible">
           <div className="overflow-x-auto">
             <table className="min-w-full">
@@ -513,7 +520,7 @@ const PlansPage = () => {
                 className={`px-4 py-2 rounded-lg transition ${
                   currentPage === totalPages
                     ? "bg-gray-300 cursor-not-allowed"
-                    : "bg-blue-500 hover:bg-blue-600 text-white"
+                    : "bg-purple-500 hover:bg-purple-600 text-white"
                 }`}
               >
                 Next

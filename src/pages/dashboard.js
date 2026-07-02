@@ -4,7 +4,7 @@ import OrgAdminDashboard from "./orgAdminDashboard.jsx";
 import ProjectManagerDashboard from "./projectManagerDashboard.jsx";
 import AppUserDashboard from "./appUserDashboard.js";
 import Moderation from "./moderation.jsx";
-
+import AdministratorDashboardNew from "./AdministratorDashboardNew.jsx"
 const Dashboard = ({ currentUser }) => {
   const getHighestPriorityRole = () => {
     if (currentUser?.user?.is_superadmin) {
@@ -48,7 +48,7 @@ const Dashboard = ({ currentUser }) => {
       case "Organization Admin":
       case "Org Admin":
       case "Administrator":
-        return <OrgAdminDashboard currentUser={currentUser} />;
+        return <AdministratorDashboardNew currentUser={currentUser} />;
       case "Project Manager":
         return <ProjectManagerDashboard currentUser={currentUser} />;
         case "Moderator":

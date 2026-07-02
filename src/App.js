@@ -36,9 +36,16 @@ import RequestLocationForm from "./pages/requestLocationForm";
 import Moderation from "./pages/moderation";
 import ForgotPassword from "./pages/forgot-password";
 import PlansPage from "./pages/organizationPlans";
+import ProjectsList from "./pages/projectsList";
+import AddProjects from "./pages/AddProjects";
+import ProjectMembers from "./pages/ProjectMembers";
+import createProjectPlans from "./pages/createProjectPlans";
+import CreateProjectPlans from "./pages/createProjectPlans";
+
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const showSidebar = currentUser && location.pathname !== "/";
 
   return (
@@ -49,12 +56,22 @@ function AppLayout({ currentUser, setCurrentUser }) {
           <SideNavbar
             currentuser={currentUser}
             setCurrentUser={setCurrentUser}
+            isSidebarCollapsed={isSidebarCollapsed}
+            setIsSidebarCollapsed={setIsSidebarCollapsed}
           />
         )}
 
         {/* Add a main content div */}
-        <div className={`flex-1 ${showSidebar ? "ml-64" : ""}`}>
-          <Routes>
+            <div
+              className={`flex-1 transition-all duration-300 ${
+                showSidebar
+                  ? isSidebarCollapsed
+                    ? "ml-20"
+                    : "ml-64"
+                  : ""
+              }`}
+            >          
+            <Routes>
             <Route
               path="/"
               element={<Login setCurrentUser={setCurrentUser} />}
@@ -72,6 +89,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/projects/:projectId/planCreation"
                   element={<PlanCreation />}
+                />
+                   <Route
+                  path="/projects/:projectId/createProjectPlans"
+                  element={<CreateProjectPlans />}
                 />
                 <Route path="/previewLayers" element={<PreviewLayers />} />
                 <Route
@@ -105,6 +126,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/projects"
                   element={<AllProjects currentUser={currentUser} />}
                 />
+                 <Route
+                  path="/projectsList"
+                  element={<ProjectsList currentUser={currentUser} />}
+                />
                 <Route
                   path="/organizations"
                   element={<AllOrganizations currentUser={currentUser} />}
@@ -113,6 +138,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/create-project"
                   element={<Project currentUser={currentUser} />}
                 />
+                <Route path="/projects/add" element={<AddProjects currentUser={currentUser} />} />
                 <Route
                   path="/create-user"
                   element={
@@ -126,6 +152,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   path="/projects/:projectId/action"
                   element={<PlantationActions currentUser={currentUser} />}
                 />
+                
                 <Route
                   path="/projects/:projectId/plans"
                   element={<AllPlans />}
@@ -138,6 +165,10 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 <Route
                   path="/yuktdhara/organizations/:organizationId/plans"
                   element={<PlansPage />}
+                />
+                <Route
+                  path="/projects/:projectId/members"
+                  element={<ProjectMembers currentUser={currentUser} />}
                 />
               </>
             ) : (
