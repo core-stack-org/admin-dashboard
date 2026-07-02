@@ -17,7 +17,7 @@ import {
   faProjectDiagram,
 } from "@fortawesome/free-solid-svg-icons";
 
-import logo from "../assets/core_stack_logo.jpeg";
+import logo from "../assets/core_stack_logo.svg";
 import { useNavigate } from "react-router-dom";
 import layersData from "../jsons/layers.json";
 import { toast } from "react-toastify";
@@ -610,7 +610,7 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
                   className="h-20 w-20 object-contain"
                 />
 
-                <span className="text-lg font-semibold text-purple-700">
+                <span className="text-xl font-semibold text-purple-700">
                   CoRE Stack
                 </span>
               </div>

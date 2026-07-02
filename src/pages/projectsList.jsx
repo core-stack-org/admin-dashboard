@@ -473,7 +473,7 @@ useEffect(() => {
           : "bg-white border-gray-200"
       }`}
     >
-      Plans
+      NRM Plans
     </button>
 
   </div>
