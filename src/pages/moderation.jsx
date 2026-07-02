@@ -174,7 +174,7 @@ const SelectionPage = ({
               `${BASEURL}api/v1/submissions/${form.name}/${selectedPlan}/?page=1`,
               {
                 headers: getHeaders(),
-              }
+              },
             );
             if (res.ok) {
               const data = await res.json();
@@ -185,7 +185,7 @@ const SelectionPage = ({
           } catch (e) {
             counts[form.name] = 0;
           }
-        })
+        }),
       );
 
       if (isMounted) {
@@ -246,7 +246,10 @@ const SelectionPage = ({
         // we only ever show projects belonging to the selected org. We exclude
         // anything we cannot positively confirm, so an unfiltered backend
         // response can never leak other orgs' projects into the dropdown.
-        const norm = (v) => String(v ?? "").trim().toLowerCase();
+        const norm = (v) =>
+          String(v ?? "")
+            .trim()
+            .toLowerCase();
         const orgName = organizations.find(
           (o) => String(o.id) === String(requestedOrg),
         )?.name;
@@ -341,7 +344,10 @@ const SelectionPage = ({
             ...blockObj,
           }));
         } catch (err) {
-          console.error(`Failed to fetch blocks for district ${districtCode}`, err);
+          console.error(
+            `Failed to fetch blocks for district ${districtCode}`,
+            err,
+          );
         }
       }
     };
@@ -433,9 +439,10 @@ const SelectionPage = ({
       groups[category].push({ value: plan.plan_id, label: plan.plan, plan });
     });
 
-    return PLAN_CATEGORY_ORDER
-      .filter((cat) => groups[cat])
-      .map((cat) => ({ label: cat, options: groups[cat] }));
+    return PLAN_CATEGORY_ORDER.filter((cat) => groups[cat]).map((cat) => ({
+      label: cat,
+      options: groups[cat],
+    }));
   };
 
   return (
@@ -462,13 +469,13 @@ const SelectionPage = ({
                 options={organizations.map((org) => ({
                   value: org.id,
                   label: org.name,
-                  org
+                  org,
                 }))}
                 value={
                   selectedOrg
                     ? organizations
-                      .map((org) => ({ value: org.id, label: org.name, org }))
-                      .find((o) => o.value === selectedOrg)
+                        .map((org) => ({ value: org.id, label: org.name, org }))
+                        .find((o) => o.value === selectedOrg)
                     : null
                 }
                 onChange={(opt) => {
@@ -527,17 +534,17 @@ const SelectionPage = ({
               options={projects.map((p) => ({
                 value: p.id || p.project_id,
                 label: p.project_name || p.name,
-                p
+                p,
               }))}
               value={
                 selectedProject
                   ? projects
-                    .map((p) => ({
-                      value: p.id || p.project_id,
-                      label: p.project_name || p.name,
-                      p
-                    }))
-                    .find((p) => p.value === selectedProject)
+                      .map((p) => ({
+                        value: p.id || p.project_id,
+                        label: p.project_name || p.name,
+                        p,
+                      }))
+                      .find((p) => p.value === selectedProject)
                   : null
               }
               onChange={(opt) =>
@@ -602,12 +609,12 @@ const SelectionPage = ({
               value={
                 selectedPlan
                   ? plans
-                    .map((plan) => ({
-                      value: plan.plan_id,
-                      label: plan.plan,
-                      plan,
-                    }))
-                    .find((p) => p.value === Number(selectedPlan))
+                      .map((plan) => ({
+                        value: plan.plan_id,
+                        label: plan.plan,
+                        plan,
+                      }))
+                      .find((p) => p.value === Number(selectedPlan))
                   : null
               }
               onChange={(opt) => setSelectedPlan(opt?.value || "")}
@@ -621,10 +628,10 @@ const SelectionPage = ({
                 }
                 const date = plan.updated_at
                   ? new Date(plan.updated_at).toLocaleDateString("en-IN", {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  })
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    })
                   : null;
                 return (
                   <div className="py-0.5">
@@ -706,7 +713,8 @@ const SelectionPage = ({
                               d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
                             />
                           </svg>
-                          {blocksMap[plan.tehsil_soi] || `Tehsil (${plan.tehsil_soi})`}
+                          {blocksMap[plan.tehsil_soi] ||
+                            `Tehsil (${plan.tehsil_soi})`}
                         </span>
                       )}
                     </div>
@@ -728,12 +736,12 @@ const SelectionPage = ({
               value={
                 selectedForm
                   ? forms
-                    .map((form) => ({
-                      value: form.name,
-                      label: FORM_DISPLAY_NAMES[form.name] || form.name,
-                      form
-                    }))
-                    .find((f) => f.value === selectedForm)
+                      .map((form) => ({
+                        value: form.name,
+                        label: FORM_DISPLAY_NAMES[form.name] || form.name,
+                        form,
+                      }))
+                      .find((f) => f.value === selectedForm)
                   : null
               }
               onChange={(opt) => setSelectedForm(opt?.value || "")}
@@ -755,7 +763,10 @@ const SelectionPage = ({
                     {form && (
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                         <span className="flex items-center gap-1 text-xs text-slate-500">
-                          Total Submissions: {formCountsLoading ? "Loading..." : (formCounts[form.name] ?? 0)}
+                          Total Submissions:{" "}
+                          {formCountsLoading
+                            ? "Loading..."
+                            : (formCounts[form.name] ?? 0)}
                         </span>
                       </div>
                     )}
@@ -832,8 +843,7 @@ const FormViewPage = ({
   const [submissionToDelete, setSubmissionToDelete] = useState(null);
   const [formTemplateLoading, setFormTemplateLoading] = useState(false);
   const dprStatus = dprWorkflowStatus?.status;
-  const isDprSubmitted =
-    dprStatus === "SUBMITTED" || dprStatus === "APPROVED";
+  const isDprSubmitted = dprStatus === "SUBMITTED" || dprStatus === "APPROVED";
   const isDprApproved = dprStatus === "APPROVED";
   const isDprRejected = dprStatus === "REJECTED";
   const nextDprSubmittedStatus = isDprSubmitted ? "REJECTED" : "SUBMITTED";
@@ -976,7 +986,6 @@ const FormViewPage = ({
     );
   };
 
-
   useEffect(() => {
     fetch(`${BASEURL}api/v1/forms`, { headers: getHeaders() })
       .then((res) => res.json())
@@ -1039,8 +1048,8 @@ const FormViewPage = ({
         if (!res.ok) {
           throw new Error(
             data?.message ||
-            data?.error ||
-            "Failed to fetch DPR workflow status.",
+              data?.error ||
+              "Failed to fetch DPR workflow status.",
           );
         }
         return data;
@@ -1237,12 +1246,11 @@ const FormViewPage = ({
     const fieldTypes = {};
 
     const analyzeElement = (element, parentName = "") => {
-      const elementName =
-        element.name.startsWith(parentName + "-")
-          ? element.name
-          : parentName
-            ? `${parentName}-${element.name}`
-            : element.name;
+      const elementName = element.name.startsWith(parentName + "-")
+        ? element.name
+        : parentName
+          ? `${parentName}-${element.name}`
+          : element.name;
 
       if (element.type === "checkbox") {
         fieldTypes[elementName] = "checkbox";
@@ -1297,7 +1305,7 @@ const FormViewPage = ({
             map[String(choice.value).toLowerCase().trim()] = choice.value;
             const text =
               typeof choice.text === "object"
-                ? choice.text?.default ?? Object.values(choice.text)[0]
+                ? (choice.text?.default ?? Object.values(choice.text)[0])
                 : choice.text;
             if (text) map[String(text).toLowerCase().trim()] = choice.value;
           } else if (typeof choice === "string") {
@@ -1310,7 +1318,7 @@ const FormViewPage = ({
     };
     if (schema.pages)
       schema.pages.forEach((page) =>
-        (page.elements || []).forEach(processElement)
+        (page.elements || []).forEach(processElement),
       );
     return choiceMap;
   };
@@ -1325,7 +1333,7 @@ const FormViewPage = ({
     // Strategy 1: space-split — if ALL tokens match known values
     const spaceSplit = trimmed.split(" ").filter((v) => v.trim().length > 0);
     const allMatch = spaceSplit.every(
-      (t) => fieldChoices[t.toLowerCase().trim()] !== undefined
+      (t) => fieldChoices[t.toLowerCase().trim()] !== undefined,
     );
     if (allMatch)
       return spaceSplit.map((t) => fieldChoices[t.toLowerCase().trim()]);
@@ -1397,7 +1405,10 @@ const FormViewPage = ({
             const fieldChoices = choiceMap[fullKey] || choiceMap[key];
 
             if (fieldType === "checkbox") {
-              transformedData[fullKey] = resolveCheckboxValues(value, fieldChoices);
+              transformedData[fullKey] = resolveCheckboxValues(
+                value,
+                fieldChoices,
+              );
             } else if (fieldType === "radio") {
               transformedData[fullKey] = resolveRadioValue(value, fieldChoices);
             } else {
@@ -1432,7 +1443,9 @@ const FormViewPage = ({
       const oldValue = submission[oldKey];
       const currentValue = transformedData[newKey];
       const isCurrentEmpty =
-        currentValue === null || currentValue === undefined || currentValue === "";
+        currentValue === null ||
+        currentValue === undefined ||
+        currentValue === "";
       const isOldValueReal =
         oldValue !== null && oldValue !== undefined && oldValue !== "";
       if (isCurrentEmpty && isOldValueReal) {
@@ -1887,7 +1900,6 @@ const FormViewPage = ({
     setSurveyModel(model);
   };
 
-
   const handleEditSubmission = async (submission) => {
     setFormTemplateLoading(true);
     const formTemplate = await getFormTemplate(selectedForm);
@@ -1940,7 +1952,9 @@ const FormViewPage = ({
 
       if (!response.ok) {
         setSaveStatus("error");
-        setSaveError(result?.message || result?.error || "Save failed. Please try again.");
+        setSaveError(
+          result?.message || result?.error || "Save failed. Please try again.",
+        );
         return;
       }
 
@@ -1953,7 +1967,6 @@ const FormViewPage = ({
         setSurveyModel(null);
         setSaveStatus("idle");
       }, 1500);
-
     } catch (error) {
       console.error("Save error:", error);
       setSaveStatus("error");
@@ -2001,7 +2014,9 @@ const FormViewPage = ({
 
       if (!response.ok) {
         setDeleteStatus("error");
-        setDeleteError(data?.message || data?.error || "Delete failed. Please try again.");
+        setDeleteError(
+          data?.message || data?.error || "Delete failed. Please try again.",
+        );
         return;
       }
 
@@ -2013,7 +2028,6 @@ const FormViewPage = ({
         setSubmissionToDelete(null);
         setDeleteStatus("idle");
       }, 1500);
-
     } catch (error) {
       console.error("Delete error:", error);
       setDeleteStatus("error");
@@ -2086,8 +2100,8 @@ const FormViewPage = ({
       if (!response.ok) {
         throw new Error(
           data?.message ||
-          data?.error ||
-          "Failed to update DPR workflow status.",
+            data?.error ||
+            "Failed to update DPR workflow status.",
         );
       }
 
@@ -2153,7 +2167,6 @@ const FormViewPage = ({
       setTimeout(() => setPlanReviewNotification(null), 4000);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
@@ -2263,20 +2276,22 @@ const FormViewPage = ({
             <div className="flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
               <button
                 onClick={() => setViewMode("card")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${viewMode === "card"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                  }`}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "card"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
               >
                 <Grid size={15} />
                 Card
               </button>
               <button
                 onClick={() => setViewMode("map")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${viewMode === "map"
-                  ? "bg-indigo-600 text-white shadow-md"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                  }`}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "map"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
               >
                 <MapIcon size={15} />
                 Map
@@ -2337,10 +2352,11 @@ const FormViewPage = ({
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => setDprExpanded(!dprExpanded)}
-                      className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${dprExpanded
-                        ? "bg-violet-600 text-white border-violet-600 shadow-md"
-                        : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
-                        }`}
+                      className={`flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm transition-all shrink-0 shadow-sm border ${
+                        dprExpanded
+                          ? "bg-violet-600 text-white border-violet-600 shadow-md"
+                          : "bg-white/70 backdrop-blur-sm border-slate-200/80 text-slate-700 hover:border-violet-400 hover:text-violet-600"
+                      }`}
                     >
                       <FileText size={15} />
                       Generate DPR
@@ -2455,10 +2471,11 @@ const FormViewPage = ({
 
                     {planReviewNotification && (
                       <div
-                        className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${planReviewNotification.type === "success"
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                          : "border-red-200 bg-red-50 text-red-800"
-                          }`}
+                        className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
+                          planReviewNotification.type === "success"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : "border-red-200 bg-red-50 text-red-800"
+                        }`}
                       >
                         <CheckCircle2 size={16} className="shrink-0" />
                         <span>{planReviewNotification.message}</span>
@@ -2549,10 +2566,11 @@ const FormViewPage = ({
 
                 {dprWorkflowNotification && (
                   <div
-                    className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${dprWorkflowNotification.type === "success"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "bg-red-50 text-red-700"
-                      }`}
+                    className={`mt-4 flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
+                      dprWorkflowNotification.type === "success"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : "bg-red-50 text-red-700"
+                    }`}
                   >
                     <CheckCircle2 size={16} className="shrink-0" />
                     <span>{dprWorkflowNotification.message}</span>
@@ -2567,16 +2585,18 @@ const FormViewPage = ({
       {/* Floating toast notification */}
       {dprNotification && (
         <div
-          className={`fixed top-6 right-6 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm transition-all animate-in fade-in slide-in-from-top-3 duration-300 ${dprNotification.type === "success"
-            ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
-            : "bg-red-50/90 border-red-200 text-red-900"
-            }`}
+          className={`fixed top-6 right-6 z-[9999] flex items-start gap-3 px-5 py-4 rounded-2xl shadow-2xl border backdrop-blur-md max-w-sm transition-all animate-in fade-in slide-in-from-top-3 duration-300 ${
+            dprNotification.type === "success"
+              ? "bg-emerald-50/90 border-emerald-200 text-emerald-900"
+              : "bg-red-50/90 border-red-200 text-red-900"
+          }`}
         >
           <div
-            className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${dprNotification.type === "success"
-              ? "bg-emerald-500"
-              : "bg-red-500"
-              }`}
+            className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+              dprNotification.type === "success"
+                ? "bg-emerald-500"
+                : "bg-red-500"
+            }`}
           >
             {dprNotification.type === "success" ? (
               <svg
@@ -2643,7 +2663,6 @@ const FormViewPage = ({
       {selectedSubmission && surveyModel && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden relative">
-
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 flex items-center justify-between">
               <div>
@@ -2654,7 +2673,7 @@ const FormViewPage = ({
                   Submitted:{" "}
                   {formatToIST(
                     selectedSubmission.__system?.submissionDate ||
-                    selectedSubmission.submission_time,
+                      selectedSubmission.submission_time,
                   )}
                 </p>
               </div>
@@ -2667,8 +2686,18 @@ const FormViewPage = ({
                 }}
                 className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -2684,7 +2713,9 @@ const FormViewPage = ({
                 {saveStatus === "saving" && (
                   <div className="text-center">
                     <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-lg font-bold text-slate-700">Saving changes...</p>
+                    <p className="text-lg font-bold text-slate-700">
+                      Saving changes...
+                    </p>
                     <p className="text-sm text-slate-500 mt-1">Please wait</p>
                   </div>
                 )}
@@ -2692,23 +2723,49 @@ const FormViewPage = ({
                 {saveStatus === "success" && (
                   <div className="text-center">
                     <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                      <svg
+                        className="w-8 h-8 text-emerald-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                     </div>
-                    <p className="text-lg font-bold text-slate-700">Saved successfully!</p>
+                    <p className="text-lg font-bold text-slate-700">
+                      Saved successfully!
+                    </p>
                   </div>
                 )}
 
                 {saveStatus === "error" && (
                   <div className="text-center max-w-sm">
                     <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                      <svg
+                        className="w-8 h-8 text-red-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2.5}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
                       </svg>
                     </div>
-                    <p className="text-lg font-bold text-slate-700">Save failed</p>
-                    <p className="text-sm text-red-600 mt-1 mb-5">{saveError}</p>
+                    <p className="text-lg font-bold text-slate-700">
+                      Save failed
+                    </p>
+                    <p className="text-sm text-red-600 mt-1 mb-5">
+                      {saveError}
+                    </p>
                     <button
                       onClick={() => {
                         setSaveStatus("idle");
@@ -2722,7 +2779,6 @@ const FormViewPage = ({
                 )}
               </div>
             )}
-
           </div>
         </div>
       )}
@@ -2731,7 +2787,6 @@ const FormViewPage = ({
       {submissionToDelete && deleteStatus !== "idle" && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-
             {/* Header */}
             <div className="bg-gradient-to-r from-rose-600 to-red-600 text-white p-6 flex items-center justify-between">
               <h2 className="text-xl font-black">Delete Submission</h2>
@@ -2745,15 +2800,24 @@ const FormViewPage = ({
                   }}
                   className="text-white hover:bg-white/20 rounded-lg p-2 transition-all"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               )}
             </div>
 
             <div className="p-8 text-center">
-
               {/* Confirm state */}
               {deleteStatus === "confirm" && (
                 <>
@@ -2764,7 +2828,8 @@ const FormViewPage = ({
                     Are you sure?
                   </p>
                   <p className="text-sm text-slate-500 mb-6">
-                    This submission will be permanently deleted and cannot be recovered.
+                    This submission will be permanently deleted and cannot be
+                    recovered.
                   </p>
                   <div className="flex gap-3 justify-center">
                     <button
@@ -2791,7 +2856,9 @@ const FormViewPage = ({
               {deleteStatus === "deleting" && (
                 <>
                   <div className="w-16 h-16 border-4 border-rose-200 border-t-rose-600 rounded-full animate-spin mx-auto mb-4" />
-                  <p className="text-lg font-bold text-slate-700">Deleting...</p>
+                  <p className="text-lg font-bold text-slate-700">
+                    Deleting...
+                  </p>
                   <p className="text-sm text-slate-500 mt-1">Please wait</p>
                 </>
               )}
@@ -2800,11 +2867,23 @@ const FormViewPage = ({
               {deleteStatus === "success" && (
                 <>
                   <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    <svg
+                      className="w-8 h-8 text-emerald-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M5 13l4 4L19 7"
+                      />
                     </svg>
                   </div>
-                  <p className="text-lg font-bold text-slate-700">Deleted successfully!</p>
+                  <p className="text-lg font-bold text-slate-700">
+                    Deleted successfully!
+                  </p>
                 </>
               )}
 
@@ -2812,12 +2891,26 @@ const FormViewPage = ({
               {deleteStatus === "error" && (
                 <>
                   <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                    <svg
+                      className="w-8 h-8 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2.5}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </div>
-                  <p className="text-lg font-bold text-slate-700">Delete failed</p>
-                  <p className="text-sm text-red-600 mt-1 mb-5">{deleteError}</p>
+                  <p className="text-lg font-bold text-slate-700">
+                    Delete failed
+                  </p>
+                  <p className="text-sm text-red-600 mt-1 mb-5">
+                    {deleteError}
+                  </p>
                   <button
                     onClick={() => {
                       setDeleteStatus("confirm");
@@ -2829,7 +2922,6 @@ const FormViewPage = ({
                   </button>
                 </>
               )}
-
             </div>
           </div>
         </div>
@@ -2954,22 +3046,25 @@ const FormViewPage = ({
                     >
                       {/* Left accent stripe */}
                       <div
-                        className={`absolute left-0 top-0 bottom-0 w-1 ${isModerated ? "bg-emerald-400" : "bg-amber-400"
-                          }`}
+                        className={`absolute left-0 top-0 bottom-0 w-1 ${
+                          isModerated ? "bg-emerald-400" : "bg-amber-400"
+                        }`}
                       />
 
                       <div className="pl-6 pr-5 pt-4 pb-0">
                         {/* Top row: status badge + date */}
                         <div className="flex items-center justify-between mb-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${isModerated
-                              ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                              : "bg-amber-50 text-amber-700 ring-amber-200"
-                              }`}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${
+                              isModerated
+                                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                                : "bg-amber-50 text-amber-700 ring-amber-200"
+                            }`}
                           >
                             <span
-                              className={`w-1.5 h-1.5 rounded-full ${isModerated ? "bg-emerald-500" : "bg-amber-400"
-                                }`}
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                isModerated ? "bg-emerald-500" : "bg-amber-400"
+                              }`}
                             />
                             {isModerated ? "Moderated" : ""}
                           </span>
@@ -2978,7 +3073,7 @@ const FormViewPage = ({
                             <Calendar size={12} />
                             {formatToIST(
                               submission.__system?.submissionDate ||
-                              submission.submission_time,
+                                submission.submission_time,
                             )}
                           </div>
                         </div>
@@ -3007,16 +3102,30 @@ const FormViewPage = ({
                                 field.key === "Beneficiary_Name" ||
                                 field.key === "beneficiary_name" ||
                                 field.key === "Beneficiary_name" ||
-                                field.label?.toLowerCase().includes("beneficiary's name") ||
-                                field.label?.toLowerCase().includes("beneficiary name")
+                                field.label
+                                  ?.toLowerCase()
+                                  .includes("beneficiary's name") ||
+                                field.label
+                                  ?.toLowerCase()
+                                  .includes("beneficiary name")
                               ) {
-                                if (shouldHideBeneficiaryName(selectedForm, submission)) return false;
+                                if (
+                                  shouldHideBeneficiaryName(
+                                    selectedForm,
+                                    submission,
+                                  )
+                                )
+                                  return false;
                               }
 
                               return true;
                             })
                             .map(({ field, value }) => {
-                              const isBlank = value === "-" || value === null || value === undefined || value === "";
+                              const isBlank =
+                                value === "-" ||
+                                value === null ||
+                                value === undefined ||
+                                value === "";
                               return (
                                 <div key={field.key} className="min-w-0">
                                   <div className="text-xs text-slate-400 font-medium mb-0.5 truncate">
@@ -3038,11 +3147,12 @@ const FormViewPage = ({
                               Site Validation
                             </div>
                             <span
-                              className={`px-2 py-1 text-xs rounded-md font-bold ${validationResults[uuid].finalDecision ===
+                              className={`px-2 py-1 text-xs rounded-md font-bold ${
+                                validationResults[uuid].finalDecision ===
                                 "Recommended"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : "bg-red-50 text-red-700"
-                                }`}
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : "bg-red-50 text-red-700"
+                              }`}
                             >
                               {validationResults[uuid].finalDecision}
                             </span>
@@ -3053,12 +3163,13 @@ const FormViewPage = ({
                             ).map(([param, category]) => (
                               <span
                                 key={param}
-                                className={`px-2 py-1 text-xs rounded-md font-semibold ${category === "accepted"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : category === "partially_accepted"
-                                    ? "bg-amber-50 text-amber-700"
-                                    : "bg-red-50 text-red-700"
-                                  }`}
+                                className={`px-2 py-1 text-xs rounded-md font-semibold ${
+                                  category === "accepted"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : category === "partially_accepted"
+                                      ? "bg-amber-50 text-amber-700"
+                                      : "bg-red-50 text-red-700"
+                                }`}
                               >
                                 {param} → {category.replace("_", " ")}
                               </span>
@@ -3115,23 +3226,23 @@ const FormViewPage = ({
                               "Surface Water Body Remotely Sensed Maintenance",
                               "Well",
                             ].includes(selectedForm) && (
-                                <button
-                                  onClick={() =>
-                                    handleValidateSubmission(submission)
-                                  }
-                                  disabled={validationLoading[uuid]}
-                                  className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-60"
-                                >
-                                  {validationLoading[uuid] ? (
-                                    <>
-                                      <div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div>
-                                      Validating...
-                                    </>
-                                  ) : (
-                                    <>Validate</>
-                                  )}
-                                </button>
-                              )}
+                              <button
+                                onClick={() =>
+                                  handleValidateSubmission(submission)
+                                }
+                                disabled={validationLoading[uuid]}
+                                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-60"
+                              >
+                                {validationLoading[uuid] ? (
+                                  <>
+                                    <div className="w-3 h-3 border-2 border-violet-400 border-t-transparent rounded-full animate-spin"></div>
+                                    Validating...
+                                  </>
+                                ) : (
+                                  <>Validate</>
+                                )}
+                              </button>
+                            )}
 
                             <button
                               onClick={() => handleDelete(submission)}
@@ -3166,10 +3277,11 @@ const FormViewPage = ({
               <button
                 key={i}
                 onClick={() => fetchSubmissions(i + 1)}
-                className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${page === i + 1
-                  ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
-                  : "bg-white border-2 border-slate-300 hover:bg-slate-50"
-                  }`}
+                className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${
+                  page === i + 1
+                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+                    : "bg-white border-2 border-slate-300 hover:bg-slate-50"
+                }`}
               >
                 {i + 1}
               </button>
