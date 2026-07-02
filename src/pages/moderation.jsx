@@ -629,6 +629,10 @@ const FormViewPage = ({
   const [deleteError, setDeleteError] = useState("");
   const [submissionToDelete, setSubmissionToDelete] = useState(null);
   const [formTemplateLoading, setFormTemplateLoading] = useState(false);
+  const dprStatus = dprWorkflowStatus?.status;
+  const isDprSubmitted =
+    dprStatus === "SUBMITTED" || dprStatus === "APPROVED";
+  const isDprApproved = dprStatus === "APPROVED";
 
 
   useEffect(() => {
@@ -2198,7 +2202,7 @@ const handleSaveSubmission = async (uuid, data) => {
                           <button
                             type="button"
                             onClick={() =>
-                              dprWorkflowStatus?.status !== "SUBMITTED" &&
+                              !isDprSubmitted &&
                               handleDprWorkflowUpdate(
                                 "status",
                                 "SUBMITTED",
@@ -2210,7 +2214,7 @@ const handleSaveSubmission = async (uuid, data) => {
                               dprWorkflowLoading === "status-submitted"
                             }
                             className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                              dprWorkflowStatus?.status === "SUBMITTED"
+                              isDprSubmitted
                                 ? "bg-blue-700"
                                 : "bg-slate-300"
                             } ${
@@ -2219,14 +2223,12 @@ const handleSaveSubmission = async (uuid, data) => {
                                 ? "cursor-not-allowed opacity-60"
                                 : "cursor-pointer"
                             }`}
-                            aria-pressed={
-                              dprWorkflowStatus?.status === "SUBMITTED"
-                            }
+                            aria-pressed={isDprSubmitted}
                             aria-label="DPR submitted"
                           >
                             <span
                               className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                dprWorkflowStatus?.status === "SUBMITTED"
+                                isDprSubmitted
                                   ? "translate-x-6"
                                   : "translate-x-1"
                               }`}
@@ -2263,7 +2265,7 @@ const handleSaveSubmission = async (uuid, data) => {
                             <button
                               type="button"
                               onClick={() =>
-                                dprWorkflowStatus?.status !== "APPROVED" &&
+                                !isDprApproved &&
                                 handleDprWorkflowUpdate(
                                   "status",
                                   "APPROVED",
@@ -2275,7 +2277,7 @@ const handleSaveSubmission = async (uuid, data) => {
                                 dprWorkflowLoading === "status-approved"
                               }
                               className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                                dprWorkflowStatus?.status === "APPROVED"
+                                isDprApproved
                                   ? "bg-emerald-700"
                                   : "bg-slate-300"
                               } ${
@@ -2284,14 +2286,12 @@ const handleSaveSubmission = async (uuid, data) => {
                                   ? "cursor-not-allowed opacity-60"
                                   : "cursor-pointer"
                               }`}
-                              aria-pressed={
-                                dprWorkflowStatus?.status === "APPROVED"
-                              }
+                              aria-pressed={isDprApproved}
                               aria-label="DPR approved"
                             >
                               <span
                                 className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                  dprWorkflowStatus?.status === "APPROVED"
+                                  isDprApproved
                                     ? "translate-x-6"
                                     : "translate-x-1"
                                 }`}
