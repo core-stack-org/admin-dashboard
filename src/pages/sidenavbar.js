@@ -236,7 +236,10 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
            {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Integration into Yuktdhara",
-        href: "/yuktdhara/organizations/",
+        onClick: () =>
+          navigate(
+            `/yuktdhara/organizations/${currentuser.user.organization}/plans`
+          ),
       },
       {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
