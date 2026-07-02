@@ -633,6 +633,146 @@ const FormViewPage = ({
   const isDprSubmitted =
     dprStatus === "SUBMITTED" || dprStatus === "APPROVED";
   const isDprApproved = dprStatus === "APPROVED";
+  const isDprRejected = dprStatus === "REJECTED";
+  const nextDprSubmittedStatus = isDprSubmitted ? "REJECTED" : "SUBMITTED";
+  const nextDprApprovedStatus = isDprApproved ? "SUBMITTED" : "APPROVED";
+  const nextDprRejectedStatus = isDprRejected ? "SUBMITTED" : "REJECTED";
+
+  const renderDprStatusCard = ({
+    title,
+    description,
+    isActive,
+    loadingKey,
+    nextStatus,
+    ariaLabel,
+    children,
+  }) => {
+    const disabled = dprWorkflowMissing || dprWorkflowLoading === loadingKey;
+
+    return (
+      <div
+        className={`rounded-2xl border p-4 transition-all ${
+          isActive
+            ? "border-slate-300 bg-gradient-to-b from-white to-slate-100 shadow-sm ring-1 ring-slate-200"
+            : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-sm hover:border-slate-300 hover:to-slate-100"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${
+                  isActive ? "bg-slate-600" : "bg-slate-300"
+                }`}
+              />
+            </div>
+            <p
+              className={`text-base font-bold ${
+                isActive ? "text-slate-950" : "text-slate-700"
+              }`}
+            >
+              {title}
+            </p>
+            {description && (
+              <p
+                className={`mt-1 text-sm leading-5 ${
+                  isActive ? "text-slate-600" : "text-slate-500"
+                }`}
+              >
+                {description}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              handleDprWorkflowUpdate("status", nextStatus, loadingKey)
+            }
+            disabled={disabled}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+              isActive ? "bg-slate-600" : "bg-slate-200"
+            } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
+            aria-pressed={isActive}
+            aria-label={ariaLabel}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                isActive ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+        {children}
+      </div>
+    );
+  };
+
+  const renderReviewStatusCard = ({
+    title,
+    description,
+    isActive,
+    field,
+    label,
+    ariaLabel,
+  }) => {
+    return (
+      <div
+        className={`rounded-2xl border p-4 transition-all ${
+          isActive
+            ? "border-slate-300 bg-gradient-to-b from-white to-slate-100 shadow-sm ring-1 ring-slate-200"
+            : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-sm hover:border-slate-300 hover:to-slate-100"
+        }`}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className={`h-2.5 w-2.5 rounded-full ${
+                  isActive ? "bg-slate-600" : "bg-slate-300"
+                }`}
+              />
+            </div>
+            <p
+              className={`text-base font-bold ${
+                isActive ? "text-slate-950" : "text-slate-700"
+              }`}
+            >
+              {title}
+            </p>
+            {description && (
+              <p
+                className={`mt-1 text-sm leading-5 ${
+                  isActive ? "text-slate-600" : "text-slate-500"
+                }`}
+              >
+                {description}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => handlePlanStatusToggle(field, !isActive, label)}
+            disabled={planReviewLoading}
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
+              isActive ? "bg-slate-600" : "bg-slate-200"
+            } ${
+              planReviewLoading
+                ? "cursor-not-allowed opacity-60"
+                : "cursor-pointer"
+            }`}
+            aria-pressed={isActive}
+            aria-label={ariaLabel}
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+                isActive ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+      </div>
+    );
+  };
 
 
   useEffect(() => {
@@ -2080,86 +2220,22 @@ const handleSaveSubmission = async (uuid, data) => {
                       </div>
                     </div>
 
-                    <div className="space-y-3 p-5">
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900">
-                              Is DPR Completed?
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handlePlanStatusToggle(
-                                "is_completed",
-                                !planDetails?.is_completed,
-                                "Plan completed",
-                              )
-                            }
-                            disabled={planReviewLoading}
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                              planDetails?.is_completed
-                                ? "bg-blue-700"
-                                : "bg-slate-300"
-                            } ${
-                              planReviewLoading
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer"
-                            }`}
-                            aria-pressed={Boolean(planDetails?.is_completed)}
-                            aria-label="Is Plan Completed?"
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                planDetails?.is_completed
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                              }`}
-                            />
-                          </button>
-                        </div>
-                      </div>
+                    <div className="grid gap-4 p-5 lg:grid-cols-2">
+                      {renderReviewStatusCard({
+                        title: "DPR Completed",
+                        isActive: Boolean(planDetails?.is_completed),
+                        field: "is_completed",
+                        label: "Plan completed",
+                        ariaLabel: "DPR completed",
+                      })}
 
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900">
-                              Is DPR Reviewed?
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handlePlanStatusToggle(
-                                "is_dpr_reviewed",
-                                !planDetails?.is_dpr_reviewed,
-                                "Plan reviewed",
-                              )
-                            }
-                            disabled={planReviewLoading}
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                              planDetails?.is_dpr_reviewed
-                                ? "bg-blue-700"
-                                : "bg-slate-300"
-                            } ${
-                              planReviewLoading
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer"
-                            }`}
-                            aria-pressed={Boolean(planDetails?.is_dpr_reviewed)}
-                            aria-label="Is DPR Reviewed?"
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                planDetails?.is_dpr_reviewed
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                              }`}
-                            />
-                          </button>
-                        </div>
-                      </div>
+                      {renderReviewStatusCard({
+                        title: "DPR Reviewed",
+                        isActive: Boolean(planDetails?.is_dpr_reviewed),
+                        field: "is_dpr_reviewed",
+                        label: "Plan reviewed",
+                        ariaLabel: "DPR reviewed",
+                      })}
                     </div>
 
                     {planReviewNotification && (
@@ -2191,162 +2267,62 @@ const handleSaveSubmission = async (uuid, data) => {
                       </h4>
                     </div>
 
-                    <div className="grid gap-3 p-5 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-4">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-slate-900">
-                              DPR Submitted
+                    <div className="grid gap-4 p-5 lg:grid-cols-3">
+                      {renderDprStatusCard({
+                        title: "DPR Submitted",
+                        isActive: isDprSubmitted,
+                        loadingKey: "status-submitted",
+                        nextStatus: nextDprSubmittedStatus,
+                        ariaLabel: "DPR submitted",
+                        children: (
+                          <div
+                            className={`mt-5 rounded-xl border px-4 py-3 ${
+                              isDprSubmitted
+                                ? "border-slate-300 bg-slate-50 text-slate-950"
+                                : "border-slate-200 bg-slate-50 text-slate-900"
+                            }`}
+                          >
+                            <p
+                              className={`text-[11px] font-bold uppercase tracking-[0.18em] ${
+                                isDprSubmitted
+                                  ? "text-slate-500"
+                                  : "text-slate-400"
+                              }`}
+                            >
+                              Demands Submitted
+                            </p>
+                            <p className="mt-1 text-2xl font-black tracking-tight">
+                              {dprWorkflowStatus?.submitted_breakdown
+                                ?.demands_submitted ?? 0}
+                            </p>
+                            <p
+                              className={`text-xs ${
+                                isDprSubmitted
+                                  ? "text-slate-500"
+                                  : "text-slate-500"
+                              }`}
+                            >
+                              records
                             </p>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              !isDprSubmitted &&
-                              handleDprWorkflowUpdate(
-                                "status",
-                                "SUBMITTED",
-                                "status-submitted",
-                              )
-                            }
-                            disabled={
-                              dprWorkflowMissing ||
-                              dprWorkflowLoading === "status-submitted"
-                            }
-                            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                              isDprSubmitted
-                                ? "bg-blue-700"
-                                : "bg-slate-300"
-                            } ${
-                              dprWorkflowMissing ||
-                              dprWorkflowLoading === "status-submitted"
-                                ? "cursor-not-allowed opacity-60"
-                                : "cursor-pointer"
-                            }`}
-                            aria-pressed={isDprSubmitted}
-                            aria-label="DPR submitted"
-                          >
-                            <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                isDprSubmitted
-                                  ? "translate-x-6"
-                                  : "translate-x-1"
-                              }`}
-                            />
-                          </button>
-                        </div>
+                        ),
+                      })}
 
-                        <div className="mt-4 grid gap-3">
-                          <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                                  Demands Submitted
-                                </p>
-                                <p className="mt-1 text-sm font-semibold text-slate-900">
-                                  {dprWorkflowStatus?.submitted_breakdown
-                                    ?.demands_submitted ?? 0}{" "}
-                                  records
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                      {renderDprStatusCard({
+                        title: "DPR Approved",
+                        isActive: isDprApproved,
+                        loadingKey: "status-approved",
+                        nextStatus: nextDprApprovedStatus,
+                        ariaLabel: "DPR approved",
+                      })}
 
-                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-slate-900">
-                                DPR Approved
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                !isDprApproved &&
-                                handleDprWorkflowUpdate(
-                                  "status",
-                                  "APPROVED",
-                                  "status-approved",
-                                )
-                              }
-                              disabled={
-                                dprWorkflowMissing ||
-                                dprWorkflowLoading === "status-approved"
-                              }
-                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                                isDprApproved
-                                  ? "bg-emerald-700"
-                                  : "bg-slate-300"
-                              } ${
-                                dprWorkflowMissing ||
-                                dprWorkflowLoading === "status-approved"
-                                  ? "cursor-not-allowed opacity-60"
-                                  : "cursor-pointer"
-                              }`}
-                              aria-pressed={isDprApproved}
-                              aria-label="DPR approved"
-                            >
-                              <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                  isDprApproved
-                                    ? "translate-x-6"
-                                    : "translate-x-1"
-                                }`}
-                              />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-slate-900">
-                                DPR Rejected
-                              </p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                dprWorkflowStatus?.status !== "REJECTED" &&
-                                handleDprWorkflowUpdate(
-                                  "status",
-                                  "REJECTED",
-                                  "status-rejected",
-                                )
-                              }
-                              disabled={
-                                dprWorkflowMissing ||
-                                dprWorkflowLoading === "status-rejected"
-                              }
-                              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-                                dprWorkflowStatus?.status === "REJECTED"
-                                  ? "bg-red-700"
-                                  : "bg-slate-300"
-                              } ${
-                                dprWorkflowMissing ||
-                                dprWorkflowLoading === "status-rejected"
-                                  ? "cursor-not-allowed opacity-60"
-                                  : "cursor-pointer"
-                              }`}
-                              aria-pressed={
-                                dprWorkflowStatus?.status === "REJECTED"
-                              }
-                              aria-label="DPR rejected"
-                            >
-                              <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-                                  dprWorkflowStatus?.status === "REJECTED"
-                                    ? "translate-x-6"
-                                    : "translate-x-1"
-                                }`}
-                              />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
+                      {renderDprStatusCard({
+                        title: "DPR Rejected",
+                        isActive: isDprRejected,
+                        loadingKey: "status-rejected",
+                        nextStatus: nextDprRejectedStatus,
+                        ariaLabel: "DPR rejected",
+                      })}
                     </div>
                   </div>
                 </div>
