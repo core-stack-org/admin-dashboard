@@ -233,18 +233,18 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Moderation Dashboard",
         href: "/moderation",
       },
-           {
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Integration into Yuktdhara",
         onClick: () =>
           navigate(
             `/yuktdhara/organizations/${currentuser.user.organization}/plans`
           ),
-      },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Demand Status",
-        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
