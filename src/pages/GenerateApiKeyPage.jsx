@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { Eye, Copy, Trash2 } from "lucide-react";
+import { Eye, Copy, Trash2, KeyRound, Plus } from "lucide-react";
 
 const GenerateApiKeyPage = ({ currentUser,isStandalone = false }) => {
   const [keys, setKeys] = useState([]);
@@ -40,7 +40,7 @@ const GenerateApiKeyPage = ({ currentUser,isStandalone = false }) => {
         setKeys(formattedKeys);
       } catch (error) {
         console.error("Error fetching API keys:", error);
-        toast.error("❌ Failed to load API keys");
+        toast.error(" Failed to load API keys");
       } finally {
         setApiLoading(false);
       }
@@ -154,115 +154,202 @@ const GenerateApiKeyPage = ({ currentUser,isStandalone = false }) => {
     );
   };
 
-  return (
-<div
-  className={`max-w-3xl mx-auto bg-white rounded shadow p-6 ${
-    isStandalone ? "mt-28" : ""
-  }`}
->
-      {/* Heading + Plus Button */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Manage API Key</h2>
+return (
+  <div
+    className={`max-w-6xl mx-auto ${
+      isStandalone ? "mt-24" : ""
+    } px-6`}
+  >
+    <div className="bg-white rounded-3xl border border-purple-100 shadow-xl p-8">
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+
+        <div className="flex items-center gap-5">
+          <div className="w-14 h-14 rounded-full bg-purple-100 flex items-center justify-center">
+            <KeyRound size={26} className="text-purple-600" />
+          </div>
+
+          <div>
+            <h1 className="text-3xl font-bold text-purple-600">
+              Manage API Key
+            </h1>
+            <p className="text-gray-500 mt-1">
+              Create and manage secure API access keys
+            </p>
+          </div>
+        </div>
+
         <button
           onClick={generateApiKey}
           disabled={generateLoading}
-          className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+          className="
+            bg-gradient-to-r
+            from-purple-600
+            to-violet-600
+            hover:from-purple-700
+            hover:to-violet-700
+            text-white
+            px-5
+            py-3
+            rounded-xl
+            font-medium
+            shadow-md
+            transition-all
+            flex
+            items-center
+            gap-2
+          "
         >
-          {generateLoading ? "Generating..." : "+"}
+          <Plus size={18} />
+          {generateLoading ? "Generating..." : "Generate API Key"}
         </button>
       </div>
 
-      {/* Table */}
-      <table className="w-full border-collapse border border-gray-300">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 text-left">Key</th>
-            <th className="px-4 py-2 text-center">Actions</th>
-            <th className="px-4 py-2 text-center">Status</th>
-            <th className="px-4 py-2 text-center">Expiry</th>
-            <th className="px-4 py-2 text-center">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {apiLoading ? (
-            <tr>
-              <td colSpan="5" className="px-4 py-4 text-center text-gray-500">
-                <span className="inline-block w-4 h-4 mr-2 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
-                Loading API keys...
-              </td>
-            </tr>
-          ) : keys.length === 0 ? (
-            <tr>
-              <td
-                colSpan="4"
-                className="px-4 py-4 text-center text-gray-500 italic"
-              >
-                No API key generated, click on + to generate
-              </td>
-            </tr>
-          ) : (
-            keys.map((item, index) => (
-              <tr key={index} className="border-b">
-                <td className="px-4 py-2">
-                  <input
-                    type={item.show ? "text" : "password"}
-                    value={item.key}
-                    readOnly
-                    className="w-full px-2 py-1 border rounded"
-                  />
-                </td>
-                <td className="px-4 py-2 text-center">
-                  {!item.show ? (
-                    <button
-                      onClick={() => toggleShowKey(index)}
-                      className="text-gray-500 hover:text-black"
-                    >
-                      <Eye size={20} />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => copyToClipboard(item.key)}
-                      className="text-gray-500 hover:text-black"
-                    >
-                      <Copy size={20} />
-                    </button>
-                  )}
-                </td>
+      <div className="border-b border-gray-200 mt-6 mb-8" />
 
-                <td className="px-4 py-2 text-center flex items-center justify-center gap-2">
-                  <span
-                    className={
-                      item.status === "Active"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }
-                  >
-                    {item.status}
-                  </span>
-                </td>
+      {/* Table Card */}
+      <div className="border border-purple-100 rounded-2xl overflow-hidden">
 
-                <td className="px-4 py-2 text-center">{item.expiry}</td>
-                <td className="px-4 py-2 text-center">
-                  <button
-                    onClick={() => deactivateKey(index)}
-                    disabled={deactivateLoadingIndex === index}
-                    className="text-gray-500 hover:text-red-600"
-                    title="Deactivate Key"
-                  >
-                    {deactivateLoadingIndex === index ? (
-                      <span className="animate-spin">⏳</span>
-                    ) : (
-                      <Trash2 size={18} />
-                    )}
-                  </button>
+        <table className="w-full">
+          <thead className="bg-purple-50">
+            <tr>
+              <th className="px-6 py-4 text-left text-purple-700 font-semibold">
+                Key
+              </th>
+              <th className="px-4 py-4 text-center text-purple-700 font-semibold">
+                Actions
+              </th>
+              <th className="px-4 py-4 text-center text-purple-700 font-semibold">
+                Status
+              </th>
+              <th className="px-4 py-4 text-center text-purple-700 font-semibold">
+                Expiry
+              </th>
+              <th className="px-4 py-4 text-center text-purple-700 font-semibold">
+                Action
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {apiLoading ? (
+              <tr>
+                <td
+                  colSpan="5"
+                  className="py-12 text-center text-gray-500"
+                >
+                  <span className="inline-block w-5 h-5 mr-2 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                  Loading API Keys...
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : keys.length === 0 ? (
+              <tr>
+                <td colSpan="5" className="py-20">
+
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-24 h-24 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                      <KeyRound
+                        size={42}
+                        className="text-purple-500"
+                      />
+                    </div>
+
+                    <h3 className="text-2xl font-semibold text-gray-800">
+                      No API key generated
+                    </h3>
+
+                    <p className="text-gray-500 mt-2">
+                      Click on Generate API Key to create one
+                    </p>
+                  </div>
+
+                </td>
+              </tr>
+            ) : (
+              keys.map((item, index) => (
+                <tr
+                  key={index}
+                  className="border-t hover:bg-purple-50/40 transition"
+                >
+                  <td className="px-6 py-4">
+                    <input
+                      type={item.show ? "text" : "password"}
+                      value={item.key}
+                      readOnly
+                      className="
+                        w-full
+                        px-3
+                        py-2
+                        border
+                        border-gray-200
+                        rounded-lg
+                        bg-gray-50
+                      "
+                    />
+                  </td>
+
+                  <td className="px-4 py-4 text-center">
+                    {!item.show ? (
+                      <button
+                        onClick={() => toggleShowKey(index)}
+                        className="text-gray-500 hover:text-purple-600"
+                      >
+                        <Eye size={18} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => copyToClipboard(item.key)}
+                        className="text-gray-500 hover:text-purple-600"
+                      >
+                        <Copy size={18} />
+                      </button>
+                    )}
+                  </td>
+
+                  <td className="px-4 py-4 text-center">
+                    <span
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        item.status === "Active"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {item.status}
+                    </span>
+                  </td>
+
+                  <td className="px-4 py-4 text-center text-gray-700">
+                    {item.expiry}
+                  </td>
+
+                  <td className="px-4 py-4 text-center">
+                    <button
+                      onClick={() => deactivateKey(index)}
+                      disabled={deactivateLoadingIndex === index}
+                      className="
+                        text-gray-500
+                        hover:text-red-600
+                        transition
+                      "
+                    >
+                      {deactivateLoadingIndex === index ? (
+                        <span className="animate-spin">⏳</span>
+                      ) : (
+                        <Trash2 size={18} />
+                      )}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+      </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default GenerateApiKeyPage;
