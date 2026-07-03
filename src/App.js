@@ -36,6 +36,7 @@ import RequestLocationForm from "./pages/requestLocationForm";
 import Moderation from "./pages/moderation";
 import ForgotPassword from "./pages/forgot-password";
 import PlansPage from "./pages/organizationPlans";
+import DemandStatus from "./pages/demandStatus";
 
 function AppLayout({ currentUser, setCurrentUser }) {
   const location = useLocation();
@@ -135,6 +136,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                   element={<LocationForm currentUser={currentUser} />}
                 />
                 <Route path="/moderation" element={<Moderation />} />
+                <Route path="/demandStatus" element={<DemandStatus />} />
                 <Route
                   path="/yuktdhara/organizations/:organizationId/plans"
                   element={<PlansPage />}

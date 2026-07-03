@@ -231,6 +231,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         href: "/moderation",
       },
       {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faPlug} size="lg" />,
         label: "Activate Location",
         href: "/activateBlock",
@@ -284,6 +289,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         label: "Moderation Dashboard",
         href: "/moderation",
       },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
     ];
   }
 
@@ -294,6 +304,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Moderation Dashboard",
         href: "/moderation",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
@@ -338,6 +353,11 @@ const SideNavbar = ({ currentuser, setCurrentUser }) => {
         icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
         label: "Dashboard",
         href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
