@@ -289,7 +289,12 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Moderate Plans",
         href: "/moderation",
       },
-            {
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faProjectDiagram} size="lg" />,
         label: "Integration into Yuktdhara",
           onClick: () =>
@@ -307,11 +312,6 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Quick tutorial",
         href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
         external: true,
-      },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Demand Status",
-        href: "/demandStatus",
       },
       {
         icon: <KeyRound size={18} />,
