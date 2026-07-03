@@ -64,7 +64,8 @@ const RegistrationForm = () => {
           value: org.id,
           label: org.name,
         })),
-        { value: "others", label: "Others" }, // static option
+        { value: "other_org",
+          label: "Other (Not Listed)" }, // static option
       ];
     } catch (error) {
       console.error("Error fetching organizations:", error);
@@ -405,29 +406,42 @@ const RegistrationForm = () => {
   className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
   placeholder="Enter Age"
 />
-<span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+{/* <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
     *
-  </span>
+  </span> */}
         {errors.age && (
           <p className="text-red-500 text-sm">{errors.age}</p>
         )}
       </div>
 
-      <div className="relative">
-        <input
-          name="education"
-          value={formData.education}
-          onChange={handleChange}
-          className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          placeholder="Education Qualification"
-        />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-red-500">
+     <div className="relative">
+  <select
+    name="education"
+    value={formData.education}
+    onChange={handleChange}
+    className="w-full rounded border border-gray-300 px-3 py-4 focus:outline-none focus:ring-2 focus:ring-gray-500"
+  >
+    <option value="">Select Education Qualification</option>
+    <option value="No Formal Education">No Formal Education</option>
+    <option value="Primary">Primary (Class 1-5)</option>
+    <option value="Middle">Middle (Class 6-8)</option>
+    <option value="Secondary">Secondary (Class 9-10)</option>
+    <option value="Higher Secondary">Higher Secondary (Class 11-12)</option>
+    <option value="ITI">ITI / Vocational Training</option>
+    <option value="Diploma">Diploma</option>
+    <option value="Graduate">Graduate</option>
+    <option value="Post Graduate">Post Graduate</option>
+    <option value="Doctorate">Doctorate / PhD</option>
+  </select>
+
+  {/* <span className="absolute right-8 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
     *
-  </span>
-        {errors.education && (
-          <p className="text-red-500 text-sm">{errors.education}</p>
-        )}
-      </div>
+  </span> */}
+
+  {errors.education && (
+    <p className="text-red-500 text-sm">{errors.education}</p>
+  )}
+</div>
 
     </div>
 
@@ -502,7 +516,10 @@ const RegistrationForm = () => {
                 setSelectedOption(selected);
                 setFormData({
                   ...formData,
-                  organization: selected?.value || "",
+                  organization:
+                  selected?.value === "other_org"
+                    ? ""
+                    : selected?.value || "",
                 });
               }}
               placeholder={
@@ -547,6 +564,27 @@ const RegistrationForm = () => {
               })}
             />
           </div>
+
+          {selectedOption?.value === "other_org" && (
+            <>
+  <input
+    type="text"
+    placeholder="Enter Organization Name"
+    value={formData.organization}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        organization: e.target.value,
+      })
+    }
+    className="mt-3 w-full rounded border border-gray-300 px-4 py-3"
+  />
+   <p className="mt-2 text-sm text-amber-600">
+      Note: If your organization is not listed, please enter its name here.
+      Our team will review and add it to the organization directory.
+    </p>
+    </>
+)}
 
 
           <div className="grid grid-cols-2 gap-4">
