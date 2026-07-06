@@ -1117,6 +1117,23 @@ const FormViewPage = ({
     return null;
   };
 
+  // Extract submission date/time from submission with multiple fallbacks
+  const getSubmissionDate = (submission) => {
+    if (submission?.__system?.submissionDate) {
+      return submission.__system.submissionDate;
+    }
+    if (submission?.submission_time) {
+      return submission.submission_time;
+    }
+    if (submission?.submissiontime) {
+      return submission.submissiontime;
+    }
+    if (submission?._coords?.submission_time) {
+      return submission._coords.submission_time;
+    }
+    return null;
+  };
+
   const getStructureType = (submission) => {
     if (selectedForm === "Waterbody") {
       return submission.select_one_water_structure;
@@ -1638,14 +1655,31 @@ const FormViewPage = ({
       const submissionsWithFlags = (data.data || []).map((item) => {
         if (Array.isArray(item)) {
           const submission = { ...item[0], _moderated: item[1] };
-          // item[2] is the UUID string, item[3] is the {latitude, longitude} coords object
-          if (!submission.__id && item[2]) {
-            submission.__id = item[2];
+          
+          // item[2] can be a string UUID OR the coordinates/metadata object (if 3-element array)
+          if (item[2]) {
+            if (typeof item[2] === "string" && !submission.__id) {
+              submission.__id = item[2];
+            } else if (typeof item[2] === "object") {
+              if (item[2].latitude !== undefined && item[2].longitude !== undefined) {
+                submission._coords = item[2];
+              }
+              if (item[2].submission_time) {
+                submission.submission_time = item[2].submission_time;
+              }
+            }
           }
-          // item[3] contains coordinates for forms without GPS_point (e.g. maintenance forms)
-          if (item[3] && typeof item[3] === "object" && item[3].latitude !== undefined && item[3].longitude !== undefined) {
-            submission._coords = item[3];
+
+          // item[3] is the coordinates/metadata object (if 4-element array)
+          if (item[3] && typeof item[3] === "object") {
+            if (item[3].latitude !== undefined && item[3].longitude !== undefined) {
+              submission._coords = item[3];
+            }
+            if (item[3].submission_time) {
+              submission.submission_time = item[3].submission_time;
+            }
           }
+          
           return submission;
         }
         return item;
@@ -1764,6 +1798,12 @@ const FormViewPage = ({
           const value = getFieldValue(submission, field.key);
           popupContent += `<div class="mb-2"><span class="text-xs text-slate-500 font-semibold">${field.label}:</span><br/><span class="text-sm text-slate-900">${value}</span></div>`;
         });
+
+        const dateVal = getSubmissionDate(submission);
+        if (dateVal) {
+          const formattedDate = formatToIST(dateVal);
+          popupContent += `<div class="mb-2"><span class="text-xs text-slate-500 font-semibold">Submitted On:</span><br/><span class="text-sm text-slate-900">${formattedDate}</span></div>`;
+        }
 
         popupContent += `<div class="mt-4 pt-3 border-t border-slate-200 flex gap-2">`;
         popupContent += `<button class="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all" onclick="window.viewSubmissionFromMap('${getSubmissionUUID(submission)}')">View</button>`;
@@ -2686,10 +2726,7 @@ const FormViewPage = ({
                 </h2>
                 <p className="text-indigo-100 text-sm mt-1">
                   Submitted:{" "}
-                  {formatToIST(
-                    selectedSubmission.__system?.submissionDate ||
-                      selectedSubmission.submission_time,
-                  )}
+                  {formatToIST(getSubmissionDate(selectedSubmission))}
                 </p>
               </div>
               <button
@@ -3086,10 +3123,7 @@ const FormViewPage = ({
 
                           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                             <Calendar size={12} />
-                            {formatToIST(
-                              submission.__system?.submissionDate ||
-                                submission.submission_time,
-                            )}
+                            {formatToIST(getSubmissionDate(submission))}
                           </div>
                         </div>
 
