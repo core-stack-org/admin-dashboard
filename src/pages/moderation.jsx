@@ -1081,28 +1081,37 @@ const FormViewPage = ({
 
   // Extract coordinates from submission
   const getCoordinates = (submission) => {
-    if (!submission?.GPS_point) return null;
+    // 1. Try GPS_point (standard forms)
+    if (submission?.GPS_point) {
+      const gps = submission.GPS_point;
 
-    const gps = submission.GPS_point;
+      // GeoJSON point
+      const geoPoint = gps.point_mapappearance || gps.point_mapsappearance;
 
-    // GeoJSON point
-    const geoPoint = gps.point_mapappearance || gps.point_mapsappearance;
+      if (
+        geoPoint &&
+        Array.isArray(geoPoint.coordinates) &&
+        geoPoint.coordinates.length === 2
+      ) {
+        const [lon, lat] = geoPoint.coordinates;
 
-    if (
-      geoPoint &&
-      Array.isArray(geoPoint.coordinates) &&
-      geoPoint.coordinates.length === 2
-    ) {
-      const [lon, lat] = geoPoint.coordinates;
+        if (!isNaN(lon) && !isNaN(lat)) {
+          return [lon, lat];
+        }
+      }
 
-      if (!isNaN(lon) && !isNaN(lat)) {
-        return [lon, lat];
+      // fallback (very rare, just in case)
+      if (gps.longitude && gps.latitude) {
+        return [parseFloat(gps.longitude), parseFloat(gps.latitude)];
       }
     }
 
-    // fallback (very rare, just in case)
-    if (gps.longitude && gps.latitude) {
-      return [parseFloat(gps.longitude), parseFloat(gps.latitude)];
+    // 2. Try _coords (latitude/longitude from API response item[3] — used by maintenance forms)
+    if (submission?._coords) {
+      const { latitude, longitude } = submission._coords;
+      if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude)) {
+        return [parseFloat(longitude), parseFloat(latitude)];
+      }
     }
 
     return null;
@@ -1625,11 +1634,17 @@ const FormViewPage = ({
 
       const data = await res.json();
 
+
       const submissionsWithFlags = (data.data || []).map((item) => {
         if (Array.isArray(item)) {
           const submission = { ...item[0], _moderated: item[1] };
+          // item[2] is the UUID string, item[3] is the {latitude, longitude} coords object
           if (!submission.__id && item[2]) {
             submission.__id = item[2];
+          }
+          // item[3] contains coordinates for forms without GPS_point (e.g. maintenance forms)
+          if (item[3] && typeof item[3] === "object" && item[3].latitude !== undefined && item[3].longitude !== undefined) {
+            submission._coords = item[3];
           }
           return submission;
         }
