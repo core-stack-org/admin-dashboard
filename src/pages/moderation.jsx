@@ -801,6 +801,8 @@ const FormViewPage = ({
   onBack,
 }) => {
   const [forms, setForms] = useState([]);
+  const [formCounts, setFormCounts] = useState({});
+  const [formCountsLoading, setFormCountsLoading] = useState(false);
   const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -996,6 +998,52 @@ const FormViewPage = ({
       .catch((err) => console.log("Forms Fetch Error", err));
   }, []);
 
+  useEffect(() => {
+    if (!selectedPlan || forms.length === 0) {
+      setFormCounts({});
+      return;
+    }
+
+    let isMounted = true;
+    setFormCountsLoading(true);
+
+    const fetchCounts = async () => {
+      const counts = {};
+
+      await Promise.all(
+        forms.map(async (form) => {
+          try {
+            const res = await fetch(
+              `${BASEURL}api/v1/submissions/${form.name}/${selectedPlan}/?page=1`,
+              {
+                headers: getHeaders(),
+              },
+            );
+            if (res.ok) {
+              const data = await res.json();
+              counts[form.name] = data.total_objects || 0;
+            } else {
+              counts[form.name] = 0;
+            }
+          } catch (e) {
+            counts[form.name] = 0;
+          }
+        }),
+      );
+
+      if (isMounted) {
+        setFormCounts(counts);
+        setFormCountsLoading(false);
+      }
+    };
+
+    fetchCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedPlan, forms]);
+
   const groupedFormOptions = FORM_CATEGORY_ORDER.filter((category) =>
     forms.some(
       (form) => (FORM_CATEGORY_MAP[form.name] || "Other") === category,
@@ -1007,6 +1055,7 @@ const FormViewPage = ({
       .map((form) => ({
         value: form.name,
         label: FORM_DISPLAY_NAMES[form.name] || form.name,
+        form,
       })),
   }));
 
@@ -2269,6 +2318,34 @@ const FormViewPage = ({
                     .flatMap((group) => group.options)
                     .find((option) => option.value === selectedForm)}
                   onChange={(opt) => onFormChange(opt?.value || "")}
+                  formatOptionLabel={({ form, label }, { context }) => {
+                    if (context === "value") {
+                      return (
+                        <span className="font-semibold text-slate-800">
+                          {label}
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <div className="py-0.5">
+                        <div className="font-semibold text-slate-800 text-sm leading-snug">
+                          {label}
+                        </div>
+
+                        {form && (
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                              Total Submissions:{" "}
+                              {formCountsLoading
+                                ? "Loading..."
+                                : (formCounts[form.name] ?? 0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
                   isSearchable
                   placeholder="Switch form..."
                 />
