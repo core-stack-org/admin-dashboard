@@ -233,7 +233,12 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Moderation Dashboard",
         href: "/moderation",
       },
-           {
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Integration into Yuktdhara",
         onClick: () =>
@@ -284,7 +289,12 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Moderate Plans",
         href: "/moderation",
       },
-            {
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faProjectDiagram} size="lg" />,
         label: "Integration into Yuktdhara",
           onClick: () =>
@@ -319,6 +329,11 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Moderate Plans",
         href: "/moderation",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
@@ -364,6 +379,11 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
         label: "Dashboard",
         href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
