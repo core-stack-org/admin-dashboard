@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Select from "react-select";
+import Select, { components } from "react-select";
 import {
   ChevronLeft,
   Search,
@@ -112,6 +112,70 @@ const SelectionPage = ({
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(false);
   const [blocksMap, setBlocksMap] = useState({});
+  const [filterReviewed, setFilterReviewed] = useState(false);
+  const [filterApproved, setFilterApproved] = useState(false);
+
+  // Auto-clear selectedPlan if it no longer matches the filters
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const currentPlan = plans.find((p) => (p.id || p.plan_id) === Number(selectedPlan));
+    if (currentPlan) {
+      if (filterReviewed && !currentPlan.is_dpr_reviewed) {
+        setSelectedPlan("");
+      } else if (filterApproved && !currentPlan.is_dpr_approved) {
+        setSelectedPlan("");
+      }
+    }
+  }, [filterReviewed, filterApproved, plans, selectedPlan, setSelectedPlan]);
+
+  const CustomMenuList = (props) => {
+    return (
+      <div className="flex flex-col">
+        {/* Filters Header inside Menu List */}
+        <div 
+          className="flex items-center gap-2 p-2 border-b border-slate-100 bg-slate-50 sticky top-0 z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mr-1 px-1">
+            Filter:
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setFilterReviewed(!filterReviewed);
+            }}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+              filterReviewed
+                ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Reviewed
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setFilterApproved(!filterApproved);
+            }}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+              filterApproved
+                ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Approved
+          </button>
+        </div>
+        <components.MenuList {...props} />
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (!isSuperAdmin) return;
@@ -238,7 +302,14 @@ const SelectionPage = ({
 
   const groupPlansForDropdown = (plansList) => {
     const groups = { "Completed": [], "In Progress": [] };
-    plansList.forEach((plan) => {
+
+    const filteredPlans = plansList.filter((plan) => {
+      if (filterReviewed && !plan.is_dpr_reviewed) return false;
+      if (filterApproved && !plan.is_dpr_approved) return false;
+      return true;
+    });
+
+    filteredPlans.forEach((plan) => {
       const category = plan.is_completed ? "Completed" : "In Progress";
       groups[category].push({ value: plan.plan_id, label: plan.plan, plan });
     });
@@ -421,6 +492,7 @@ const SelectionPage = ({
                   : null
               }
               onChange={(opt) => setSelectedPlan(opt?.value || "")}
+              components={{ MenuList: CustomMenuList }}
               formatOptionLabel={({ plan, label }, { context }) => {
                 if (context === "value") {
                   return (
@@ -438,8 +510,22 @@ const SelectionPage = ({
                   : null;
                 return (
                   <div className="py-0.5">
-                    <div className="font-semibold text-slate-800 text-sm leading-snug">
-                      {plan.plan}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-semibold text-slate-800 text-sm leading-snug">
+                        {plan.plan}
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        {plan.is_dpr_reviewed && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider">
+                            Reviewed
+                          </span>
+                        )}
+                        {plan.is_dpr_approved && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider">
+                            Approved
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                       {plan.facilitator_name && (
