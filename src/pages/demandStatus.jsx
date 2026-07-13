@@ -103,8 +103,6 @@ const SelectionPage = ({
   setSelectedProject,
   selectedPlan,
   setSelectedPlan,
-  selectedDemand,
-  setSelectedDemand,
 }) => {
   const [organizations, setOrganizations] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -320,9 +318,9 @@ const SelectionPage = ({
   };
 
   const handleSubmit = () => {
-    if (!selectedProject || !selectedPlan || !selectedDemand) return;
+    if (!selectedProject || !selectedPlan) return;
     const planObj = plans.find((p) => p.plan_id === Number(selectedPlan));
-    onLoadDemandDashboard(selectedProject, selectedPlan, selectedDemand, planObj);
+    onLoadDemandDashboard(selectedProject, selectedPlan, planObj);
   };
 
   return (
@@ -613,23 +611,9 @@ const SelectionPage = ({
             />
           </div>
 
-          <div className="mb-8">
-            <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-              Select Demand Type
-            </label>
-            <Select
-              styles={selectStyles}
-              placeholder="-- Choose Demand Type --"
-              options={DEMAND_OPTIONS}
-              value={DEMAND_OPTIONS.find((d) => d.value === selectedDemand) || null}
-              onChange={(opt) => setSelectedDemand(opt?.value || "")}
-              isClearable
-            />
-          </div>
-
           <button
             onClick={handleSubmit}
-            disabled={!selectedPlan || !selectedDemand}
+            disabled={!selectedPlan}
             className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg disabled:from-slate-300 disabled:to-slate-400 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
             Submit
@@ -640,14 +624,251 @@ const SelectionPage = ({
   );
 };
 
+// Helper components for tabular representation
+const renderBeneficiary = (record) => {
+  if (!record.beneficiary_name && !record.beneficiary_father_name) {
+    return <span className="text-slate-400">—</span>;
+  }
+  return (
+    <div className="min-w-0">
+      <div className="font-bold text-slate-800 text-sm">
+        {record.beneficiary_name === "0" ? "N/A" : record.beneficiary_name || "N/A"}
+      </div>
+      {record.beneficiary_father_name && (
+        <div className="text-[11px] text-slate-500 font-medium">
+          S/O: {record.beneficiary_father_name}
+        </div>
+      )}
+      {record.gender && (
+        <span className="inline-block text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 mt-1 rounded">
+          Gender: {record.gender}
+        </span>
+      )}
+    </div>
+  );
+};
+
+const DemandTable = ({
+  title,
+  icon: Icon,
+  records,
+  categoryType,
+  handleStatusChange,
+  getStatusConfig,
+}) => {
+  if (!records) return null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-md overflow-hidden mb-8 transition-all hover:shadow-lg">
+      {/* Table Header Section */}
+      <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200 flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          {Icon && <Icon className="text-indigo-600" size={20} />}
+          <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
+        </div>
+        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+          {records.length} Records
+        </span>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase tracking-wider text-slate-500">
+              <th className="py-3 px-5 w-16">ID</th>
+              {categoryType === "maintenance" && (
+                <>
+                  <th className="py-3 px-4">Structure Type</th>
+                  <th className="py-3 px-4">Repair Activities</th>
+                </>
+              )}
+              {categoryType === "new_demand" && (
+                <>
+                  <th className="py-3 px-4">Work Title / Category</th>
+                  <th className="py-3 px-4">Beneficiary</th>
+                  <th className="py-3 px-4">Settlement</th>
+                </>
+              )}
+              {categoryType === "plantation" && (
+                <>
+                  <th className="py-3 px-4">Livelihood Work</th>
+                  <th className="py-3 px-4">Acres</th>
+                  <th className="py-3 px-4">Beneficiary</th>
+                </>
+              )}
+              {categoryType === "livelihood" && (
+                <>
+                  <th className="py-3 px-4">Livelihood Work</th>
+                  <th className="py-3 px-4">Beneficiary</th>
+                  <th className="py-3 px-4">Settlement</th>
+                </>
+              )}
+              <th className="py-3 px-4">GPS Coordinates</th>
+              <th className="py-3 px-4 w-32">Status</th>
+              <th className="py-3 px-4 w-40">Update Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100 text-sm">
+            {records.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={categoryType === "maintenance" ? 6 : 7}
+                  className="py-10 text-center text-slate-400 font-medium bg-slate-50/30"
+                >
+                  No records found in this category.
+                </td>
+              </tr>
+            ) : (
+              records.map((record, index) => {
+                const status = record.status || "PENDING";
+                const { badgeClass, dotClass } = getStatusConfig(status);
+
+                const getRecordTitle = () => {
+                  if (categoryType === "maintenance") {
+                    return record.structure_type || "Maintenance Demand";
+                  } else if (categoryType === "new_demand") {
+                    return record.work_demand || record.work_category || "New Demand";
+                  } else {
+                    return record.work_demand || "Livelihood/Plantation Demand";
+                  }
+                };
+
+                return (
+                  <tr
+                    key={record.id || index}
+                    className="hover:bg-slate-50/80 transition-colors duration-150 group"
+                  >
+                    {/* ID */}
+                    <td className="py-4 px-5 font-semibold text-slate-500 text-xs">
+                      #{record.id}
+                    </td>
+
+                    {/* Maintenance Columns */}
+                    {categoryType === "maintenance" && (
+                      <>
+                        <td className="py-4 px-4 font-bold text-slate-800">
+                          {getRecordTitle()}
+                          <span className="block text-[10px] text-indigo-500 font-bold uppercase mt-0.5">
+                            {record.resource_type || "maintenance"}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          {record.repair_activities ? (
+                            <span className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-100 block max-w-xs break-words">
+                              {record.repair_activities}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                      </>
+                    )}
+
+                    {/* New Demand Columns */}
+                    {categoryType === "new_demand" && (
+                      <>
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-800">{getRecordTitle()}</div>
+                          {record.work_category && (
+                            <span className="inline-block text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded mt-1">
+                              {record.work_category}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4">
+                          {renderBeneficiary(record)}
+                        </td>
+                        <td className="py-4 px-4 font-medium text-slate-600">
+                          {record.beneficiary_settlement || <span className="text-slate-400">—</span>}
+                        </td>
+                      </>
+                    )}
+
+                    {/* Plantation Columns */}
+                    {categoryType === "plantation" && (
+                      <>
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-800">{record.livelihood_work || getRecordTitle()}</div>
+                        </td>
+                        <td className="py-4 px-4 font-bold text-slate-800">
+                          {record.total_acres !== undefined && record.total_acres !== null ? (
+                            `${record.total_acres} acres`
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+                        <td className="py-4 px-4">
+                          {renderBeneficiary(record)}
+                        </td>
+                      </>
+                    )}
+
+                    {/* Livelihood Columns */}
+                    {categoryType === "livelihood" && (
+                      <>
+                        <td className="py-4 px-4">
+                          <div className="font-bold text-slate-800">{record.livelihood_work || getRecordTitle()}</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          {renderBeneficiary(record)}
+                        </td>
+                        <td className="py-4 px-4 font-medium text-slate-600">
+                          {record.beneficiary_settlement || <span className="text-slate-400">—</span>}
+                        </td>
+                      </>
+                    )}
+
+                    {/* GPS Coordinates */}
+                    <td className="py-4 px-4 font-mono text-xs text-slate-600 whitespace-nowrap">
+                      {record.latitude || record.longitude ? (
+                        <div>
+                          <div>Lat: {parseFloat(record.latitude).toFixed(6)}</div>
+                          <div>Lon: {parseFloat(record.longitude).toFixed(6)}</div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">—</span>
+                      )}
+                    </td>
+
+                    {/* Status badge */}
+                    <td className="py-4 px-4">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ${badgeClass}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+                        {status.toUpperCase()}
+                      </span>
+                    </td>
+
+                    {/* Status updater dropdown */}
+                    <td className="py-4 px-4">
+                      <select
+                        value={status}
+                        onChange={(e) => handleStatusChange(record, e.target.value)}
+                        className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
+                      >
+                        <option value="PENDING">PENDING</option>
+                        <option value="SUBMITTED">SUBMITTED</option>
+                        <option value="APPROVED">APPROVED</option>
+                        <option value="REVERTED">REVERTED</option>
+                        <option value="REJECTED">REJECTED</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
 // Main Dashboard View Component
 const DemandDashboard = ({
   isSuperAdmin,
   selectedProject,
   selectedPlan,
-  selectedDemand,
   planDetails,
-  onDemandChange,
   onBack,
 }) => {
   const [demands, setDemands] = useState([]);
@@ -655,39 +876,55 @@ const DemandDashboard = ({
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchDemands = async () => {
-    if (!selectedPlan || !selectedDemand) return;
+    if (!selectedPlan) return;
 
     setLoading(true);
     setDemands([]); // Clear demands first to prevent stale views
-    let endpoint = "";
-    if (selectedDemand === "maintenance") {
-      endpoint = `${BASEURL}api/v1/dpr_data/${selectedPlan}/maintenance/`;
-    } else if (selectedDemand === "new_demand") {
-      endpoint = `${BASEURL}api/v1/dpr_data/${selectedPlan}/nrm-works/`;
-    } else {
-      // Both Livelihood and Plantation call the livelihood API
-      endpoint = `${BASEURL}api/v1/dpr_data/${selectedPlan}/livelihood/`;
-    }
+    
+    const maintenanceUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/maintenance/`;
+    const newDemandUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/nrm-works/`;
+    const livelihoodUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/livelihood/`;
 
     try {
-      const res = await fetch(endpoint, { headers: getHeaders() });
-      if (!res.ok) throw new Error("Failed to fetch demands data");
-      const data = await res.json();
-      let results = data.results || data.data || [];
+      const [mRes, nRes, lRes] = await Promise.all([
+        fetch(maintenanceUrl, { headers: getHeaders() }),
+        fetch(newDemandUrl, { headers: getHeaders() }),
+        fetch(livelihoodUrl, { headers: getHeaders() })
+      ]);
 
-      if (selectedDemand === "plantation") {
-        results = results.filter((item) => {
-          const work = String(item.livelihood_work || "").toLowerCase().trim();
-          return work.startsWith("plantation");
-        });
-      } else if (selectedDemand === "livelihood") {
-        results = results.filter((item) => {
-          const work = String(item.livelihood_work || "").toLowerCase().trim();
-          return !work.startsWith("plantation");
-        });
+      if (!mRes.ok || !nRes.ok || !lRes.ok) {
+        throw new Error("Failed to fetch one or more demand types");
       }
 
-      setDemands(results);
+      const [mData, nData, lData] = await Promise.all([
+        mRes.json(),
+        nRes.json(),
+        lRes.json()
+      ]);
+
+      const mList = (mData.results || mData.data || []).map(item => ({
+        ...item,
+        categoryType: 'maintenance',
+        resource_type: item.resource_type || 'maintenance'
+      }));
+
+      const nList = (nData.results || nData.data || []).map(item => ({
+        ...item,
+        categoryType: 'new_demand',
+        resource_type: item.resource_type || 'nrm-works'
+      }));
+
+      const lList = (lData.results || lData.data || []).map(item => {
+        const work = String(item.livelihood_work || "").toLowerCase().trim();
+        const isPlantation = work.startsWith("plantation");
+        return {
+          ...item,
+          categoryType: isPlantation ? 'plantation' : 'livelihood',
+          resource_type: item.resource_type || 'livelihood'
+        };
+      });
+
+      setDemands([...mList, ...nList, ...lList]);
     } catch (err) {
       console.error("Demand Status Fetch Error", err);
       toast.error("Failed to load demand records");
@@ -699,7 +936,7 @@ const DemandDashboard = ({
 
   useEffect(() => {
     fetchDemands();
-  }, [selectedPlan, selectedDemand]);
+  }, [selectedPlan]);
 
   const handleStatusChange = async (record, newStatus) => {
     const originalStatus = record.status || "PENDING";
@@ -785,6 +1022,11 @@ const DemandDashboard = ({
     return searchStr.includes(searchTerm.toLowerCase());
   });
 
+  const mRecords = filteredDemands.filter(d => d.categoryType === 'maintenance');
+  const nRecords = filteredDemands.filter(d => d.categoryType === 'new_demand');
+  const pRecords = filteredDemands.filter(d => d.categoryType === 'plantation');
+  const lRecords = filteredDemands.filter(d => d.categoryType === 'livelihood');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
       {/* Header */}
@@ -803,37 +1045,10 @@ const DemandDashboard = ({
 
             <div className="w-px h-6 bg-white/30 shrink-0" />
 
-            {/* Demand Dropdown */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-indigo-200 text-xs font-bold uppercase tracking-wider shrink-0">
-                Demand Type
+              <span className="text-white font-extrabold text-lg tracking-tight">
+                All Demand Dashboard
               </span>
-              <div className="min-w-[260px] max-w-[420px] flex-1">
-                <Select
-                  menuPortalTarget={document.body}
-                  styles={{
-                    control: (base, state) => ({
-                      ...base,
-                      minHeight: "42px",
-                      borderRadius: "0.5rem",
-                      borderWidth: "1px",
-                      backgroundColor: "rgba(255,255,255,0.95)",
-                      borderColor: state.isFocused ? "#c7d2fe" : "#bfdbfe",
-                      boxShadow: state.isFocused
-                        ? "0 0 0 3px rgba(255,255,255,0.15)"
-                        : "none",
-                    }),
-                    menuPortal: (base) => ({
-                      ...base,
-                      zIndex: 9999,
-                    }),
-                  }}
-                  options={DEMAND_OPTIONS}
-                  value={DEMAND_OPTIONS.find((option) => option.value === selectedDemand)}
-                  onChange={(opt) => onDemandChange(opt?.value || "")}
-                  placeholder="Switch demand..."
-                />
-              </div>
             </div>
 
             {/* Demand Counts */}
@@ -906,7 +1121,7 @@ const DemandDashboard = ({
             <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
             <p className="text-indigo-600 font-bold">Fetching demand records...</p>
           </div>
-        ) : filteredDemands.length === 0 ? (
+        ) : filteredDemands.length === 0 && demands.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 shadow-xl max-w-2xl mx-auto mt-10">
             <div className="w-16 h-16 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
               <Database size={32} />
@@ -917,194 +1132,50 @@ const DemandDashboard = ({
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredDemands.map((record, index) => {
-              const isMaintenance = selectedDemand === "maintenance";
-              const isNewDemand = selectedDemand === "new_demand";
-              const id = record.id;
-              const title = isMaintenance
-                ? record.structure_type || "Maintenance Demand"
-                : isNewDemand
-                  ? record.work_demand || record.work_category || "New Demand"
-                  : record.work_demand || "Livelihood/Plantation Demand";
+          <div className="space-y-8 pb-12">
+            <DemandTable
+              title="Maintenance Demands"
+              icon={Clipboard}
+              records={mRecords}
+              categoryType="maintenance"
+              handleStatusChange={handleStatusChange}
+              getStatusConfig={getStatusConfig}
+            />
 
-              const status = record.status || "PENDING";
-              const { borderClass, badgeClass, dotClass } = getStatusConfig(status);
+            <DemandTable
+              title="New Demands"
+              icon={Layers}
+              records={nRecords}
+              categoryType="new_demand"
+              handleStatusChange={handleStatusChange}
+              getStatusConfig={getStatusConfig}
+            />
 
-              return (
-                <div
-                  key={`${selectedDemand}-${record.id || index}-${index}`}
-                  className="relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
-                >
-                  {/* Left accent stripe */}
-                  <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${borderClass}`} />
+            <div className="border-t border-slate-200/80 pt-6">
+              <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight px-2">
+                Livelihood Demands
+              </h2>
+              
+              <div className="space-y-6">
+                <DemandTable
+                  title="Plantation Demands"
+                  icon={MapPin}
+                  records={pRecords}
+                  categoryType="plantation"
+                  handleStatusChange={handleStatusChange}
+                  getStatusConfig={getStatusConfig}
+                />
 
-                  <div className="pl-6 pr-5 pt-4 pb-4">
-                    {/* Top row: status badge + selector + date */}
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2 border-b border-slate-50 pb-3">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ${badgeClass}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
-                          {status.toUpperCase()}
-                        </span>
-
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                            Update Status:
-                          </span>
-                          <select
-                            value={status}
-                            onChange={(e) => handleStatusChange(record, e.target.value)}
-                            className="border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
-                          >
-                            <option value="PENDING">PENDING</option>
-                            <option value="SUBMITTED">SUBMITTED</option>
-                            <option value="APPROVED">APPROVED</option>
-                            <option value="REVERTED">REVERTED</option>
-                            <option value="REJECTED">REJECTED</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5 text-xs text-slate-400 font-semibold">
-                        <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                          ID: {id}
-                        </span>
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
-                          {record.resource_type || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Dynamic grid layout fields */}
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-3">
-                      {/* Title/Work */}
-                      <div className="min-w-0">
-                        <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                          Work Title
-                        </div>
-                        <div className="text-sm font-bold text-slate-800 truncate" title={title}>
-                          {title}
-                        </div>
-                      </div>
-
-                      {/* Work Category (New Demand only) */}
-                      {isNewDemand && record.work_category && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            Work Category
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            {record.work_category}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Livelihood Work (Livelihood & Plantation only) */}
-                      {record.livelihood_work && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            Livelihood Work
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            {record.livelihood_work}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Total Acres (Livelihood & Plantation only) */}
-                      {record.total_acres !== undefined && record.total_acres !== null && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            Total Acres
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            {record.total_acres}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Demand Type */}
-                      {record.demand_type && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            Demand Type
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            {record.demand_type}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Beneficiary Info */}
-                      {(record.beneficiary_name || record.beneficiary_father_name) && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            Beneficiary
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            {record.beneficiary_name === "0" ? "N/A" : record.beneficiary_name || "N/A"}
-                            {record.beneficiary_father_name && (
-                              <span className="text-xs text-slate-500 font-medium block">
-                                S/O: {record.beneficiary_father_name}
-                              </span>
-                            )}
-                            {record.gender && (
-                              <span className="inline-block text-[9px] font-bold text-slate-600 bg-slate-100 px-1.5 py-0.2 mt-0.5 rounded">
-                                Gender: {record.gender}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Settlement */}
-                      {record.beneficiary_settlement && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            Settlement
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            {record.beneficiary_settlement}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Coordinates */}
-                      {(record.latitude || record.longitude) && (
-                        <div className="min-w-0">
-                          <div className="text-xs text-slate-400 font-medium mb-0.5 uppercase tracking-wider">
-                            GPS Coordinates
-                          </div>
-                          <div className="text-sm font-bold text-slate-800 truncate">
-                            Lat: {parseFloat(record.latitude).toFixed(6)}
-                            <br />
-                            Lon: {parseFloat(record.longitude).toFixed(6)}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Repair Activities (Maintenance only) */}
-                    {isMaintenance && record.repair_activities && (
-                      <div className="mt-4 bg-amber-50/50 p-3 rounded-xl border border-amber-100/50 flex items-start gap-2">
-                        <Clipboard size={16} className="text-amber-500 mt-0.5 shrink-0" />
-                        <div>
-                          <span className="text-xs font-bold text-amber-800 uppercase block tracking-wider">
-                            Repair Activities
-                          </span>
-                          <span className="text-xs font-medium text-amber-700 block mt-0.5">
-                            {record.repair_activities}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                <DemandTable
+                  title="Livelihood Demands (Others / Rest)"
+                  icon={User}
+                  records={lRecords}
+                  categoryType="livelihood"
+                  handleStatusChange={handleStatusChange}
+                  getStatusConfig={getStatusConfig}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1117,13 +1188,12 @@ const DemandStatus = () => {
   const [selectedOrg, setSelectedOrg] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
-  const [selectedDemand, setSelectedDemand] = useState("");
   const [planDetails, setPlanDetails] = useState(null);
 
   const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
     try {
       const sessionUser = JSON.parse(
-        sessionStorage.getItem("currentUser") || "{}",
+        sessionStorage.getItem("currentUser") || "{}"
       );
       return !!sessionUser?.user?.is_superadmin;
     } catch {
@@ -1131,20 +1201,15 @@ const DemandStatus = () => {
     }
   });
 
-  const handleLoadDemandDashboard = (project, plan, demand, planObj) => {
+  const handleLoadDemandDashboard = (project, plan, planObj) => {
     setSelectedProject(project);
     setSelectedPlan(plan);
-    setSelectedDemand(demand);
     setPlanDetails(planObj);
     setCurrentPage("dashboard");
   };
 
   const handleBack = () => {
     setCurrentPage("selection");
-  };
-
-  const handleDemandChange = (demand) => {
-    setSelectedDemand(demand);
   };
 
   return currentPage === "selection" ? (
@@ -1157,17 +1222,13 @@ const DemandStatus = () => {
       setSelectedProject={setSelectedProject}
       selectedPlan={selectedPlan}
       setSelectedPlan={setSelectedPlan}
-      selectedDemand={selectedDemand}
-      setSelectedDemand={setSelectedDemand}
     />
   ) : (
     <DemandDashboard
       isSuperAdmin={isSuperAdmin}
       selectedProject={selectedProject}
       selectedPlan={selectedPlan}
-      selectedDemand={selectedDemand}
       planDetails={planDetails}
-      onDemandChange={handleDemandChange}
       onBack={handleBack}
     />
   );
