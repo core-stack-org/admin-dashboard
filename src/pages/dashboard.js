@@ -7,6 +7,9 @@ import Moderation from "./moderation.jsx";
 import AdministratorDashboardNew from "./AdministratorDashboardNew.jsx"
 const Dashboard = ({ currentUser }) => {
   const getHighestPriorityRole = () => {
+      if (currentUser?.user?.account_type?.toLowerCase() === "individual") {
+    return "App User";
+  }
     if (currentUser?.user?.is_superadmin) {
       return "Super Admin";
     }
