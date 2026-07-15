@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const LoginPage = ({ setCurrentUser }) => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const LoginPage = ({ setCurrentUser }) => {
   const [loginErr, setLoginErr] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
 
   const validateForm = () => {
     const newErrors = {};
@@ -40,6 +42,10 @@ const LoginPage = ({ setCurrentUser }) => {
     if (!validateForm()) {
       return;
     }
+    if (!captchaToken) {
+     setLoginErr("Please complete the captcha");
+    return;
+    }
     setLoading(true);
     setLoginErr("");
     try {
@@ -53,6 +59,8 @@ const LoginPage = ({ setCurrentUser }) => {
           body: JSON.stringify({
             username: formData.username,
             password: formData.password,
+            captcha: captchaToken,
+
           }),
         }
       );
@@ -156,6 +164,10 @@ const LoginPage = ({ setCurrentUser }) => {
               )}
             </div>
           </div>
+          <ReCAPTCHA
+            sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+            onChange={(token) => setCaptchaToken(token)}
+          />
           <div className="flex justify-between items-center text-sm">
             <label className="flex items-center gap-2 text-gray-600">
               <input type="checkbox" className="accent-blue-600" />
