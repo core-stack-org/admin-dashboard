@@ -195,8 +195,11 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
     setIsDropdownOpen(false);
   };
 
+  const accountType = currentuser?.user?.account_type?.toLowerCase();
+  const isIndividual = accountType === "individual";
   // ROLE CHECKS
   const isSuperAdmin = currentuser?.user?.is_superadmin === true;
+  
 
   const userRoles = currentuser?.user?.groups?.map((r) => r.name) || [];
 
@@ -210,7 +213,33 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
   let menuItems = [];
 
   // SUPERADMIN → SHOW ALL
-  if (isSuperAdmin) {
+  // INDIVIDUAL USER → Show only App User menus
+if (isIndividual) {
+  menuItems = [
+    {
+      icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
+      label: "Dashboard",
+      href: "/dashboard",
+    },
+    {
+      icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
+      label: "How to use",
+      href: "https://www.youtube.com/watch?v=t-7lTkakA9Q",
+      external: true,
+    },
+    {
+      icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
+      label: "Request data layers",
+      href: "/locationForm",
+    },
+     {
+        icon: <KeyRound size={18} />,
+        label: "Generate API Key",
+        href: "/generateApiKey",
+      },
+  ];
+}
+  else if (isSuperAdmin) {
     menuItems = [
       {
         icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
@@ -233,7 +262,12 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Moderation Dashboard",
         href: "/moderation",
       },
-           {
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Integration into Yuktdhara",
         onClick: () =>
@@ -284,7 +318,12 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         label: "Moderate Plans",
         href: "/moderation",
       },
-            {
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
+      },
+      {
         icon: <FontAwesomeIcon icon={faProjectDiagram} size="lg" />,
         label: "Integration into Yuktdhara",
           onClick: () =>
@@ -319,6 +358,11 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Moderate Plans",
         href: "/moderation",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
@@ -364,6 +408,11 @@ const SideNavbar = ({ currentuser, setCurrentUser,isSidebarCollapsed, setIsSideb
         icon: <FontAwesomeIcon icon={faTachometerAlt} size="lg" />,
         label: "Dashboard",
         href: "/dashboard",
+      },
+      {
+        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+        label: "Demand Status",
+        href: "/demandStatus",
       },
       {
         icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,

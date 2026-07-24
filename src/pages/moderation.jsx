@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import Select from "react-select";
+import Select, { components } from "react-select";
 import {
   Trash2,
   ChevronLeft,
@@ -142,7 +142,69 @@ const SelectionPage = ({
   const [blocksMap, setBlocksMap] = useState({});
   const [formCounts, setFormCounts] = useState({});
   const [formCountsLoading, setFormCountsLoading] = useState(false);
+  const [filterReviewed, setFilterReviewed] = useState(false);
+  const [filterApproved, setFilterApproved] = useState(false);
 
+  // Auto-clear selectedPlan if it no longer matches the filters
+  useEffect(() => {
+    if (!selectedPlan) return;
+    const currentPlan = plans.find((p) => (p.id || p.plan_id) === Number(selectedPlan));
+    if (currentPlan) {
+      if (filterReviewed && !currentPlan.is_dpr_reviewed) {
+        setSelectedPlan("");
+      } else if (filterApproved && !currentPlan.is_dpr_approved) {
+        setSelectedPlan("");
+      }
+    }
+  }, [filterReviewed, filterApproved, plans, selectedPlan]);
+  const CustomMenuList = (props) => {
+    return (
+      <div className="flex flex-col">
+        {/* Filters Header inside Menu List */}
+        <div 
+          className="flex items-center gap-2 p-2 border-b border-slate-100 bg-slate-50 sticky top-0 z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mr-1 px-1">
+            Filter:
+          </span>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setFilterReviewed(!filterReviewed);
+            }}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+              filterReviewed
+                ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Reviewed
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setFilterApproved(!filterApproved);
+            }}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+              filterApproved
+                ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            Approved
+          </button>
+        </div>
+        <components.MenuList {...props} />
+      </div>
+    );
+  };
   useEffect(() => {
     if (!isSuperAdmin) return;
 
@@ -433,7 +495,13 @@ const SelectionPage = ({
   const groupPlansForDropdown = (plans) => {
     const groups = {};
 
-    plans.forEach((plan) => {
+    const filteredPlans = plans.filter((plan) => {
+      if (filterReviewed && !plan.is_dpr_reviewed) return false;
+      if (filterApproved && !plan.is_dpr_approved) return false;
+      return true;
+    });
+
+    filteredPlans.forEach((plan) => {
       const category = getPlanCategory(plan);
       if (!groups[category]) groups[category] = [];
       groups[category].push({ value: plan.plan_id, label: plan.plan, plan });
@@ -618,6 +686,7 @@ const SelectionPage = ({
                   : null
               }
               onChange={(opt) => setSelectedPlan(opt?.value || "")}
+              components={{ MenuList: CustomMenuList }}
               formatOptionLabel={({ plan, label }, { context }) => {
                 if (context === "value") {
                   return (
@@ -635,8 +704,22 @@ const SelectionPage = ({
                   : null;
                 return (
                   <div className="py-0.5">
-                    <div className="font-semibold text-slate-800 text-sm leading-snug">
-                      {plan.plan}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-semibold text-slate-800 text-sm leading-snug">
+                        {plan.plan}
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        {plan.is_dpr_reviewed && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider">
+                            Reviewed
+                          </span>
+                        )}
+                        {plan.is_dpr_approved && (
+                          <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider">
+                            Approved
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                       {plan.facilitator_name && (
@@ -801,6 +884,8 @@ const FormViewPage = ({
   onBack,
 }) => {
   const [forms, setForms] = useState([]);
+  const [formCounts, setFormCounts] = useState({});
+  const [formCountsLoading, setFormCountsLoading] = useState(false);
   const [submissions, setSubmissions] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -996,6 +1081,52 @@ const FormViewPage = ({
       .catch((err) => console.log("Forms Fetch Error", err));
   }, []);
 
+  useEffect(() => {
+    if (!selectedPlan || forms.length === 0) {
+      setFormCounts({});
+      return;
+    }
+
+    let isMounted = true;
+    setFormCountsLoading(true);
+
+    const fetchCounts = async () => {
+      const counts = {};
+
+      await Promise.all(
+        forms.map(async (form) => {
+          try {
+            const res = await fetch(
+              `${BASEURL}api/v1/submissions/${form.name}/${selectedPlan}/?page=1`,
+              {
+                headers: getHeaders(),
+              },
+            );
+            if (res.ok) {
+              const data = await res.json();
+              counts[form.name] = data.total_objects || 0;
+            } else {
+              counts[form.name] = 0;
+            }
+          } catch (e) {
+            counts[form.name] = 0;
+          }
+        }),
+      );
+
+      if (isMounted) {
+        setFormCounts(counts);
+        setFormCountsLoading(false);
+      }
+    };
+
+    fetchCounts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedPlan, forms]);
+
   const groupedFormOptions = FORM_CATEGORY_ORDER.filter((category) =>
     forms.some(
       (form) => (FORM_CATEGORY_MAP[form.name] || "Other") === category,
@@ -1007,6 +1138,7 @@ const FormViewPage = ({
       .map((form) => ({
         value: form.name,
         label: FORM_DISPLAY_NAMES[form.name] || form.name,
+        form,
       })),
   }));
 
@@ -1081,30 +1213,56 @@ const FormViewPage = ({
 
   // Extract coordinates from submission
   const getCoordinates = (submission) => {
-    if (!submission?.GPS_point) return null;
+    // 1. Try GPS_point (standard forms)
+    if (submission?.GPS_point) {
+      const gps = submission.GPS_point;
 
-    const gps = submission.GPS_point;
+      // GeoJSON point
+      const geoPoint = gps.point_mapappearance || gps.point_mapsappearance;
 
-    // GeoJSON point
-    const geoPoint = gps.point_mapappearance || gps.point_mapsappearance;
+      if (
+        geoPoint &&
+        Array.isArray(geoPoint.coordinates) &&
+        geoPoint.coordinates.length === 2
+      ) {
+        const [lon, lat] = geoPoint.coordinates;
 
-    if (
-      geoPoint &&
-      Array.isArray(geoPoint.coordinates) &&
-      geoPoint.coordinates.length === 2
-    ) {
-      const [lon, lat] = geoPoint.coordinates;
+        if (!isNaN(lon) && !isNaN(lat)) {
+          return [lon, lat];
+        }
+      }
 
-      if (!isNaN(lon) && !isNaN(lat)) {
-        return [lon, lat];
+      // fallback (very rare, just in case)
+      if (gps.longitude && gps.latitude) {
+        return [parseFloat(gps.longitude), parseFloat(gps.latitude)];
       }
     }
 
-    // fallback (very rare, just in case)
-    if (gps.longitude && gps.latitude) {
-      return [parseFloat(gps.longitude), parseFloat(gps.latitude)];
+    // 2. Try _coords (latitude/longitude from API response item[3] — used by maintenance forms)
+    if (submission?._coords) {
+      const { latitude, longitude } = submission._coords;
+      if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude)) {
+        return [parseFloat(longitude), parseFloat(latitude)];
+      }
     }
 
+    return null;
+  };
+
+  // Extract submission date/time from submission with multiple fallbacks
+  const getSubmissionDate = (submission) => {
+    if (submission?.__system?.submissionDate) {
+      return submission.__system.submissionDate;
+    }
+    if (submission?.submission_time) {
+      return submission.submission_time;
+    }
+    if (submission?.submissiontime) {
+      return submission.submissiontime;
+    }
+    if (submission?._coords?.submission_time) {
+      return submission._coords.submission_time;
+    }
     return null;
   };
 
@@ -1625,12 +1783,35 @@ const FormViewPage = ({
 
       const data = await res.json();
 
+
       const submissionsWithFlags = (data.data || []).map((item) => {
         if (Array.isArray(item)) {
           const submission = { ...item[0], _moderated: item[1] };
-          if (!submission.__id && item[2]) {
-            submission.__id = item[2];
+          
+          // item[2] can be a string UUID OR the coordinates/metadata object (if 3-element array)
+          if (item[2]) {
+            if (typeof item[2] === "string" && !submission.__id) {
+              submission.__id = item[2];
+            } else if (typeof item[2] === "object") {
+              if (item[2].latitude !== undefined && item[2].longitude !== undefined) {
+                submission._coords = item[2];
+              }
+              if (item[2].submission_time) {
+                submission.submission_time = item[2].submission_time;
+              }
+            }
           }
+
+          // item[3] is the coordinates/metadata object (if 4-element array)
+          if (item[3] && typeof item[3] === "object") {
+            if (item[3].latitude !== undefined && item[3].longitude !== undefined) {
+              submission._coords = item[3];
+            }
+            if (item[3].submission_time) {
+              submission.submission_time = item[3].submission_time;
+            }
+          }
+          
           return submission;
         }
         return item;
@@ -1749,6 +1930,12 @@ const FormViewPage = ({
           const value = getFieldValue(submission, field.key);
           popupContent += `<div class="mb-2"><span class="text-xs text-slate-500 font-semibold">${field.label}:</span><br/><span class="text-sm text-slate-900">${value}</span></div>`;
         });
+
+        const dateVal = getSubmissionDate(submission);
+        if (dateVal) {
+          const formattedDate = formatToIST(dateVal);
+          popupContent += `<div class="mb-2"><span class="text-xs text-slate-500 font-semibold">Submitted On:</span><br/><span class="text-sm text-slate-900">${formattedDate}</span></div>`;
+        }
 
         popupContent += `<div class="mt-4 pt-3 border-t border-slate-200 flex gap-2">`;
         popupContent += `<button class="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all" onclick="window.viewSubmissionFromMap('${getSubmissionUUID(submission)}')">View</button>`;
@@ -2214,6 +2401,34 @@ const FormViewPage = ({
                     .flatMap((group) => group.options)
                     .find((option) => option.value === selectedForm)}
                   onChange={(opt) => onFormChange(opt?.value || "")}
+                  formatOptionLabel={({ form, label }, { context }) => {
+                    if (context === "value") {
+                      return (
+                        <span className="font-semibold text-slate-800">
+                          {label}
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <div className="py-0.5">
+                        <div className="font-semibold text-slate-800 text-sm leading-snug">
+                          {label}
+                        </div>
+
+                        {form && (
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                              Total Submissions:{" "}
+                              {formCountsLoading
+                                ? "Loading..."
+                                : (formCounts[form.name] ?? 0)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
                   isSearchable
                   placeholder="Switch form..."
                 />
@@ -2671,10 +2886,7 @@ const FormViewPage = ({
                 </h2>
                 <p className="text-indigo-100 text-sm mt-1">
                   Submitted:{" "}
-                  {formatToIST(
-                    selectedSubmission.__system?.submissionDate ||
-                      selectedSubmission.submission_time,
-                  )}
+                  {formatToIST(getSubmissionDate(selectedSubmission))}
                 </p>
               </div>
               <button
@@ -3071,10 +3283,7 @@ const FormViewPage = ({
 
                           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                             <Calendar size={12} />
-                            {formatToIST(
-                              submission.__system?.submissionDate ||
-                                submission.submission_time,
-                            )}
+                            {formatToIST(getSubmissionDate(submission))}
                           </div>
                         </div>
 
