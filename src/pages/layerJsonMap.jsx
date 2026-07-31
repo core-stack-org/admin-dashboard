@@ -1,7 +1,182 @@
 import React, { useState, useEffect } from "react";
-import layersData from "../jsons/layers.json";
-import { Vector as VectorSource } from "ol/source";
-import GeoJSON from "ol/format/GeoJSON";
+import { toast } from "react-toastify";
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOptions,
+  ComboboxOption,
+} from "@headlessui/react";
+import {
+  MapPin,
+  Layers,
+  Satellite,
+  Cpu,
+  Calendar,
+  ChevronDown,
+  Check,
+  Loader2,
+} from "lucide-react";
+
+const LOCAL_API_BASE_URL = "https://cse.iitd.ernet.in/act4dws6/";
+
+const COMPUTE_OPTIONS = [
+  { value: "gee", label: "Google Earth Engine (GEE)" },
+  { value: "local", label: "Local" },
+];
+
+const GEE_MAP_TYPES = [
+  {
+    value: "map_1",
+    label: "Map 1: Tehsil level admin boundaries and MWS layer",
+    description: "Covers Admin boundaries and MWS",
+  },
+  {
+    value: "map_2",
+    label: "Map 2: Hydrology layer (Fortnight and Annual)",
+    description: "Covers hydrology (Fortnight and Annual) Layer",
+  },
+  {
+    value: "map_3",
+    label: "Map 3: NDVI, Drought, Stream Order, CLART and Site Suitability",
+    description:
+      "Covers NDVI Timeseries, Drought Causality, Stream Order, CLART and Site Suitability Layers",
+  },
+];
+
+const LOCAL_MAP_TYPES = [
+  {
+    value: "dynamic_layers",
+    label: "Dynamic Layers",
+    description: "Layers that are periodically recomputed (ex: NREGA, LULC, Change Detection etc).",
+  },
+  {
+    value: "static_layers",
+    label: "Static Layers",
+    description: "Layers that do not change over time (ex: Aquifer, Livestocks, Canal etc).",
+  },
+];
+
+const MAP_TYPES_BY_COMPUTE = {
+  gee: GEE_MAP_TYPES,
+  local: LOCAL_MAP_TYPES,
+};
+
+const FormSelect = ({
+  label,
+  icon: Icon,
+  options,
+  value,
+  onChange,
+  placeholder = "Select an option",
+  disabled = false,
+  emptyMessage = "No results found",
+}) => {
+  const [query, setQuery] = useState("");
+  const selected = options.find((option) => option.value === value) || null;
+
+  const filteredOptions =
+    query === ""
+      ? options
+      : options.filter((option) =>
+          option.label.toLowerCase().includes(query.toLowerCase())
+        );
+
+  const groups = [];
+  const groupIndex = new Map();
+  filteredOptions.forEach((option) => {
+    const key = option.group || "";
+    if (!groupIndex.has(key)) {
+      groupIndex.set(key, []);
+      groups.push([key, groupIndex.get(key)]);
+    }
+    groupIndex.get(key).push(option);
+  });
+
+  return (
+    <div>
+      <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+        {Icon && <Icon className="h-4 w-4 text-gray-400" />}
+        {label}
+      </label>
+      <Combobox
+        value={selected}
+        onChange={(option) => onChange(option ? option.value : "")}
+        onClose={() => setQuery("")}
+        disabled={disabled}
+        by="value"
+      >
+        <div className="relative">
+          <div className="group relative flex items-center rounded-lg border border-gray-300 bg-white shadow-sm transition-colors focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/40 hover:border-gray-400 has-[:disabled]:cursor-not-allowed has-[:disabled]:border-gray-200 has-[:disabled]:bg-gray-50 has-[:disabled]:hover:border-gray-200">
+            <ComboboxInput
+              className="w-full rounded-lg bg-transparent py-2.5 pl-3.5 pr-10 text-sm text-gray-900 outline-none placeholder:text-gray-400 disabled:cursor-not-allowed disabled:text-gray-400"
+              displayValue={(option) => option?.label ?? ""}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={placeholder}
+            />
+            <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <ChevronDown className="h-4 w-4 text-gray-400 group-has-[:disabled]:text-gray-300" />
+            </ComboboxButton>
+          </div>
+
+          <ComboboxOptions
+            transition
+            className="absolute z-20 mt-1.5 max-h-60 w-full overflow-auto rounded-lg border border-gray-100 bg-white py-1 shadow-lg ring-1 ring-black/5 transition duration-100 ease-in focus:outline-none data-[closed]:data-[leave]:opacity-0"
+          >
+            {filteredOptions.length === 0 ? (
+              <div className="px-3.5 py-2 text-sm text-gray-500">
+                {emptyMessage}
+              </div>
+            ) : (
+              groups.map(([group, groupOptions]) => (
+                <div key={group || "__ungrouped"}>
+                  {group && (
+                    <div className="px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                      {group}
+                    </div>
+                  )}
+                  {groupOptions.map((option) => (
+                    <ComboboxOption
+                      key={option.value}
+                      value={option}
+                      className="group/option relative cursor-pointer select-none py-2 pl-9 pr-3.5 text-sm text-gray-900 data-[focus]:bg-blue-50 data-[focus]:text-blue-900"
+                    >
+                      <span className="block truncate group-data-[selected]/option:font-semibold">
+                        {option.label}
+                      </span>
+                      <span className="absolute inset-y-0 left-3 hidden items-center text-blue-600 group-data-[selected]/option:flex">
+                        <Check className="h-4 w-4" />
+                      </span>
+                    </ComboboxOption>
+                  ))}
+                </div>
+              ))
+            )}
+          </ComboboxOptions>
+        </div>
+      </Combobox>
+    </div>
+  );
+};
+
+const FormInput = ({ label, icon: Icon, ...props }) => (
+  <div>
+    <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+      {Icon && <Icon className="h-4 w-4 text-gray-400" />}
+      {label}
+    </label>
+    <input
+      className="w-full rounded-lg border border-gray-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-sm transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40"
+      {...props}
+    />
+  </div>
+);
+
+const SectionHeading = ({ children }) => (
+  <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+    {children}
+  </h2>
+);
 
 const LayerMapJsonComponent = () => {
   const [state, setState] = useState({ id: "", name: "" });
@@ -10,11 +185,13 @@ const LayerMapJsonComponent = () => {
   const [statesList, setStatesList] = useState([]);
   const [districtsList, setDistrictsList] = useState([]);
   const [blocksList, setBlocksList] = useState([]);
+  const [compute, setCompute] = useState("");
   const [mapType, setMapType] = useState("");
   const [geeAccounts, setGeeAccounts] = useState([]);
   const [selectedGEEAccount, setSelectedGEEAccount] = useState("");
   const [startYear, setStartYear] = useState("");
   const [endYear, setEndYear] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchStates();
@@ -86,8 +263,7 @@ const LayerMapJsonComponent = () => {
     }
   };
 
-  const handleStateChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleStateChange = (selectedValue) => {
     if (!selectedValue) {
       setState({ id: "", name: "" });
       return;
@@ -95,13 +271,14 @@ const LayerMapJsonComponent = () => {
 
     const [state_id, state_name] = selectedValue.split("_");
     setState({ id: state_id, name: state_name });
+    setDistrict({ id: "", name: "" });
+    setBlock({ id: "", name: "" });
     setDistrictsList([]);
     setBlocksList([]);
     fetchDistricts(state_id);
   };
 
-  const handleDistrictChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleDistrictChange = (selectedValue) => {
     if (!selectedValue) {
       setDistrict({ id: "", name: "" });
       return;
@@ -109,12 +286,12 @@ const LayerMapJsonComponent = () => {
 
     const [district_census_code, district_name] = selectedValue.split("_");
     setDistrict({ id: district_census_code, name: district_name });
+    setBlock({ id: "", name: "" });
     setBlocksList([]);
     fetchBlocks(district_census_code);
   };
 
-  const handleBlockChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleBlockChange = (selectedValue) => {
     if (!selectedValue) {
       setBlock({ id: "", name: "" });
       return;
@@ -122,6 +299,11 @@ const LayerMapJsonComponent = () => {
 
     const [block_census_code, block_name] = selectedValue.split("_");
     setBlock({ id: block_census_code, name: block_name });
+  };
+
+  const handleComputeChange = (selectedValue) => {
+    setCompute(selectedValue);
+    setMapType("");
   };
 
   useEffect(() => {
@@ -149,25 +331,36 @@ const LayerMapJsonComponent = () => {
     fetchGEEAccounts();
   }, []);
 
-  const handleGEEAccountChange = (event) => {
-    setSelectedGEEAccount(event.target.value);
-  };
+  const yearFieldsRequired = Boolean(mapType) && !(compute === "gee" && mapType === "map_1");
 
   useEffect(() => {
-    if (mapType && mapType !== "map_1") {
+    if (yearFieldsRequired) {
       setStartYear(2017);
       setEndYear(2024);
     } else {
       setStartYear("");
       setEndYear("");
     }
-  }, [mapType]);
+  }, [yearFieldsRequired]);
+
+  const isFormValid = Boolean(
+    state.name && district.name && block.name && compute && mapType
+  );
 
   const handleGenerateJsonMapLayer = async () => {
     if (!state.name || !district.name || !block.name) {
-      alert("Please select a state, district, and block to generate Excel.");
+      toast.error("Please select a state, district, and block to generate the layer.");
       return;
     }
+    if (!compute) {
+      toast.error("Please select a compute option to generate the layer.");
+      return;
+    }
+    if (!mapType) {
+      toast.error("Please select a map type to generate the layer.");
+      return;
+    }
+
     const token = sessionStorage.getItem("accessToken");
 
     const payload = {
@@ -176,217 +369,217 @@ const LayerMapJsonComponent = () => {
       block: block.name,
       map: mapType,
       gee_account_id: selectedGEEAccount,
-      ...(mapType !== "map_1" && { start_year: startYear, end_year: endYear }),
+      ...(compute === "local" && { compute }),
+      ...(yearFieldsRequired && { start_year: startYear, end_year: endYear }),
     };
 
+    const endpoint =
+      compute === "local"
+        ? `${LOCAL_API_BASE_URL}api/v1/generate_layer_in_order/`
+        : `${process.env.REACT_APP_BASEURL}api/v1/generate_layer_in_order/`;
+
+    setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}api/v1/generate_layer_in_order/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!response.ok) throw new Error("Failed to generate layers");
 
-      const data = await response.json();
-      alert("Layer generation started successfully!");
+      await response.json();
+      toast.success("Layer generation started successfully!");
     } catch (error) {
       console.error("Error:", error);
-      alert("Something went wrong while generating the layers.");
+      toast.error("Something went wrong while generating the layers.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const stateOptions = statesList.map((s) => ({
+    value: `${s.id}_${s.state_name}`,
+    label: s.state_name,
+  }));
+
+  const districtOptions = districtsList.map((d) => ({
+    value: `${d.id}_${d.district_name}`,
+    label: d.district_name,
+  }));
+
+  const blockOptions = blocksList.map((b) => ({
+    value: `${b.id}_${b.block_name}`,
+    label: b.block_name,
+  }));
+
+  const geeAccountOptions = Object.entries(geeAccounts).flatMap(
+    ([email, accounts]) =>
+      accounts.map((acc) => ({
+        value: String(acc.id),
+        label: acc.name,
+        group: email,
+      }))
+  );
+
+  const availableMapTypes = MAP_TYPES_BY_COMPUTE[compute] || [];
+
+  const mapTypeOptions = availableMapTypes.map((m) => ({
+    value: m.value,
+    label: m.label,
+  }));
+
+  const selectedMapDescription = availableMapTypes.find(
+    (m) => m.value === mapType
+  )?.description;
+
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-28">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold">Generate Layer Map Json</h1>{" "}
-      </div>
-      <form className="space-y-8">
-        <div>
-          <label className="text-lg font-semibold mb-2 block">State:</label>
-          <select
-            value={state.id && state.name ? `${state.id}_${state.name}` : ""}
-            onChange={handleStateChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select State</option>
-            {statesList.map((state) => (
-              <option
-                key={state.id}
-                value={`${state.id}_${state.state_name}`}
-              >
-                {state.state_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* District Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">District:</label>
-          <select
-            value={
-              district.id && district.name
-                ? `${district.id}_${district.name}`
-                : ""
-            }
-            onChange={handleDistrictChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select District</option>
-            {districtsList.map((district) => (
-              <option
-                key={`${district.id}_${district.district_name}`} // Ensure uniqueness
-                value={`${district.id}_${district.district_name}`}
-              >
-                {district.district_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Block Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">Block:</label>
-          <select
-            value={block.id && block.name ? `${block.id}_${block.name}` : ""}
-            onChange={handleBlockChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select Block</option>
-            {blocksList && blocksList.length > 0 ? (
-              blocksList.map((block) => (
-                <option
-                  key={`${block.id}_${block.block_name}`} // Ensure uniqueness
-                  value={`${block.id}_${block.block_name}`}
-                >
-                  {block.block_name}
-                </option>
-              ))
-            ) : (
-              <option value="">No blocks available</option>
-            )}
-          </select>
-        </div>
-
-        {/* GEE Account Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">
-            Select GEE Account:
-          </label>
-                  <select
-          value={selectedGEEAccount}
-          onChange={handleGEEAccountChange}
-          className="w-full px-4 py-3 border text-lg rounded-lg"
-        >
-          <option value="">Select GEE Account</option>
-
-          {geeAccounts &&
-            Object.entries(geeAccounts).map(([email, accounts]) => (
-              <optgroup key={email} label={email}>
-                {accounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-        </select>
-        </div>
-
-        {/* Map Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">Map Type:</label>
-          <select
-            value={mapType}
-            onChange={(e) => setMapType(e.target.value)}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select Map</option>
-            <option
-              value="map_1"
-              title="Covers Admin boundaries, NREGA, and MWS."
-            >
-              Map 1 - Tehsil-level Basic Layers
-            </option>
-            <option
-              value="map_2_1"
-              title="Covers hydrology(Fortnight and Annual)"
-            >
-              Map 2_1 - Hydrology(Fortnight and Annual)
-            </option>
-            <option
-              value="map_2_2"
-              title="Covers LULC with Vectorise LULC, Cropping Intensity, Drought, Drought Causality, Crop grid, Change detection and vectorise Change detection."
-            >
-              Map 2_2 - LULC & Cropping
-            </option>
-            <option
-              value="map_3"
-              title="Covers SOGE, Stream Order, Restoration, Aquifer vector,Natural Depression, Distance to nearest Drainage line, Catchment Area, Slope %, LCW conflict, Agroecological, Factory CSR, Green Credits, Mining. "
-            >
-              Map 3 - Restoration & SOGE
-            </option>
-            <option
-              value="map_4"
-              title="Drainage lines, CLART, Site Suitabilty, Terrin raster, Terrain cluster, LULC on slope cluster and plain cluster, Tree health ch raster and vector, Tree health ccd raster and vector, Tree health overall change raster and vector, SWB. "
-            >
-              Map 4 - Tree Health & Drainage
-            </option>
-          </select>
-        </div>
-
-        {/*  Year Fields */}
-        {mapType && mapType !== "map_1" && (
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <label className="text-lg font-semibold mb-2 block">
-                Start Year:
-              </label>
-              <input
-                type="number"
-                min="2000"
-                max="2100"
-                value={startYear || 2017}
-                onChange={(e) => setStartYear(e.target.value)}
-                placeholder="Enter start year"
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              />
-            </div>
-            <div>
-              <label className="text-lg font-semibold mb-2 block">
-                End Year:
-              </label>
-              <input
-                type="number"
-                min="2000"
-                max="2100"
-                value={endYear || 2024}
-                onChange={(e) => setEndYear(e.target.value)}
-                placeholder="Enter end year"
-                className="w-full px-4 py-3 border text-lg rounded-lg"
-              />
+    <div className="min-h-screen bg-gray-50 px-4 pt-16">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center py-10">
+        <div className="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-100 px-8 py-6">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                <Layers className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Generate Layer from JSON Map
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Select a location and map configuration to generate layers.
+                </p>
+              </div>
             </div>
           </div>
-        )}
 
-        {/* Submit Button */}
-        <div className="text-center">
-          <button
-            type="button"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            onClick={handleGenerateJsonMapLayer}
+          <form
+            className="space-y-8 px-8 py-6"
+            onSubmit={(e) => e.preventDefault()}
           >
-            Generate Layer
-          </button>
+            <section>
+              <SectionHeading>Location</SectionHeading>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FormSelect
+                  label="State"
+                  icon={MapPin}
+                  options={stateOptions}
+                  value={
+                    state.id && state.name ? `${state.id}_${state.name}` : ""
+                  }
+                  onChange={handleStateChange}
+                  placeholder="Select state"
+                />
+
+                <FormSelect
+                  label="District"
+                  icon={MapPin}
+                  options={districtOptions}
+                  value={
+                    district.id && district.name
+                      ? `${district.id}_${district.name}`
+                      : ""
+                  }
+                  onChange={handleDistrictChange}
+                  placeholder="Select district"
+                  disabled={!state.id}
+                />
+
+                <FormSelect
+                  label="Block"
+                  icon={MapPin}
+                  options={blockOptions}
+                  value={
+                    block.id && block.name ? `${block.id}_${block.name}` : ""
+                  }
+                  onChange={handleBlockChange}
+                  placeholder="Select block"
+                  disabled={!district.id}
+                  emptyMessage="No blocks available"
+                />
+              </div>
+            </section>
+
+            <section>
+              <SectionHeading>Map Configuration</SectionHeading>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FormSelect
+                  label="Compute"
+                  icon={Cpu}
+                  options={COMPUTE_OPTIONS}
+                  value={compute}
+                  onChange={handleComputeChange}
+                  placeholder="Select compute"
+                />
+
+                <FormSelect
+                  label="GEE Account"
+                  icon={Satellite}
+                  options={geeAccountOptions}
+                  value={selectedGEEAccount}
+                  onChange={setSelectedGEEAccount}
+                  placeholder="Select GEE account"
+                />
+
+                <FormSelect
+                  label="Map Type"
+                  icon={Layers}
+                  options={mapTypeOptions}
+                  value={mapType}
+                  onChange={setMapType}
+                  placeholder="Select map type"
+                  disabled={!compute}
+                />
+              </div>
+              {selectedMapDescription && (
+                <p className="mt-2 text-xs text-gray-500">
+                  {selectedMapDescription}
+                </p>
+              )}
+
+              {yearFieldsRequired && (
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <FormInput
+                    label="Start Year"
+                    icon={Calendar}
+                    type="number"
+                    min="2000"
+                    max="2100"
+                    value={startYear}
+                    onChange={(e) => setStartYear(e.target.value)}
+                    placeholder="Enter start year"
+                  />
+                  <FormInput
+                    label="End Year"
+                    icon={Calendar}
+                    type="number"
+                    min="2000"
+                    max="2100"
+                    value={endYear}
+                    onChange={(e) => setEndYear(e.target.value)}
+                    placeholder="Enter end year"
+                  />
+                </div>
+              )}
+            </section>
+
+            <div className="flex justify-end border-t border-gray-100 pt-6">
+              <button
+                type="submit"
+                disabled={loading || !isFormValid}
+                onClick={handleGenerateJsonMapLayer}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+              >
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {loading ? "Generating..." : "Generate Layer"}
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </div>
     </div>
   );
 };
