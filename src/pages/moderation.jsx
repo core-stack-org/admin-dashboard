@@ -935,6 +935,11 @@ const FormViewPage = ({
   const nextDprApprovedStatus = isDprApproved ? "SUBMITTED" : "APPROVED";
   const nextDprRejectedStatus = isDprRejected ? "SUBMITTED" : "REJECTED";
 
+
+  useEffect(() => {
+  console.log("🔥 CURRENT SUBMISSIONS:", submissions);
+}, [submissions]);
+
   const renderDprStatusCard = ({
     title,
     description,
@@ -1816,7 +1821,7 @@ const FormViewPage = ({
         }
         return item;
       });
-
+      console.log("🔥 ALL SETTLEMENT SUBMISSIONS:", data);
       setSubmissions(submissionsWithFlags);
 
       // pagination is only for card
@@ -2076,6 +2081,9 @@ const FormViewPage = ({
     }
 
     const cleanTemplate = stripSystemFields(formTemplate);
+    console.log("FORM TEMPLATE:", formTemplate);
+console.log("CLEAN TEMPLATE:", cleanTemplate);
+
     const transformedData = transformApiToSurvey(submission, formTemplate);
 
     setSelectedSubmission(submission);
@@ -2097,6 +2105,14 @@ const FormViewPage = ({
     }
 
     const cleanTemplate = stripSystemFields(formTemplate);
+
+    const gpsField = cleanTemplate.pages[0].elements.find(
+      (el) => el.name === "GPS_point"
+    );
+    if (gpsField) {
+      gpsField.readOnly = false;
+    }
+
     const transformedData = transformApiToSurvey(submission, formTemplate);
 
     setSelectedSubmission(submission);
