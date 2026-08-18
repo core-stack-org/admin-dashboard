@@ -36,6 +36,7 @@ import Overlay from "ol/Overlay";
 import "ol/ol.css";
 import { toast } from "react-toastify";
 import { getBlocks } from "./base_function";
+import { DemandDashboard } from "./demandStatus";
 
 import {
   BASEURL,
@@ -139,11 +140,17 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
+  useEffect(() => {
+  if (!selectedForm && forms.length > 0) {
+    setSelectedForm(forms[0].name);
+  }
+}, [forms, selectedForm]);
   const [blocksMap, setBlocksMap] = useState({});
   const [formCounts, setFormCounts] = useState({});
   const [formCountsLoading, setFormCountsLoading] = useState(false);
   const [filterReviewed, setFilterReviewed] = useState(false);
   const [filterApproved, setFilterApproved] = useState(false);
+  const [activeTab, setActiveTab] = useState("moderation");
 
   // Auto-clear selectedPlan if it no longer matches the filters
   useEffect(() => {
@@ -808,7 +815,7 @@ const SelectionPage = ({
             />
           </div>
 
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Form
             </label>
@@ -858,7 +865,7 @@ const SelectionPage = ({
               }}
               isClearable
             />
-          </div>
+          </div> */}
           <button
             onClick={handleLoadSubmissions}
             disabled={!selectedPlan || !selectedForm}
@@ -3526,6 +3533,79 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
   );
 };
 
+const ModerationTabsPage = ({
+  activeTab,
+  setActiveTab,
+  isSuperAdmin,
+  user,
+  selectedForm,
+  selectedPlan,
+  selectedPlanName,
+  selectedProject,
+  onFormChange,
+  onBack,
+}) => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
+
+      {/* Tabs */}
+      <div className="max-w-7xl mx-auto mt-6 mb-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-2 flex gap-2">
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("moderation")}
+            className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all ${
+              activeTab === "moderation"
+                ? "bg-purple-700 text-white shadow-md"
+                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+            }`}
+          >
+            Moderation
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("demand")}
+            className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all ${
+              activeTab === "demand"
+                ? "bg-purple-700 text-white shadow-md"
+                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+            }`}
+          >
+            Demand Status
+          </button>
+
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "moderation" ? (
+        <FormViewPage
+          isSuperAdmin={isSuperAdmin}
+          user={user}
+          selectedForm={selectedForm}
+          selectedPlan={selectedPlan}
+          selectedPlanName={selectedPlanName}
+          selectedProject={selectedProject}
+          onFormChange={onFormChange}
+          onBack={onBack}
+        />
+      ) : (
+        <DemandDashboard
+          isSuperAdmin={isSuperAdmin}
+          selectedProject={selectedProject}
+          selectedPlan={selectedPlan}
+          planDetails={{
+            plan_id: selectedPlan,
+            plan: selectedPlanName,
+          }}
+          onBack={onBack}
+        />
+      )}
+    </div>
+  );
+};
 // Main Component
 const Moderation = () => {
   const [currentPage, setCurrentPage] = useState("selection");
@@ -3534,6 +3614,7 @@ const Moderation = () => {
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
+  const [activeTab, setActiveTab] = useState("moderation");
   const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
     try {
       const sessionUser = JSON.parse(
@@ -3569,6 +3650,7 @@ const Moderation = () => {
     setSelectedPlan("");
     setSelectedForm("");
     setSelectedPlanName("");
+    setActiveTab("moderation");
     setCurrentPage("selection");
   }, [userId]);
 
@@ -3577,6 +3659,7 @@ const Moderation = () => {
     setSelectedPlan(plan);
     setSelectedForm(form);
     setSelectedPlanName(planName);
+    setActiveTab("moderation");
     setCurrentPage("forms");
   };
 
@@ -3588,31 +3671,33 @@ const Moderation = () => {
     setSelectedForm(form);
   };
 
-  return currentPage === "selection" ? (
-    <SelectionPage
-      isSuperAdmin={isSuperAdmin}
-      onLoadSubmissions={handleLoadSubmissions}
-      selectedOrg={selectedOrg}
-      setSelectedOrg={setSelectedOrg}
-      selectedProject={selectedProject}
-      setSelectedProject={setSelectedProject}
-      initialProject={selectedProject}
-      initialPlan={selectedPlan}
-      initialForm={selectedForm}
-      initialOrg={selectedOrg}
-    />
-  ) : (
-    <FormViewPage
-      isSuperAdmin={isSuperAdmin}
-      user={currentUser}
-      selectedForm={selectedForm}
-      selectedPlan={selectedPlan}
-      selectedPlanName={selectedPlanName}
-      selectedProject={selectedProject}
-      onFormChange={handleFormChange}
-      onBack={handleBack}
-    />
-  );
+return currentPage === "selection" ? (
+  <SelectionPage
+    isSuperAdmin={isSuperAdmin}
+    onLoadSubmissions={handleLoadSubmissions}
+    selectedOrg={selectedOrg}
+    setSelectedOrg={setSelectedOrg}
+    selectedProject={selectedProject}
+    setSelectedProject={setSelectedProject}
+    initialProject={selectedProject}
+    initialPlan={selectedPlan}
+    initialForm={selectedForm}
+    initialOrg={selectedOrg}
+  />
+) : (
+  <ModerationTabsPage
+    activeTab={activeTab}
+    setActiveTab={setActiveTab}
+    isSuperAdmin={isSuperAdmin}
+    user={currentUser}
+    selectedForm={selectedForm}
+    selectedPlan={selectedPlan}
+    selectedPlanName={selectedPlanName}
+    selectedProject={selectedProject}
+    onFormChange={handleFormChange}
+    onBack={handleBack}
+  />
+);
 };
 
 export default Moderation;

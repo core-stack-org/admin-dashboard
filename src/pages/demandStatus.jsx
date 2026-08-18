@@ -864,7 +864,7 @@ const DemandTable = ({
 };
 
 // Main Dashboard View Component
-const DemandDashboard = ({
+export const DemandDashboard = ({
   isSuperAdmin,
   selectedProject,
   selectedPlan,
