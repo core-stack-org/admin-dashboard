@@ -102,7 +102,7 @@ function AppLayout({ currentUser, setCurrentUser }) {
                 />
                 <Route
                   path="/generateLayerJsonMap"
-                  element={<LayerMapJsonComponent />}
+                  element={<LayerMapJsonComponent currentUser={currentUser} />}
                 />
                 <Route path="/layerStatus" element={<LayerStatusComponent />} />
                 <Route
