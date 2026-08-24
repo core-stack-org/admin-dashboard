@@ -36,6 +36,7 @@ import Overlay from "ol/Overlay";
 import "ol/ol.css";
 import { toast } from "react-toastify";
 import { getBlocks } from "./base_function";
+import { DemandDashboard } from "./demandStatus";
 
 import {
   BASEURL,
@@ -139,11 +140,17 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
+  useEffect(() => {
+  if (!selectedForm && forms.length > 0) {
+    setSelectedForm(forms[0].name);
+  }
+}, [forms, selectedForm]);
   const [blocksMap, setBlocksMap] = useState({});
   const [formCounts, setFormCounts] = useState({});
   const [formCountsLoading, setFormCountsLoading] = useState(false);
   const [filterReviewed, setFilterReviewed] = useState(false);
   const [filterApproved, setFilterApproved] = useState(false);
+  const [activeTab, setActiveTab] = useState("moderation");
 
   // Auto-clear selectedPlan if it no longer matches the filters
   useEffect(() => {
@@ -179,7 +186,7 @@ const SelectionPage = ({
             }}
             className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
               filterReviewed
-                ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                ? "bg-purple-600 border-purple-600 text-white shadow-sm"
                 : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
             }`}
           >
@@ -194,7 +201,7 @@ const SelectionPage = ({
             }}
             className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
               filterApproved
-                ? "bg-indigo-600 border-indigo-600 text-white shadow-sm"
+                ? "bg-purple-600 border-purple-600 text-white shadow-sm"
                 : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
             }`}
           >
@@ -514,7 +521,7 @@ const SelectionPage = ({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-100 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
           <h1 className="text-5xl text-purple-900 mb-3 tracking-tight mt-10">
@@ -808,7 +815,7 @@ const SelectionPage = ({
             />
           </div>
 
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
               Select Form
             </label>
@@ -858,11 +865,11 @@ const SelectionPage = ({
               }}
               isClearable
             />
-          </div>
+          </div> */}
           <button
             onClick={handleLoadSubmissions}
             disabled={!selectedPlan || !selectedForm}
-            className="w-full bg-purple-700 text-white py-4 rounded-xl font-bold text-lg disabled:bg-purple-300 disabled:cursor-not-allowed hover:from-indigo-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full bg-purple-700 text-white py-4 rounded-xl font-bold text-lg disabled:bg-purple-300 disabled:cursor-not-allowed hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
             Submit
           </button>
@@ -953,10 +960,10 @@ const FormViewPage = ({
 
     return (
       <div
-        className={`rounded-2xl border p-4 transition-all ${
+        className={`min-h-[220px] rounded-2xl border p-4 transition-all ${
           isActive
-            ? "border-slate-300 bg-gradient-to-b from-white to-slate-100 shadow-sm ring-1 ring-slate-200"
-            : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-sm hover:border-slate-300 hover:to-slate-100"
+            ? "border-purple-300 bg-gradient-to-b from-white to-purple-100 shadow-sm ring-1 ring-purple-200"
+            : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-sm hover:border-purple-300 hover:to-purple-100"
         }`}
       >
         <div className="flex items-start justify-between gap-4">
@@ -964,13 +971,13 @@ const FormViewPage = ({
             <div className="mb-3 flex items-center gap-2">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  isActive ? "bg-slate-600" : "bg-slate-300"
+                  isActive ? "bg-purple-600" : "bg-slate-300"
                 }`}
               />
             </div>
             <p
               className={`text-base font-bold ${
-                isActive ? "text-slate-950" : "text-slate-700"
+                isActive ? "text-purple-950" : "text-slate-700"
               }`}
             >
               {title}
@@ -991,8 +998,8 @@ const FormViewPage = ({
               handleDprWorkflowUpdate("status", nextStatus, loadingKey)
             }
             disabled={disabled}
-            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-              isActive ? "bg-slate-600" : "bg-slate-200"
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-purple-300 focus:ring-offset-2 ${
+              isActive ? "bg-purple-600" : "bg-slate-200"
             } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
             aria-pressed={isActive}
             aria-label={ariaLabel}
@@ -1009,7 +1016,7 @@ const FormViewPage = ({
     );
   };
 
-  const renderReviewStatusCard = ({
+   const renderReviewStatusCard = ({
     title,
     description,
     isActive,
@@ -1019,44 +1026,24 @@ const FormViewPage = ({
   }) => {
     return (
       <div
-        className={`rounded-2xl border p-4 transition-all ${
+        className={`rounded-2xl border p-5 transition-all min-h-[220px] flex flex-col ${
           isActive
-            ? "border-slate-300 bg-gradient-to-b from-white to-slate-100 shadow-sm ring-1 ring-slate-200"
-            : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-sm hover:border-slate-300 hover:to-slate-100"
+            ? "border-purple-300 bg-gradient-to-b from-white to-purple-100 shadow-sm ring-1 ring-purple-200"
+            : "border-slate-200 bg-gradient-to-b from-white to-slate-50 shadow-sm hover:border-purple-300 hover:to-purple-100"
         }`}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="mb-3 flex items-center gap-2">
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  isActive ? "bg-slate-600" : "bg-slate-300"
-                }`}
-              />
-            </div>
-            <p
-              className={`text-base font-bold ${
-                isActive ? "text-slate-950" : "text-slate-700"
-              }`}
-            >
-              {title}
-            </p>
-            {description && (
-              <p
-                className={`mt-1 text-sm leading-5 ${
-                  isActive ? "text-slate-600" : "text-slate-500"
-                }`}
-              >
-                {description}
-              </p>
-            )}
-          </div>
+        <div className="flex items-center justify-between gap-4">
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${
+              isActive ? "bg-purple-600" : "bg-slate-300"
+            }`}
+          />
           <button
             type="button"
             onClick={() => handlePlanStatusToggle(field, !isActive, label)}
             disabled={planReviewLoading}
-            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2 ${
-              isActive ? "bg-slate-600" : "bg-slate-200"
+            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-purple-300 focus:ring-offset-2 ${
+              isActive ? "bg-purple-600" : "bg-slate-200"
             } ${
               planReviewLoading
                 ? "cursor-not-allowed opacity-60"
@@ -1071,6 +1058,25 @@ const FormViewPage = ({
               }`}
             />
           </button>
+        </div>
+
+        <div className="flex-1 flex flex-col justify-center">
+          <p
+            className={`text-base font-bold ${
+              isActive ? "text-purple-950" : "text-slate-700"
+            }`}
+          >
+            {title}
+          </p>
+          {description && (
+            <p
+              className={`mt-1 text-sm leading-5 ${
+                isActive ? "text-slate-600" : "text-slate-500"
+              }`}
+            >
+              {description}
+            </p>
+          )}
         </div>
       </div>
     );
@@ -1244,10 +1250,24 @@ const FormViewPage = ({
     }
 
     // 2. Try _coords (latitude/longitude from API response item[3] — used by maintenance forms)
+      // 2. Try _coords (latitude/longitude from API response item[3] — used by maintenance forms)
     if (submission?._coords) {
       const { latitude, longitude } = submission._coords;
       if (latitude && longitude && !isNaN(latitude) && !isNaN(longitude)) {
         return [parseFloat(longitude), parseFloat(latitude)];
+      }
+    }
+
+    // 3. Fallback: try user_latlon string field (used by Cropping Pattern form)
+    // Format: "longitude,latitude" e.g. "85.0121695,20.7645265"
+    if (submission?.user_latlon && typeof submission.user_latlon === "string") {
+      const parts = submission.user_latlon.split(",").map((v) => v.trim());
+      if (parts.length === 2) {
+        const lon = parseFloat(parts[0]);
+        const lat = parseFloat(parts[1]);
+        if (!isNaN(lon) && !isNaN(lat)) {
+          return [lon, lat];
+        }
       }
     }
 
@@ -1929,7 +1949,7 @@ const FormViewPage = ({
         const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
         let popupContent =
           '<div class="bg-white rounded-lg shadow-xl p-4 min-w-[280px] max-w-[350px]">';
-        popupContent += `<div class="font-bold text-lg mb-3 text-indigo-600 border-b border-slate-200 pb-2">Submission Details</div>`;
+        popupContent += `<div class="font-bold text-lg mb-3 text-purple-600 border-b border-slate-200 pb-2">Submission Details</div>`;
 
         displayFields.slice(0, 3).forEach((field) => {
           const value = getFieldValue(submission, field.key);
@@ -1943,7 +1963,7 @@ const FormViewPage = ({
         }
 
         popupContent += `<div class="mt-4 pt-3 border-t border-slate-200 flex gap-2">`;
-        popupContent += `<button class="flex-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-indigo-700 transition-all" onclick="window.viewSubmissionFromMap('${getSubmissionUUID(submission)}')">View</button>`;
+        popupContent += `<button class="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-bold hover:bg-purple-700 transition-all" onclick="window.viewSubmissionFromMap('${getSubmissionUUID(submission)}')">View</button>`;
 
         // Add Edit and Delete buttons if user has permissions
         if (showActions) {
@@ -2019,7 +2039,7 @@ const FormViewPage = ({
           new Style({
             image: new Icon({
               src: `${iconSrc}#${submission.__id || Date.now()}`,
-              scale: 0.5,
+              scale: selectedForm === "Crop" ? 0.05 : 0.5,
               anchor: [0.5, 0.5],
               anchorXUnits: "fraction",
               anchorYUnits: "fraction",
@@ -2372,12 +2392,12 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white-50 to-purple-100 p-6 mt-5">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6 mt-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           {/* Top strip — gradient context bar */}
-          <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 px-6 py-4 flex items-center gap-4 flex-wrap">
+          <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-white-500 px-6 py-4 flex items-center gap-4 flex-wrap">
             {/* Back button */}
             <button
               onClick={onBack}
@@ -2391,7 +2411,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
             {/* Form */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-indigo-200 text-xs font-bold uppercase tracking-wider shrink-0">
+              <span className="text-purple-200 text-xs font-bold uppercase tracking-wider shrink-0">
                 Form
               </span>
               <div className="min-w-[260px] max-w-[420px] flex-1">
@@ -2434,12 +2454,12 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
                         {form && (
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                            {/* <span className="flex items-center gap-1 text-xs text-slate-500">
                               Total Submissions:{" "}
                               {formCountsLoading
                                 ? "Loading..."
                                 : (formCounts[form.name] ?? 0)}
-                            </span>
+                            </span> */}
                           </div>
                         )}
                       </div>
@@ -2453,11 +2473,11 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
             {/* Submission counts pushed to the right */}
             <div className="ml-auto flex items-center gap-4 shrink-0">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
                 {filteredSubmissions.filter((s) => !s._moderated).length}
               </span>
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
                 {filteredSubmissions.filter((s) => s._moderated).length}{" "}
                 Moderated
@@ -2466,7 +2486,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
           </div>
 
           {/* Plan details ribbon */}
-          <div className="px-8 py-3 bg-indigo-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap">
+          <div className="px-8 py-3 bg-purple-50/70 backdrop-blur-sm border-b border-purple-100/80 flex items-center gap-10 flex-wrap">
             {[
               {
                 label: "Plan ID",
@@ -2491,7 +2511,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
               },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">
+                <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
                   {label}
                 </span>
                 <span className="text-sm font-bold text-slate-800 truncate max-w-[220px]">
@@ -2509,7 +2529,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                 onClick={() => setViewMode("card")}
                 className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
                   viewMode === "card"
-                    ? "bg-indigo-600 text-white shadow-md"
+                    ? "bg-purple-600 text-white shadow-md"
                     : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                 }`}
               >
@@ -2520,7 +2540,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                 onClick={() => setViewMode("map")}
                 className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
                   viewMode === "map"
-                    ? "bg-indigo-600 text-white shadow-md"
+                    ? "bg-purple-600 text-white shadow-md"
                     : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
                 }`}
               >
@@ -2542,7 +2562,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                 placeholder="Search submissions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-sm shadow-sm"
+                className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all text-sm shadow-sm"
               />
             </div>
 
@@ -2555,7 +2575,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
               <select
                 value={moderationFilter}
                 onChange={(e) => setModerationFilter(e.target.value)}
-                className="pl-10 pr-10 py-2.5 border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 focus:outline-none transition-all text-sm font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
+                className="pl-10 pr-10 py-2.5 border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all text-sm font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
               >
                 <option value="all">All Submissions</option>
                 <option value="moderated">Moderated</option>
@@ -2646,7 +2666,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                       <button
                         onClick={handleGenerateDPR}
                         disabled={!dprEmail || dprLoading}
-                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:from-violet-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all shrink-0"
+                        className="flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold text-sm shadow-md hover:shadow-lg hover:from-violet-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none transition-all shrink-0"
                       >
                         {dprLoading ? (
                           <>
@@ -2682,7 +2702,15 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                       </div>
                     </div>
 
-                    <div className="grid gap-4 p-5 lg:grid-cols-2">
+                    <div className="grid items-stretch gap-4 p-5 lg:grid-cols-2">
+                        {renderReviewStatusCard({
+                        title: "DPR Reviewed",
+                        isActive: Boolean(planDetails?.is_dpr_reviewed),
+                        field: "is_dpr_reviewed",
+                        label: "Plan reviewed",
+                        ariaLabel: "DPR reviewed",
+                      })}
+
                       {renderReviewStatusCard({
                         title: "DPR Completed",
                         isActive: Boolean(planDetails?.is_completed),
@@ -2691,13 +2719,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                         ariaLabel: "DPR completed",
                       })}
 
-                      {renderReviewStatusCard({
-                        title: "DPR Reviewed",
-                        isActive: Boolean(planDetails?.is_dpr_reviewed),
-                        field: "is_dpr_reviewed",
-                        label: "Plan reviewed",
-                        ariaLabel: "DPR reviewed",
-                      })}
+                  
                     </div>
 
                     {planReviewNotification && (
@@ -2729,7 +2751,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                       </h4>
                     </div>
 
-                    <div className="grid gap-4 p-5 lg:grid-cols-3">
+                    <div className="grid gap-4 p-5 lg:grid-cols-2">
                       {renderDprStatusCard({
                         title: "DPR Submitted",
                         isActive: isDprSubmitted,
@@ -2740,7 +2762,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                           <div
                             className={`mt-5 rounded-xl border px-4 py-3 ${
                               isDprSubmitted
-                                ? "border-slate-300 bg-slate-50 text-slate-950"
+                                ? "border-purple-300 bg-slate-50 text-slate-950"
                                 : "border-slate-200 bg-slate-50 text-slate-900"
                             }`}
                           >
@@ -2771,20 +2793,63 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                       })}
 
                       {renderDprStatusCard({
+                          title: "DPR Approved",
+                          isActive: isDprApproved,
+                          loadingKey: "status-approved",
+                          nextStatus: nextDprApprovedStatus,
+                          ariaLabel: "DPR approved",
+                          children: (
+                            <div className="mt-5 rounded-xl border border-purple-300 bg-slate-50 px-4 py-3">
+                              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                                Demand Status
+                              </p>
+
+                              <div className="mt-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                                    <span className="text-sm font-semibold text-slate-700">
+                                      Demand Accepted
+                                    </span>
+                                  </div>
+
+                                  <span className="text-sm font-bold text-slate-900">
+                                    0
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
+                                    <span className="text-sm font-semibold text-slate-700">
+                                      Demand Rejected/Pending
+                                    </span>
+                                  </div>
+
+                                  <span className="text-sm font-bold text-slate-900">
+                                    0
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                        })}
+
+                      {/* {renderDprStatusCard({
                         title: "DPR Approved",
                         isActive: isDprApproved,
                         loadingKey: "status-approved",
                         nextStatus: nextDprApprovedStatus,
                         ariaLabel: "DPR approved",
-                      })}
+                      })} */}
 
-                      {renderDprStatusCard({
+                      {/* {renderDprStatusCard({
                         title: "DPR Rejected",
                         isActive: isDprRejected,
                         loadingKey: "status-rejected",
                         nextStatus: nextDprRejectedStatus,
                         ariaLabel: "DPR rejected",
-                      })}
+                      })} */}
                     </div>
                   </div>
                 </div>
@@ -2895,12 +2960,12 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-6 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden relative">
             {/* Header */}
-            <div className="bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-6 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-black">
                   {isEditing ? "Edit Submission" : "View Submission"}
                 </h2>
-                <p className="text-indigo-100 text-sm mt-1">
+                <p className="text-purple-100 text-sm mt-1">
                   Submitted:{" "}
                   {formatToIST(getSubmissionDate(selectedSubmission))}
                 </p>
@@ -2940,7 +3005,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
               <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex items-center justify-center rounded-2xl z-10">
                 {saveStatus === "saving" && (
                   <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
+                    <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4" />
                     <p className="text-lg font-bold text-slate-700">
                       Saving changes...
                     </p>
@@ -2999,7 +3064,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                         setSaveStatus("idle");
                         setSaveError("");
                       }}
-                      className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+                      className="px-6 py-2.5 bg-purple-600 text-white rounded-xl font-semibold text-sm hover:bg-purple-700 transition-all"
                     >
                       Go back
                     </button>
@@ -3144,7 +3209,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                       setDeleteStatus("confirm");
                       setDeleteError("");
                     }}
-                    className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-all"
+                    className="px-6 py-2.5 bg-purple-600 text-white rounded-xl font-semibold text-sm hover:bg-purple-700 transition-all"
                   >
                     Try again
                   </button>
@@ -3161,7 +3226,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
           /* Map View */
           <div className="bg-white rounded-2xl shadow-xl border-2 border-slate-200 overflow-hidden">
             {/* Map Stats Header */}
-            <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-4 border-b-2 border-slate-200 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 border-b-2 border-slate-200 flex items-center justify-between">
               <div className="flex gap-6">
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 rounded-full bg-amber-400 border-2 border-amber-600"></div>
@@ -3177,7 +3242,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-indigo-600">
+                  <span className="text-sm font-bold text-purple-600">
                     Total: {filteredSubmissions.length} submissions
                   </span>
                 </div>
@@ -3225,7 +3290,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
             <div className="mb-4 rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-purple-500">
                     Submissions
                   </p>
                 </div>
@@ -3425,7 +3490,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                         <button
                           onClick={() => handleViewSubmission(submission)}
                           disabled={formTemplateLoading}
-                          className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-all"
+                          className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-all"
                         >
                           <Eye size={13} />
                           View
@@ -3504,7 +3569,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                 onClick={() => fetchSubmissions(i + 1)}
                 className={`px-5 py-2.5 rounded-xl font-bold transition-all shadow-md ${
                   page === i + 1
-                    ? "bg-gradient-to-r from-indigo-600 to-blue-600 text-white"
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
                     : "bg-white border-2 border-slate-300 hover:bg-slate-50"
                 }`}
               >
@@ -3526,6 +3591,79 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
   );
 };
 
+const ModerationTabsPage = ({
+  activeTab,
+  setActiveTab,
+  isSuperAdmin,
+  user,
+  selectedForm,
+  selectedPlan,
+  selectedPlanName,
+  selectedProject,
+  onFormChange,
+  onBack,
+}) => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-100 p-6 mt-5">
+
+      {/* Tabs */}
+      <div className="max-w-7xl mx-auto mt-6 mb-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-2 flex gap-2">
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("moderation")}
+            className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all ${
+              activeTab === "moderation"
+                ? "bg-purple-700 text-white shadow-md"
+                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+            }`}
+          >
+            Moderation
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("demand")}
+            className={`flex-1 py-3 px-6 rounded-xl font-bold text-sm transition-all ${
+              activeTab === "demand"
+                ? "bg-purple-700 text-white shadow-md"
+                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+            }`}
+          >
+            Demand Status
+          </button>
+
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "moderation" ? (
+        <FormViewPage
+          isSuperAdmin={isSuperAdmin}
+          user={user}
+          selectedForm={selectedForm}
+          selectedPlan={selectedPlan}
+          selectedPlanName={selectedPlanName}
+          selectedProject={selectedProject}
+          onFormChange={onFormChange}
+          onBack={onBack}
+        />
+      ) : (
+        <DemandDashboard
+          isSuperAdmin={isSuperAdmin}
+          selectedProject={selectedProject}
+          selectedPlan={selectedPlan}
+          planDetails={{
+            plan_id: selectedPlan,
+            plan: selectedPlanName,
+          }}
+          onBack={onBack}
+        />
+      )}
+    </div>
+  );
+};
 // Main Component
 const Moderation = () => {
   const [currentPage, setCurrentPage] = useState("selection");
@@ -3534,6 +3672,7 @@ const Moderation = () => {
   const [selectedPlan, setSelectedPlan] = useState("");
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
+  const [activeTab, setActiveTab] = useState("moderation");
   const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
     try {
       const sessionUser = JSON.parse(
@@ -3569,6 +3708,7 @@ const Moderation = () => {
     setSelectedPlan("");
     setSelectedForm("");
     setSelectedPlanName("");
+    setActiveTab("moderation");
     setCurrentPage("selection");
   }, [userId]);
 
@@ -3577,6 +3717,7 @@ const Moderation = () => {
     setSelectedPlan(plan);
     setSelectedForm(form);
     setSelectedPlanName(planName);
+    setActiveTab("moderation");
     setCurrentPage("forms");
   };
 
@@ -3588,31 +3729,33 @@ const Moderation = () => {
     setSelectedForm(form);
   };
 
-  return currentPage === "selection" ? (
-    <SelectionPage
-      isSuperAdmin={isSuperAdmin}
-      onLoadSubmissions={handleLoadSubmissions}
-      selectedOrg={selectedOrg}
-      setSelectedOrg={setSelectedOrg}
-      selectedProject={selectedProject}
-      setSelectedProject={setSelectedProject}
-      initialProject={selectedProject}
-      initialPlan={selectedPlan}
-      initialForm={selectedForm}
-      initialOrg={selectedOrg}
-    />
-  ) : (
-    <FormViewPage
-      isSuperAdmin={isSuperAdmin}
-      user={currentUser}
-      selectedForm={selectedForm}
-      selectedPlan={selectedPlan}
-      selectedPlanName={selectedPlanName}
-      selectedProject={selectedProject}
-      onFormChange={handleFormChange}
-      onBack={handleBack}
-    />
-  );
+return currentPage === "selection" ? (
+  <SelectionPage
+    isSuperAdmin={isSuperAdmin}
+    onLoadSubmissions={handleLoadSubmissions}
+    selectedOrg={selectedOrg}
+    setSelectedOrg={setSelectedOrg}
+    selectedProject={selectedProject}
+    setSelectedProject={setSelectedProject}
+    initialProject={selectedProject}
+    initialPlan={selectedPlan}
+    initialForm={selectedForm}
+    initialOrg={selectedOrg}
+  />
+) : (
+  <ModerationTabsPage
+    activeTab={activeTab}
+    setActiveTab={setActiveTab}
+    isSuperAdmin={isSuperAdmin}
+    user={currentUser}
+    selectedForm={selectedForm}
+    selectedPlan={selectedPlan}
+    selectedPlanName={selectedPlanName}
+    selectedProject={selectedProject}
+    onFormChange={handleFormChange}
+    onBack={handleBack}
+  />
+);
 };
 
 export default Moderation;
