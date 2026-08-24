@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 const LOCAL_API_BASE_URL = "https://cse.iitd.ernet.in/act4dws6/";
+const LOCAL_AUTH_URL = "https://cse.iitd.ernet.in/act4dws6/api/v1/auth/login/";
 
 const COMPUTE_OPTIONS = [
   { value: "gee", label: "Google Earth Engine (GEE)" },
@@ -178,7 +179,7 @@ const SectionHeading = ({ children }) => (
   </h2>
 );
 
-const LayerMapJsonComponent = () => {
+const LayerMapJsonComponent = ({ currentUser }) => {
   const [state, setState] = useState({ id: "", name: "" });
   const [district, setDistrict] = useState({ id: "", name: "" });
   const [block, setBlock] = useState({ id: "", name: "" });
@@ -347,6 +348,26 @@ const LayerMapJsonComponent = () => {
     state.name && district.name && block.name && compute && mapType
   );
 
+const getLocalAccessToken = async (username, password) => {
+  const response = await fetch(LOCAL_AUTH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username,
+      password,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Local authentication failed");
+  }
+
+  const data = await response.json();
+
+  return data.access;
+};
   const handleGenerateJsonMapLayer = async () => {
     if (!state.name || !district.name || !block.name) {
       toast.error("Please select a state, district, and block to generate the layer.");
@@ -362,6 +383,15 @@ const LayerMapJsonComponent = () => {
     }
 
     const token = sessionStorage.getItem("accessToken");
+    const username = currentUser?.loginCredentials?.username;
+    const password = currentUser?.loginCredentials?.password;
+
+
+    let localToken = null;
+
+    if (compute === "local") {
+      localToken = await getLocalAccessToken(username, password);
+    }
 
     const payload = {
       state: state.name,
@@ -384,7 +414,7 @@ const LayerMapJsonComponent = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+  Authorization: `Bearer ${compute === "local" ? localToken : token}`,
         },
         body: JSON.stringify(payload),
       });

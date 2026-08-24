@@ -262,11 +262,11 @@ if (isIndividual) {
         label: "Moderation Dashboard",
         href: "/moderation",
       },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Demand Status",
-        href: "/demandStatus",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+      //   label: "Demand Status",
+      //   href: "/demandStatus",
+      // },
       {
         icon: <FontAwesomeIcon icon={faShieldAlt} size="lg" />,
         label: "Integration into Yuktdhara",
@@ -318,11 +318,11 @@ if (isIndividual) {
         label: "Moderate Plans",
         href: "/moderation",
       },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Demand Status",
-        href: "/demandStatus",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+      //   label: "Demand Status",
+      //   href: "/demandStatus",
+      // },
       {
         icon: <FontAwesomeIcon icon={faProjectDiagram} size="lg" />,
         label: "Integration into Yuktdhara",
@@ -359,11 +359,11 @@ if (isIndividual) {
         label: "Moderate Plans",
         href: "/moderation",
       },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Demand Status",
-        href: "/demandStatus",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+      //   label: "Demand Status",
+      //   href: "/demandStatus",
+      // },
       {
         icon: <FontAwesomeIcon icon={faLocationArrow} size="lg" />,
         label: "Request data layers",
@@ -409,11 +409,11 @@ if (isIndividual) {
         label: "Dashboard",
         href: "/dashboard",
       },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Demand Status",
-        href: "/demandStatus",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+      //   label: "Demand Status",
+      //   href: "/demandStatus",
+      // },
       {
         icon: <FontAwesomeIcon icon={faPlayCircleSolid} size="lg" />,
         label: "How to use",
