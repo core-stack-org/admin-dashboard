@@ -666,7 +666,7 @@ const DemandTable = ({
           {Icon && <Icon className="text-indigo-600" size={20} />}
           <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
         </div>
-        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+        <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
           {records.length} Records
         </span>
       </div>
@@ -1033,7 +1033,7 @@ export const DemandDashboard = ({
       <div className="max-w-7xl mx-auto mb-6 mt-8">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
           {/* Top strip — gradient context bar */}
-          <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 px-6 py-4 flex items-center gap-4 flex-wrap">
+          <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-white-500 px-6 py-4 flex items-center gap-4 flex-wrap">
             {/* Back button */}
             <button
               onClick={onBack}
@@ -1053,14 +1053,14 @@ export const DemandDashboard = ({
 
             {/* Demand Counts */}
             <div className="ml-auto flex items-center gap-4 shrink-0">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/90 bg-white/20 px-3 py-1.5 rounded-lg">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 bg-white/20 px-3 py-1.5 rounded-lg">
                 Total Records: {filteredDemands.length}
               </span>
             </div>
           </div>
 
           {/* Plan details ribbon */}
-          <div className="px-8 py-3 bg-indigo-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap">
+          <div className="px-8 py-3 bg-purple-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap text-purple-500">
             {[
               {
                 label: "Plan ID",
@@ -1084,7 +1084,7 @@ export const DemandDashboard = ({
               },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">
+                <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
                   {label}
                 </span>
                 <span className="text-sm font-bold text-slate-800 truncate max-w-[220px]">

@@ -2454,12 +2454,12 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
                         {form && (
                           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                            <span className="flex items-center gap-1 text-xs text-slate-500">
+                            {/* <span className="flex items-center gap-1 text-xs text-slate-500">
                               Total Submissions:{" "}
                               {formCountsLoading
                                 ? "Loading..."
                                 : (formCounts[form.name] ?? 0)}
-                            </span>
+                            </span> */}
                           </div>
                         )}
                       </div>
@@ -2473,11 +2473,11 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
             {/* Submission counts pushed to the right */}
             <div className="ml-auto flex items-center gap-4 shrink-0">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
                 {filteredSubmissions.filter((s) => !s._moderated).length}
               </span>
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/80">
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
                 {filteredSubmissions.filter((s) => s._moderated).length}{" "}
                 Moderated
