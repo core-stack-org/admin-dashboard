@@ -360,14 +360,22 @@ const getLocalAccessToken = async (username, password) => {
     }),
   });
 
-  if (!response.ok) {
-    throw new Error("Local authentication failed");
-  }
-
   const data = await response.json();
+
+  console.log("LOCAL AUTH STATUS:", response.status);
+  console.log("LOCAL AUTH RESPONSE:", data);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.detail ||
+      data?.message ||
+      "Local authentication failed"
+    );
+  }
 
   return data.access;
 };
+
   const handleGenerateJsonMapLayer = async () => {
     if (!state.name || !district.name || !block.name) {
       toast.error("Please select a state, district, and block to generate the layer.");
@@ -385,6 +393,10 @@ const getLocalAccessToken = async (username, password) => {
     const token = sessionStorage.getItem("accessToken");
     const username = currentUser?.loginCredentials?.username;
     const password = currentUser?.loginCredentials?.password;
+
+    console.log("CURRENT USER:", currentUser);
+console.log("USERNAME EXISTS:", !!username);
+console.log("PASSWORD EXISTS:", !!password);
 
 
     let localToken = null;
