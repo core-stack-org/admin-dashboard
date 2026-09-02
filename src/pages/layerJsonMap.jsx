@@ -362,9 +362,6 @@ const getLocalAccessToken = async (username, password) => {
 
   const data = await response.json();
 
-  console.log("LOCAL AUTH STATUS:", response.status);
-  console.log("LOCAL AUTH RESPONSE:", data);
-
   if (!response.ok) {
     throw new Error(
       data?.detail ||
@@ -394,9 +391,6 @@ const getLocalAccessToken = async (username, password) => {
     const username = currentUser?.loginCredentials?.username;
     const password = currentUser?.loginCredentials?.password;
 
-    console.log("CURRENT USER:", currentUser);
-console.log("USERNAME EXISTS:", !!username);
-console.log("PASSWORD EXISTS:", !!password);
 
 
     let localToken = null;
