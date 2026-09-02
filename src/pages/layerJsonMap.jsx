@@ -18,8 +18,8 @@ import {
   Loader2,
 } from "lucide-react";
 
-const LOCAL_API_BASE_URL = "https://cse.iitd.ernet.in/act4dws6/";
-const LOCAL_AUTH_URL = "https://cse.iitd.ernet.in/act4dws6/api/v1/auth/login/";
+const LOCAL_API_BASE_URL = "https://www.cse.iitd.ernet.in/act4dws6/";
+const LOCAL_AUTH_URL = "https://www.cse.iitd.ernet.in/act4dws6/api/v1/auth/login/";
 
 const COMPUTE_OPTIONS = [
   { value: "gee", label: "Google Earth Engine (GEE)" },
