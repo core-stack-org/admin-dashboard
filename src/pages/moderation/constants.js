@@ -369,7 +369,7 @@ export const shouldHideBeneficiaryName = (formName, submission) => {
 };
 
 const SYSTEM_FIELD_NAMES = new Set([
-  // "GPS_point",
+  "GPS_point",
   "block_name",
   "plan_id",
   "plan_name",

@@ -846,10 +846,7 @@ const DemandTable = ({
                         className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
                       >
                         <option value="PENDING">PENDING</option>
-                        <option value="SUBMITTED">SUBMITTED</option>
                         <option value="APPROVED">APPROVED</option>
-                        <option value="REVERTED">REVERTED</option>
-                        <option value="REJECTED">REJECTED</option>
                       </select>
                     </td>
                   </tr>
@@ -1028,37 +1025,25 @@ export const DemandDashboard = ({
   const lRecords = filteredDemands.filter(d => d.categoryType === 'livelihood');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6 mt-8">
+      <div className="max-w-7xl mx-auto mb-6">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          {/* Top strip — gradient context bar */}
-          <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-white-500 px-6 py-4 flex items-center gap-4 flex-wrap">
-            {/* Back button */}
+          <div className="relative px-6 py-3 flex items-center">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-white/90 hover:text-white font-semibold text-sm bg-white/15 hover:bg-white/25 px-4 py-2 rounded-lg transition-all shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold text-sm transition-all shrink-0"
             >
               <ChevronLeft size={16} />
               Back
             </button>
 
-            <div className="w-px h-6 bg-white/30 shrink-0" />
-
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-white font-extrabold text-lg tracking-tight">
-                All Demand Dashboard
-              </span>
-            </div>
-
-            {/* Demand Counts */}
-            <div className="ml-auto flex items-center gap-4 shrink-0">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 bg-white/20 px-3 py-1.5 rounded-lg">
-                Total Records: {filteredDemands.length}
-              </span>
-            </div>
+            <h2 className="absolute left-1/2 -translate-x-1/2 text-xl font-extrabold text-purple-500 tracking-tight whitespace-nowrap">
+              Natural Resource Management Demands
+            </h2>
           </div>
-
+         
+         
           {/* Plan details ribbon */}
           <div className="px-8 py-3 bg-purple-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap text-purple-500">
             {[

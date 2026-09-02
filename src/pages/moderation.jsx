@@ -140,6 +140,7 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
+
   useEffect(() => {
   if (!selectedForm && forms.length > 0) {
     setSelectedForm(forms[0].name);
@@ -151,6 +152,7 @@ const SelectionPage = ({
   const [filterReviewed, setFilterReviewed] = useState(false);
   const [filterApproved, setFilterApproved] = useState(false);
   const [activeTab, setActiveTab] = useState("moderation");
+  const [planStatusFilters, setPlanStatusFilters] = useState([]);
 
   // Auto-clear selectedPlan if it no longer matches the filters
   useEffect(() => {
@@ -164,6 +166,15 @@ const SelectionPage = ({
       }
     }
   }, [filterReviewed, filterApproved, plans, selectedPlan]);
+
+  const togglePlanStatusFilter = (status) => {
+  setPlanStatusFilters((prev) =>
+    prev.includes(status)
+      ? prev.filter((item) => item !== status)
+      : [...prev, status]
+  );
+};
+
   const CustomMenuList = (props) => {
     return (
       <div className="flex flex-col">
@@ -178,35 +189,52 @@ const SelectionPage = ({
             Filter:
           </span>
           <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setFilterReviewed(!filterReviewed);
-            }}
-            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
-              filterReviewed
-                ? "bg-purple-600 border-purple-600 text-white shadow-sm"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Reviewed
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setFilterApproved(!filterApproved);
-            }}
-            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
-              filterApproved
-                ? "bg-purple-600 border-purple-600 text-white shadow-sm"
-                : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Approved
-          </button>
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePlanStatusFilter("pending");
+  }}
+  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+    planStatusFilters.includes("pending")
+      ? "bg-purple-600 border-purple-600 text-white shadow-sm"
+      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+  }`}
+>
+  Pending Moderation
+</button>
+
+<button
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePlanStatusFilter("moderated");
+  }}
+  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+    planStatusFilters.includes("moderated")
+      ? "bg-purple-600 border-purple-600 text-white shadow-sm"
+      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+  }`}
+>
+  Moderated
+</button>
+
+<button
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    togglePlanStatusFilter("approved");
+  }}
+  className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all border ${
+    planStatusFilters.includes("approved")
+      ? "bg-purple-600 border-purple-600 text-white shadow-sm"
+      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
+  }`}
+>
+  Approved by GP
+</button>
         </div>
         <components.MenuList {...props} />
       </div>
@@ -362,26 +390,41 @@ const SelectionPage = ({
       .catch((err) => console.log("Forms Fetch Error", err));
   }, []);
 
-  useEffect(() => {
-    if (!initialProject) return;
+ useEffect(() => {
+  if (!initialProject) return;
 
+  const fetchPlans = async () => {
     setPlansLoading(true);
-    fetch(`${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`, {
-      headers: getHeaders(),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const rawPlans = data?.data || data?.plans || data;
-        setPlans(
-          formatPlansForDropdown(Array.isArray(rawPlans) ? rawPlans : []),
-        );
-      })
-      .catch((err) => {
-        console.error("Plan Fetch Error", err);
-        setPlans([]);
-      })
-      .finally(() => setPlansLoading(false));
-  }, [initialProject]);
+
+    try {
+      const res = await fetch(
+        `${BASEURL}api/v1/projects/${initialProject}/watershed/plans/`,
+        {
+          headers: getHeaders(),
+        }
+      );
+
+      const data = await res.json();
+
+      const rawPlans = data?.data || data?.plans || data;
+
+      const formattedPlans = formatPlansForDropdown(
+        Array.isArray(rawPlans) ? rawPlans : []
+      );
+
+      const workedPlans = await filterPlansWithActualWork(formattedPlans);
+
+      setPlans(workedPlans);
+    } catch (err) {
+      console.error("Plan Fetch Error", err);
+      setPlans([]);
+    } finally {
+      setPlansLoading(false);
+    }
+  };
+
+  fetchPlans();
+}, [initialProject]);
 
   useEffect(() => {
     if (!initialPlan || plans.length === 0) return;
@@ -439,32 +482,106 @@ const SelectionPage = ({
       is_dpr_approved: p.is_dpr_approved ?? false,
     }));
 
-  const handleProjectChange = (e) => {
-    const id = e.target.value;
+    const filterPlansWithActualWork = async (plans) => {
+  if (!plans.length) return [];
 
-    setSelectedProject(id);
-    setSelectedPlan("");
-    setPlans([]);
-
-    if (!id) return;
-
-    setPlansLoading(true);
-    fetch(`${BASEURL}api/v1/projects/${id}/watershed/plans/`, {
-      headers: getHeaders(),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        const rawPlans = data?.data || data?.plans || data;
-        setPlans(
-          formatPlansForDropdown(Array.isArray(rawPlans) ? rawPlans : []),
+  const workedPlans = await Promise.all(
+    plans.map(async (plan) => {
+      try {
+        const res = await fetch(
+          `${BASEURL}api/v1/dpr_data/${plan.plan_id}/summary/`,
+          {
+            headers: getHeaders(),
+          }
         );
-      })
-      .catch((err) => {
-        console.error("Plan Fetch Error", err);
-        setPlans([]);
-      })
-      .finally(() => setPlansLoading(false));
-  };
+
+        if (!res.ok) {
+          return null;
+        }
+
+        const data = await res.json();
+        const sections = data?.sections || {};
+
+        const hasWork = Object.values(sections).some((value) => {
+          if (typeof value === "number") {
+            return value > 0;
+          }
+
+          if (value && typeof value === "object") {
+            return Object.values(value).some(
+              (count) => typeof count === "number" && count > 0
+            );
+          }
+
+          return false;
+        });
+
+        return hasWork ? plan : null;
+      } catch (error) {
+        console.error(
+          `Failed to fetch summary for plan ${plan.plan_id}:`,
+          error
+        );
+        return null;
+      }
+    })
+  );
+
+  return workedPlans.filter(Boolean);
+};
+
+const getPlanModerationStatus = (plan) => {
+  // Highest priority
+  if (plan.is_dpr_approved) {
+    return "approved";
+  }
+
+  // Reviewed but not approved
+  if (plan.is_dpr_reviewed) {
+    return "moderated";
+  }
+
+  // Neither reviewed nor approved
+  return "pending";
+};
+
+const handleProjectChange = async (e) => {
+  const id = e.target.value;
+
+  setSelectedProject(id);
+  setSelectedPlan("");
+  setPlans([]);
+
+  if (!id) return;
+
+  setPlansLoading(true);
+
+  try {
+    const res = await fetch(
+      `${BASEURL}api/v1/projects/${id}/watershed/plans/`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+    const data = await res.json();
+
+    const rawPlans = data?.data || data?.plans || data;
+
+    const formattedPlans = formatPlansForDropdown(
+      Array.isArray(rawPlans) ? rawPlans : []
+    );
+
+    const workedPlans = await filterPlansWithActualWork(formattedPlans);
+
+    setPlans(workedPlans);
+  } catch (err) {
+    console.error("Plan Fetch Error", err);
+    setPlans([]);
+  } finally {
+    setPlansLoading(false);
+  }
+};
 
   const groupFormsByCategory = (forms) => {
     const groups = {};
@@ -503,9 +620,14 @@ const SelectionPage = ({
     const groups = {};
 
     const filteredPlans = plans.filter((plan) => {
-      if (filterReviewed && !plan.is_dpr_reviewed) return false;
-      if (filterApproved && !plan.is_dpr_approved) return false;
-      return true;
+      // No filter selected → show all worked plans
+      if (planStatusFilters.length === 0) {
+        return true;
+      }
+
+      const status = getPlanModerationStatus(plan);
+
+      return planStatusFilters.includes(status);
     });
 
     filteredPlans.forEach((plan) => {
@@ -715,7 +837,7 @@ const SelectionPage = ({
                       <div className="font-semibold text-slate-800 text-sm leading-snug">
                         {plan.plan}
                       </div>
-                      <div className="flex gap-1.5 shrink-0">
+                      {/* <div className="flex gap-1.5 shrink-0">
                         {plan.is_dpr_reviewed && (
                           <span className="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase tracking-wider">
                             Reviewed
@@ -723,10 +845,10 @@ const SelectionPage = ({
                         )}
                         {plan.is_dpr_approved && (
                           <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold uppercase tracking-wider">
-                            Approved
+                            Approvedaa
                           </span>
                         )}
-                      </div>
+                      </div> */}
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                       {plan.facilitator_name && (
@@ -941,7 +1063,107 @@ const FormViewPage = ({
   const nextDprSubmittedStatus = isDprSubmitted ? "REJECTED" : "SUBMITTED";
   const nextDprApprovedStatus = isDprApproved ? "SUBMITTED" : "APPROVED";
   const nextDprRejectedStatus = isDprRejected ? "SUBMITTED" : "REJECTED";
+  const [selectedStatusSection, setSelectedStatusSection] = useState(null);
+  const [demandStatusCounts, setDemandStatusCounts] = useState({
+  pending: 0,
+  submitted: 0,
+  approved: 0,
+});
 
+const [demandStatusLoading, setDemandStatusLoading] = useState(false);
+
+// Fetch demand status counts for the selected plan
+useEffect(() => {
+  // Demand counts should only be shown after DPR is submitted
+  if (!selectedPlan || !isDprSubmitted) {
+    setDemandStatusCounts({
+      pending: 0,
+      submitted: 0,
+      approved: 0,
+    });
+    return;
+  }
+
+  let isMounted = true;
+
+  const fetchDemandStatusCounts = async () => {
+    setDemandStatusLoading(true);
+
+    try {
+      const res = await fetch(
+          `https://uat.core-stack.org:444/api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+        // `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+        {
+          headers: getHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch demand status counts.");
+      }
+
+      const data = await res.json();
+      console.log("Demand status counts data:", data);
+
+      // API returns:
+      // results: [
+      //   {
+      //     plan_id: ...,
+      //     totals: {
+      //       PENDING: { demands: 4 },
+      //       SUBMITTED: { demands: 10 },
+      //       APPROVED: { demands: 2 }
+      //     }
+      //   }
+      // ]
+
+      const planData =
+        data?.results?.[0] ||
+        data?.data?.[0] ||
+        data;
+
+      const totals = planData?.totals || {};
+
+      if (isMounted) {
+        setDemandStatusCounts({
+          pending: totals?.PENDING?.demands ?? 0,
+          submitted: totals?.SUBMITTED?.demands ?? 0,
+          approved: totals?.APPROVED?.demands ?? 0,
+        });
+      }
+    } catch (error) {
+      console.error("Demand status fetch error:", error);
+
+      if (isMounted) {
+        setDemandStatusCounts({
+          pending: 0,
+          submitted: 0,
+          approved: 0,
+        });
+      }
+    } finally {
+      if (isMounted) {
+        setDemandStatusLoading(false);
+      }
+    }
+  };
+
+  fetchDemandStatusCounts();
+
+  return () => {
+    isMounted = false;
+  };
+}, [selectedPlan, isDprSubmitted]);
+
+  const handleStatusSectionClick = (section) => {
+    setSelectedStatusSection(section);
+  };
+
+  const handleStatusSectionDoubleClick = (section) => {
+    if (selectedStatusSection === section) {
+      setSelectedStatusSection(null);
+    }
+  };
 
   useEffect(() => {
   console.log("🔥 CURRENT SUBMISSIONS:", submissions);
@@ -1890,6 +2112,81 @@ const FormViewPage = ({
     return matchesSearch && matchesModeration;
   });
 
+// Detect duplicate submissions for any form
+const duplicateSubmissionIds = new Set();
+
+const duplicateGroups = {};
+
+submissions.forEach((submission) => {
+  const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
+
+  // Find a name/identifier field dynamically
+  const nameField = displayFields.find((field) => {
+    const key = String(field.key || "").toLowerCase();
+    const label = String(field.label || "").toLowerCase();
+
+    return (
+      key.includes("name") ||
+      label.includes("name")
+    );
+  });
+
+  if (!nameField) return;
+
+  const nameValue = getFieldValue(
+    submission,
+    nameField.key
+  );
+
+  const coords = getCoordinates(submission);
+
+  // Name + coordinates are required
+  if (
+    !nameValue ||
+    nameValue === "-" ||
+    !coords ||
+    coords.length !== 2
+  ) {
+    return;
+  }
+
+  const normalizedName = String(nameValue)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+
+  const lat = Number(coords[1]);
+  const lon = Number(coords[0]);
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+    return;
+  }
+
+  const duplicateKey = [
+    normalizedName,
+    lat,
+    lon,
+  ].join("|");
+
+  if (!duplicateGroups[duplicateKey]) {
+    duplicateGroups[duplicateKey] = [];
+  }
+
+  duplicateGroups[duplicateKey].push(submission);
+});
+
+// Mark all submissions that belong to a duplicate group
+Object.values(duplicateGroups).forEach((group) => {
+  if (group.length > 1) {
+    group.forEach((submission) => {
+      duplicateSubmissionIds.add(
+        getSubmissionUUID(submission)
+      );
+    });
+  }
+});
+
+
   // Initialize map
   useEffect(() => {
     if (viewMode !== "map" || !mapElement.current || mapRef.current) return;
@@ -2392,26 +2689,254 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white-50 to-purple-100 p-6 mt-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white-50 to-purple-100 p-2">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6 mt-8">
+      <div className="max-w-7xl mx-auto mb-6">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          {/* Top strip — gradient context bar */}
-          <div className="bg-gradient-to-r from-purple-600 via-purple-500 to-white-500 px-6 py-4 flex items-center gap-4 flex-wrap">
-            {/* Back button */}
+         {/* Plan details ribbon */}
+      <div className="px-6 py-3 bg-purple-50/70 backdrop-blur-sm border-b border-purple-100/80 flex items-center gap-8 flex-wrap">
+
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold text-sm transition-all shrink-0"
+        >
+          <ChevronLeft size={16} />
+          Back
+        </button>
+
+        {/* Divider */}
+        <div className="w-px h-8 bg-purple-200 shrink-0" />
+
+        {[
+          {
+            label: "Plan ID",
+            value: `#${planDetails?.id || planDetails?.plan_id || selectedPlan}`,
+          },
+          {
+            label: "Plan Name",
+            value: planDetails?.plan || selectedPlanName || "—",
+          },
+          {
+            label: "Facilitator",
+            value: planDetails?.facilitator_name || "—",
+          },
+          {
+            label: "Village",
+            value: planDetails?.village || "—",
+          },
+          {
+            label: "Gram Panchayat",
+            value:
+              planDetails?.gram_panchayat || planDetails?.gp_name || "—",
+          },
+        ].map(({ label, value }) => (
+          <div key={label} className="flex flex-col min-w-0">
+            <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
+              {label}
+            </span>
+
+            <span className="text-sm font-bold text-slate-800 truncate max-w-[220px]">
+              {value}
+            </span>
+          </div>
+        ))}
+                    <div className="ml-auto flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
+              <button
+                onClick={() => setViewMode("card")}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "card"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
+              >
+                <Grid size={15} />
+                Card
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "map"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
+              >
+                <MapIcon size={15} />
+                Map
+              </button>
+            </div>
+      </div>
+
+            {/* Status Progress */}
+<div className="mt-8 rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-sm p-2">
+  <div className="relative flex items-start justify-between">
+
+    {[
+      {
+        key: "moderated",
+        label: "Moderated",
+        completed: Boolean(planDetails?.is_dpr_reviewed),
+      },
+      {
+        key: "completed",
+        label: "Completed",
+        completed: Boolean(planDetails?.is_completed),
+      },
+      {
+        key: "submitted",
+        label: "Submitted",
+        completed: Boolean(isDprSubmitted),
+      },
+      {
+        key: "approved",
+        label: "Approved",
+        completed: Boolean(isDprApproved),
+      },
+    ].map((section, index, sections) => {
+      const isSelected = selectedStatusSection === section.key;
+      const isGreen = section.completed || isSelected;
+
+      return (
+        <React.Fragment key={section.key}>
+
+          {/* Step */}
+          <div className="relative z-10 flex flex-1 flex-col items-center">
+
             <button
-              onClick={onBack}
-              className="flex items-center gap-2 text-white/90 hover:text-white font-semibold text-sm bg-white/15 hover:bg-white/25 px-4 py-2 rounded-lg transition-all shrink-0"
+              type="button"
+              onClick={() => handleStatusSectionClick(section.key)}
+              onDoubleClick={() =>
+                handleStatusSectionDoubleClick(section.key)
+              }
+              className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+                isGreen
+                  ? "border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-100"
+                  : "border-slate-300 bg-slate-50 text-slate-500 hover:border-slate-400 hover:bg-slate-100"
+              }`}
             >
-              <ChevronLeft size={16} />
-              Back
+              {section.completed ? (
+                <span className="text-lg font-bold">✓</span>
+              ) : (
+                <span className="text-sm font-semibold">
+                  {index + 1}
+                </span>
+              )}
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleStatusSectionClick(section.key)}
+              onDoubleClick={() =>
+                handleStatusSectionDoubleClick(section.key)
+              }
+              className={`mt-3 text-sm font-semibold transition-colors ${
+                isGreen
+                  ? "text-emerald-600"
+                  : "text-slate-700"
+              }`}
+            >
+              {section.label}
+            </button>
+          </div>
+
+          {/* Connector */}
+          {index < sections.length - 1 && (
+            <div
+              className={`mt-6 h-0.5 flex-1 transition-colors duration-300 ${
+                sections[index + 1].completed
+                  ? "bg-emerald-500"
+                  : "bg-slate-300"
+              }`}
+            />
+          )}
+        </React.Fragment>
+      );
+    })}
+  </div>
+</div>
+
+{/* Demand Status Summary */}
+{isDprSubmitted && (
+  <div className="mt-4 rounded-2xl border border-purple-200 bg-white px-5 py-4 shadow-sm">
+    <div className="flex items-center gap-4">
+
+      {/* Heading */}
+      <div className="flex items-center gap-2 min-w-[150px]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50">
+          <FileText size={17} className="text-purple-600" />
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
+            Demand Status
+          </p>
+          <p className="text-xs text-slate-400">
+            Demand count
+          </p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-10 w-px bg-slate-200" />
+
+      {/* Pending */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Pending Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-amber-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.pending}
+        </span>
+      </div>
+
+      {/* Submitted */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Submitted Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-blue-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.submitted}
+        </span>
+      </div>
+
+      {/* Approved */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Approved Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-emerald-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.approved}
+        </span>
+      </div>
+
+    </div>
+  </div>
+)}
+
+          {/* Top strip — gradient context bar */}
+          <div className="px-8 py-4 flex items-center gap-4 bg-white border-b border-slate-100">
+        
 
             <div className="w-px h-6 bg-white/30 shrink-0" />
 
             {/* Form */}
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-purple-200 text-xs font-bold uppercase tracking-wider shrink-0">
+            <div className="flex items-center gap-3 w-full">
+              <span className="text-purple-700 text-xs font-bold uppercase tracking-wider shrink-0">
                 Form
               </span>
               <div className="min-w-[260px] max-w-[420px] flex-1">
@@ -2469,91 +2994,10 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                   placeholder="Switch form..."
                 />
               </div>
-            </div>
-
-            {/* Submission counts pushed to the right */}
-            <div className="ml-auto flex items-center gap-4 shrink-0">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
-                {filteredSubmissions.filter((s) => !s._moderated).length}
-              </span>
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
-                {filteredSubmissions.filter((s) => s._moderated).length}{" "}
-                Moderated
-              </span>
-            </div>
-          </div>
-
-          {/* Plan details ribbon */}
-          <div className="px-8 py-3 bg-purple-50/70 backdrop-blur-sm border-b border-purple-100/80 flex items-center gap-10 flex-wrap">
-            {[
-              {
-                label: "Plan ID",
-                value: `#${planDetails?.id || planDetails?.plan_id || selectedPlan}`,
-              },
-              {
-                label: "Plan Name",
-                value: planDetails?.plan || selectedPlanName || "—",
-              },
-              {
-                label: "Facilitator",
-                value: planDetails?.facilitator_name || "—",
-              },
-              {
-                label: "Village",
-                value: planDetails?.village || "—",
-              },
-              {
-                label: "Gram Panchayat",
-                value:
-                  planDetails?.gram_panchayat || planDetails?.gp_name || "—",
-              },
-            ].map(({ label, value }) => (
-              <div key={label} className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
-                  {label}
-                </span>
-                <span className="text-sm font-bold text-slate-800 truncate max-w-[220px]">
-                  {value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom strip — controls bar */}
-          <div className="px-8 py-4 flex items-center gap-4 bg-white/60 backdrop-blur-md">
-            {/* Card / Map toggle */}
-            <div className="flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
-              <button
-                onClick={() => setViewMode("card")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
-                  viewMode === "card"
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                }`}
-              >
-                <Grid size={15} />
-                Card
-              </button>
-              <button
-                onClick={() => setViewMode("map")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
-                  viewMode === "map"
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                }`}
-              >
-                <MapIcon size={15} />
-                Map
-              </button>
-            </div>
-
-            <div className="w-px h-6 bg-slate-200/80 shrink-0" />
 
             {/* Search — expands to fill remaining space */}
-            <div className="relative flex-1">
-              <Search
+              <div className="relative flex-1 min-w-[350px] max-w-[700px]">
+                <Search
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                 size={15}
               />
@@ -2567,7 +3011,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
             </div>
 
             {/* Moderation filter — pinned to right */}
-            <div className="relative shrink-0">
+            <div className="relative shrink-0 ml-auto">
               <Filter
                 className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                 size={15}
@@ -2582,19 +3026,17 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                 <option value="not-moderated">Pending</option>
               </select>
             </div>
+            </div>
           </div>
 
           {/* Third row — DPR details */}
-          <div className="px-8 py-3 border-t border-slate-100/80 bg-white/40 backdrop-blur-md">
-            <div className="rounded-2xl border border-slate-200/80 bg-white/70 p-5 shadow-sm">
+         <div className="px-8 py-3 border-t border-slate-100/80 bg-white">
+             <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet-500">
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-violet-500">
                     DPR Details
                   </p>
-                </div>
-                <div className="rounded-xl bg-violet-50 p-3 text-violet-600">
-                  <FileText size={18} />
                 </div>
               </div>
 
@@ -2685,58 +3127,9 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                 </div>
 
                 <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-                  <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                    {planDetailsLoading && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-xl bg-white/70 backdrop-blur-[1px]">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                        <span className="text-sm font-medium text-slate-600">
-                          Updating…
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-5 py-4">
-                      <div>
-                        <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                          Review status
-                        </h4>
-                      </div>
-                    </div>
-
-                    <div className="grid items-stretch gap-4 p-5 lg:grid-cols-2">
-                        {renderReviewStatusCard({
-                        title: "DPR Reviewed",
-                        isActive: Boolean(planDetails?.is_dpr_reviewed),
-                        field: "is_dpr_reviewed",
-                        label: "Plan reviewed",
-                        ariaLabel: "DPR reviewed",
-                      })}
-
-                      {renderReviewStatusCard({
-                        title: "DPR Completed",
-                        isActive: Boolean(planDetails?.is_completed),
-                        field: "is_completed",
-                        label: "Plan completed",
-                        ariaLabel: "DPR completed",
-                      })}
-
                   
-                    </div>
 
-                    {planReviewNotification && (
-                      <div
-                        className={`mx-5 mb-5 flex items-center gap-2 rounded-lg border px-4 py-3 text-sm ${
-                          planReviewNotification.type === "success"
-                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                            : "border-red-200 bg-red-50 text-red-800"
-                        }`}
-                      >
-                        <CheckCircle2 size={16} className="shrink-0" />
-                        <span>{planReviewNotification.message}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                  {/* <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
                     {dprWorkflowStatusLoading && (
                       <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-xl bg-white/70 backdrop-blur-[1px]">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
@@ -2834,24 +3227,8 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                             </div>
                           ),
                         })}
-
-                      {/* {renderDprStatusCard({
-                        title: "DPR Approved",
-                        isActive: isDprApproved,
-                        loadingKey: "status-approved",
-                        nextStatus: nextDprApprovedStatus,
-                        ariaLabel: "DPR approved",
-                      })} */}
-
-                      {/* {renderDprStatusCard({
-                        title: "DPR Rejected",
-                        isActive: isDprRejected,
-                        loadingKey: "status-rejected",
-                        nextStatus: nextDprRejectedStatus,
-                        ariaLabel: "DPR rejected",
-                      })} */}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
 
                 {dprWorkflowMissing && (
@@ -3294,9 +3671,22 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                     Submissions
                   </p>
                 </div>
-                <div className="text-sm font-semibold text-slate-500">
+                {/* <div className="text-sm font-semibold text-slate-500 ml-auto">
                   {filteredSubmissions.length} total
+                </div> */}
+                      {/* Submission counts pushed to the right */}
+                <div className="ml-auto flex items-center gap-4 shrink-0">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+                    {filteredSubmissions.filter((s) => !s._moderated).length}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
+                    {filteredSubmissions.filter((s) => s._moderated).length}{" "}
+                    Moderated
+                  </span>
                 </div>
+                
               </div>
             </div>
             {filteredSubmissions.length === 0 ? (
@@ -3619,7 +4009,7 @@ const ModerationTabsPage = ({
                 : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
             }`}
           >
-            Moderation
+            Moderate DPRs
           </button>
 
           <button
@@ -3631,7 +4021,7 @@ const ModerationTabsPage = ({
                 : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
             }`}
           >
-            Demand Status
+            Update Demand status post GP approval
           </button>
 
         </div>
@@ -3673,6 +4063,7 @@ const Moderation = () => {
   const [selectedForm, setSelectedForm] = useState("");
   const [selectedPlanName, setSelectedPlanName] = useState("");
   const [activeTab, setActiveTab] = useState("moderation");
+  
   const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
     try {
       const sessionUser = JSON.parse(
