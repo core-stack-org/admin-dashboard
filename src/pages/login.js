@@ -64,7 +64,13 @@ const LoginPage = ({ setCurrentUser }) => {
       const data = await response.json();
       sessionStorage.setItem("accessToken", data.access);
       sessionStorage.setItem("refreshToken", data.refresh);
-      setCurrentUser(data);
+        setCurrentUser({
+          ...data,
+          loginCredentials: {
+            username: formData.username,
+            password: formData.password,
+          },
+        });
       toast.success("Login successful!");
 
       setTimeout(() => {
