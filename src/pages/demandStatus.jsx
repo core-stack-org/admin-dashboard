@@ -720,7 +720,7 @@ const DemandTable = ({
               </tr>
             ) : (
               records.map((record, index) => {
-                const status = record.status || "PENDING";
+                const status = record.status || "GENERATED";
                 const { badgeClass, dotClass } = getStatusConfig(status);
 
                 const getRecordTitle = () => {
@@ -834,7 +834,7 @@ const DemandTable = ({
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ${badgeClass}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
-                        {status.toUpperCase()}
+                          {status.toUpperCase() === "PENDING" ? "GENERATED" : status.toUpperCase()}
                       </span>
                     </td>
 
@@ -845,7 +845,7 @@ const DemandTable = ({
                         onChange={(e) => handleStatusChange(record, e.target.value)}
                         className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
                       >
-                        <option value="PENDING">PENDING</option>
+                        <option value="PENDING">SUBMITTED</option>
                         <option value="APPROVED">APPROVED</option>
                       </select>
                     </td>
@@ -871,6 +871,82 @@ export const DemandDashboard = ({
   const [demands, setDemands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [demandStatusCounts, setDemandStatusCounts] = useState({
+  pending: 0,
+  submitted: 0,
+  approved: 0,
+});
+
+const [demandStatusLoading, setDemandStatusLoading] = useState(false);
+
+useEffect(() => {
+  if (!selectedPlan) {
+    setDemandStatusCounts({
+      pending: 0,
+      submitted: 0,
+      approved: 0,
+    });
+    return;
+  }
+
+  let isMounted = true;
+
+  const fetchDemandStatusCounts = async () => {
+    setDemandStatusLoading(true);
+
+    try {
+      const res = await fetch(
+        `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+        {
+          headers: getHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch demand status counts.");
+      }
+
+      const data = await res.json();
+
+      console.log("Demand status counts data:", data);
+
+      const planData =
+        data?.results?.[0] ||
+        data?.data?.[0] ||
+        data;
+
+      const totals = planData?.totals || {};
+
+      if (isMounted) {
+        setDemandStatusCounts({
+          pending: totals?.PENDING?.demands ?? 0,
+          submitted: totals?.SUBMITTED?.demands ?? 0,
+          approved: totals?.APPROVED?.demands ?? 0,
+        });
+      }
+    } catch (error) {
+      console.error("Demand status fetch error:", error);
+
+      if (isMounted) {
+        setDemandStatusCounts({
+          pending: 0,
+          submitted: 0,
+          approved: 0,
+        });
+      }
+    } finally {
+      if (isMounted) {
+        setDemandStatusLoading(false);
+      }
+    }
+  };
+
+  fetchDemandStatusCounts();
+
+  return () => {
+    isMounted = false;
+  };
+}, [selectedPlan]);
 
   const fetchDemands = async () => {
     if (!selectedPlan) return;
@@ -898,6 +974,10 @@ export const DemandDashboard = ({
         nRes.json(),
         lRes.json()
       ]);
+
+      console.log("MAINTENANCE API:", mData);
+console.log("NRM WORKS API:", nData);
+console.log("LIVELIHOOD API:", lData);
 
       const mList = (mData.results || mData.data || []).map(item => ({
         ...item,
@@ -1078,6 +1158,79 @@ export const DemandDashboard = ({
               </div>
             ))}
           </div>
+
+            {/* Demand Status Summary */}
+{selectedPlan && (
+  <div className="mt-2 rounded-2xl border border-purple-200 bg-white px-5 py-4 shadow-sm m-2">
+    <div className="flex items-center gap-4">
+
+      {/* Heading */}
+      <div className="flex items-center gap-2 min-w-[150px]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50">
+          <FileText size={17} className="text-purple-600" />
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
+            Demand Status
+          </p>
+
+          <p className="text-xs text-slate-400">
+            Demand count
+          </p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-10 w-px bg-slate-200" />
+      {/* Pending */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Total Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-amber-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.pending}
+        </span>
+      </div>
+         {/* Submitted */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Submitted Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-blue-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.submitted}
+        </span>
+      </div>
+
+
+         {/* Approved */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Approved Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-emerald-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.approved}
+        </span>
+      </div>
+
+    </div>
+  </div>
+)}
 
           {/* Controls bar */}
           <div className="px-8 py-4 flex items-center gap-4 bg-white/60 backdrop-blur-md">

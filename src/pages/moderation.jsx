@@ -140,6 +140,7 @@ const SelectionPage = ({
   const [organizations, setOrganizations] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedForm, setSelectedForm] = useState(initialForm);
+  const actualWorkPlansCache = useRef({});
 
   useEffect(() => {
   if (!selectedForm && forms.length > 0) {
@@ -153,6 +154,8 @@ const SelectionPage = ({
   const [filterApproved, setFilterApproved] = useState(false);
   const [activeTab, setActiveTab] = useState("moderation");
   const [planStatusFilters, setPlanStatusFilters] = useState([]);
+    const [planSubmissionCounts, setPlanSubmissionCounts] = useState({});
+  const [planSubmissionCountsLoading, setPlanSubmissionCountsLoading] = useState(false);
 
   // Auto-clear selectedPlan if it no longer matches the filters
   useEffect(() => {
@@ -409,12 +412,10 @@ const SelectionPage = ({
       const rawPlans = data?.data || data?.plans || data;
 
       const formattedPlans = formatPlansForDropdown(
-        Array.isArray(rawPlans) ? rawPlans : []
-      );
+      Array.isArray(rawPlans) ? rawPlans : []
+    );
 
-      const workedPlans = await filterPlansWithActualWork(formattedPlans);
-
-      setPlans(workedPlans);
+    setPlans(formattedPlans);
     } catch (err) {
       console.error("Plan Fetch Error", err);
       setPlans([]);
@@ -467,6 +468,7 @@ const SelectionPage = ({
     fetchAllBlocks();
   }, [plans]);
 
+
   const formatPlansForDropdown = (rawPlans = []) =>
     rawPlans.map((p) => ({
       plan_id: p.id || p.plan_id,
@@ -478,13 +480,21 @@ const SelectionPage = ({
       tehsil_soi: p.tehsil_soi,
       district_soi: p.district_soi,
       is_completed: p.is_completed ?? false,
-      is_dpr_reviewed: p.is_dpr_reviewed ?? false,
-      is_dpr_approved: p.is_dpr_approved ?? false,
+      is_dpr_reviewed: Boolean(p.is_dpr_reviewed),
+      is_dpr_approved: Boolean(p.is_dpr_approved),
+      // is_dpr_reviewed: p.is_dpr_reviewed ?? false,
+      // is_dpr_approved: p.is_dpr_approved ?? false,
     }));
 
     const filterPlansWithActualWork = async (plans) => {
   if (!plans.length) return [];
+      const projectKey = selectedProject || initialProject;
 
+if (actualWorkPlansCache.current[projectKey]) {
+  return plans.filter((plan) =>
+    actualWorkPlansCache.current[projectKey].includes(plan.plan_id)
+  );
+}
   const workedPlans = await Promise.all(
     plans.map(async (plan) => {
       try {
@@ -527,8 +537,13 @@ const SelectionPage = ({
     })
   );
 
-  return workedPlans.filter(Boolean);
-};
+const filteredPlans = workedPlans.filter(Boolean);
+
+actualWorkPlansCache.current[projectKey] = filteredPlans.map(
+  (plan) => plan.plan_id
+);
+
+return filteredPlans;};
 
 const getPlanModerationStatus = (plan) => {
   // Highest priority
@@ -568,13 +583,13 @@ const handleProjectChange = async (e) => {
 
     const rawPlans = data?.data || data?.plans || data;
 
-    const formattedPlans = formatPlansForDropdown(
-      Array.isArray(rawPlans) ? rawPlans : []
-    );
+  const formattedPlans = formatPlansForDropdown(
+  Array.isArray(rawPlans) ? rawPlans : []
+);
 
-    const workedPlans = await filterPlansWithActualWork(formattedPlans);
+const workedPlans = await filterPlansWithActualWork(formattedPlans);
 
-    setPlans(workedPlans);
+setPlans(workedPlans);
   } catch (err) {
     console.error("Plan Fetch Error", err);
     setPlans([]);
@@ -850,6 +865,7 @@ const handleProjectChange = async (e) => {
                         )}
                       </div> */}
                     </div>
+                 
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
                       {plan.facilitator_name && (
                         <span className="flex items-center gap-1 text-xs text-slate-500">
@@ -1044,10 +1060,6 @@ const FormViewPage = ({
   const vectorLayerRef = useRef(null);
   const popupRef = useRef(null);
   const overlayRef = useRef(null);
-  const groups = Array.isArray(user?.groups) ? user.groups : [];
-  const isAdmin = groups.some((g) => g.name === "Administrator");
-  const isModerator = groups.some((g) => g.name === "Moderator");
-  const showActions = isAdmin || isModerator || isSuperAdmin;
   const [validationResults, setValidationResults] = useState({});
   const [validationLoading, setValidationLoading] = useState({});
   const [saveStatus, setSaveStatus] = useState("idle");
@@ -1071,6 +1083,28 @@ const FormViewPage = ({
 });
 
 const [demandStatusLoading, setDemandStatusLoading] = useState(false);
+
+const groups = Array.isArray(user?.groups) ? user.groups : [];
+
+const isAdmin = groups.some(
+  (g) => g.name?.toLowerCase() === "administrator"
+);
+
+const isModerator = groups.some(
+  (g) => g.name?.toLowerCase() === "moderator"
+);
+
+// Check the actual role/group names used by your application.
+const isProjectManager =
+  groups.some(
+    (g) => g.name?.toLowerCase() === "project manager"
+  ) ||
+  user?.role?.toLowerCase() === "project manager";
+
+const canEditGPS =
+  Boolean(isSuperAdmin) || isAdmin || isProjectManager;
+
+const showActions = isAdmin || isModerator || isSuperAdmin;
 
 // Fetch demand status counts for the selected plan
 useEffect(() => {
@@ -1164,10 +1198,6 @@ useEffect(() => {
       setSelectedStatusSection(null);
     }
   };
-
-  useEffect(() => {
-  console.log("🔥 CURRENT SUBMISSIONS:", submissions);
-}, [submissions]);
 
   const renderDprStatusCard = ({
     title,
@@ -1751,116 +1781,481 @@ useEffect(() => {
     return capitalSplit.map((t) => fieldChoices[t.toLowerCase().trim()] ?? t);
   };
 
+//   const WELL_REPAIR_MAPPING = {
+//   "repairing cracks or damage to the surface seal around the well casing":
+//     "Repairing cracks or damage to well walls",
+
+//   "well rehabilitation like chemical treatment removing material that clogs the well":
+//     "De sitling",
+
+//   "repairing handpumps or other pumping devices":
+//     "Installing or repairing pumping mechanisms",
+
+//   "constructing soil bunds around the well to prevent surface runoff":
+//     "Deepening the well to enhance water availability",
+// };
+
+const WELL_REPAIR_MAPPING = {
+  "repairing cracks or damage to the surface seal around the well casing":
+    "Repairing cracks or damage to well walls",
+
+  "repairing handpumps or other pumping devices":
+    "Installing or repairing pumping mechanisms",
+};
+
+const resolveModifiedCheckboxValue = (rawString, fieldChoices) => {
+  if (!rawString || typeof rawString !== "string") {
+    return { values: [], otherText: "" };
+  }
+
+  const trimmed = rawString.trim();
+
+  if (!trimmed) {
+    return { values: [], otherText: "" };
+  }
+const normalizedText = trimmed.replace(/_/g, " ");
+
+const normalizedLower = normalizedText.toLowerCase();
+
+const mappingMatches = Object.keys(WELL_REPAIR_MAPPING)
+  .map((key) => ({
+    key,
+    index: normalizedLower.indexOf(key.toLowerCase()),
+  }))
+  .filter((item) => item.index !== -1)
+  .sort((a, b) => a.index - b.index);
+
+let modifiedValues = [];
+
+if (mappingMatches.length > 0) {
+  let currentIndex = 0;
+
+  mappingMatches.forEach(({ key, index }) => {
+    // Anything before a mapped option = unmatched / Other
+    const unmatchedBefore = normalizedText
+      .slice(currentIndex, index)
+      .trim();
+
+    if (unmatchedBefore) {
+      modifiedValues.push(unmatchedBefore);
+    }
+
+    // Add the mapped option
+    modifiedValues.push(key);
+
+    currentIndex = index + key.length;
+  });
+
+  // Anything after the last mapped option = unmatched / Other
+  const unmatchedAfter = normalizedText
+    .slice(currentIndex)
+    .trim();
+
+  if (unmatchedAfter) {
+    modifiedValues.push(unmatchedAfter);
+  }
+} else {
+  modifiedValues = [normalizedText];
+}
+
+  const matchedValues = [];
+  const unmatchedValues = [];
+
+modifiedValues.forEach((value) => {
+  const normalizedValue = value.toLowerCase().trim();
+
+const wellMappedValue = WELL_REPAIR_MAPPING[normalizedValue];
+
+const mappedValue =
+  wellMappedValue !== undefined
+    ? fieldChoices?.[wellMappedValue.toLowerCase().trim()]
+    : fieldChoices?.[normalizedValue];
+
+  if (mappedValue !== undefined) {
+    matchedValues.push(mappedValue);
+  } else {
+    unmatchedValues.push(value);
+  }
+});
+
+  return {
+    values:
+      unmatchedValues.length > 0
+        ? [...matchedValues, "other"]
+        : matchedValues,
+    otherText: unmatchedValues.join(", "),
+  };
+};
+
   const resolveRadioValue = (rawValue, fieldChoices) => {
     if (!rawValue || typeof rawValue !== "string") return rawValue;
     if (!fieldChoices) return rawValue;
     const resolved = fieldChoices[rawValue.toLowerCase().trim()];
     return resolved !== undefined ? resolved : rawValue;
   };
-  // Transform API data to SurveyJS format
-  const transformApiToSurvey = (submission, formSchema) => {
-    const fieldTypes = analyzeFormSchema(formSchema);
-    const choiceMap = buildChoiceMap(formSchema);
-    const transformedData = { ...submission };
 
-    const processObject = (obj, parentKey = "") => {
-      Object.keys(obj).forEach((key) => {
-        const value = obj[key];
-        const fullKey = parentKey ? `${parentKey}-${key}` : key;
+const MODIFIED_DATA_MAPPING = {
+  Well: {
+    demand_type: "select_one_owns",
+    select_one_activities: "Well_usage-repairs_type",
+    },
+  Water_structure: {
+    demand_type: "select_one_owns",
+  },
+    Waterbody: {
+    demand_type: "select_one_owns",
+  },
+  Groundwater: {},
+  Agri: {},
+  Livelihood: {},
+  Agrohorticulture: {},
+};
 
-        if (value && typeof value === "object" && !Array.isArray(value)) {
-          // GPS_point special handling
-          if (key === "GPS_point") {
-            const coordsObj =
-              value.point_mapsappearance || value.point_mapappearance;
-            if (coordsObj?.coordinates) {
-              const coords = coordsObj.coordinates;
-              transformedData["GPS_point"] = {
-                longitude: coords[0],
-                latitude: coords[1],
-              };
-              return;
-            }
-            if (value.latitude !== undefined && value.longitude !== undefined) {
-              transformedData["GPS_point"] = value;
-              return;
-            }
-          }
+// Transform API data to SurveyJS format
+const transformApiToSurvey = (submission, formSchema, formName) => {
+  const fieldTypes = analyzeFormSchema(formSchema);
+  const choiceMap = buildChoiceMap(formSchema);
+  const transformedData = { ...submission };
 
-          if (value.latitude !== undefined && value.longitude !== undefined) {
-            transformedData[fullKey] = value;
+  const processObject = (obj, parentKey = "") => {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+      const fullKey = parentKey ? `${parentKey}-${key}` : key;
+
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        // GPS_point special handling
+        if (key === "GPS_point") {
+          const coordsObj =
+            value.point_mapsappearance || value.point_mapappearance;
+
+          if (coordsObj?.coordinates) {
+            const coords = coordsObj.coordinates;
+
+            transformedData["GPS_point"] = {
+              longitude: coords[0],
+              latitude: coords[1],
+            };
+
             return;
           }
 
-          // multipletext → keep as nested object, never flatten
-          const isMultipleText =
-            fieldTypes[key] === "multipletext" ||
-            fieldTypes[fullKey] === "multipletext";
-
-          if (isMultipleText) {
-            transformedData[key] = value;
+          if (
+            value.latitude !== undefined &&
+            value.longitude !== undefined
+          ) {
+            transformedData["GPS_point"] = value;
             return;
-          }
-
-          // Regular nested object (panel) → flatten with "-" separator
-          processObject(value, key);
-        } else {
-          if (typeof value === "string" && value.trim().length > 0) {
-            const fieldType = fieldTypes[fullKey] || fieldTypes[key];
-            const fieldChoices = choiceMap[fullKey] || choiceMap[key];
-
-            if (fieldType === "checkbox") {
-              transformedData[fullKey] = resolveCheckboxValues(
-                value,
-                fieldChoices,
-              );
-            } else if (fieldType === "radio") {
-              transformedData[fullKey] = resolveRadioValue(value, fieldChoices);
-            } else {
-              // text/number input — use as-is
-              transformedData[fullKey] = value;
-            }
-          } else {
-            // null, undefined, number, boolean — pass through directly
-            transformedData[fullKey] = value;
           }
         }
-      });
-    };
 
-    processObject(submission);
+        if (
+          value.latitude !== undefined &&
+          value.longitude !== undefined
+        ) {
+          transformedData[fullKey] = value;
+          return;
+        }
 
-    // Legacy key mappings
-    const legacyKeyMap = {
-      "Livestock-is_demand_livestock": "select_one_demand_promoting_livestock",
-      "Livestock-demands_promoting_livestock": "select_one_promoting_livestock",
-      "Livestock-select_one_promoting_livestock_other":
-        "select_one_promoting_livestock_other",
-      "kitchen_gardens-area_kg": "area_didi_badi",
-      "kitchen_gardens-assets_kg": "indi_assets",
-      "fisheries-is_demand_fisheries": "select_one_demand_promoting_fisheries",
-      "fisheries-demands_promoting_fisheries": "select_one_promoting_fisheries",
-      "fisheries-demands_promoting_fisheries_other":
-        "select_one_promoting_fisheries_other",
-    };
+        // multipletext → keep as nested object, never flatten
+        const isMultipleText =
+          fieldTypes[key] === "multipletext" ||
+          fieldTypes[fullKey] === "multipletext";
 
-    Object.entries(legacyKeyMap).forEach(([newKey, oldKey]) => {
-      const oldValue = submission[oldKey];
-      const currentValue = transformedData[newKey];
+        if (isMultipleText) {
+          transformedData[key] = value;
+          return;
+        }
+
+        // Regular nested object (panel) → flatten with "-" separator
+        processObject(value, key);
+      } else {
+        if (
+          typeof value === "string" &&
+          value.trim().length > 0
+        ) {
+          const fieldType =
+            fieldTypes[fullKey] || fieldTypes[key];
+
+          const fieldChoices =
+            choiceMap[fullKey] || choiceMap[key];
+
+          if (fieldType === "checkbox") {
+            transformedData[fullKey] = resolveCheckboxValues(
+              value,
+              fieldChoices
+            );
+          } else if (fieldType === "radio") {
+            transformedData[fullKey] = resolveRadioValue(
+              value,
+              fieldChoices
+            );
+          } else {
+            // text/number input — use as-is
+            transformedData[fullKey] = value;
+          }
+        } else {
+          // null, undefined, number, boolean — pass through directly
+          transformedData[fullKey] = value;
+        }
+      }
+    });
+  };
+
+  processObject(submission);
+
+  // --------------------------------------------------
+  // MODIFIED DATA MAPPING
+  // --------------------------------------------------
+
+  const mapping = MODIFIED_DATA_MAPPING[formName] || {};
+
+  Object.entries(mapping).forEach(
+    ([modifiedKey, surveyKey]) => {
+      const modifiedValue =
+        submission.modified_data?.[modifiedKey];
+
+      // No modified value
+      if (
+        modifiedValue === null ||
+        modifiedValue === undefined ||
+        modifiedValue === ""
+      ) {
+        return;
+      }
+
+      const currentValue =
+        transformedData[surveyKey];
+
+      const fieldType =
+        fieldTypes[surveyKey];
+
+      const fieldChoices =
+        choiceMap[surveyKey];
+
+      const isCurrentEmpty =
+        currentValue === null ||
+        currentValue === undefined ||
+        currentValue === "" ||
+        (Array.isArray(currentValue) &&
+          currentValue.length === 0);
+
+      // --------------------------------------------------
+      // CHECKBOX
+      // --------------------------------------------------
+
+      if (fieldType === "checkbox") {
+        let hasMatchingCurrentValue = false;
+
+        if (!isCurrentEmpty && fieldChoices) {
+          const currentValues = Array.isArray(currentValue)
+            ? currentValue
+            : [currentValue];
+
+          hasMatchingCurrentValue =
+            currentValues.some((value) => {
+              const normalized = String(value)
+                .toLowerCase()
+                .trim();
+
+              return (
+                fieldChoices[normalized] !== undefined ||
+                Object.values(fieldChoices).some(
+                  (choice) =>
+                    String(choice)
+                      .toLowerCase()
+                      .trim() === normalized
+                )
+              );
+            });
+        }
+
+        // Current value is already a valid SurveyJS option
+        if (
+          !isCurrentEmpty &&
+          hasMatchingCurrentValue
+        ) {
+          return;
+        }
+
+        // Modified data → checkbox
+        const {
+          values,
+          otherText,
+        } = resolveModifiedCheckboxValue(
+          modifiedValue,
+          fieldChoices
+        );
+
+        transformedData[surveyKey] = values;
+
+        // If some modified values don't match
+        // current SurveyJS options → select Other
+        if (otherText) {
+         transformedData[`${surveyKey}-Comment`] = otherText;
+          transformedData[`${surveyKey}-other`] = otherText;
+          transformedData[`${surveyKey}_other`] = otherText;
+        }
+
+        return;
+      }
+
+      // --------------------------------------------------
+      // RADIO
+      // --------------------------------------------------
+
+      if (fieldType === "radio") {
+        let radioValue = modifiedValue;
+
+        if (surveyKey === "select_one_owns") {
+          const normalizedValue = String(modifiedValue)
+            .toLowerCase()
+            .trim();
+
+          // ----------------------------------------------
+          // WELL
+          // ----------------------------------------------
+
+          if (formName === "Well") {
+            if (normalizedValue === "public well") {
+              radioValue = "Community Well";
+            } else if (
+              normalizedValue === "private"
+            ) {
+              radioValue = "Privately owned";
+            }
+          }
+
+          // ----------------------------------------------
+          // WATER STRUCTURE
+          // ----------------------------------------------
+
+          if (formName === "Water_structure" || formName === "Waterbody") {
+            if (normalizedValue === "public") {
+              radioValue = "Community";
+            } else if (
+              normalizedValue === "private"
+            ) {
+              radioValue = "Private";
+            }
+          }
+        }
+
+        // Check whether existing API value is
+        // actually a valid SurveyJS option
+        let hasValidCurrentValue = false;
+
+        if (
+          !isCurrentEmpty &&
+          fieldChoices
+        ) {
+          const normalizedCurrent = String(currentValue)
+            .toLowerCase()
+            .trim();
+
+          hasValidCurrentValue =
+            fieldChoices[normalizedCurrent] !== undefined ||
+            Object.values(fieldChoices).some(
+              (choice) =>
+                String(choice)
+                  .toLowerCase()
+                  .trim() === normalizedCurrent
+            );
+        }
+
+        // If current value is invalid/empty,
+        // use modified_data value
+        if (!hasValidCurrentValue) {
+          transformedData[surveyKey] =
+            resolveRadioValue(
+              radioValue,
+              fieldChoices
+            );
+        }
+
+        return;
+      }
+
+      // --------------------------------------------------
+      // OTHER FIELD TYPES
+      // --------------------------------------------------
+
+      if (isCurrentEmpty) {
+        transformedData[surveyKey] =
+          modifiedValue;
+      }
+    }
+  );
+
+  console.log(
+    "MODIFIED DATA:",
+    submission.modified_data
+  );
+
+  console.log(
+    "TRANSFORMED DATA:",
+    transformedData
+  );
+
+  // --------------------------------------------------
+  // Legacy key mappings
+  // --------------------------------------------------
+
+  const legacyKeyMap = {
+    "Livestock-is_demand_livestock":
+      "select_one_demand_promoting_livestock",
+
+    "Livestock-demands_promoting_livestock":
+      "select_one_promoting_livestock",
+
+    "Livestock-select_one_promoting_livestock_other":
+      "select_one_promoting_livestock_other",
+
+    "kitchen_gardens-area_kg":
+      "area_didi_badi",
+
+    "kitchen_gardens-assets_kg":
+      "indi_assets",
+
+    "fisheries-is_demand_fisheries":
+      "select_one_demand_promoting_fisheries",
+
+    "fisheries-demands_promoting_fisheries":
+      "select_one_promoting_fisheries",
+
+    "fisheries-demands_promoting_fisheries_other":
+      "select_one_promoting_fisheries_other",
+  };
+
+  Object.entries(legacyKeyMap).forEach(
+    ([newKey, oldKey]) => {
+      const oldValue =
+        submission[oldKey];
+
+      const currentValue =
+        transformedData[newKey];
+
       const isCurrentEmpty =
         currentValue === null ||
         currentValue === undefined ||
         currentValue === "";
+
       const isOldValueReal =
-        oldValue !== null && oldValue !== undefined && oldValue !== "";
-      if (isCurrentEmpty && isOldValueReal) {
-        transformedData[newKey] = oldValue;
+        oldValue !== null &&
+        oldValue !== undefined &&
+        oldValue !== "";
+
+      if (
+        isCurrentEmpty &&
+        isOldValueReal
+      ) {
+        transformedData[newKey] =
+          oldValue;
       }
-    });
+    }
+  );
 
-    return transformedData;
-  };
-
+  return transformedData;
+};
   // Transform SurveyJS data back to API format
   const transformSurveyToApi = (surveyData, originalSubmission, formSchema) => {
     const fieldTypes = analyzeFormSchema(formSchema);
@@ -2045,6 +2440,9 @@ useEffect(() => {
               }
               if (item[2].submission_time) {
                 submission.submission_time = item[2].submission_time;
+              }
+               if (item[2].modified_data) {
+                submission.modified_data = item[2].modified_data;
               }
             }
           }
@@ -2401,7 +2799,7 @@ Object.values(duplicateGroups).forEach((group) => {
     console.log("FORM TEMPLATE:", formTemplate);
 console.log("CLEAN TEMPLATE:", cleanTemplate);
 
-    const transformedData = transformApiToSurvey(submission, formTemplate);
+    const transformedData = transformApiToSurvey(submission, formTemplate, selectedForm);
 
     setSelectedSubmission(submission);
     setIsEditing(false);
@@ -2412,45 +2810,116 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
     setSurveyModel(model);
   };
 
+  // const handleEditSubmission = async (submission) => {
+  //   setFormTemplateLoading(true);
+  //   const formTemplate = await getFormTemplate(selectedForm);
+  //   setFormTemplateLoading(false);
+  //   if (!formTemplate) {
+  //     alert(`No template found for form: ${selectedForm}`);
+  //     return;
+  //   }
+
+  //   const cleanTemplate = stripSystemFields(formTemplate);
+
+  //   const gpsField = cleanTemplate.pages[0].elements.find(
+  //     (el) => el.name === "GPS_point"
+  //   );
+  //   if (gpsField) {
+  //     gpsField.readOnly = false;
+  //   }
+
+  //   const transformedData = transformApiToSurvey(submission, formTemplate, selectedForm);
+
+  //   setSelectedSubmission(submission);
+  //   setIsEditing(true);
+
+  //   const model = new Model(cleanTemplate);
+  //   model.showCompletedPage = false;
+  //   model.data = transformedData;
+
+  //   model.onComplete.add((sender) => {
+  //     const saveData = transformSurveyToApi(
+  //       sender.data,
+  //       submission,
+  //       formTemplate,
+  //     );
+  //     const uuid = getSubmissionUUID(submission);
+  //     handleSaveSubmission(uuid, saveData);
+  //   });
+
+  //   setSurveyModel(model);
+  // };
+
+
   const handleEditSubmission = async (submission) => {
-    setFormTemplateLoading(true);
-    const formTemplate = await getFormTemplate(selectedForm);
-    setFormTemplateLoading(false);
-    if (!formTemplate) {
-      alert(`No template found for form: ${selectedForm}`);
-      return;
+  setFormTemplateLoading(true);
+
+  const formTemplate = await getFormTemplate(selectedForm);
+
+  setFormTemplateLoading(false);
+
+  if (!formTemplate) {
+    alert(`No template found for form: ${selectedForm}`);
+    return;
+  }
+
+  // Keep GPS_point in the edit schema.
+  // Other system fields will remain hidden.
+  const cleanTemplate = stripSystemFields(formTemplate);
+
+  const gpsField = formTemplate.pages
+    ?.flatMap((page) => page.elements || [])
+    ?.find((el) => el.name === "GPS_point");
+
+  // If GPS_point was removed by stripSystemFields,
+  // add it back to the edit schema.
+  if (gpsField) {
+    const gpsAlreadyExists = cleanTemplate.pages
+      ?.flatMap((page) => page.elements || [])
+      ?.some((el) => el.name === "GPS_point");
+
+    if (!gpsAlreadyExists) {
+      cleanTemplate.pages[0].elements.push({
+        ...gpsField,
+        readOnly: !canEditGPS,
+      });
+    } else {
+      const existingGPS = cleanTemplate.pages
+        .flatMap((page) => page.elements || [])
+        .find((el) => el.name === "GPS_point");
+
+      existingGPS.readOnly = !canEditGPS;
     }
+  }
 
-    const cleanTemplate = stripSystemFields(formTemplate);
+  const transformedData = transformApiToSurvey(
+    submission,
+    formTemplate,
+    selectedForm
+  );
 
-    const gpsField = cleanTemplate.pages[0].elements.find(
-      (el) => el.name === "GPS_point"
+  setSelectedSubmission(submission);
+  setIsEditing(true);
+
+  const model = new Model(cleanTemplate);
+
+  model.showCompletedPage = false;
+  model.data = transformedData;
+
+  model.onComplete.add((sender) => {
+    const saveData = transformSurveyToApi(
+      sender.data,
+      submission,
+      formTemplate
     );
-    if (gpsField) {
-      gpsField.readOnly = false;
-    }
 
-    const transformedData = transformApiToSurvey(submission, formTemplate);
+    const uuid = getSubmissionUUID(submission);
 
-    setSelectedSubmission(submission);
-    setIsEditing(true);
+    handleSaveSubmission(uuid, saveData);
+  });
 
-    const model = new Model(cleanTemplate);
-    model.showCompletedPage = false;
-    model.data = transformedData;
-
-    model.onComplete.add((sender) => {
-      const saveData = transformSurveyToApi(
-        sender.data,
-        submission,
-        formTemplate,
-      );
-      const uuid = getSubmissionUUID(submission);
-      handleSaveSubmission(uuid, saveData);
-    });
-
-    setSurveyModel(model);
-  };
+  setSurveyModel(model);
+};
 
   const handleSaveSubmission = async (uuid, data) => {
     setSaveStatus("saving");
@@ -2741,123 +3210,153 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
             </span>
           </div>
         ))}
-                    <div className="ml-auto flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
-              <button
-                onClick={() => setViewMode("card")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
-                  viewMode === "card"
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                }`}
-              >
-                <Grid size={15} />
-                Card
-              </button>
-              <button
-                onClick={() => setViewMode("map")}
-                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
-                  viewMode === "map"
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
-                }`}
-              >
-                <MapIcon size={15} />
-                Map
-              </button>
-            </div>
+         
       </div>
 
-            {/* Status Progress */}
-<div className="mt-8 rounded-2xl border border-slate-200 bg-white px-6 py-6 shadow-sm p-2">
-  <div className="relative flex items-start justify-between">
+{/* DPR Status */}
+<div className="mt-2 rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm m-2">
 
-    {[
-      {
-        key: "moderated",
-        label: "Moderated",
-        completed: Boolean(planDetails?.is_dpr_reviewed),
-      },
-      {
-        key: "completed",
-        label: "Completed",
-        completed: Boolean(planDetails?.is_completed),
-      },
-      {
-        key: "submitted",
-        label: "Submitted",
-        completed: Boolean(isDprSubmitted),
-      },
-      {
-        key: "approved",
-        label: "Approved",
-        completed: Boolean(isDprApproved),
-      },
-    ].map((section, index, sections) => {
-      const isSelected = selectedStatusSection === section.key;
-      const isGreen = section.completed || isSelected;
+  <div className="flex items-center gap-5">
 
-      return (
-        <React.Fragment key={section.key}>
+    {/* DPR Status Heading */}
+    <div className="flex items-center gap-2 min-w-[150px] shrink-0">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50">
+        <FileText size={17} className="text-purple-600" />
+      </div>
 
-          {/* Step */}
-          <div className="relative z-10 flex flex-1 flex-col items-center">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
+          DPR PROGRESS
+        </p>
+        {/* <p className="text-xs text-slate-400">
+          DPR progress
+        </p> */}
+      </div>
+    </div>
 
-            <button
-              type="button"
-              onClick={() => handleStatusSectionClick(section.key)}
-              onDoubleClick={() =>
-                handleStatusSectionDoubleClick(section.key)
-              }
-              className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
-                isGreen
-                  ? "border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-100"
-                  : "border-slate-300 bg-slate-50 text-slate-500 hover:border-slate-400 hover:bg-slate-100"
-              }`}
-            >
-              {section.completed ? (
-                <span className="text-lg font-bold">✓</span>
-              ) : (
-                <span className="text-sm font-semibold">
-                  {index + 1}
-                </span>
-              )}
-            </button>
+    {/* Divider */}
+    <div className="h-10 w-px shrink-0 bg-slate-200" />
 
-            <button
-              type="button"
-              onClick={() => handleStatusSectionClick(section.key)}
-              onDoubleClick={() =>
-                handleStatusSectionDoubleClick(section.key)
-              }
-              className={`mt-3 text-sm font-semibold transition-colors ${
-                isGreen
-                  ? "text-emerald-600"
-                  : "text-slate-700"
-              }`}
-            >
-              {section.label}
-            </button>
-          </div>
+    {/* Status Progress */}
+    <div className="relative flex flex-1 items-start justify-between">
 
-          {/* Connector */}
-          {index < sections.length - 1 && (
-            <div
-              className={`mt-6 h-0.5 flex-1 transition-colors duration-300 ${
-                sections[index + 1].completed
-                  ? "bg-emerald-500"
-                  : "bg-slate-300"
-              }`}
-            />
-          )}
-        </React.Fragment>
-      );
-    })}
+      {[
+        {
+          key: "moderated",
+          label: "Moderated",
+          completed: Boolean(planDetails?.is_dpr_reviewed),
+        },
+        {
+          key: "completed",
+          label: "Completed",
+          completed: Boolean(planDetails?.is_completed),
+        },
+        {
+          key: "submitted",
+          label: "Submitted",
+          completed: Boolean(isDprSubmitted),
+        },
+        // {
+        //   key: "approved",
+        //   label: "Approved",
+        //   completed: Boolean(isDprApproved),
+        // },
+      ].map((section, index, sections) => {
+        const isSelected = selectedStatusSection === section.key;
+        const isGreen = section.completed || isSelected;
+
+        return (
+          <React.Fragment key={section.key}>
+
+            {/* Step */}
+            <div className="relative z-10 flex flex-1 flex-col items-center">
+
+              <button
+                type="button"
+                onClick={() => handleStatusSectionClick(section.key)}
+                onDoubleClick={() =>
+                  handleStatusSectionDoubleClick(section.key)
+                }
+                className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-200 ${
+                  isGreen
+                    ? "border-emerald-500 bg-emerald-500 text-white shadow-md shadow-emerald-100"
+                    : "border-slate-300 bg-slate-50 text-slate-500 hover:border-slate-400 hover:bg-slate-100"
+                }`}
+              >
+                {section.completed ? (
+                  <span className="text-lg font-bold">✓</span>
+                ) : (
+                  <span className="text-sm font-semibold">
+                    {index + 1}
+                  </span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStatusSectionClick(section.key)}
+                onDoubleClick={() =>
+                  handleStatusSectionDoubleClick(section.key)
+                }
+                className={`mt-3 text-sm font-semibold transition-colors ${
+                  isGreen
+                    ? "text-emerald-600"
+                    : "text-slate-700"
+                }`}
+              >
+                {section.label}
+              </button>
+
+            </div>
+
+            {/* Connector */}
+            {index < sections.length - 1 && (
+              <div
+                className={`mt-6 h-0.5 flex-1 transition-colors duration-300 ${
+                  sections[index + 1].completed
+                    ? "bg-emerald-500"
+                    : "bg-slate-300"
+                }`}
+              />
+            )}
+
+          </React.Fragment>
+        );
+      })}
+
+    </div>
+    <div className="h-10 w-px shrink-0 bg-slate-200" />
+
+    {/* DPR Status */}
+    <div className="flex flex-1 items-center justify-center">
+      <div className="flex items-center justify-between w-full px-16">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
+          DPR Status
+        </p>
+
+        <div
+          className={`flex items-center gap-2 rounded-xl border px-8 py-3 transition-all ${
+            isDprApproved
+              ? "border-emerald-200 bg-emerald-50 text-emerald-600"
+              : "border-slate-200 bg-slate-100 text-slate-500"
+          }`}
+        >
+          <span className="text-lg">
+            {isDprApproved ? "✓" : "○"}
+          </span>
+
+          <span className="text-sm font-semibold">
+            Approved
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
-</div>
 
+</div>
 {/* Demand Status Summary */}
 {isDprSubmitted && (
-  <div className="mt-4 rounded-2xl border border-purple-200 bg-white px-5 py-4 shadow-sm">
+  <div className="mt-2 rounded-2xl border border-purple-200 bg-white px-5 py-4 shadow-sm m-2">
     <div className="flex items-center gap-4">
 
       {/* Heading */}
@@ -2885,7 +3384,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
           <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
 
           <span className="text-sm font-semibold text-slate-700">
-            Pending Demands
+            Total Demands
           </span>
         </div>
 
@@ -2893,8 +3392,7 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
           {demandStatusLoading ? "—" : demandStatusCounts.pending}
         </span>
       </div>
-
-      {/* Submitted */}
+         {/* Submitted */}
       <div className="flex flex-1 items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-5 py-3">
         <div className="flex items-center gap-3">
           <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
@@ -2909,7 +3407,8 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
         </span>
       </div>
 
-      {/* Approved */}
+
+         {/* Approved */}
       <div className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/60 px-5 py-3">
         <div className="flex items-center gap-3">
           <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
@@ -2924,110 +3423,12 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
         </span>
       </div>
 
+   
+   
+
     </div>
   </div>
 )}
-
-          {/* Top strip — gradient context bar */}
-          <div className="px-8 py-4 flex items-center gap-4 bg-white border-b border-slate-100">
-        
-
-            <div className="w-px h-6 bg-white/30 shrink-0" />
-
-            {/* Form */}
-            <div className="flex items-center gap-3 w-full">
-              <span className="text-purple-700 text-xs font-bold uppercase tracking-wider shrink-0">
-                Form
-              </span>
-              <div className="min-w-[260px] max-w-[420px] flex-1">
-                <Select
-                  styles={{
-                    ...selectStyles,
-                    control: (base, state) => ({
-                      ...selectStyles.control(base, state),
-                      minHeight: "42px",
-                      backgroundColor: "rgba(255,255,255,0.95)",
-                      borderColor: state.isFocused ? "#c7d2fe" : "#bfdbfe",
-                      boxShadow: state.isFocused
-                        ? "0 0 0 3px rgba(255,255,255,0.15)"
-                        : "none",
-                    }),
-                    menu: (base) => ({
-                      ...selectStyles.menu(base),
-                      zIndex: 80,
-                    }),
-                  }}
-                  options={groupedFormOptions}
-                  value={groupedFormOptions
-                    .flatMap((group) => group.options)
-                    .find((option) => option.value === selectedForm)}
-                  onChange={(opt) => onFormChange(opt?.value || "")}
-                  formatOptionLabel={({ form, label }, { context }) => {
-                    if (context === "value") {
-                      return (
-                        <span className="font-semibold text-slate-800">
-                          {label}
-                        </span>
-                      );
-                    }
-
-                    return (
-                      <div className="py-0.5">
-                        <div className="font-semibold text-slate-800 text-sm leading-snug">
-                          {label}
-                        </div>
-
-                        {form && (
-                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                            {/* <span className="flex items-center gap-1 text-xs text-slate-500">
-                              Total Submissions:{" "}
-                              {formCountsLoading
-                                ? "Loading..."
-                                : (formCounts[form.name] ?? 0)}
-                            </span> */}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }}
-                  isSearchable
-                  placeholder="Switch form..."
-                />
-              </div>
-
-            {/* Search — expands to fill remaining space */}
-              <div className="relative flex-1 min-w-[350px] max-w-[700px]">
-                <Search
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                size={15}
-              />
-              <input
-                type="text"
-                placeholder="Search submissions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all text-sm shadow-sm"
-              />
-            </div>
-
-            {/* Moderation filter — pinned to right */}
-            <div className="relative shrink-0 ml-auto">
-              <Filter
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                size={15}
-              />
-              <select
-                value={moderationFilter}
-                onChange={(e) => setModerationFilter(e.target.value)}
-                className="pl-10 pr-10 py-2.5 border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all text-sm font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
-              >
-                <option value="all">All Submissions</option>
-                <option value="moderated">Moderated</option>
-                <option value="not-moderated">Pending</option>
-              </select>
-            </div>
-            </div>
-          </div>
 
           {/* Third row — DPR details */}
          <div className="px-8 py-3 border-t border-slate-100/80 bg-white">
@@ -3124,111 +3525,6 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                       </button>
                     </div>
                   )}
-                </div>
-
-                <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-                  
-
-                  {/* <div className="relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                    {dprWorkflowStatusLoading && (
-                      <div className="absolute inset-0 z-10 flex items-center justify-center gap-2 rounded-xl bg-white/70 backdrop-blur-[1px]">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-blue-600" />
-                        <span className="text-sm font-medium text-slate-600">
-                          Updating…
-                        </span>
-                      </div>
-                    )}
-                    <div className="border-b border-slate-200 px-5 py-4">
-                      <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-700">
-                        DPR workflow
-                      </h4>
-                    </div>
-
-                    <div className="grid gap-4 p-5 lg:grid-cols-2">
-                      {renderDprStatusCard({
-                        title: "DPR Submitted",
-                        isActive: isDprSubmitted,
-                        loadingKey: "status-submitted",
-                        nextStatus: nextDprSubmittedStatus,
-                        ariaLabel: "DPR submitted",
-                        children: (
-                          <div
-                            className={`mt-5 rounded-xl border px-4 py-3 ${
-                              isDprSubmitted
-                                ? "border-purple-300 bg-slate-50 text-slate-950"
-                                : "border-slate-200 bg-slate-50 text-slate-900"
-                            }`}
-                          >
-                            <p
-                              className={`text-[11px] font-bold uppercase tracking-[0.18em] ${
-                                isDprSubmitted
-                                  ? "text-slate-500"
-                                  : "text-slate-400"
-                              }`}
-                            >
-                              Demands Submitted
-                            </p>
-                            <p className="mt-1 text-2xl font-black tracking-tight">
-                              {dprWorkflowStatus?.submitted_breakdown
-                                ?.demands_submitted ?? 0}
-                            </p>
-                            <p
-                              className={`text-xs ${
-                                isDprSubmitted
-                                  ? "text-slate-500"
-                                  : "text-slate-500"
-                              }`}
-                            >
-                              records
-                            </p>
-                          </div>
-                        ),
-                      })}
-
-                      {renderDprStatusCard({
-                          title: "DPR Approved",
-                          isActive: isDprApproved,
-                          loadingKey: "status-approved",
-                          nextStatus: nextDprApprovedStatus,
-                          ariaLabel: "DPR approved",
-                          children: (
-                            <div className="mt-5 rounded-xl border border-purple-300 bg-slate-50 px-4 py-3">
-                              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                                Demand Status
-                              </p>
-
-                              <div className="mt-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                                    <span className="text-sm font-semibold text-slate-700">
-                                      Demand Accepted
-                                    </span>
-                                  </div>
-
-                                  <span className="text-sm font-bold text-slate-900">
-                                    0
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
-                                    <span className="text-sm font-semibold text-slate-700">
-                                      Demand Rejected/Pending
-                                    </span>
-                                  </div>
-
-                                  <span className="text-sm font-bold text-slate-900">
-                                    0
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          ),
-                        })}
-                    </div>
-                  </div> */}
                 </div>
 
                 {dprWorkflowMissing && (
@@ -3667,25 +3963,141 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
             <div className="mb-4 rounded-2xl border border-slate-200 bg-white/80 px-6 py-4 shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-purple-500">
+                  {/* <p className="text-xs font-semibold uppercase tracking-[0.18em] text-purple-500">
                     Submissions
-                  </p>
+                  </p> */}
+                  <div className="flex items-center gap-3 w-full">
+              <span className="text-purple-700 text-xs font-bold uppercase tracking-wider shrink-0">
+                Form
+              </span>
+              <div className="min-w-[260px] max-w-[420px] flex-1">
+                <Select
+                  styles={{
+                    ...selectStyles,
+                    control: (base, state) => ({
+                      ...selectStyles.control(base, state),
+                      minHeight: "42px",
+                      backgroundColor: "rgba(255,255,255,0.95)",
+                      borderColor: state.isFocused ? "#c7d2fe" : "#bfdbfe",
+                      boxShadow: state.isFocused
+                        ? "0 0 0 3px rgba(255,255,255,0.15)"
+                        : "none",
+                    }),
+                    menu: (base) => ({
+                      ...selectStyles.menu(base),
+                      zIndex: 80,
+                    }),
+                  }}
+                  options={groupedFormOptions}
+                  value={groupedFormOptions
+                    .flatMap((group) => group.options)
+                    .find((option) => option.value === selectedForm)}
+                  onChange={(opt) => onFormChange(opt?.value || "")}
+                  formatOptionLabel={({ form, label }, { context }) => {
+                    if (context === "value") {
+                      return (
+                        <span className="font-semibold text-slate-800">
+                          {label}
+                        </span>
+                      );
+                    }
+
+                    return (
+                      <div className="py-0.5">
+                        <div className="font-semibold text-slate-800 text-sm leading-snug">
+                          {label}
+                        </div>
+
+                        {form && (
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                            {/* <span className="flex items-center gap-1 text-xs text-slate-500">
+                              Total Submissions:{" "}
+                              {formCountsLoading
+                                ? "Loading..."
+                                : (formCounts[form.name] ?? 0)}
+                            </span> */}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
+                  isSearchable
+                  placeholder="Switch form..."
+                />
+              </div>
+
+            {/* Search — expands to fill remaining space */}
+              <div className="relative flex-1 min-w-[250px] max-w-[500px]">
+                <Search
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                size={15}
+              />
+              <input
+                type="text"
+                placeholder="Search submissions..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2.5 w-full border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm placeholder-slate-400 focus:bg-white/90 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all text-sm shadow-sm"
+              />
+            </div>
+
+            {/* Moderation filter — pinned to right */}
+            <div className="relative shrink-0 ml-auto">
+              <Filter
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
+                size={15}
+              />
+              <select
+                value={moderationFilter}
+                onChange={(e) => setModerationFilter(e.target.value)}
+                className="pl-10 pr-10 py-2.5 border border-slate-200/80 rounded-xl bg-white/60 backdrop-blur-sm focus:bg-white/90 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 focus:outline-none transition-all text-sm font-medium text-slate-700 appearance-none shadow-sm cursor-pointer"
+              >
+                <option value="all">All Submissions</option>
+                <option value="moderated">Moderated</option>
+                <option value="not-moderated">Pending</option>
+              </select>
+            </div>
+            </div>
                 </div>
                 {/* <div className="text-sm font-semibold text-slate-500 ml-auto">
                   {filteredSubmissions.length} total
                 </div> */}
                       {/* Submission counts pushed to the right */}
                 <div className="ml-auto flex items-center gap-4 shrink-0">
-                  <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
+                  {/* <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
                     {filteredSubmissions.filter((s) => !s._moderated).length}
-                  </span>
+                  </span> */}
                   <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-600">
                     <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />
                     {filteredSubmissions.filter((s) => s._moderated).length}{" "}
                     Moderated
                   </span>
                 </div>
+                           <div className="ml-auto flex bg-white/70 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shrink-0 shadow-sm">
+              <button
+                onClick={() => setViewMode("card")}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "card"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
+              >
+                <Grid size={15} />
+                Card
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`px-5 py-2 rounded-lg font-semibold text-sm transition-all flex items-center gap-2 ${
+                  viewMode === "map"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-slate-500 hover:text-slate-700 hover:bg-white/80"
+                }`}
+              >
+                <MapIcon size={15} />
+                Map
+              </button>
+            </div>
                 
               </div>
             </div>
@@ -3718,21 +4130,33 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
             ) : (
               <div className="space-y-3">
                 {filteredSubmissions.map((submission) => {
+                  
                   const displayFields = CARD_DISPLAY_FIELDS[selectedForm] || [];
                   const uuid = getSubmissionUUID(submission);
+                  const isDuplicate = duplicateSubmissionIds.has(uuid);
                   const isModerated = submission._moderated === true;
 
                   return (
                     <div
                       key={uuid}
-                      className="relative bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
-                    >
+                      className={`relative rounded-2xl border bg-white shadow-sm transition-all
+                          ${
+                            isDuplicate
+                              ? "border-red-300 bg-red-50/40"
+                              : "border-slate-200"
+                          }
+                        `}                   
+                        >
                       {/* Left accent stripe */}
-                      <div
-                        className={`absolute left-0 top-0 bottom-0 w-1 ${
-                          isModerated ? "bg-emerald-400" : "bg-amber-400"
-                        }`}
-                      />
+                     <div
+                          className={`absolute left-0 top-0 bottom-0 w-1 ${
+                            isDuplicate
+                              ? "bg-red-500"
+                              : isModerated
+                              ? "bg-emerald-400"
+                              : "bg-amber-400"
+                          }`}
+                        />
 
                       <div className="pl-6 pr-5 pt-4 pb-0">
                         {/* Top row: status badge + date */}
@@ -3751,6 +4175,14 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
                             />
                             {isModerated ? "Moderated" : ""}
                           </span>
+
+                             {/* Duplicate badge */}
+                              {isDuplicate && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-500 text-white shadow-sm">
+                                  <span>⚠</span>
+                                  Duplicate Entry
+                                </span>
+                              )}
 
                           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                             <Calendar size={12} />
@@ -4056,7 +4488,15 @@ const ModerationTabsPage = ({
 };
 // Main Component
 const Moderation = () => {
-  const [currentPage, setCurrentPage] = useState("selection");
+const [currentPage, setCurrentPage] = useState(() => {
+  return sessionStorage.getItem("moderationCurrentPage") || "selection";
+});
+
+useEffect(() => {
+  sessionStorage.setItem("moderationCurrentPage", currentPage);
+}, [currentPage]);
+
+
   const [selectedOrg, setSelectedOrg] = useState("");
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
