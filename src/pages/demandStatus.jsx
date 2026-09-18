@@ -678,29 +678,44 @@ const DemandTable = ({
               <th className="py-3 px-5 w-16">ID</th>
               {categoryType === "maintenance" && (
                 <>
-                  <th className="py-3 px-4">Structure Type</th>
+                  <th className="py-3 px-4">Demand Type</th>
+                  <th className="py-3 px-4">Name of Beneficiary</th>
+                  <th className="py-3 px-4">Settlement Beneficiary Name</th>
+                  <th className="py-3 px-4">Structure Typess</th>
                   <th className="py-3 px-4">Repair Activities</th>
                 </>
               )}
               {categoryType === "new_demand" && (
                 <>
                   <th className="py-3 px-4">Work Title / Category</th>
-                  <th className="py-3 px-4">Beneficiary</th>
-                  <th className="py-3 px-4">Settlement</th>
+                  <th className="py-3 px-4">Type of Demand</th>
+                  <th className="py-3 px-4">Name of Beneficiary's Settlement</th>
+                  <th className="py-3 px-4">Beneficiary's name</th>
+                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Beneficiary's Father Name</th>
                 </>
               )}
               {categoryType === "plantation" && (
                 <>
-                  <th className="py-3 px-4">Livelihood Work</th>
+                  <th className="py-3 px-4">Livelihood Work</th>\
+                  <th className="py-3 px-4">Type of Demand</th>
+                  <th className="py-3 px-4">Beneficiary's settlement</th>
+                  <th className="py-3 px-4">Beneficiary Name</th>
+                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Beneficiary's Father Name</th>
+                  <th className="py-3 px-4">Name of Plantation Crop</th>
                   <th className="py-3 px-4">Acres</th>
-                  <th className="py-3 px-4">Beneficiary</th>
                 </>
               )}
               {categoryType === "livelihood" && (
                 <>
                   <th className="py-3 px-4">Livelihood Work</th>
-                  <th className="py-3 px-4">Beneficiary</th>
-                  <th className="py-3 px-4">Settlement</th>
+                  <th className="py-3 px-4">Type of Demand</th>
+                  <th className="py-3 px-4">Work Demand</th>
+                  <th className="py-3 px-4">Name of Beneficiary</th>
+                  <th className="py-3 px-4">Settlement Beneficiary Name</th>
+                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Beneficiary's Father Name</th>
                 </>
               )}
               <th className="py-3 px-4">GPS Coordinates</th>
@@ -743,15 +758,41 @@ const DemandTable = ({
                       #{record.id}
                     </td>
 
-                    {/* Maintenance Columns */}
+                   {/* Maintenance Columns */}
                     {categoryType === "maintenance" && (
                       <>
+                        {/* Demand Type */}
                         <td className="py-4 px-4 font-bold text-slate-800">
-                          {getRecordTitle()}
+                          {record.demand_type || (
+                            <span className="text-slate-400">—</span>
+                          )}
                           <span className="block text-[10px] text-indigo-500 font-bold uppercase mt-0.5">
                             {record.resource_type || "maintenance"}
                           </span>
                         </td>
+
+                        {/* Name of Beneficiary */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Settlement Beneficiary Name */}
+                        <td className="py-4 px-4 font-medium text-slate-600">
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Structure Type */}
+                        <td className="py-4 px-4 font-bold text-slate-800">
+                          {record.structure_type || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Repair Activities */}
                         <td className="py-4 px-4">
                           {record.repair_activities ? (
                             <span className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-100 block max-w-xs break-words">
@@ -767,19 +808,67 @@ const DemandTable = ({
                     {/* New Demand Columns */}
                     {categoryType === "new_demand" && (
                       <>
+                        {/* Work Title / Category */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800">{getRecordTitle()}</div>
+                          <div className="font-bold text-slate-800">
+                            {record.work_demand || "—"}
+                          </div>
+
                           {record.work_category && (
                             <span className="inline-block text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded mt-1">
                               {record.work_category}
                             </span>
                           )}
                         </td>
+
+                        {/* Type of Demand */}
                         <td className="py-4 px-4">
-                          {renderBeneficiary(record)}
+                          {record.demand_type ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.demand_type}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
+
+                        {/* Name of Beneficiary's Settlement */}
                         <td className="py-4 px-4 font-medium text-slate-600">
-                          {record.beneficiary_settlement || <span className="text-slate-400">—</span>}
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary's Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name ? (
+                            <div className="font-bold text-slate-800">
+                              {record.beneficiary_name === "0"
+                                ? "N/A"
+                                : record.beneficiary_name}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                        <td className="py-4 px-4">
+                          {record.gender ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.gender.charAt(0).toUpperCase() +
+                                record.gender.slice(1).toLowerCase()}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary's Father Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_father_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                       </>
                     )}
@@ -787,33 +876,135 @@ const DemandTable = ({
                     {/* Plantation Columns */}
                     {categoryType === "plantation" && (
                       <>
+                        {/* Livelihood Work */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800">{record.livelihood_work || getRecordTitle()}</div>
+                          <div className="font-bold text-slate-800">
+                            {record.livelihood_work || "—"}
+                          </div>
                         </td>
+
+                        {/* Type of Demand */}
+                        <td className="py-4 px-4">
+                          {record.demand_type ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.demand_type.replace(/_demand$/i, "")}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary's Settlement */}
+                        <td className="py-4 px-4 font-medium text-slate-600">
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name ? (
+                            <div className="font-bold text-slate-800">
+                              {record.beneficiary_name === "0"
+                                ? "N/A"
+                                : record.beneficiary_name}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                        <td className="py-4 px-4">
+                          {record.gender ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.gender.charAt(0).toUpperCase() +
+                                record.gender.slice(1).toLowerCase()}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Father's Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_father_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Name of Plantation Crop */}
+                        <td className="py-4 px-4">
+                          {record.work_demand || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Acres */}
                         <td className="py-4 px-4 font-bold text-slate-800">
-                          {record.total_acres !== undefined && record.total_acres !== null ? (
+                          {record.total_acres !== undefined &&
+                          record.total_acres !== null &&
+                          record.total_acres !== "O" ? (
                             `${record.total_acres} acres`
                           ) : (
                             <span className="text-slate-400">—</span>
                           )}
                         </td>
-                        <td className="py-4 px-4">
-                          {renderBeneficiary(record)}
-                        </td>
                       </>
                     )}
 
                     {/* Livelihood Columns */}
-                    {categoryType === "livelihood" && (
+                  {categoryType === "livelihood" && (
                       <>
+                        {/* Livelihood Work */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800">{record.livelihood_work || getRecordTitle()}</div>
+                          <div className="font-bold text-slate-800">
+                            {record.livelihood_work || getRecordTitle()}
+                          </div>
                         </td>
+
+                        {/* Type of Demand */}
+                      <td className="py-4 px-4">
+                          {record.demand_type
+                            ? record.demand_type.replace(/_demand$/i, "")
+                            : <span className="text-slate-400">—</span>
+                          }
+                        </td>
+
+                        {/* Work Demand */}
                         <td className="py-4 px-4">
-                          {renderBeneficiary(record)}
+                          {record.work_demand || (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
+
+                        {/* Name of Beneficiary */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Settlement */}
                         <td className="py-4 px-4 font-medium text-slate-600">
-                          {record.beneficiary_settlement || <span className="text-slate-400">—</span>}
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                     <td className="py-4 px-4">
+                        {record.gender
+                          ? record.gender.charAt(0).toUpperCase() + record.gender.slice(1).toLowerCase()
+                          : <span className="text-slate-400">—</span>
+                        }
+                      </td>
+
+                        {/* Father's Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_father_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                       </>
                     )}
@@ -833,17 +1024,16 @@ const DemandTable = ({
                     {/* Status badge */}
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ${badgeClass}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
                           {status.toUpperCase() === "PENDING" ? "GENERATED" : status.toUpperCase()}
                       </span>
                     </td>
 
                     {/* Status updater dropdown */}
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-2">
                       <select
                         value={status}
                         onChange={(e) => handleStatusChange(record, e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
+                        className="w-full border border-slate-200 rounded-lg px-1 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
                       >
                         <option value="PENDING">SUBMITTED</option>
                         <option value="APPROVED">APPROVED</option>
@@ -1072,18 +1262,6 @@ console.log("LIVELIHOOD API:", lData);
           badgeClass: "bg-emerald-50 text-emerald-700 ring-emerald-200",
           dotClass: "bg-emerald-500",
         };
-      case "REVERTED":
-        return {
-          borderClass: "bg-amber-400",
-          badgeClass: "bg-amber-50 text-amber-700 ring-amber-200",
-          dotClass: "bg-amber-500",
-        };
-      case "REJECTED":
-        return {
-          borderClass: "bg-rose-400",
-          badgeClass: "bg-rose-50 text-rose-700 ring-rose-200",
-          dotClass: "bg-rose-500",
-        };
       case "PENDING":
       default:
         return {
@@ -1184,16 +1362,16 @@ console.log("LIVELIHOOD API:", lData);
       {/* Divider */}
       <div className="h-10 w-px bg-slate-200" />
       {/* Pending */}
-      <div className="flex flex-1 items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-5 py-3">
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-purple-100 bg-purple-50/60 px-5 py-3">
         <div className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-purple-400" />
 
           <span className="text-sm font-semibold text-slate-700">
             Total Demands
           </span>
         </div>
 
-        <span className="text-xl font-black text-amber-600">
+        <span className="text-xl font-black text-purple-600">
           {demandStatusLoading ? "—" : demandStatusCounts.pending}
         </span>
       </div>
@@ -1290,9 +1468,6 @@ console.log("LIVELIHOOD API:", lData);
             />
 
             <div className="border-t border-slate-200/80 pt-6">
-              <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight px-2">
-                Livelihood Demands
-              </h2>
               
               <div className="space-y-6">
                 <DemandTable
@@ -1305,7 +1480,7 @@ console.log("LIVELIHOOD API:", lData);
                 />
 
                 <DemandTable
-                  title="Livelihood Demands (Others / Rest)"
+                  title="Livelihood Demands"
                   icon={User}
                   records={lRecords}
                   categoryType="livelihood"

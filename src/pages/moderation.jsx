@@ -3379,16 +3379,16 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
       <div className="h-10 w-px bg-slate-200" />
 
       {/* Pending */}
-      <div className="flex flex-1 items-center justify-between rounded-xl border border-amber-100 bg-amber-50/60 px-5 py-3">
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-purple-100 bg-purple-50/60 px-5 py-3">
         <div className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
+          <span className="h-2.5 w-2.5 rounded-full bg-purple-400" />
 
           <span className="text-sm font-semibold text-slate-700">
             Total Demands
           </span>
         </div>
 
-        <span className="text-xl font-black text-amber-600">
+        <span className="text-xl font-black text-purple-600">
           {demandStatusLoading ? "—" : demandStatusCounts.pending}
         </span>
       </div>
