@@ -697,14 +697,14 @@ const DemandTable = ({
               )}
               {categoryType === "plantation" && (
                 <>
-                  <th className="py-3 px-4">Livelihood Work</th>\
-                  <th className="py-3 px-4">Type of Demand</th>
-                  <th className="py-3 px-4">Beneficiary's settlement</th>
-                  <th className="py-3 px-4">Beneficiary Name</th>
-                  <th className="py-3 px-4">Gender</th>
-                  <th className="py-3 px-4">Beneficiary's Father Name</th>
-                  <th className="py-3 px-4">Name of Plantation Crop</th>
-                  <th className="py-3 px-4">Acres</th>
+                  <th className="py-3 px-3">Livelihood Work</th>
+                  <th className="py-3 px-3">Type of Demand</th>
+                  <th className="py-3 px-3">Beneficiary's settlement</th>
+                  <th className="py-3 px-3">Beneficiary Name</th>
+                  <th className="py-3 px-3">Gender</th>
+                  <th className="py-3 px-3">Beneficiary's Father Name</th>
+                  {/* <th className="py-3 px-3">Name of Plantation Crop</th> */}
+                  <th className="py-3 px-3">Acres</th>
                 </>
               )}
               {categoryType === "livelihood" && (
@@ -877,14 +877,14 @@ const DemandTable = ({
                     {categoryType === "plantation" && (
                       <>
                         {/* Livelihood Work */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           <div className="font-bold text-slate-800">
                             {record.livelihood_work || "—"}
                           </div>
                         </td>
 
                         {/* Type of Demand */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           {record.demand_type ? (
                             <span className="text-sm font-medium text-slate-700">
                               {record.demand_type.replace(/_demand$/i, "")}
@@ -895,14 +895,14 @@ const DemandTable = ({
                         </td>
 
                         {/* Beneficiary's Settlement */}
-                        <td className="py-4 px-4 font-medium text-slate-600">
+                        <td className="py-4 px-3 font-medium text-slate-600">
                           {record.beneficiary_settlement || (
                             <span className="text-slate-400">—</span>
                           )}
                         </td>
 
                         {/* Beneficiary Name */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           {record.beneficiary_name ? (
                             <div className="font-bold text-slate-800">
                               {record.beneficiary_name === "0"
@@ -915,7 +915,7 @@ const DemandTable = ({
                         </td>
 
                         {/* Gender */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           {record.gender ? (
                             <span className="text-sm font-medium text-slate-700">
                               {record.gender.charAt(0).toUpperCase() +
@@ -927,21 +927,21 @@ const DemandTable = ({
                         </td>
 
                         {/* Father's Name */}
-                        <td className="py-4 px-4">
+                        <td className="py-4 px-3">
                           {record.beneficiary_father_name || (
                             <span className="text-slate-400">—</span>
                           )}
                         </td>
 
                         {/* Name of Plantation Crop */}
-                        <td className="py-4 px-4">
+                        {/* <td className="py-4 px-3">
                           {record.work_demand || (
                             <span className="text-slate-400">—</span>
                           )}
-                        </td>
+                        </td> */}
 
                         {/* Acres */}
-                        <td className="py-4 px-4 font-bold text-slate-800">
+                        <td className="py-4 px-3 font-bold text-slate-800">
                           {record.total_acres !== undefined &&
                           record.total_acres !== null &&
                           record.total_acres !== "O" ? (
@@ -1066,6 +1066,7 @@ export const DemandDashboard = ({
   submitted: 0,
   approved: 0,
 });
+const [totalDemands, setTotalDemands] = useState(0);
 
 const [demandStatusLoading, setDemandStatusLoading] = useState(false);
 
@@ -1108,10 +1109,19 @@ useEffect(() => {
       const totals = planData?.totals || {};
 
       if (isMounted) {
+        const pending = totals?.PENDING?.demands ?? 0;
+        const submitted = totals?.SUBMITTED?.demands ?? 0;
+        const approved = totals?.APPROVED?.demands ?? 0;
+        const total = pending + submitted + approved;
+
+
+
+        setTotalDemands(total);
+
         setDemandStatusCounts({
-          pending: totals?.PENDING?.demands ?? 0,
-          submitted: totals?.SUBMITTED?.demands ?? 0,
-          approved: totals?.APPROVED?.demands ?? 0,
+          pending: pending + submitted + approved,
+          submitted,
+          approved,
         });
       }
     } catch (error) {
@@ -1206,6 +1216,7 @@ console.log("LIVELIHOOD API:", lData);
   }, [selectedPlan]);
 
   const handleStatusChange = async (record, newStatus) => {
+     console.log("STATUS CHECK:", record.status, newStatus);
     const originalStatus = record.status || "PENDING";
 
     // Optimistic UI update
@@ -1233,6 +1244,36 @@ console.log("LIVELIHOOD API:", lData);
       }
 
       toast.success(`Status updated to ${newStatus} successfully!`);
+      const countRes = await fetch(
+      `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+      if (countRes.ok) {
+        const countData = await countRes.json();
+
+        const planData =
+          countData?.results?.[0] ||
+          countData?.data?.[0] ||
+          countData;
+
+        const totals = planData?.totals || {};
+
+        const pending = totals?.PENDING?.demands ?? 0;
+        const submitted = totals?.SUBMITTED?.demands ?? 0;
+        const approved = totals?.APPROVED?.demands ?? 0;
+
+        const total = pending + submitted + approved;
+        setTotalDemands(total);
+
+        setDemandStatusCounts({
+          pending: pending + submitted + approved,
+          submitted,
+          approved,
+        });
+      }
     } catch (err) {
       console.error("Status update error:", err);
       toast.error("Failed to update status. Reverting change.");
@@ -1283,7 +1324,7 @@ console.log("LIVELIHOOD API:", lData);
   const lRecords = filteredDemands.filter(d => d.categoryType === 'livelihood');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 overflow-x-hidden">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
@@ -1372,7 +1413,7 @@ console.log("LIVELIHOOD API:", lData);
         </div>
 
         <span className="text-xl font-black text-purple-600">
-          {demandStatusLoading ? "—" : demandStatusCounts.pending}
+          {demandStatusLoading ? "—" : totalDemands}
         </span>
       </div>
          {/* Submitted */}

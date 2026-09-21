@@ -1082,6 +1082,7 @@ const FormViewPage = ({
   approved: 0,
 });
 
+const hasApprovedDemand = demandStatusCounts.approved > 0;
 const [demandStatusLoading, setDemandStatusLoading] = useState(false);
 
 const groups = Array.isArray(user?.groups) ? user.groups : [];
@@ -1125,8 +1126,8 @@ useEffect(() => {
 
     try {
       const res = await fetch(
-          `https://uat.core-stack.org:444/api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
-        // `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+          // `https://uat.core-stack.org:444/api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+        `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
         {
           headers: getHeaders(),
         }
@@ -1159,10 +1160,14 @@ useEffect(() => {
       const totals = planData?.totals || {};
 
       if (isMounted) {
+        const pending = totals?.PENDING?.demands ?? 0;
+        const submitted = totals?.SUBMITTED?.demands ?? 0;
+        const approved = totals?.APPROVED?.demands ?? 0;
+
         setDemandStatusCounts({
-          pending: totals?.PENDING?.demands ?? 0,
-          submitted: totals?.SUBMITTED?.demands ?? 0,
-          approved: totals?.APPROVED?.demands ?? 0,
+          pending: pending + submitted + approved,
+          submitted,
+          approved,
         });
       }
     } catch (error) {
@@ -3157,6 +3162,35 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
     }
   };
 
+  const handleDprProgressToggle = (section) => {
+  if (section.key === "moderated") {
+    handlePlanStatusToggle(
+      "is_dpr_reviewed",
+      !planDetails?.is_dpr_reviewed,
+      "Moderated"
+    );
+  }
+
+  if (section.key === "completed") {
+    handlePlanStatusToggle(
+      "is_completed",
+      !planDetails?.is_completed,
+      "Completed"
+    );
+  }
+
+  if (section.key === "submitted") {
+  handleDprWorkflowUpdate(
+    "status",
+    nextDprSubmittedStatus,
+    "submitted"
+  );
+}
+
+};
+
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white-50 to-purple-100 p-2">
       {/* Header */}
@@ -3273,7 +3307,10 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
               <button
                 type="button"
-                onClick={() => handleStatusSectionClick(section.key)}
+                onClick={() => {
+                  handleStatusSectionClick(section.key);
+                  handleDprProgressToggle(section);
+                }}
                 onDoubleClick={() =>
                   handleStatusSectionDoubleClick(section.key)
                 }
@@ -3294,7 +3331,10 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
               <button
                 type="button"
-                onClick={() => handleStatusSectionClick(section.key)}
+                onClick={() => {
+                  handleStatusSectionClick(section.key);
+                  handleDprProgressToggle(section);
+                }}
                 onDoubleClick={() =>
                   handleStatusSectionDoubleClick(section.key)
                 }
@@ -3336,13 +3376,13 @@ console.log("CLEAN TEMPLATE:", cleanTemplate);
 
         <div
           className={`flex items-center gap-2 rounded-xl border px-8 py-3 transition-all ${
-            isDprApproved
+            isDprApproved || hasApprovedDemand
               ? "border-emerald-200 bg-emerald-50 text-emerald-600"
               : "border-slate-200 bg-slate-100 text-slate-500"
           }`}
         >
           <span className="text-lg">
-            {isDprApproved ? "✓" : "○"}
+            {isDprApproved || hasApprovedDemand ? "✓" : "○"}
           </span>
 
           <span className="text-sm font-semibold">
