@@ -1274,6 +1274,22 @@ console.log("LIVELIHOOD API:", lData);
           approved,
         });
       }
+      if (newStatus === "APPROVED") {
+        const dprRes = await fetch(
+          `${BASEURL}api/v1/dpr_data/${selectedPlan}/report-status/`,
+          {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify({
+              status: "APPROVED",
+            }),
+          }
+        );
+
+        if (!dprRes.ok) {
+          throw new Error("Failed to approve DPR");
+        }
+      }
     } catch (err) {
       console.error("Status update error:", err);
       toast.error("Failed to update status. Reverting change.");
