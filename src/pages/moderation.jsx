@@ -1169,6 +1169,13 @@ useEffect(() => {
           submitted,
           approved,
         });
+
+        if (approved > 0) {
+          setDprWorkflowStatus((prev) => ({
+            ...prev,
+            status: "APPROVED",
+          }));
+        }
       }
     } catch (error) {
       console.error("Demand status fetch error:", error);
