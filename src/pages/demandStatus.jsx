@@ -666,7 +666,7 @@ const DemandTable = ({
           {Icon && <Icon className="text-indigo-600" size={20} />}
           <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
         </div>
-        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
+        <span className="text-xs font-bold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">
           {records.length} Records
         </span>
       </div>
@@ -678,29 +678,44 @@ const DemandTable = ({
               <th className="py-3 px-5 w-16">ID</th>
               {categoryType === "maintenance" && (
                 <>
-                  <th className="py-3 px-4">Structure Type</th>
+                  <th className="py-3 px-4">Demand Type</th>
+                  <th className="py-3 px-4">Name of Beneficiary</th>
+                  <th className="py-3 px-4">Settlement Beneficiary Name</th>
+                  <th className="py-3 px-4">Structure Typess</th>
                   <th className="py-3 px-4">Repair Activities</th>
                 </>
               )}
               {categoryType === "new_demand" && (
                 <>
                   <th className="py-3 px-4">Work Title / Category</th>
-                  <th className="py-3 px-4">Beneficiary</th>
-                  <th className="py-3 px-4">Settlement</th>
+                  <th className="py-3 px-4">Type of Demand</th>
+                  <th className="py-3 px-4">Name of Beneficiary's Settlement</th>
+                  <th className="py-3 px-4">Beneficiary's name</th>
+                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Beneficiary's Father Name</th>
                 </>
               )}
               {categoryType === "plantation" && (
                 <>
-                  <th className="py-3 px-4">Livelihood Work</th>
-                  <th className="py-3 px-4">Acres</th>
-                  <th className="py-3 px-4">Beneficiary</th>
+                  <th className="py-3 px-3">Livelihood Work</th>
+                  <th className="py-3 px-3">Type of Demand</th>
+                  <th className="py-3 px-3">Beneficiary's settlement</th>
+                  <th className="py-3 px-3">Beneficiary Name</th>
+                  <th className="py-3 px-3">Gender</th>
+                  <th className="py-3 px-3">Beneficiary's Father Name</th>
+                  {/* <th className="py-3 px-3">Name of Plantation Crop</th> */}
+                  <th className="py-3 px-3">Acres</th>
                 </>
               )}
               {categoryType === "livelihood" && (
                 <>
                   <th className="py-3 px-4">Livelihood Work</th>
-                  <th className="py-3 px-4">Beneficiary</th>
-                  <th className="py-3 px-4">Settlement</th>
+                  <th className="py-3 px-4">Type of Demand</th>
+                  <th className="py-3 px-4">Work Demand</th>
+                  <th className="py-3 px-4">Name of Beneficiary</th>
+                  <th className="py-3 px-4">Settlement Beneficiary Name</th>
+                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Beneficiary's Father Name</th>
                 </>
               )}
               <th className="py-3 px-4">GPS Coordinates</th>
@@ -720,7 +735,7 @@ const DemandTable = ({
               </tr>
             ) : (
               records.map((record, index) => {
-                const status = record.status || "PENDING";
+                const status = record.status || "GENERATED";
                 const { badgeClass, dotClass } = getStatusConfig(status);
 
                 const getRecordTitle = () => {
@@ -743,15 +758,41 @@ const DemandTable = ({
                       #{record.id}
                     </td>
 
-                    {/* Maintenance Columns */}
+                   {/* Maintenance Columns */}
                     {categoryType === "maintenance" && (
                       <>
+                        {/* Demand Type */}
                         <td className="py-4 px-4 font-bold text-slate-800">
-                          {getRecordTitle()}
+                          {record.demand_type || (
+                            <span className="text-slate-400">—</span>
+                          )}
                           <span className="block text-[10px] text-indigo-500 font-bold uppercase mt-0.5">
                             {record.resource_type || "maintenance"}
                           </span>
                         </td>
+
+                        {/* Name of Beneficiary */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Settlement Beneficiary Name */}
+                        <td className="py-4 px-4 font-medium text-slate-600">
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Structure Type */}
+                        <td className="py-4 px-4 font-bold text-slate-800">
+                          {record.structure_type || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Repair Activities */}
                         <td className="py-4 px-4">
                           {record.repair_activities ? (
                             <span className="text-xs text-amber-800 bg-amber-50/80 px-2.5 py-1 rounded-lg border border-amber-100 block max-w-xs break-words">
@@ -767,19 +808,67 @@ const DemandTable = ({
                     {/* New Demand Columns */}
                     {categoryType === "new_demand" && (
                       <>
+                        {/* Work Title / Category */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800">{getRecordTitle()}</div>
+                          <div className="font-bold text-slate-800">
+                            {record.work_demand || "—"}
+                          </div>
+
                           {record.work_category && (
                             <span className="inline-block text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded mt-1">
                               {record.work_category}
                             </span>
                           )}
                         </td>
+
+                        {/* Type of Demand */}
                         <td className="py-4 px-4">
-                          {renderBeneficiary(record)}
+                          {record.demand_type ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.demand_type}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
+
+                        {/* Name of Beneficiary's Settlement */}
                         <td className="py-4 px-4 font-medium text-slate-600">
-                          {record.beneficiary_settlement || <span className="text-slate-400">—</span>}
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary's Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name ? (
+                            <div className="font-bold text-slate-800">
+                              {record.beneficiary_name === "0"
+                                ? "N/A"
+                                : record.beneficiary_name}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                        <td className="py-4 px-4">
+                          {record.gender ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.gender.charAt(0).toUpperCase() +
+                                record.gender.slice(1).toLowerCase()}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary's Father Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_father_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                       </>
                     )}
@@ -787,33 +876,135 @@ const DemandTable = ({
                     {/* Plantation Columns */}
                     {categoryType === "plantation" && (
                       <>
-                        <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800">{record.livelihood_work || getRecordTitle()}</div>
+                        {/* Livelihood Work */}
+                        <td className="py-4 px-3">
+                          <div className="font-bold text-slate-800">
+                            {record.livelihood_work || "—"}
+                          </div>
                         </td>
-                        <td className="py-4 px-4 font-bold text-slate-800">
-                          {record.total_acres !== undefined && record.total_acres !== null ? (
+
+                        {/* Type of Demand */}
+                        <td className="py-4 px-3">
+                          {record.demand_type ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.demand_type.replace(/_demand$/i, "")}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary's Settlement */}
+                        <td className="py-4 px-3 font-medium text-slate-600">
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Beneficiary Name */}
+                        <td className="py-4 px-3">
+                          {record.beneficiary_name ? (
+                            <div className="font-bold text-slate-800">
+                              {record.beneficiary_name === "0"
+                                ? "N/A"
+                                : record.beneficiary_name}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                        <td className="py-4 px-3">
+                          {record.gender ? (
+                            <span className="text-sm font-medium text-slate-700">
+                              {record.gender.charAt(0).toUpperCase() +
+                                record.gender.slice(1).toLowerCase()}
+                            </span>
+                          ) : (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Father's Name */}
+                        <td className="py-4 px-3">
+                          {record.beneficiary_father_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Name of Plantation Crop */}
+                        {/* <td className="py-4 px-3">
+                          {record.work_demand || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td> */}
+
+                        {/* Acres */}
+                        <td className="py-4 px-3 font-bold text-slate-800">
+                          {record.total_acres !== undefined &&
+                          record.total_acres !== null &&
+                          record.total_acres !== "O" ? (
                             `${record.total_acres} acres`
                           ) : (
                             <span className="text-slate-400">—</span>
                           )}
                         </td>
-                        <td className="py-4 px-4">
-                          {renderBeneficiary(record)}
-                        </td>
                       </>
                     )}
 
                     {/* Livelihood Columns */}
-                    {categoryType === "livelihood" && (
+                  {categoryType === "livelihood" && (
                       <>
+                        {/* Livelihood Work */}
                         <td className="py-4 px-4">
-                          <div className="font-bold text-slate-800">{record.livelihood_work || getRecordTitle()}</div>
+                          <div className="font-bold text-slate-800">
+                            {record.livelihood_work || getRecordTitle()}
+                          </div>
                         </td>
+
+                        {/* Type of Demand */}
+                      <td className="py-4 px-4">
+                          {record.demand_type
+                            ? record.demand_type.replace(/_demand$/i, "")
+                            : <span className="text-slate-400">—</span>
+                          }
+                        </td>
+
+                        {/* Work Demand */}
                         <td className="py-4 px-4">
-                          {renderBeneficiary(record)}
+                          {record.work_demand || (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
+
+                        {/* Name of Beneficiary */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Settlement */}
                         <td className="py-4 px-4 font-medium text-slate-600">
-                          {record.beneficiary_settlement || <span className="text-slate-400">—</span>}
+                          {record.beneficiary_settlement || (
+                            <span className="text-slate-400">—</span>
+                          )}
+                        </td>
+
+                        {/* Gender */}
+                     <td className="py-4 px-4">
+                        {record.gender
+                          ? record.gender.charAt(0).toUpperCase() + record.gender.slice(1).toLowerCase()
+                          : <span className="text-slate-400">—</span>
+                        }
+                      </td>
+
+                        {/* Father's Name */}
+                        <td className="py-4 px-4">
+                          {record.beneficiary_father_name || (
+                            <span className="text-slate-400">—</span>
+                          )}
                         </td>
                       </>
                     )}
@@ -833,23 +1024,19 @@ const DemandTable = ({
                     {/* Status badge */}
                     <td className="py-4 px-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ring-1 ${badgeClass}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
-                        {status.toUpperCase()}
+                          {status.toUpperCase() === "PENDING" ? "GENERATED" : status.toUpperCase()}
                       </span>
                     </td>
 
                     {/* Status updater dropdown */}
-                    <td className="py-4 px-4">
+                    <td className="py-4 px-2">
                       <select
                         value={status}
                         onChange={(e) => handleStatusChange(record, e.target.value)}
-                        className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
+                        className="w-full border border-slate-200 rounded-lg px-1 py-1.5 text-xs font-semibold bg-white text-slate-700 hover:border-indigo-400 focus:outline-none transition-all cursor-pointer shadow-sm"
                       >
-                        <option value="PENDING">PENDING</option>
-                        <option value="SUBMITTED">SUBMITTED</option>
+                        <option value="PENDING">SUBMITTED</option>
                         <option value="APPROVED">APPROVED</option>
-                        <option value="REVERTED">REVERTED</option>
-                        <option value="REJECTED">REJECTED</option>
                       </select>
                     </td>
                   </tr>
@@ -864,7 +1051,7 @@ const DemandTable = ({
 };
 
 // Main Dashboard View Component
-const DemandDashboard = ({
+export const DemandDashboard = ({
   isSuperAdmin,
   selectedProject,
   selectedPlan,
@@ -874,6 +1061,92 @@ const DemandDashboard = ({
   const [demands, setDemands] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [demandStatusCounts, setDemandStatusCounts] = useState({
+  pending: 0,
+  submitted: 0,
+  approved: 0,
+});
+const [totalDemands, setTotalDemands] = useState(0);
+
+const [demandStatusLoading, setDemandStatusLoading] = useState(false);
+
+useEffect(() => {
+  if (!selectedPlan) {
+    setDemandStatusCounts({
+      pending: 0,
+      submitted: 0,
+      approved: 0,
+    });
+    return;
+  }
+
+  let isMounted = true;
+
+  const fetchDemandStatusCounts = async () => {
+    setDemandStatusLoading(true);
+
+    try {
+      const res = await fetch(
+        `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+        {
+          headers: getHeaders(),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch demand status counts.");
+      }
+
+      const data = await res.json();
+
+      console.log("Demand status counts data:", data);
+
+      const planData =
+        data?.results?.[0] ||
+        data?.data?.[0] ||
+        data;
+
+      const totals = planData?.totals || {};
+
+      if (isMounted) {
+        const pending = totals?.PENDING?.demands ?? 0;
+        const submitted = totals?.SUBMITTED?.demands ?? 0;
+        const approved = totals?.APPROVED?.demands ?? 0;
+        const total = pending + submitted + approved;
+
+
+
+        setTotalDemands(total);
+
+        setDemandStatusCounts({
+          pending: pending + submitted + approved,
+          submitted,
+          approved,
+        });
+      }
+    } catch (error) {
+      console.error("Demand status fetch error:", error);
+
+      if (isMounted) {
+        setDemandStatusCounts({
+          pending: 0,
+          submitted: 0,
+          approved: 0,
+        });
+      }
+    } finally {
+      if (isMounted) {
+        setDemandStatusLoading(false);
+      }
+    }
+  };
+
+  fetchDemandStatusCounts();
+
+  return () => {
+    isMounted = false;
+  };
+}, [selectedPlan]);
 
   const fetchDemands = async () => {
     if (!selectedPlan) return;
@@ -901,6 +1174,10 @@ const DemandDashboard = ({
         nRes.json(),
         lRes.json()
       ]);
+
+      console.log("MAINTENANCE API:", mData);
+console.log("NRM WORKS API:", nData);
+console.log("LIVELIHOOD API:", lData);
 
       const mList = (mData.results || mData.data || []).map(item => ({
         ...item,
@@ -939,6 +1216,7 @@ const DemandDashboard = ({
   }, [selectedPlan]);
 
   const handleStatusChange = async (record, newStatus) => {
+     console.log("STATUS CHECK:", record.status, newStatus);
     const originalStatus = record.status || "PENDING";
 
     // Optimistic UI update
@@ -966,6 +1244,52 @@ const DemandDashboard = ({
       }
 
       toast.success(`Status updated to ${newStatus} successfully!`);
+      const countRes = await fetch(
+      `${BASEURL}api/v1/dpr_data/status-tracking-by-plan/?plan_id=${selectedPlan}`,
+      {
+        headers: getHeaders(),
+      }
+    );
+
+      if (countRes.ok) {
+        const countData = await countRes.json();
+
+        const planData =
+          countData?.results?.[0] ||
+          countData?.data?.[0] ||
+          countData;
+
+        const totals = planData?.totals || {};
+
+        const pending = totals?.PENDING?.demands ?? 0;
+        const submitted = totals?.SUBMITTED?.demands ?? 0;
+        const approved = totals?.APPROVED?.demands ?? 0;
+
+        const total = pending + submitted + approved;
+        setTotalDemands(total);
+
+        setDemandStatusCounts({
+          pending: pending + submitted + approved,
+          submitted,
+          approved,
+        });
+      }
+      if (newStatus === "APPROVED") {
+        const dprRes = await fetch(
+          `${BASEURL}api/v1/dpr_data/${selectedPlan}/report-status/`,
+          {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify({
+              status: "APPROVED",
+            }),
+          }
+        );
+
+        if (!dprRes.ok) {
+          throw new Error("Failed to approve DPR");
+        }
+      }
     } catch (err) {
       console.error("Status update error:", err);
       toast.error("Failed to update status. Reverting change.");
@@ -995,18 +1319,6 @@ const DemandDashboard = ({
           badgeClass: "bg-emerald-50 text-emerald-700 ring-emerald-200",
           dotClass: "bg-emerald-500",
         };
-      case "REVERTED":
-        return {
-          borderClass: "bg-amber-400",
-          badgeClass: "bg-amber-50 text-amber-700 ring-amber-200",
-          dotClass: "bg-amber-500",
-        };
-      case "REJECTED":
-        return {
-          borderClass: "bg-rose-400",
-          badgeClass: "bg-rose-50 text-rose-700 ring-rose-200",
-          dotClass: "bg-rose-500",
-        };
       case "PENDING":
       default:
         return {
@@ -1028,39 +1340,27 @@ const DemandDashboard = ({
   const lRecords = filteredDemands.filter(d => d.categoryType === 'livelihood');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-6 mt-5">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 overflow-x-hidden">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6 mt-8">
+      <div className="max-w-7xl mx-auto mb-6">
         <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-          {/* Top strip — gradient context bar */}
-          <div className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-blue-500 px-6 py-4 flex items-center gap-4 flex-wrap">
-            {/* Back button */}
+          <div className="relative px-6 py-3 flex items-center">
             <button
               onClick={onBack}
-              className="flex items-center gap-2 text-white/90 hover:text-white font-semibold text-sm bg-white/15 hover:bg-white/25 px-4 py-2 rounded-lg transition-all shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-purple-100 text-purple-700 hover:bg-purple-200 font-semibold text-sm transition-all shrink-0"
             >
               <ChevronLeft size={16} />
               Back
             </button>
 
-            <div className="w-px h-6 bg-white/30 shrink-0" />
-
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              <span className="text-white font-extrabold text-lg tracking-tight">
-                All Demand Dashboard
-              </span>
-            </div>
-
-            {/* Demand Counts */}
-            <div className="ml-auto flex items-center gap-4 shrink-0">
-              <span className="flex items-center gap-1.5 text-xs font-semibold text-white/90 bg-white/20 px-3 py-1.5 rounded-lg">
-                Total Records: {filteredDemands.length}
-              </span>
-            </div>
+            <h2 className="absolute left-1/2 -translate-x-1/2 text-xl font-extrabold text-purple-500 tracking-tight whitespace-nowrap">
+              Natural Resource Management Demands
+            </h2>
           </div>
-
+         
+         
           {/* Plan details ribbon */}
-          <div className="px-8 py-3 bg-indigo-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap">
+          <div className="px-8 py-3 bg-purple-50/70 backdrop-blur-sm border-b border-indigo-100/80 flex items-center gap-10 flex-wrap text-purple-500">
             {[
               {
                 label: "Plan ID",
@@ -1084,7 +1384,7 @@ const DemandDashboard = ({
               },
             ].map(({ label, value }) => (
               <div key={label} className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mb-0.5">
+                <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider mb-0.5">
                   {label}
                 </span>
                 <span className="text-sm font-bold text-slate-800 truncate max-w-[220px]">
@@ -1093,6 +1393,79 @@ const DemandDashboard = ({
               </div>
             ))}
           </div>
+
+            {/* Demand Status Summary */}
+{selectedPlan && (
+  <div className="mt-2 rounded-2xl border border-purple-200 bg-white px-5 py-4 shadow-sm m-2">
+    <div className="flex items-center gap-4">
+
+      {/* Heading */}
+      <div className="flex items-center gap-2 min-w-[150px]">
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-purple-50">
+          <FileText size={17} className="text-purple-600" />
+        </div>
+
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-purple-500">
+            Demand Status
+          </p>
+
+          <p className="text-xs text-slate-400">
+            Demand count
+          </p>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-10 w-px bg-slate-200" />
+      {/* Pending */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-purple-100 bg-purple-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-purple-400" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Total Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-purple-600">
+          {demandStatusLoading ? "—" : totalDemands}
+        </span>
+      </div>
+         {/* Submitted */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-blue-100 bg-blue-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-blue-500" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Submitted Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-blue-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.submitted}
+        </span>
+      </div>
+
+
+         {/* Approved */}
+      <div className="flex flex-1 items-center justify-between rounded-xl border border-emerald-100 bg-emerald-50/60 px-5 py-3">
+        <div className="flex items-center gap-3">
+          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+
+          <span className="text-sm font-semibold text-slate-700">
+            Approved Demands
+          </span>
+        </div>
+
+        <span className="text-xl font-black text-emerald-600">
+          {demandStatusLoading ? "—" : demandStatusCounts.approved}
+        </span>
+      </div>
+
+    </div>
+  </div>
+)}
 
           {/* Controls bar */}
           <div className="px-8 py-4 flex items-center gap-4 bg-white/60 backdrop-blur-md">
@@ -1152,9 +1525,6 @@ const DemandDashboard = ({
             />
 
             <div className="border-t border-slate-200/80 pt-6">
-              <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight px-2">
-                Livelihood Demands
-              </h2>
               
               <div className="space-y-6">
                 <DemandTable
@@ -1167,7 +1537,7 @@ const DemandDashboard = ({
                 />
 
                 <DemandTable
-                  title="Livelihood Demands (Others / Rest)"
+                  title="Livelihood Demands"
                   icon={User}
                   records={lRecords}
                   categoryType="livelihood"
