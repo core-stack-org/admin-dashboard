@@ -2572,11 +2572,33 @@ submissions.forEach((submission) => {
     return;
   }
 
-  const duplicateKey = [
-    normalizedName,
-    lat,
-    lon,
-  ].join("|");
+const settlement = getFieldValue(
+  submission,
+  "beneficiary_settlement"
+);
+
+const beneficiaryName = getFieldValue(
+  submission,
+  "Beneficiary_name"
+);
+
+const normalizedSettlement = String(settlement || "")
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, " ");
+
+const normalizedBeneficiaryName = String(beneficiaryName || "")
+  .trim()
+  .toLowerCase()
+  .replace(/\s+/g, " ");
+
+const duplicateKey = [
+  normalizedSettlement,
+  normalizedBeneficiaryName,
+  lat,
+  lon,
+].join("|");
+
 
   if (!duplicateGroups[duplicateKey]) {
     duplicateGroups[duplicateKey] = [];
