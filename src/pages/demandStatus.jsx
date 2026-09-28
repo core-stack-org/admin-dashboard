@@ -18,6 +18,8 @@ import { getBlocks } from "./base_function";
 const BASEURL = `${process.env.REACT_APP_BASEURL}`;
 
 const getToken = () => sessionStorage.getItem("accessToken");
+const demandsCache = {};
+
 
 const getHeaders = () => ({
   "Content-Type": "application/json",
@@ -1050,6 +1052,7 @@ const DemandTable = ({
   );
 };
 
+
 // Main Dashboard View Component
 export const DemandDashboard = ({
   isSuperAdmin,
@@ -1057,6 +1060,8 @@ export const DemandDashboard = ({
   selectedPlan,
   planDetails,
   onBack,
+  demandsCache,
+  setDemandsCache,
 }) => {
   const [demands, setDemands] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -1148,68 +1153,132 @@ useEffect(() => {
   };
 }, [selectedPlan]);
 
-  const fetchDemands = async () => {
-    if (!selectedPlan) return;
+const fetchDemands = async () => {
+  if (!selectedPlan) return;
 
-    setLoading(true);
-    setDemands([]); // Clear demands first to prevent stale views
-    
-    const maintenanceUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/maintenance/`;
-    const newDemandUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/nrm-works/`;
-    const livelihoodUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/livelihood/`;
+  if (demandsCache[selectedPlan]) {
+    setDemands(demandsCache[selectedPlan]);
+    return;
+  }
 
-    try {
-      const [mRes, nRes, lRes] = await Promise.all([
-        fetch(maintenanceUrl, { headers: getHeaders() }),
-        fetch(newDemandUrl, { headers: getHeaders() }),
-        fetch(livelihoodUrl, { headers: getHeaders() })
-      ]);
+  setLoading(true);
+  setDemands([]);
 
-      if (!mRes.ok || !nRes.ok || !lRes.ok) {
-        throw new Error("Failed to fetch one or more demand types");
-      }
+  const maintenanceTypes = ["gw", "agri", "swb", "swb_rs"];
 
-      const [mData, nData, lData] = await Promise.all([
-        mRes.json(),
-        nRes.json(),
-        lRes.json()
-      ]);
+  const newDemandUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/nrm-works/`;
+  const livelihoodUrl = `${BASEURL}api/v1/dpr_data/${selectedPlan}/livelihood/`;
 
-      console.log("MAINTENANCE API:", mData);
-console.log("NRM WORKS API:", nData);
-console.log("LIVELIHOOD API:", lData);
+  try {
+    // Call all maintenance types + NRM + Livelihood in parallel
+    const [
+      maintenanceResponses,
+      nRes,
+      lRes
+    ] = await Promise.all([
+      Promise.all(
+        maintenanceTypes.map((type) =>
+          fetch(
+            `${BASEURL}api/v1/dpr_data/${selectedPlan}/maintenance/?type=${type}`,
+            {
+              headers: getHeaders(),
+            }
+          )
+        )
+      ),
 
-      const mList = (mData.results || mData.data || []).map(item => ({
-        ...item,
-        categoryType: 'maintenance',
-        resource_type: item.resource_type || 'maintenance'
-      }));
+      fetch(newDemandUrl, {
+        headers: getHeaders(),
+      }),
 
-      const nList = (nData.results || nData.data || []).map(item => ({
-        ...item,
-        categoryType: 'new_demand',
-        resource_type: item.resource_type || 'nrm-works'
-      }));
+      fetch(livelihoodUrl, {
+        headers: getHeaders(),
+      }),
+    ]);
 
-      const lList = (lData.results || lData.data || []).map(item => {
-        const work = String(item.livelihood_work || "").toLowerCase().trim();
-        const isPlantation = work.startsWith("plantation");
-        return {
-          ...item,
-          categoryType: isPlantation ? 'plantation' : 'livelihood',
-          resource_type: item.resource_type || 'livelihood'
-        };
-      });
-
-      setDemands([...mList, ...nList, ...lList]);
-    } catch (err) {
-      console.error("Demand Status Fetch Error", err);
-      toast.error("Failed to load demand records");
-      setDemands([]);
-    } finally {
-      setLoading(false);
+    // Check responses
+    if (
+      maintenanceResponses.some((res) => !res.ok) ||
+      !nRes.ok ||
+      !lRes.ok
+    ) {
+      throw new Error("Failed to fetch one or more demand types");
     }
-  };
+
+    // Parse all responses in parallel
+    const [
+      maintenanceData,
+      nData,
+      lData
+    ] = await Promise.all([
+      Promise.all(
+        maintenanceResponses.map((res) => res.json())
+      ),
+      nRes.json(),
+      lRes.json(),
+    ]);
+
+    // --------------------------------
+    // Maintenance
+    // --------------------------------
+    const mList = maintenanceData.flatMap((data, index) => {
+      const type = maintenanceTypes[index];
+
+      return (data.results || data.data || []).map((item) => ({
+        ...item,
+        categoryType: "maintenance",
+        maintenanceType: type,
+        resource_type: item.resource_type || "maintenance",
+      }));
+    });
+
+    // --------------------------------
+    // NRM Works
+    // --------------------------------
+    const nList = (nData.results || nData.data || []).map((item) => ({
+      ...item,
+      categoryType: "new_demand",
+      resource_type: item.resource_type || "nrm-works",
+    }));
+
+    // --------------------------------
+    // Livelihood
+    // --------------------------------
+    const lList = (lData.results || lData.data || []).map((item) => {
+      const work = String(item.livelihood_work || "")
+        .toLowerCase()
+        .trim();
+
+      const isPlantation = work.startsWith("plantation");
+
+      return {
+        ...item,
+        categoryType: isPlantation
+          ? "plantation"
+          : "livelihood",
+        resource_type: item.resource_type || "livelihood",
+      };
+    });
+
+    // Combine everything
+   const allDemands = [
+  ...mList,
+  ...nList,
+  ...lList,
+];
+    setDemands(allDemands);
+
+    // Cache data for this plan
+    demandsCache[selectedPlan] = allDemands;
+
+  } catch (err) {
+    console.error("Demand Status Fetch Error", err);
+    toast.error("Failed to load demand records");
+    setDemands([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchDemands();
@@ -1559,6 +1628,7 @@ const DemandStatus = () => {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedPlan, setSelectedPlan] = useState("");
   const [planDetails, setPlanDetails] = useState(null);
+  const [demandsCache, setDemandsCache] = useState({});
 
   const [isSuperAdmin, setIsSuperAdmin] = useState(() => {
     try {
@@ -1600,6 +1670,8 @@ const DemandStatus = () => {
       selectedPlan={selectedPlan}
       planDetails={planDetails}
       onBack={handleBack}
+      demandsCache={demandsCache}
+      setDemandsCache={setDemandsCache}
     />
   );
 };

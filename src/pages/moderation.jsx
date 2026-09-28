@@ -4494,6 +4494,8 @@ const ModerationTabsPage = ({
   onFormChange,
   onBack,
 }) => {
+    const [demandsCache, setDemandsCache] = useState({});
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-100 p-6 mt-5">
 
@@ -4550,6 +4552,8 @@ const ModerationTabsPage = ({
             plan: selectedPlanName,
           }}
           onBack={onBack}
+          demandsCache={demandsCache}
+          setDemandsCache={setDemandsCache}
         />
       )}
     </div>
