@@ -209,18 +209,33 @@ const ActivateBlock = () => {
     if (!locId) return toast.error("Please select a location first.");
 
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/activate_location/`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location_type: selectedLevel,
-            location_id: locId,
-            active,
-          }),
-        }
-      );
+      const payload = {
+        location_type: selectedLevel,
+        location_id: locId,
+        active,
+      };
+
+      const [res, localRes] = await Promise.all([
+        // Existing API
+        fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/activate_location/`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        ),
+
+        // Local API
+        fetch(
+          `${process.env.REACT_APP_LOCAL_API_BASE_URL}/api/v1/activate_location/`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        ),
+      ]);
 
       if (!res.ok) {
         let msg = "Failed to update status.";
@@ -286,9 +301,22 @@ const ActivateBlock = () => {
         Activate/Deactivate Location
       </h2>
 
+   
       {/* LOCATION TYPE */}
       <div className="mb-4">
-        <label className="font-semibold">Location Type:</label>
+        <div className="flex items-center justify-between">
+          <label className="font-semibold">Location Type:</label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="w-4 h-4"
+              defaultChecked={true}
+            />
+            <span className="font-semibold">Local</span>
+          </label>
+        </div>
+
         <select
           className="w-full p-3 border rounded mt-2"
           value={locationType}
