@@ -175,18 +175,33 @@ const ActivateBlock = () => {
     if (!locId) return toast.error("Please select a location first.");
 
     try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/activate_location/`,
-        {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            location_type: selectedLevel,
-            location_id: locId,
-            active,
-          }),
-        }
-      );
+      const payload = {
+        location_type: selectedLevel,
+        location_id: locId,
+        active,
+      };
+
+      const [res, localRes] = await Promise.all([
+        // Existing API
+        fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/activate_location/`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        ),
+
+        // Local API
+        fetch(
+          `${process.env.REACT_APP_LOCAL_API_BASE_URL}/api/v1/activate_location/`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          }
+        ),
+      ]);
 
       if (!res.ok) {
         let msg = "Failed to update status.";
