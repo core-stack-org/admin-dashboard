@@ -1,6 +1,24 @@
 import { useEffect, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import {
+  Landmark,
+  Map,
+  MapPin,
+  Power,
+  PowerOff,
+} from "lucide-react";
+import {
+  Card,
+  CardBody,
+  CardFooter,
+  FormSection,
+  SelectField,
+  fetchLocationList,
+} from "./locationFields";
+import SyncGeoserver from "./syncGeoserver";
+
+const LEVEL_LABELS = { state: "State", district: "District", block: "Tehsil" };
 
 const ActivateBlock = () => {
   const [locationType, setLocationType] = useState("");
@@ -26,75 +44,23 @@ const ActivateBlock = () => {
     return null;
   };
 
-  // FETCH STATES
-  const fetchStates = async () => {
-    try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_states/`,
-        {
-          method: "GET",
-          headers: {
-            "content-type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-          },
-        }
-      );
-      const data = await res.json();
-      const sorted = (data.states || []).sort((a, b) =>
-        a.state_name.localeCompare(b.state_name)
-      );
-      setStatesList(sorted);
-    } catch {
-      toast.error("Failed to load states.");
-    }
-  };
+  const fetchStates = () =>
+    fetchLocationList("get_states", "states", "state_name")
+      .then(setStatesList)
+      .catch(() => toast.error("Failed to load states."));
 
-  // FETCH DISTRICTS
-  const fetchDistricts = async (stateId) => {
+  const fetchDistricts = (stateId) => {
     if (!stateId) return;
-    try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_districts/${stateId}/`,
-        {
-          method: "GET",
-          headers: {
-            "content-type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-          },
-        }
-      );
-      const data = await res.json();
-      const sorted = (data.districts || []).sort((a, b) =>
-        a.district_name.localeCompare(b.district_name)
-      );
-      setDistrictsList(sorted);
-    } catch {
-      toast.error("Failed to load districts.");
-    }
+    fetchLocationList(`get_districts/${stateId}`, "districts", "district_name")
+      .then(setDistrictsList)
+      .catch(() => toast.error("Failed to load districts."));
   };
 
-  // FETCH BLOCKS
-  const fetchBlocks = async (districtId) => {
+  const fetchBlocks = (districtId) => {
     if (!districtId) return;
-    try {
-      const res = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/get_blocks/${districtId}/`,
-        {
-          method: "GET",
-          headers: {
-            "content-type": "application/json",
-            "ngrok-skip-browser-warning": "420",
-          },
-        }
-      );
-      const data = await res.json();
-      const sorted = (data.blocks || []).sort((a, b) =>
-        a.block_name.localeCompare(b.block_name)
-      );
-      setBlocksList(sorted);
-    } catch {
-      toast.error("Failed to load blocks.");
-    }
+    fetchLocationList(`get_blocks/${districtId}`, "blocks", "block_name")
+      .then(setBlocksList)
+      .catch(() => toast.error("Failed to load tehsils."));
   };
 
   // LOCATION TYPE CHANGE
@@ -232,7 +198,7 @@ const ActivateBlock = () => {
       }
 
       toast.success(
-        `${selectedLevel.charAt(0).toUpperCase() + selectedLevel.slice(1)} ${
+        `${LEVEL_LABELS[selectedLevel]} ${
           active ? "activated" : "deactivated"
         } successfully!`
       );
@@ -279,132 +245,167 @@ const ActivateBlock = () => {
     }
   };
 
+  const levels = [
+    { value: "State", label: "State", icon: Map },
+    { value: "District", label: "District", icon: Landmark },
+    { value: "Block", label: "Tehsil", icon: MapPin },
+  ];
+
+  const isActive = selectedLocation.active_status === true;
+  const hasSelection = selectedLocation.active_status !== null;
+  const selectedLevel = getSelectedLevel();
+
   return (
-    <div className="max-w-xl mx-auto bg-white shadow-md rounded-lg p-8 mt-24">
+    <div className="min-h-screen bg-gray-50 pt-24 pb-16">
       <ToastContainer />
-      <h2 className="text-2xl font-bold mb-6 text-center">
-        Activate/Deactivate Location
-      </h2>
-
-      {/* LOCATION TYPE */}
-      <div className="mb-4">
-        <label className="font-semibold">Location Type:</label>
-        <select
-          className="w-full p-3 border rounded mt-2"
-          value={locationType}
-          onChange={(e) => setLocationType(e.target.value)}
-        >
-          <option value="">Select Location Type</option>
-          <option value="State">State</option>
-          <option value="District">District</option>
-          <option value="Block">Block</option>
-        </select>
-      </div>
-
-      {/* STATE DROPDOWN */}
-      {(locationType === "State" ||
-        locationType === "District" ||
-        locationType === "Block") && (
-        <div className="mb-4">
-          <label className="font-semibold">Select State:</label>
-          <select
-            className="w-full p-3 border rounded mt-2"
-            value={selectedState?.id || ""}
-            onChange={handleStateChange}
-          >
-            <option value="">Select State</option>
-            {statesList.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.state_name}
-              </option>
-            ))}
-          </select>
+      <div className="max-w-3xl mx-auto px-4 space-y-8">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">
+            Location Management
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">
+            Activate a location, then publish its layers to GeoServer.
+          </p>
         </div>
-      )}
 
-      {/* DISTRICT DROPDOWN */}
-      {locationType !== "State" && selectedState && (
-        <div className="mb-4">
-          <label className="font-semibold">Select District:</label>
-          <select
-            className="w-full p-3 border rounded mt-2"
-            disabled={!selectedState.active_status}
-            value={selectedDistrict?.id || ""}
-            onChange={handleDistrictChange}
-          >
-            {!selectedState.active_status ? (
-              <option>Please activate state first</option>
-            ) : (
-              <>
-                <option value="">Select District</option>
-                {districtsList.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.district_name}
-                  </option>
+        <Card
+          step={1}
+          accent="blue"
+          icon={Power}
+          title="Activate / Deactivate Location"
+          subtitle="Control which states, districts and tehsils are live"
+        >
+          <CardBody>
+            <FormSection title="Level">
+              <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-xl">
+                {levels.map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setLocationType(value)}
+                    className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      locationType === value
+                        ? "bg-white text-blue-600 shadow-sm ring-1 ring-gray-200"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <Icon size={16} />
+                    {label}
+                  </button>
                 ))}
-              </>
-            )}
-          </select>
-        </div>
-      )}
+              </div>
+            </FormSection>
 
-      {/* BLOCK DROPDOWN */}
-      {locationType === "Block" && selectedDistrict && (
-        <div className="mb-4">
-          <label className="font-semibold">Select Block:</label>
-          <select
-            className="w-full p-3 border rounded mt-2"
-            disabled={!selectedDistrict.active_status}
-            value={selectedBlock?.id || ""}
-            onChange={handleBlockChange}
-          >
-            {!selectedDistrict.active_status ? (
-              <option>Please activate district first</option>
+            {locationType && (
+              <FormSection title="Location">
+                <SelectField
+                  label="State"
+                  value={selectedState?.id || ""}
+                  onChange={handleStateChange}
+                  placeholder="Select a state"
+                >
+                  {statesList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.state_name}
+                    </option>
+                  ))}
+                </SelectField>
+
+                {locationType !== "State" && selectedState && (
+                  <SelectField
+                    label="District"
+                    value={selectedDistrict?.id || ""}
+                    onChange={handleDistrictChange}
+                    placeholder="Select a district"
+                    disabledHint={
+                      !selectedState.active_status &&
+                      `Activate ${selectedState.name} first to manage its districts.`
+                    }
+                  >
+                    {districtsList.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.district_name}
+                      </option>
+                    ))}
+                  </SelectField>
+                )}
+
+                {locationType === "Block" && selectedDistrict && (
+                  <SelectField
+                    label="Tehsil"
+                    value={selectedBlock?.id || ""}
+                    onChange={handleBlockChange}
+                    placeholder="Select a tehsil"
+                    disabledHint={
+                      !selectedDistrict.active_status &&
+                      `Activate ${selectedDistrict.name} first to manage its tehsils.`
+                    }
+                  >
+                    {blocksList.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.block_name}
+                      </option>
+                    ))}
+                  </SelectField>
+                )}
+              </FormSection>
+            )}
+          </CardBody>
+
+          <CardFooter>
+            {hasSelection ? (
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    {LEVEL_LABELS[selectedLevel]}
+                  </p>
+                  <div className="flex items-center gap-2.5 mt-0.5">
+                    <span className="text-base font-semibold text-gray-900 truncate">
+                      {selectedLocation.name}
+                    </span>
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        isActive
+                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+                          : "bg-gray-100 text-gray-600 ring-1 ring-gray-200"
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          isActive ? "bg-emerald-500" : "bg-gray-400"
+                        }`}
+                      />
+                      {isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => updateStatus(!isActive)}
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-colors ${
+                    isActive
+                      ? "bg-white text-red-600 ring-1 ring-red-200 hover:bg-red-50"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  }`}
+                >
+                  {isActive ? <PowerOff size={16} /> : <Power size={16} />}
+                  {isActive ? "Deactivate" : "Activate"}
+                </button>
+              </div>
             ) : (
-              <>
-                <option value="">Select Block</option>
-                {blocksList.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.block_name}
-                  </option>
-                ))}
-              </>
+              <p className="text-sm text-gray-500 py-2">
+                Pick a level and location to see its status.
+              </p>
             )}
-          </select>
-        </div>
-      )}
+          </CardFooter>
+        </Card>
 
-      {/* BUTTONS */}
-      <div className="flex justify-between mt-6">
-        <button
-          onClick={() => updateStatus(true)}
-          disabled={
-            selectedLocation.active_status === true ||
-            selectedLocation.active_status === null
-          }
-          className={`px-6 py-2 rounded text-white ${
-            selectedLocation.active_status === false
-              ? "bg-green-600 hover:bg-green-700"
-              : "bg-green-300 cursor-not-allowed"
-          }`}
-        >
-          Activate
-        </button>
-
-        <button
-          onClick={() => updateStatus(false)}
-          disabled={
-            selectedLocation.active_status === false ||
-            selectedLocation.active_status === null
-          }
-          className={`px-6 py-2 rounded text-white ${
-            selectedLocation.active_status === true
-              ? "bg-red-600 hover:bg-red-700"
-              : "bg-red-300 cursor-not-allowed"
-          }`}
-        >
-          Deactivate
-        </button>
+        <SyncGeoserver
+          prefillState={selectedState}
+          prefillDistrict={selectedDistrict}
+          prefillBlock={selectedBlock}
+        />
       </div>
     </div>
   );
