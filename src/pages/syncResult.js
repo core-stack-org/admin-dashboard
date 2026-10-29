@@ -117,14 +117,14 @@ const SyncResult = ({ result, location }) => {
   }, [result]);
 
   const { ok, message, data } = result;
-  const isSyncResponse = ok && data && "found" in data;
+  const isSyncResponse = ok && data && ("found" in data || "gee" in data);
 
   return (
     <div ref={ref} className="scroll-mt-24">
       <Card
         accent={ok ? "emerald" : "red"}
         icon={ok ? CheckCircle2 : XCircle}
-        title={ok ? "Sync queued" : "Sync failed"}
+        title={ok ? (data?.dry_run ? "Dry run preview" : "Sync queued") : "Sync failed"}
         subtitle={isSyncResponse ? location : message}
         aside={
           isSyncResponse && (
@@ -138,7 +138,9 @@ const SyncResult = ({ result, location }) => {
         <CardBody>
           {isSyncResponse ? (
             <div className="space-y-4">
-              <LayerSource title="Local layers" source={data} />
+              {"found" in data && (
+                <LayerSource title="Local layers" source={data} />
+              )}
               {data.gee && (
                 <LayerSource
                   title="GEE layers"

@@ -56,6 +56,11 @@ const LOCAL_MAP_TYPES = [
     label: "Static Layers",
     description: "Layers that do not change over time (ex: Aquifer, Livestocks, Canal etc).",
   },
+  {
+    value: "gee_layers",
+    label: "GEE Layers",
+    description: "Layers computed on Google Earth Engine using the selected GEE account.",
+  },
 ];
 
 const MAP_TYPES_BY_COMPUTE = {
@@ -344,8 +349,16 @@ const LayerMapJsonComponent = ({ currentUser }) => {
     }
   }, [yearFieldsRequired]);
 
+  const geeAccountRequired = compute === "local" && mapType === "gee_layers";
+  const showGeeAccount = compute === "gee" || geeAccountRequired;
+
   const isFormValid = Boolean(
-    state.name && district.name && block.name && compute && mapType
+    state.name &&
+      district.name &&
+      block.name &&
+      compute &&
+      mapType &&
+      (!geeAccountRequired || selectedGEEAccount)
   );
 
 const getLocalAccessToken = async (username, password) => {
@@ -386,6 +399,10 @@ const getLocalAccessToken = async (username, password) => {
       toast.error("Please select a map type to generate the layer.");
       return;
     }
+    if (geeAccountRequired && !selectedGEEAccount) {
+      toast.error("Please select a GEE account to generate GEE layers.");
+      return;
+    }
 
     const token = sessionStorage.getItem("accessToken");
     const username = currentUser?.loginCredentials?.username;
@@ -404,8 +421,8 @@ const getLocalAccessToken = async (username, password) => {
       district: district.name,
       block: block.name,
       map: mapType,
-      gee_account_id: selectedGEEAccount,
       ...(compute === "local" && { compute }),
+      ...(showGeeAccount && { gee_account_id: selectedGEEAccount }),
       ...(yearFieldsRequired && { start_year: startYear, end_year: endYear }),
     };
 
@@ -552,15 +569,6 @@ const getLocalAccessToken = async (username, password) => {
                 />
 
                 <FormSelect
-                  label="GEE Account"
-                  icon={Satellite}
-                  options={geeAccountOptions}
-                  value={selectedGEEAccount}
-                  onChange={setSelectedGEEAccount}
-                  placeholder="Select GEE account"
-                />
-
-                <FormSelect
                   label="Map Type"
                   icon={Layers}
                   options={mapTypeOptions}
@@ -569,6 +577,17 @@ const getLocalAccessToken = async (username, password) => {
                   placeholder="Select map type"
                   disabled={!compute}
                 />
+
+                {showGeeAccount && (
+                  <FormSelect
+                    label="GEE Account"
+                    icon={Satellite}
+                    options={geeAccountOptions}
+                    value={selectedGEEAccount}
+                    onChange={setSelectedGEEAccount}
+                    placeholder="Select GEE account"
+                  />
+                )}
               </div>
               {selectedMapDescription && (
                 <p className="mt-2 text-xs text-gray-500">
