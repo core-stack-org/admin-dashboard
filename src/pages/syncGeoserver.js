@@ -25,6 +25,35 @@ const LAYER_GROUPS = [
   { label: "Static layers", layers: flattenLayers(layerTypes.static_layers) },
 ];
 
+const SOURCE_OPTIONS = [
+  { value: "local", label: "Local only" },
+  { value: "gee", label: "GEE only" },
+];
+
+const Toggle = ({ label, description, checked, onChange }) => (
+  <label className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg ring-1 ring-gray-200 cursor-pointer hover:bg-gray-50 transition">
+    <div>
+      <p className="text-sm font-medium text-gray-900">{label}</p>
+      <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`relative w-10 h-6 rounded-full shrink-0 transition-colors ${
+        checked ? "bg-violet-600" : "bg-gray-300"
+      }`}
+    >
+      <span
+        className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-4" : ""
+        }`}
+      />
+    </button>
+  </label>
+);
+
 const toLocation = (item, nameKey) => ({
   id: item.id,
   name: item[nameKey],
@@ -41,7 +70,12 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
   const [selectedBlock, setSelectedBlock] = useState(null);
 
   const [layerType, setLayerType] = useState("");
+  const [source, setSource] = useState("");
+  const [geeAccounts, setGeeAccounts] = useState({});
+  const [geeAccountId, setGeeAccountId] = useState("");
   const [force, setForce] = useState(false);
+  const [dryRun, setDryRun] = useState(false);
+  const [skipBoundaries, setSkipBoundaries] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [result, setResult] = useState(null);
 
@@ -60,8 +94,28 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
       .then(setBlocksList)
       .catch(() => toast.error("Failed to load tehsils."));
 
+  const loadGeeAccounts = async () => {
+    try {
+      const res = await fetch(
+        `${process.env.REACT_APP_BASEURL}api/v1/geeaccounts/`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+            Authorization: `Bearer ${sessionStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+      setGeeAccounts(await res.json());
+    } catch {
+      toast.error("Failed to load GEE accounts.");
+    }
+  };
+
   useEffect(() => {
     loadStates();
+    loadGeeAccounts();
   }, []);
 
   // Mirror whatever is picked in the activate form above
@@ -113,6 +167,8 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
   const blockInactive = selectedBlock && !selectedBlock.active_status;
   const canSync =
     selectedState && selectedDistrict && selectedBlock && !blockInactive;
+  // GEE account only matters when GEE layers are part of the sync
+  const includesGee = source !== "local";
 
   const syncLayers = async () => {
     if (!canSync) return;
@@ -134,7 +190,11 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
             district: selectedDistrict.name,
             block: selectedBlock.name,
             ...(layerType && { layer_type: layerType }),
+            ...(source && { source }),
+            ...(includesGee && geeAccountId && { gee_account_id: geeAccountId }),
             ...(force && { force: true }),
+            ...(dryRun && { dry_run: true }),
+            ...(skipBoundaries && { skip_boundaries: true }),
           }),
         }
       );
@@ -150,7 +210,9 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
         data?.detail ||
         data?.error ||
         (res.ok
-          ? `Queued ${queuedCount} layer${queuedCount === 1 ? "" : "s"} for sync.`
+          ? `${data?.dry_run ? "Would queue" : "Queued"} ${queuedCount} layer${
+              queuedCount === 1 ? "" : "s"
+            } for sync.`
           : "Failed to sync layers.");
 
       setResult({ ok: res.ok, message, data });
@@ -248,29 +310,70 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
               ))}
             </SelectField>
 
-            <label className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg ring-1 ring-gray-200 cursor-pointer hover:bg-gray-50 transition">
-              <div>
-                <p className="text-sm font-medium text-gray-900">Force sync</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Re-sync even if the layer is already on GeoServer
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={force}
-                onClick={() => setForce((f) => !f)}
-                className={`relative w-10 h-6 rounded-full shrink-0 transition-colors ${
-                  force ? "bg-violet-600" : "bg-gray-300"
-                }`}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <SelectField
+                label={
+                  <>
+                    Source
+                    <span className="text-gray-400 font-normal">(optional)</span>
+                  </>
+                }
+                value={source}
+                onChange={(e) => setSource(e.target.value)}
+                placeholder="All (local + GEE)"
               >
-                <span
-                  className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                    force ? "translate-x-4" : ""
-                  }`}
-                />
-              </button>
-            </label>
+                {SOURCE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </SelectField>
+
+              {includesGee && (
+                <SelectField
+                  label={
+                    <>
+                      GEE account
+                      <span className="text-gray-400 font-normal">(optional)</span>
+                    </>
+                  }
+                  value={geeAccountId}
+                  onChange={(e) => setGeeAccountId(e.target.value)}
+                  placeholder="Default account"
+                >
+                  {Object.entries(geeAccounts).map(([email, accounts]) => (
+                    <optgroup key={email} label={email}>
+                      {accounts.map((acc) => (
+                        <option key={acc.id} value={String(acc.id)}>
+                          {acc.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </SelectField>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <Toggle
+                label="Force sync"
+                description="Re-sync even if the layer is already on GeoServer"
+                checked={force}
+                onChange={setForce}
+              />
+              <Toggle
+                label="Skip boundaries"
+                description="Don't push the tehsil's panchayat_boundaries and mws layers"
+                checked={skipBoundaries}
+                onChange={setSkipBoundaries}
+              />
+              <Toggle
+                label="Dry run"
+                description="Preview what would be queued without queuing anything"
+                checked={dryRun}
+                onChange={setDryRun}
+              />
+            </div>
           </FormSection>
         </CardBody>
 
@@ -302,7 +405,13 @@ const SyncGeoserver = ({ prefillState, prefillDistrict, prefillBlock }) => {
               ) : (
                 <CloudUpload size={16} />
               )}
-              {syncing ? "Syncing..." : "Sync to GeoServer"}
+              {syncing
+                ? dryRun
+                  ? "Previewing..."
+                  : "Syncing..."
+                : dryRun
+                ? "Preview sync"
+                : "Sync to GeoServer"}
             </button>
           </div>
         </CardFooter>
