@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import { MapPin, FileSpreadsheet } from "lucide-react";
+import {
+  FormSelect,
+  SectionHeading,
+  PageCard,
+  SubmitButton,
+} from "./formControls";
 
 
 const GenerateExcelComponent = () => {
@@ -82,8 +90,7 @@ const GenerateExcelComponent = () => {
     }
   };
 
-  const handleStateChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleStateChange = (selectedValue) => {
     if (!selectedValue) {
       setState({ id: "", name: "" });
       return;
@@ -91,13 +98,14 @@ const GenerateExcelComponent = () => {
 
     const [state_id, state_name] = selectedValue.split("_");
     setState({ id: state_id, name: state_name });
+    setDistrict({ id: "", name: "" });
+    setBlock({ id: "", name: "" });
     setDistrictsList([]);
     setBlocksList([]);
     fetchDistricts(state_id);
   };
 
-  const handleDistrictChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleDistrictChange = (selectedValue) => {
     if (!selectedValue) {
       setDistrict({ id: "", name: "" });
       return;
@@ -105,12 +113,12 @@ const GenerateExcelComponent = () => {
 
     const [district_census_code, district_name] = selectedValue.split("_");
     setDistrict({ id: district_census_code, name: district_name });
+    setBlock({ id: "", name: "" });
     setBlocksList([]);
     fetchBlocks(district_census_code);
   };
 
-  const handleBlockChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleBlockChange = (selectedValue) => {
     if (!selectedValue) {
       setBlock({ id: "", name: "" });
       return;
@@ -122,7 +130,7 @@ const GenerateExcelComponent = () => {
 
   const handleGenerateExcel = async () => {
     if (!state.name || !district.name || !block.name) {
-      alert("Please select a state, district, and block to generate Excel.");
+      toast.error("Please select a state, district, and block to generate Excel.");
       return;
     }
     setLoading(true);
@@ -155,111 +163,100 @@ const GenerateExcelComponent = () => {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Excel downloaded.");
     } catch (error) {
       console.error("Error generating Excel:", error);
-      alert("Something went wrong while generating the Excel file.");
+      toast.error("Something went wrong while generating the Excel file.");
     }
     finally {
       setLoading(false); 
     }
   };
 
+  const stateOptions = statesList.map((s) => ({
+    value: `${s.id}_${s.state_name}`,
+    label: s.state_name,
+  }));
+
+  const districtOptions = districtsList.map((d) => ({
+    value: `${d.id}_${d.district_name}`,
+    label: d.district_name,
+  }));
+
+  const blockOptions = blocksList.map((b) => ({
+    value: `${b.id}_${b.block_name}`,
+    label: b.block_name,
+  }));
+
+  const isFormValid = Boolean(state.name && district.name && block.name);
+
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-28">
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold">Generate Excel for Block</h1>{" "}
-      </div>
-      <form className="space-y-8">
-        <div>
-          <label className="text-lg font-semibold mb-2 block">State:</label>
-          <select
-            value={state.id && state.name ? `${state.id}_${state.name}` : ""}
-            onChange={handleStateChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select State</option>
-            {statesList.map((state) => (
-              <option
-                key={state.id}
-                value={`${state.id}_${state.state_name}`}
-              >
-                {state.state_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* District Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">District:</label>
-          <select
-            value={
-              district.id && district.name
-                ? `${district.id}_${district.name}`
-                : ""
-            }
-            onChange={handleDistrictChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select District</option>
-            {districtsList.map((district) => (
-              <option
-                key={`${district.id}_${district.district_name}`} // Ensure uniqueness
-                value={`${district.id}_${district.district_name}`}
-              >
-                {district.district_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Block Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">Block:</label>
-          <select
-            value={block.id && block.name ? `${block.id}_${block.name}` : ""}
-            onChange={handleBlockChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select Block</option>
-            {blocksList && blocksList.length > 0 ? (
-              blocksList.map((block) => (
-                <option
-                  key={`${block.id}_${block.block_name}`} // Ensure uniqueness
-                  value={`${block.id}_${block.block_name}`}
-                >
-                  {block.block_name}
-                </option>
-              ))
-            ) : (
-              <option value="">No blocks available</option>
-            )}
-          </select>
-        </div>
-
-        {/* Submit Button */}
-        <div className="text-center">
-          <button
-            type="button"
-            disabled={loading}
-            className={`px-4 py-2 rounded-lg text-white ${
-              loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-            }`}
-            onClick={handleGenerateExcel}
-          >
-            {loading ? "Generating Excel..." : "Generate Excel"}
-          </button>
-
-          {/* Spinner */}
+    <PageCard
+      icon={FileSpreadsheet}
+      title="Generate Excel for Block"
+      subtitle="Download block-level stats as an Excel file."
+    >
+      <form
+        className="space-y-8 px-8 py-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleGenerateExcel();
+        }}
+      >
+        <section>
+          <SectionHeading>Location</SectionHeading>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <FormSelect
+              label="State"
+              icon={MapPin}
+              options={stateOptions}
+              value={state.id && state.name ? `${state.id}_${state.name}` : ""}
+              onChange={handleStateChange}
+              placeholder="Select state"
+            />
+            <FormSelect
+              label="District"
+              icon={MapPin}
+              options={districtOptions}
+              value={
+                district.id && district.name
+                  ? `${district.id}_${district.name}`
+                  : ""
+              }
+              onChange={handleDistrictChange}
+              placeholder="Select district"
+              disabled={!state.id}
+            />
+            <FormSelect
+              label="Block"
+              icon={MapPin}
+              options={blockOptions}
+              value={block.id && block.name ? `${block.id}_${block.name}` : ""}
+              onChange={handleBlockChange}
+              placeholder="Select block"
+              disabled={!district.id}
+              emptyMessage="No blocks available"
+            />
+          </div>
           {loading && (
-            <div className="flex flex-col items-center mt-4">
-              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-2 text-gray-600">Please wait, generating Excel...</p>
-            </div>
+            <p className="mt-4 text-sm text-gray-500">
+              Generating the Excel file. This can take a minute for large
+              blocks.
+            </p>
           )}
+        </section>
+
+        <div className="flex justify-end border-t border-gray-100 pt-6">
+          <SubmitButton
+            loading={loading}
+            loadingText="Generating Excel..."
+            disabled={!isFormValid}
+          >
+            Download Excel
+          </SubmitButton>
         </div>
       </form>
-    </div>
+    </PageCard>
   );
 };
 

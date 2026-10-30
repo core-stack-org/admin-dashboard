@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from "react";
 import layersData from "../jsons/layers.json";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import { useLocation } from "react-router-dom";
+import { MapPin, Layers, Satellite, Calendar, Upload } from "lucide-react";
+import {
+  FormSelect,
+  SectionHeading,
+  PageCard,
+  SubmitButton,
+} from "./formControls";
 
 const LocationFormComponent = ({ currentUser }) => {
   const location = useLocation();
@@ -141,8 +147,7 @@ const LocationFormComponent = ({ currentUser }) => {
     }
   };
 
-  const handleStateChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleStateChange = (selectedValue) => {
     if (!selectedValue) {
       setState({ id: "", name: "" });
       return;
@@ -150,13 +155,14 @@ const LocationFormComponent = ({ currentUser }) => {
 
     const [state_id, state_name] = selectedValue.split("_");
     setState({ id: state_id, name: state_name });
+    setDistrict({ id: "", name: "" });
+    setBlock({ id: "", name: "" });
     setDistrictsList([]);
     setBlocksList([]);
     fetchDistricts(state_id);
   };
 
-  const handleDistrictChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleDistrictChange = (selectedValue) => {
     if (!selectedValue) {
       setDistrict({ id: "", name: "" });
       return;
@@ -164,12 +170,12 @@ const LocationFormComponent = ({ currentUser }) => {
 
     const [id, district_name] = selectedValue.split("_");
     setDistrict({ id: id, name: district_name });
+    setBlock({ id: "", name: "" });
     setBlocksList([]);
     fetchBlocks(id);
   };
 
-  const handleBlockChange = (event) => {
-    const selectedValue = event.target.value;
+  const handleBlockChange = (selectedValue) => {
     if (!selectedValue) {
       setBlock({ id: "", name: "" });
       return;
@@ -195,7 +201,6 @@ const LocationFormComponent = ({ currentUser }) => {
           }
         );
         const data = await response.json();
-        console.log(data)
         setGeeAccounts(data);
       } catch (error) {
         console.error("Error fetching GEE accounts:", error);
@@ -204,10 +209,6 @@ const LocationFormComponent = ({ currentUser }) => {
 
     fetchGEEAccounts();
   }, []);
-
-  const handleGEEAccountChange = (event) => {
-    setSelectedGEEAccount(event.target.value);
-  };
 
   const handleGenerateLayer = async (e) => {
     e.preventDefault();
@@ -298,11 +299,8 @@ const LocationFormComponent = ({ currentUser }) => {
         throw new Error(errorData?.message || `Error: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      await response.json();
       toast.success("Layer generation initiated successfully!");
-      if (data.success) {
-        alert("Layer generation initiated successfully!");
-      }
     } catch (error) {
       console.error("Error generating layer:", error);
       toast.error(
@@ -328,246 +326,143 @@ const LocationFormComponent = ({ currentUser }) => {
       ? generateYears(dateRange[0], dateRange[1])
       : [];
 
+  const isFixedLulc =
+    layerName === "LULC Farm Boundaries" || layerName === "LULC V4";
+
+  const stateOptions = statesList.map((s) => ({
+    value: `${s.id}_${s.state_name}`,
+    label: s.state_name,
+  }));
+
+  const districtOptions = districtsList.map((d) => ({
+    value: `${d.id}_${d.district_name}`,
+    label: d.district_name,
+  }));
+
+  const blockOptions = blocksList.map((b) => ({
+    value: `${b.id}_${b.block_name}`,
+    label: b.block_name,
+  }));
+
+  const yearOptions = years.map((year) => ({
+    value: String(year),
+    label: String(year),
+  }));
+
+  const geeAccountOptions = Object.entries(geeAccounts || {}).flatMap(
+    ([email, accounts]) =>
+      (Array.isArray(accounts) ? accounts : []).map((acc) => ({
+        value: String(acc.id),
+        label: acc.name,
+        group: email,
+      }))
+  );
+
   return (
-    <div className="max-w-3xl mx-auto p-10 bg-white shadow-md rounded-lg mt-32">
-      <ToastContainer />
-      <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold">{layerName}</h1>{" "}
-      </div>
-
-      <form className="space-y-8">
-        {/* State Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">State:</label>
-          <select
-            value={state.id && state.name ? `${state.id}_${state.name}` : ""}
-            onChange={handleStateChange}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">Select State</option>
-            {statesList.map((state) => (
-              <option
-                key={state.id}
-                value={`${state.id}_${state.state_name}`}
-              >
-                {state.state_name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* District Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">District:</label>
-          <div className="relative">
-            <select
+    <PageCard
+      icon={Layers}
+      title={layerName || "Generate Layer"}
+      subtitle="Select a location and GEE account to generate this layer."
+    >
+      <form className="space-y-8 px-8 py-6" onSubmit={handleGenerateLayer}>
+        <section>
+          <SectionHeading>Location</SectionHeading>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <FormSelect
+              label="State"
+              icon={MapPin}
+              options={stateOptions}
+              value={state.id && state.name ? `${state.id}_${state.name}` : ""}
+              onChange={handleStateChange}
+              placeholder="Select state"
+            />
+            <FormSelect
+              label="District"
+              icon={MapPin}
+              options={districtOptions}
               value={
                 district.id && district.name
                   ? `${district.id}_${district.name}`
                   : ""
               }
               onChange={handleDistrictChange}
-              disabled={districtsLoading} // disable when loading
-              className="w-full px-4 py-3 border text-lg rounded-lg pr-10" // add space for spinner
-            >
-              <option value="">
-                {districtsLoading ? "Loading districts..." : "Select District"}
-              </option>
-              {!districtsLoading &&
-                districtsList.map((district) => (
-                  <option
-                    key={`${district.id}_${district.district_name}`}
-                    value={`${district.id}_${district.district_name}`}
-                  >
-                    {district.district_name}
-                  </option>
-                ))}
-            </select>
+              placeholder={
+                districtsLoading ? "Loading districts..." : "Select district"
+              }
+              disabled={!state.id || districtsLoading}
+            />
+            <FormSelect
+              label="Block"
+              icon={MapPin}
+              options={blockOptions}
+              value={block.id && block.name ? `${block.id}_${block.name}` : ""}
+              onChange={handleBlockChange}
+              placeholder={blocksLoading ? "Loading blocks..." : "Select block"}
+              disabled={!district.id || blocksLoading}
+              emptyMessage="No blocks available"
+            />
+          </div>
+        </section>
 
-            {/* Spinner */}
-            {districtsLoading && (
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <svg
-                  className="animate-spin h-5 w-5 text-gray-500"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  ></path>
-                </svg>
+        <section>
+          <SectionHeading>Layer Configuration</SectionHeading>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormSelect
+              label="GEE Account"
+              icon={Satellite}
+              options={geeAccountOptions}
+              value={selectedGEEAccount}
+              onChange={setSelectedGEEAccount}
+              placeholder="Select GEE account"
+            />
+
+            {layerName === "FES CLART" && (
+              <div>
+                <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                  <Upload className="h-4 w-4 text-gray-400" />
+                  Upload File
+                </label>
+                <input
+                  type="file"
+                  accept=".zip,.geojson,.kml,.tiff"
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
+                  className="w-full rounded-lg border border-gray-300 bg-white text-sm text-gray-700 shadow-sm file:mr-3 file:border-0 file:bg-blue-50 file:px-3.5 file:py-2.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100"
+                />
               </div>
             )}
           </div>
-        </div>
 
-        {/* Block Dropdown */}
-
-        <div>
-          <label className="text-lg font-semibold mb-2 block">Block:</label>
-          <select
-            value={block.id && block.name ? `${block.id}_${block.name}` : ""}
-            onChange={handleBlockChange}
-            disabled={blocksLoading}
-            className="w-full px-4 py-3 border text-lg rounded-lg"
-          >
-            <option value="">
-              {" "}
-              {districtsLoading ? "Loading blocks..." : "Select Block"}
-            </option>
-            {!blocksLoading && blocksList && blocksList.length > 0 ? (
-              blocksList.map((block) => (
-                <option
-                  key={`${block.id}_${block.block_name}`} // Ensure uniqueness
-                  value={`${block.id}_${block.block_name}`}
-                >
-                  {block.block_name}
-                </option>
-              ))
-            ) : (
-              <option value="">No blocks available</option>
-            )}
-          </select>
-          {blocksLoading && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <svg
-                className="animate-spin h-5 w-5 text-gray-500"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                ></path>
-              </svg>
+          {showDates && (
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <FormSelect
+                label="Start Year"
+                icon={Calendar}
+                options={yearOptions}
+                value={isFixedLulc ? "2023" : String(startYear || dateRange[0])}
+                onChange={setStartYear}
+                placeholder="Select start year"
+                disabled={layerName === "LULC Farm Boundaries"}
+              />
+              <FormSelect
+                label="End Year"
+                icon={Calendar}
+                options={yearOptions}
+                value={isFixedLulc ? "2024" : String(endYear || dateRange[1])}
+                onChange={setEndYear}
+                placeholder="Select end year"
+                disabled={layerName === "LULC Farm Boundaries"}
+              />
             </div>
           )}
-        </div>
+        </section>
 
-        {layerName === "FES CLART" && (
-          <div>
-            <label className="text-lg font-semibold mb-2 block">
-              Upload File:
-            </label>
-            <input
-              type="file"
-              accept=".zip,.geojson,.kml,.tiff"
-              onChange={(e) => setSelectedFile(e.target.files[0])}
-              className="w-full px-4 py-2 border text-lg rounded-lg"
-            />
-          </div>
-        )}
-
-        {/* Start Year Dropdown */}
-        {showDates && (
-          <div>
-            <label className="text-lg font-semibold mb-2 block">
-              Start Year:
-            </label>
-            <select
-              value={
-                layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
-                  ? "2023"
-                  : startYear || dateRange[0]
-              }
-              onChange={(e) => setStartYear(e.target.value)}
-              disabled={layerName === "LULC Farm Boundaries"}
-              className="w-full px-4 py-3 border text-lg rounded-lg"
-            >
-              <option value="">Select Start Year</option>
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* End Year Dropdown */}
-        {showDates && (
-          <div>
-            <label className="text-lg font-semibold mb-2 block">
-              End Year:
-            </label>
-            <select
-              value={
-                layerName === "LULC Farm Boundaries" || layerName === "LULC V4"
-                  ? "2024"
-                  : endYear || dateRange[1]
-              }
-              onChange={(e) => setEndYear(e.target.value)}
-              disabled={layerName === "LULC Farm Boundaries"}
-              className="w-full px-4 py-3 border text-lg rounded-lg"
-            >
-              <option value="">Select End Year</option>
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* GEE Account Dropdown */}
-        <div>
-          <label className="text-lg font-semibold mb-2 block">
-            Select GEE Account:
-          </label>
-          <select
-  value={selectedGEEAccount}
-  onChange={handleGEEAccountChange}
-  className="w-full px-4 py-3 border text-lg rounded-lg"
->
-  <option value="">Select GEE Account</option>
-
-  {geeAccounts &&
-    Object.entries(geeAccounts).map(([email, accounts]) => (
-      <optgroup key={email} label={email}>
-        {accounts.map((acc) => (
-          <option key={acc.id} value={acc.id}>
-            {acc.name}
-          </option>
-        ))}
-      </optgroup>
-    ))}
-</select>
-        </div>
-
-        {/* Submit Button */}
-        <div className="text-center pt-8">
-          <button
-            type="submit"
-            className="bg-blue-600 text-white text-lg px-8 py-3 rounded-lg hover:bg-blue-700"
-            onClick={handleGenerateLayer}
-          >
+        <div className="flex justify-end border-t border-gray-100 pt-6">
+          <SubmitButton loading={isLoading} loadingText="Generating...">
             Generate Layer
-          </button>
+          </SubmitButton>
         </div>
       </form>
-    </div>
+    </PageCard>
   );
 };
 
