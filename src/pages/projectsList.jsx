@@ -13,7 +13,7 @@ import {
   DialogContent,
   Button,
   Menu,
-  Switch
+  Switch,Snackbar,Alert
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import FilterListIcon from "@mui/icons-material/FilterList";
@@ -42,31 +42,39 @@ const ProjectsList = ({ currentUser }) => {
   const [plans, setPlans] = useState([]);
   const [selectedProjectForPlans, setSelectedProjectForPlans] = useState("");
   const [loadingPlans, setLoadingPlans] = useState(false);
- const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
- const [selectedState, setSelectedState] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("");
-    const [selectedAppType, setSelectedAppType] = useState("");
-    const [selectedOrganization, setSelectedOrganization] = useState("");
+  const [disabledProjectsApi, setDisabledProjectsApi] = useState([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedAppType, setSelectedAppType] = useState("");
+  const [selectedOrganization, setSelectedOrganization] = useState("");
   const [filterType, setFilterType] = useState("");
-   const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState("");
   const [anchorEl, setAnchorEl] = useState(null);
   const [statesList, setStatesList] = useState([]);
-    const [districtsCache, setDistrictsCache] = useState({});
-    const [blocksCache, setBlocksCache] = useState({});
-    const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
-const [selectedProject, setSelectedProject] = useState(null);
-const [showProjects, setShowProjects] = useState(true);
-const [showPlans, setShowPlans] = useState(false);
-const [compactProjects, setCompactProjects] = useState(false);
-const [activeTab, setActiveTab] = useState("projects");
- const location = useLocation();
+  const [districtsCache, setDistrictsCache] = useState({});
+  const [blocksCache, setBlocksCache] = useState({});
+  const [openAddMemberModal, setOpenAddMemberModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [showProjects, setShowProjects] = useState(true);
+  const [showPlans, setShowPlans] = useState(false);
+  const [compactProjects, setCompactProjects] = useState(false);
+  const [activeTab, setActiveTab] = useState("projects");
+  const location = useLocation();
   const currentPageFromState = location.state?.currentPage;
   const [page, setPage] = useState(currentPageFromState || 1);
   const rowsPerPage = 5;
 
+  const [exportAnchorEl, setExportAnchorEl] = useState(null);
+  const [exportScope, setExportScope] = useState("project"); // "project" | "organization"
+  const [exportStatus, setExportStatus] = useState("completed"); // "completed" | "all"
+  const [exportMessage, setExportMessage] = useState("");
+  const selectedProjectObj = projects.find(
+    (p) => String(p.id) === String(selectedProjectForPlans)
+  );
+
   const navigate = useNavigate();
   const isSuperAdmin = currentUser?.user?.is_superadmin;
-  const selectedProjectId = location.state?.selectedProjectId;    
+  const selectedProjectId = location.state?.selectedProjectId;
 
 
   console.log(statesList);
@@ -154,13 +162,13 @@ const [activeTab, setActiveTab] = useState("projects");
 
 
   useEffect(() => {
-  setPage(1);
-}, [
-  selectedState,
-  selectedStatus,
-  selectedAppType,
-  selectedOrganization,
-]);
+    setPage(1);
+  }, [
+    selectedState,
+    selectedStatus,
+    selectedAppType,
+    selectedOrganization,
+  ]);
 
   useEffect(() => {
     const fetchStates = async () => {
@@ -214,14 +222,14 @@ const [activeTab, setActiveTab] = useState("projects");
     statesList.find((s) => String(s.id) === String(stateCode))?.state_name ||
     "Unknown State";
 
-    const normalizeName = (str) =>
-  str
-    ? str
+  const normalizeName = (str) =>
+    str
+      ? str
         .toLowerCase()
         .split(" ")
         .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
         .join(" ")
-    : "";
+      : "";
 
   const fetchBlocks = async (districtCode) => {
     if (blocksCache[districtCode]) return; // already cached
@@ -260,60 +268,60 @@ const [activeTab, setActiveTab] = useState("projects");
     );
   };
 
-useEffect(() => {
-  const fetchPlans = async () => {
-    if (!selectedProjectForPlans) {
-      setPlans([]);
-      return;
-    }
-
-    try {
-      setLoadingPlans(true);
-
-      const token = sessionStorage.getItem("accessToken");
-
-      const response = await fetch(
-        `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProjectForPlans}/watershed/plans/`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch plans");
+  useEffect(() => {
+    const fetchPlans = async () => {
+      if (!selectedProjectForPlans) {
+        setPlans([]);
+        return;
       }
 
-      const data = await response.json();
+      try {
+        setLoadingPlans(true);
 
-      console.log("PLANS RESPONSE", data);
-     for (const plan of data) {
-  if (plan.state_soi) {
-    await fetchDistricts(plan.state_soi);
-  }
+        const token = sessionStorage.getItem("accessToken");
 
-  if (plan.district_soi) {
-    await fetchBlocks(plan.district_soi);
-  }
-}
-      setPlans(data);
-    } catch (error) {
-      console.error("Plans Error:", error);
-      setPlans([]);
-    } finally {
-      setLoadingPlans(false);
+        const response = await fetch(
+          `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProjectForPlans}/watershed/plans/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch plans");
+        }
+
+        const data = await response.json();
+
+        console.log("PLANS RESPONSE", data);
+        for (const plan of data) {
+          if (plan.state_soi) {
+            await fetchDistricts(plan.state_soi);
+          }
+
+          if (plan.district_soi) {
+            await fetchBlocks(plan.district_soi);
+          }
+        }
+        setPlans(data);
+      } catch (error) {
+        console.error("Plans Error:", error);
+        setPlans([]);
+      } finally {
+        setLoadingPlans(false);
+      }
+    };
+
+    fetchPlans();
+  }, [selectedProjectForPlans]);
+
+  useEffect(() => {
+    if (currentPageFromState) {
+      setPage(currentPageFromState);
     }
-  };
-
-  fetchPlans();
-}, [selectedProjectForPlans]);
-
-useEffect(() => {
-  if (currentPageFromState) {
-    setPage(currentPageFromState);
-  }
-}, [currentPageFromState]);
+  }, [currentPageFromState]);
 
 
 
@@ -406,7 +414,7 @@ useEffect(() => {
     setAnchorEl(null);
   };
 
- 
+
 
   const exportProjectsToExcel = () => {
     const dataToExport = filteredProjects.map((p, index) => ({
@@ -447,271 +455,340 @@ useEffect(() => {
     saveAs(blob, "Projects_List.xlsx");
   };
 
+const handleExportPlans = async () => {
+  setExportAnchorEl(null);
+
+  try {
+    const token = sessionStorage.getItem("accessToken");
+
+    const url =
+      exportScope === "project"
+        ? `${process.env.REACT_APP_BASEURL}/api/v1/projects/${selectedProjectForPlans}/watershed/plans/`
+        : `${process.env.REACT_APP_BASEURL}/api/v1/organizations/${selectedProjectObj?.organization}/watershed/plans/`;
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch plans for export: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+      const plansToExport =
+      exportStatus === "completed"
+        ? data.filter((plan) => plan.is_completed === true)
+        : data;
+
+      if (plansToExport.length === 0) {
+      setExportMessage(
+        exportStatus === "completed"
+          ? "No completed plans found to export."
+          : "No plans found to export."
+      );
+      return;
+    }
+
+    const rows = plansToExport.map((plan, index) => ({
+      "S. No": index + 1,
+      "Plan Name": plan.plan || "-",
+      Facilitator: plan.facilitator_name || "-",
+      State: getStateName(plan.state_soi),
+      District: getDistrictName(plan.state_soi, plan.district_soi),
+      Tehsil: getBlockName(plan.district_soi, plan.tehsil_soi),
+      Village: plan.village_name || "-",
+      "Gram Panchayat": plan.gram_panchayat || "-",
+      "Created By": plan.created_by_name || "-",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Plans");
+
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const fileName =
+      exportScope === "project"
+        ? `${selectedProjectObj?.name}_Plans.xlsx`
+        : `${selectedProjectObj?.organization_name}_Plans.xlsx`;
+
+    saveAs(blob, fileName);
+  } catch (error) {
+    console.error("Export Plans Error:", error);
+  }
+};
+
+
+
   return (
     <Box>
-<div className="flex items-center justify-between px-2">
+      <div className="flex items-center justify-between px-2">
 
-  {/* Left Side - Tabs */}
-  <div className="flex items-center gap-6">
+        {/* Left Side - Tabs */}
+        <div className="flex items-center gap-6">
 
-    <button
-      onClick={() => setActiveTab("projects")}
-      className={`px-10 py-4 rounded-xl border ${
-        activeTab === "projects"
-          ? "bg-purple-50 border-purple-500 text-purple-700"
-          : "bg-white border-gray-200"
-      }`}
-    >
-      Projects 
-    </button>
+          <button
+            onClick={() => setActiveTab("projects")}
+            className={`px-10 py-4 rounded-xl border ${activeTab === "projects"
+              ? "bg-purple-50 border-purple-500 text-purple-700"
+              : "bg-white border-gray-200"
+              }`}
+          >
+            Projects
+          </button>
 
-    <button
-      onClick={() => setActiveTab("plans")}
-      className={`px-10 py-4 rounded-xl border ${
-        activeTab === "plans"
-          ? "bg-purple-50 border-purple-500 text-purple-700"
-          : "bg-white border-gray-200"
-      }`}
-    >
-      NRM Plans
-    </button>
+          <button
+            onClick={() => setActiveTab("plans")}
+            className={`px-10 py-4 rounded-xl border ${activeTab === "plans"
+              ? "bg-purple-50 border-purple-500 text-purple-700"
+              : "bg-white border-gray-200"
+              }`}
+          >
+            NRM Plans
+          </button>
 
-  </div>
+        </div>
 
-  {/* Center - Applied Filters */}
-  <div className="flex flex-wrap items-center gap-2">
+        {/* Center - Applied Filters */}
+        <div className="flex flex-wrap items-center gap-2">
 
-    {selectedState && (
-      <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full">
-        State: {selectedState}
-        <button
-          onClick={() => setSelectedState("")}
-          className="ml-1 font-bold hover:text-red-500"
-        >
-          ×
-        </button>
-      </span>
-    )}
+          {selectedState && (
+            <span className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-full">
+              State: {selectedState}
+              <button
+                onClick={() => setSelectedState("")}
+                className="ml-1 font-bold hover:text-red-500"
+              >
+                ×
+              </button>
+            </span>
+          )}
 
-    {selectedAppType && (
-      <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full">
-        App Type: {selectedAppType}
-        <button
-          onClick={() => setSelectedAppType("")}
-          className="ml-1 font-bold hover:text-red-500"
-        >
-          ×
-        </button>
-      </span>
-    )}
+          {selectedAppType && (
+            <span className="px-3 py-1 text-sm bg-purple-100 text-purple-700 rounded-full">
+              App Type: {selectedAppType}
+              <button
+                onClick={() => setSelectedAppType("")}
+                className="ml-1 font-bold hover:text-red-500"
+              >
+                ×
+              </button>
+            </span>
+          )}
 
-    {selectedOrganization && (
-      <span className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full">
-        Org: {selectedOrganization}
-        <button
-          onClick={() => setSelectedOrganization("")}
-          className="ml-1 font-bold hover:text-red-500"
-        >
-          ×
-        </button>
-      </span>
-    )}
+          {selectedOrganization && (
+            <span className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded-full">
+              Org: {selectedOrganization}
+              <button
+                onClick={() => setSelectedOrganization("")}
+                className="ml-1 font-bold hover:text-red-500"
+              >
+                ×
+              </button>
+            </span>
+          )}
 
-  </div>
+        </div>
 
-  {/* Right Side - Actions */}
-  {activeTab === "projects" && (
-  <div className="flex items-center gap-3">
+        {/* Right Side - Actions */}
+        {activeTab === "projects" && (
+          <div className="flex items-center gap-3">
 
-    <Tooltip title="Add Project">
-      <IconButton
-        onClick={() => navigate("/projects/add")}
-        sx={{
-          color: "#9333ea",
-          "&:hover": {
-            backgroundColor: "rgba(147,51,234,0.1)",
-          },
-        }}
-      >
-        <Plus size={22} />
-      </IconButton>
-    </Tooltip>
+            <Tooltip title="Add Project">
+              <IconButton
+                onClick={() => navigate("/projects/add")}
+                sx={{
+                  color: "#9333ea",
+                  "&:hover": {
+                    backgroundColor: "rgba(147,51,234,0.1)",
+                  },
+                }}
+              >
+                <Plus size={22} />
+              </IconButton>
+            </Tooltip>
 
-    <Tooltip title="Export Excel">
-      <IconButton
-        onClick={exportProjectsToExcel}
-        sx={{
-          color: "#16a34a",
-          "&:hover": {
-            backgroundColor: "rgba(22,163,74,0.1)",
-          },
-        }}
-      >
-        <Download size={22} />
-      </IconButton>
-    </Tooltip>
+            <Tooltip title="Export Excel">
+              <IconButton
+                onClick={exportProjectsToExcel}
+                sx={{
+                  color: "#16a34a",
+                  "&:hover": {
+                    backgroundColor: "rgba(22,163,74,0.1)",
+                  },
+                }}
+              >
+                <Download size={22} />
+              </IconButton>
+            </Tooltip>
 
-  </div>
-  )}
+          </div>
+        )}
 
-</div>
+      </div>
       <div className="flex flex-col">
         {compactProjects && (
-  <div className="mx-4 mt-3 p-4 bg-purple-50 border border-purple-100 rounded-xl flex justify-between items-center">
-    <div>
-      <p className="font-semibold text-gray-700">
-        Showing {paginatedProjects.length} of {enabledProjects.length} projects
-      </p>
+          <div className="mx-4 mt-3 p-4 bg-purple-50 border border-purple-100 rounded-xl flex justify-between items-center">
+            <div>
+              <p className="font-semibold text-gray-700">
+                Showing {paginatedProjects.length} of {enabledProjects.length} projects
+              </p>
 
-      <p className="text-sm text-gray-500">
-        Page {page} of {totalPages}
-      </p>
-    </div>
+              <p className="text-sm text-gray-500">
+                Page {page} of {totalPages}
+              </p>
+            </div>
 
-    <Button
-      variant="outlined"
-      onClick={() => {
-        setCompactProjects(false);
-        setShowProjects(true);
-        setShowPlans(false);
-      }}
-    >
-      View Projects
-    </Button>
-  </div>
-)}
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setCompactProjects(false);
+                setShowProjects(true);
+                setShowPlans(false);
+              }}
+            >
+              View Projects
+            </Button>
+          </div>
+        )}
 
         {/* Table container */}
-{activeTab === "projects" && (
+        {activeTab === "projects" && (
           <div className="flex-1 overflow-y-auto p-2">
-          <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto h-full">
-            {loading ? (
-              <div className="flex justify-center items-center h-full">
-                <CircularProgress />
-              </div>
-            ) : (
-              <div>
-                <table className="min-w-full text-md text-left border-collapse">
-                  <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
-                    <tr>
-                      <th className="px-6 py-2">S. No.</th>
-                      <th className="px-6 py-2">Name</th>
-                      <th className="px-6 py-2">
-                        <div className="flex items-center">
-                          App Type
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleFilterClick(e, "app_type")}
-                          >
-                            <FilterListIcon fontSize="small" />
-                          </IconButton>
-                        </div>
-                      </th>
-                      <th className="px-6 py-2">
-                        <div className="flex items-center">
-                          State
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleFilterClick(e, "state")}
-                          >
-                            <FilterListIcon fontSize="small" />
-                          </IconButton>
-                        </div>
-                      </th>
-                      <th className="px-6 py-2">
-                        <div className="flex items-center">
-                          Organization
-                          <IconButton
-                            size="small"
-                            onClick={(e) => handleFilterClick(e, "organization")}
-                          >
-                            <FilterListIcon fontSize="small" />
-                          </IconButton>
-                        </div>
-                      </th>
-                      <th className="px-6 py-3">User Management</th>
-                    </tr>
-                  </thead>
+            <div className="rounded-2xl shadow-lg border border-gray-200 bg-white overflow-y-auto h-full">
+              {loading ? (
+                <div className="flex justify-center items-center h-full">
+                  <CircularProgress />
+                </div>
+              ) : (
+                <div>
+                  <table className="min-w-full text-md text-left border-collapse">
+                    <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black top-0 z-10">
+                      <tr>
+                        <th className="px-6 py-2">S. No.</th>
+                        <th className="px-6 py-2">Name</th>
+                        <th className="px-6 py-2">
+                          <div className="flex items-center">
+                            App Type
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleFilterClick(e, "app_type")}
+                            >
+                              <FilterListIcon fontSize="small" />
+                            </IconButton>
+                          </div>
+                        </th>
+                        <th className="px-6 py-2">
+                          <div className="flex items-center">
+                            State
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleFilterClick(e, "state")}
+                            >
+                              <FilterListIcon fontSize="small" />
+                            </IconButton>
+                          </div>
+                        </th>
+                        <th className="px-6 py-2">
+                          <div className="flex items-center">
+                            Organization
+                            <IconButton
+                              size="small"
+                              onClick={(e) => handleFilterClick(e, "organization")}
+                            >
+                              <FilterListIcon fontSize="small" />
+                            </IconButton>
+                          </div>
+                        </th>
+                        <th className="px-6 py-3">User Management</th>
+                      </tr>
+                    </thead>
 
-                  <tbody className="divide-y divide-gray-200">
-                    {enabledProjects.length > 0 ? (
-                      paginatedProjects.map((p, i) => (
-                        <tr
-                          key={p.id}
-                          onClick={() =>
-                            navigate(`/projects/${p.id}/members`, {
-                              state: {
-                                project: p,
-                                selectedProjectId: p.id,
-                                currentPage: page,
-                              },
-                            })
-                          }
-                          className={`cursor-pointer hover:bg-purple-50 transition duration-200 text-gray-700 ${
-                            selectedProjectId === p.id
+                    <tbody className="divide-y divide-gray-200">
+                      {enabledProjects.length > 0 ? (
+                        paginatedProjects.map((p, i) => (
+                          <tr
+                            key={p.id}
+                            onClick={() =>
+                              navigate(`/projects/${p.id}/members`, {
+                                state: {
+                                  project: p,
+                                  selectedProjectId: p.id,
+                                  currentPage: page,
+                                },
+                              })
+                            }
+                            className={`cursor-pointer hover:bg-purple-50 transition duration-200 text-gray-700 ${selectedProjectId === p.id
                               ? "bg-purple-50 border-l-4 border-purple-600"
                               : ""
-                          }`}>                          
-                          <td
-                            className={`px-6 py-2 font-medium ${
-                              selectedProjectId === p.id
+                              }`}>
+                            <td
+                              className={`px-6 py-2 font-medium ${selectedProjectId === p.id
                                 ? "border-l-4 border-purple-600 bg-purple-50"
                                 : ""
-                            }`}
-                          >
-                            {(page - 1) * rowsPerPage + i + 1}</td>
-                          <td className="px-6 py-2 font-medium">{p.name}</td>
-                          <td className="px-6 py-2 font-medium"> {p.app_type_display === "Watershed Planning" ? "NRM Plans via Commons connect"
-    : p.app_type_display || "N/A"} </td>
-                          <td className="px-6 py-2 font-medium"> {p.state_name} </td>
-                          <td className="px-6 py-2 font-medium"> {p.organization_name || "N/A"} </td>
-                         <td className="px-6 py-2">
-                        <div className="flex gap-2">
-  <button
-    className="px-3 py-1 text-xs border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 whitespace-nowrap"
-    onClick={(e) => {
-      e.stopPropagation();
-      setSelectedProject(p);
-      setOpenAddMemberModal(true);
-    }}
-  >
-    Register New User
-  </button>
+                                }`}
+                            >
+                              {(page - 1) * rowsPerPage + i + 1}</td>
+                            <td className="px-6 py-2 font-medium">{p.name}</td>
+                            <td className="px-6 py-2 font-medium"> {p.app_type_display === "Watershed Planning" ? "NRM Plans via Commons connect"
+                              : p.app_type_display || "N/A"} </td>
+                            <td className="px-6 py-2 font-medium"> {p.state_name} </td>
+                            <td className="px-6 py-2 font-medium"> {p.organization_name || "N/A"} </td>
+                            <td className="px-6 py-2">
+                              <div className="flex gap-2">
+                                <button
+                                  className="px-3 py-1 text-xs border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 whitespace-nowrap"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedProject(p);
+                                    setOpenAddMemberModal(true);
+                                  }}
+                                >
+                                  Register New User
+                                </button>
 
-  <button
-    className="px-3 py-1 text-xs bg-purple-600 text-white rounded-md hover:bg-purple-700 whitespace-nowrap"
-    onClick={(e) => {
-      e.stopPropagation();
-      navigate(`/projects/${p.id}/members`, {
-        state: {
-          project: p,
-          selectedProjectId: p.id,
-          currentPage: page,
-        },
-      });
-    }}
-  >
-    Edit User Details
-  </button>
-</div>
-                          </td>
+                                <button
+                                  className="px-3 py-1 text-xs bg-purple-600 text-white rounded-md hover:bg-purple-700 whitespace-nowrap"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/projects/${p.id}/members`, {
+                                      state: {
+                                        project: p,
+                                        selectedProjectId: p.id,
+                                        currentPage: page,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  Edit User Details
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="text-center py-6 text-gray-500">No projects found.</td>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={7} className="text-center py-6 text-gray-500">No projects found.</td>
-                      </tr>
-                    )}
-                  </tbody>
+                      )}
+                    </tbody>
 
-                </table>
-                <div className="flex justify-end items-center gap-2 p-4 border-t">
+                  </table>
+                  <div className="flex justify-end items-center gap-2 p-4 border-t">
                     <button
                       onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                       disabled={page === 1}
                       className={`px-3 py-1 rounded ${page === 1
-                          ? "bg-gray-200 cursor-not-allowed"
-                          : "bg-purple-500 text-white hover:bg-purple-600"}`}
+                        ? "bg-gray-200 cursor-not-allowed"
+                        : "bg-purple-500 text-white hover:bg-purple-600"}`}
                     >
                       Previous
                     </button>
@@ -724,167 +801,186 @@ useEffect(() => {
                       onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                       disabled={page === totalPages}
                       className={`px-3 py-1 rounded ${page === totalPages
-                          ? "bg-gray-200 cursor-not-allowed"
-                          : "bg-purple-500 text-white hover:bg-purple-600"}`}
+                        ? "bg-gray-200 cursor-not-allowed"
+                        : "bg-purple-500 text-white hover:bg-purple-600"}`}
                     >
                       Next
                     </button>
                   </div>
-              </div>
+                </div>
 
-            )}
+              )}
+            </div>
           </div>
-        </div>
         )}
       </div>
 
       {/* Plans Section */}
-<div className="mt-3">
+      <div className="mt-3">
 
-{activeTab === "plans" && (
-    <>
- <div className="flex items-center gap-4 justify-between">
-  <div className="flex items-center gap-4">
-    <label className="font-medium text-gray-700">
-      Select Project
-    </label>
+        {activeTab === "plans" && (
+          <>
+            <div className="flex items-center gap-4 justify-between">
+              <div className="flex items-center gap-4">
+                <label className="font-medium text-gray-700">
+                  Select Projectaa
+                </label>
 
-    <select
-      value={selectedProjectForPlans}
-      onChange={(e) => setSelectedProjectForPlans(e.target.value)}
-      className="border border-gray-300 rounded-lg px-4 py-2 min-w-[300px]"
-    >
-      <option value="">Select Project</option>
+                <select
+                  value={selectedProjectForPlans}
+                  onChange={(e) => setSelectedProjectForPlans(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-4 py-2 min-w-[300px]"
+                >
+                  <option value="">Select Project</option>
 
-      {projects
-        .filter((project) => project.app_type === "watershed")
-        .map((project) => (
-          <option key={project.id} value={project.id}>
-            {project.name}
-          </option>
-        ))}
-    </select>
-  </div>
+                  {projects
+                    .filter((project) => project.app_type === "watershed")
+                    .map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              
+ <div className="flex items-center gap-3">  
+            <Button
+                variant="outlined"
+                startIcon={<Download size={18} />}
+                endIcon={<ChevronDown size={16} />}
+                disabled={!selectedProjectForPlans}
+                onClick={(e) => setExportAnchorEl(e.currentTarget)}
+                sx={{
+                  color: "#7c3aed",
+                  borderColor: "#7c3aed",
+                  "&:hover": {
+                    borderColor: "#6d28d9",
+                    backgroundColor: "rgba(124,58,237,0.05)",
+                  },
+                }}
+              >
+                Export Plans
+              </Button>
+                <Button
+                variant="contained"
+                startIcon={<Plus size={18} />}
+                disabled={!selectedProjectForPlans}
+                sx={{
+                  backgroundColor: "#9333ea",
+                  "&:hover": {
+                    backgroundColor: "#7e22ce",
+                  },
+                  "&.Mui-disabled": {
+                    backgroundColor: "#d8b4fe",
+                    color: "#fff",
+                  },
+                }}
+                onClick={() => {
+                  const project = projects.find(
+                    (p) => String(p.id) === String(selectedProjectForPlans)
+                  );
 
-<Button
-  variant="contained"
-  startIcon={<Plus size={18} />}
-  disabled={!selectedProjectForPlans}
-  sx={{
-    backgroundColor: "#9333ea",
-    "&:hover": {
-      backgroundColor: "#7e22ce",
-    },
-    "&.Mui-disabled": {
-      backgroundColor: "#d8b4fe",
-      color: "#fff",
-    },
-  }}
-  onClick={() => {
-    const project = projects.find(
-      (p) => String(p.id) === String(selectedProjectForPlans)
-    );
+                  if (!project) return;
 
-    if (!project) return;
-
-    navigate(`/projects/${project.id}/createProjectPlans`, {
-      state: {
-        projectName: project.name,
-        projectId: project.id,
-        stateName: project.state_soi_name,
-        stateId: project.state_soi,
-        districtId: project.district_soi,
-        districtName: project.district_soi_name,
-        blockId: project.block,
-        blockName: project.block_name,
-      },
-    });
-  }}
->
-  Add Plan
-</Button>
-</div>
-
-  {selectedProjectForPlans && (
-  <div className="mt-6 rounded-2xl shadow-lg border border-gray-200 bg-white overflow-hidden">
-    {loadingPlans ? (
-      <div className="flex justify-center items-center py-10">
-        <CircularProgress />
-      </div>
-    ) : plans.length > 0 ? (
-      <table className="min-w-full text-md text-left border-collapse">
-        <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black">
-          <tr>
-            <th className="px-6 py-2">S. No.</th>
-            <th className="px-6 py-2">Plan Name</th>
-            <th className="px-6 py-2">Facilitator</th>
-            <th className="px-6 py-2">State</th>
-            <th className="px-6 py-2">District</th>
-            <th className="px-6 py-2">Tehsil</th>
-            <th className="px-6 py-2">Village</th>
-            <th className="px-6 py-2">Gram Panchayat</th>
-            <th className="px-6 py-2">Created By</th>
-            <th className="px-6 py-2 text-center">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-gray-200">
-          {plans.map((plan, index) => (
-            <tr
-              key={plan.id}
-              className="hover:bg-purple-50 transition duration-200"
-            >
-              <td className="px-6 py-2">{index + 1}</td>
-
-              <td className="px-6 py-2 font-medium">
-                {plan.plan || "-"}
-              </td>
-
-              <td className="px-6 py-2">
-                {plan.facilitator_name || "-"}
-              </td>
-
-              <td className="px-6 py-2">
-                {getStateName(plan.state_soi)}
-              </td>
-
-              <td className="px-6 py-2">
-                {getDistrictName(plan.state_soi, plan.district_soi  )}
-              </td>
-
-              <td className="px-6 py-2">
-                {getBlockName(plan.district_soi, plan.tehsil_soi)}
-              </td>
-
-              <td className="px-6 py-2">
-                {plan.village_name || "-"}
-              </td>
-                <td className="px-6 py-2">
-                {plan.gram_panchayat || "-"}
-              </td>
-
-              <td className="px-6 py-2">
-                {plan.created_by_name || "-"}
-              </td>
-             <td className="px-6 py-2 text-center">
-              <button
-                onClick={() =>
-                  navigate(`/projects/${selectedProjectForPlans}/createProjectPlans`, {
+                  navigate(`/projects/${project.id}/createProjectPlans`, {
                     state: {
-                      projectName:
-                        projects.find(
-                          (p) =>
-                            String(p.id) === String(selectedProjectForPlans)
-                        )?.name,
-                      projectId: selectedProjectForPlans,
-                      planId: plan.id,
-                      stateId: plan.state_soi,
-                      districtId: plan.district_soi,
-                      blockId: plan.tehsil_soi,
+                      projectName: project.name,
+                      projectId: project.id,
+                      stateName: project.state_soi_name,
+                      stateId: project.state_soi,
+                      districtId: project.district_soi,
+                      districtName: project.district_soi_name,
+                      blockId: project.block,
+                      blockName: project.block_name,
                     },
-                  })
-                }
-                className="
+                  });
+                }}
+              >
+                Add Plan
+              </Button>
+              </div>
+            </div>
+
+            {selectedProjectForPlans && (
+              <div className="mt-6 rounded-2xl shadow-lg border border-gray-200 bg-white overflow-hidden">
+                {loadingPlans ? (
+                  <div className="flex justify-center items-center py-10">
+                    <CircularProgress />
+                  </div>
+                ) : plans.length > 0 ? (
+                  <table className="min-w-full text-md text-left border-collapse">
+                    <thead className="bg-gradient-to-r from-blue-100 to-purple-100 text-black">
+                      <tr>
+                        <th className="px-6 py-2">S. No.</th>
+                        <th className="px-6 py-2">Plan Name</th>
+                        <th className="px-6 py-2">Facilitator</th>
+                        <th className="px-6 py-2">State</th>
+                        <th className="px-6 py-2">District</th>
+                        <th className="px-6 py-2">Tehsil</th>
+                        <th className="px-6 py-2">Village</th>
+                        <th className="px-6 py-2">Gram Panchayat</th>
+                        <th className="px-6 py-2">Created By</th>
+                        <th className="px-6 py-2 text-center">Actions</th>
+                      </tr>
+                    </thead>
+
+                    <tbody className="divide-y divide-gray-200">
+                      {plans.map((plan, index) => (
+                        <tr
+                          key={plan.id}
+                          className="hover:bg-purple-50 transition duration-200"
+                        >
+                          <td className="px-6 py-2">{index + 1}</td>
+
+                          <td className="px-6 py-2 font-medium">
+                            {plan.plan || "-"}
+                          </td>
+
+                          <td className="px-6 py-2">
+                            {plan.facilitator_name || "-"}
+                          </td>
+
+                          <td className="px-6 py-2">
+                            {getStateName(plan.state_soi)}
+                          </td>
+
+                          <td className="px-6 py-2">
+                            {getDistrictName(plan.state_soi, plan.district_soi)}
+                          </td>
+
+                          <td className="px-6 py-2">
+                            {getBlockName(plan.district_soi, plan.tehsil_soi)}
+                          </td>
+
+                          <td className="px-6 py-2">
+                            {plan.village_name || "-"}
+                          </td>
+                          <td className="px-6 py-2">
+                            {plan.gram_panchayat || "-"}
+                          </td>
+
+                          <td className="px-6 py-2">
+                            {plan.created_by_name || "-"}
+                          </td>
+                          <td className="px-6 py-2 text-center">
+                            <button
+                              onClick={() =>
+                                navigate(`/projects/${selectedProjectForPlans}/createProjectPlans`, {
+                                  state: {
+                                    projectName:
+                                      projects.find(
+                                        (p) =>
+                                          String(p.id) === String(selectedProjectForPlans)
+                                      )?.name,
+                                    projectId: selectedProjectForPlans,
+                                    planId: plan.id,
+                                    stateId: plan.state_soi,
+                                    districtId: plan.district_soi,
+                                    blockId: plan.tehsil_soi,
+                                  },
+                                })
+                              }
+                              className="
                   inline-flex
                   items-center
                   gap-1
@@ -896,22 +992,22 @@ useEffect(() => {
                   hover:bg-purple-100
                   transition
                 "
-              >
-                <Edit2 size={16} />
-                Edit
-              </button>
-            </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    ) : (
-      <div className="p-10 text-center">
-        <p className="text-gray-500 mb-4">
-          No plans found for this project
-        </p>
+                            >
+                              <Edit2 size={16} />
+                              Edit
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="p-10 text-center">
+                    <p className="text-gray-500 mb-4">
+                      No plans found for this project
+                    </p>
 
-        {/* <Button
+                    {/* <Button
           variant="contained"
           onClick={() => {
             const project = projects.find(
@@ -936,15 +1032,15 @@ useEffect(() => {
         >
           Create Plan
         </Button> */}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
-    )}
-  </div>
-)}
- </>
-)}
-</div>
 
- <Popover
+      <Popover
         open={Boolean(anchorEl)}
         anchorEl={anchorEl}
         onClose={handleFilterClose}
@@ -1044,22 +1140,107 @@ useEffect(() => {
               ))}
         </Box>
       </Popover>
-
-
-<Dialog
-  open={openAddMemberModal}
-  onClose={() => setOpenAddMemberModal(false)}
-  maxWidth="md"
-  fullWidth
+<Popover
+  open={Boolean(exportAnchorEl)}
+  anchorEl={exportAnchorEl}
+  onClose={() => setExportAnchorEl(null)}
+  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+  transformOrigin={{ vertical: "top", horizontal: "right" }}
 >
-  <DialogContent>
-    <ProjectMemberRegistration
-      project={selectedProject}
-      currentUser={currentUser}
-      onClose={() => setOpenAddMemberModal(false)}
-    />
-  </DialogContent>
-</Dialog>
+  <Box sx={{ p: 2, width: 300 }}>
+    <p className="text-xs text-gray-500 mb-2">Export for</p>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportScope === "project" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportScope === "project"}
+        onChange={() => setExportScope("project")}
+      />
+      <span>
+        This project only{" "}
+        <span className="text-gray-500">({selectedProjectObj?.name})</span>
+      </span>
+    </label>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportScope === "organization" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportScope === "organization"}
+        onChange={() => setExportScope("organization")}
+      />
+      <span>
+        Entire organization{" "}
+        <span className="text-gray-500">({selectedProjectObj?.organization_name})</span>
+      </span>
+    </label>
+
+    <hr className="my-3" />
+
+    <p className="text-xs text-gray-500 mb-2">Plans to include</p>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "completed" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "completed"}
+        onChange={() => setExportStatus("completed")}
+      />
+      <span>Completed plans only</span>
+    </label>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "all" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "all"}
+        onChange={() => setExportStatus("all")}
+      />
+      <span>All plans</span>
+    </label>
+
+    <Button
+      fullWidth
+      variant="contained"
+      startIcon={<Download size={18} />}
+      onClick={handleExportPlans}
+      sx={{
+        mt: 2,
+        backgroundColor: "#9333ea",
+        "&:hover": { backgroundColor: "#7e22ce" },
+      }}
+    >
+      Download
+    </Button>
+  </Box>
+</Popover>
+<Snackbar
+  open={Boolean(exportMessage)}
+  autoHideDuration={4000}
+  onClose={() => setExportMessage("")}
+  anchorOrigin={{ vertical: "top", horizontal: "center" }}
+>
+  <Alert
+    severity="info"
+    variant="filled"
+    onClose={() => setExportMessage("")}
+  >
+    {exportMessage}
+  </Alert>
+</Snackbar>
+
+
+      <Dialog
+        open={openAddMemberModal}
+        onClose={() => setOpenAddMemberModal(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogContent>
+          <ProjectMemberRegistration
+            project={selectedProject}
+            currentUser={currentUser}
+            onClose={() => setOpenAddMemberModal(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
 
     </Box>

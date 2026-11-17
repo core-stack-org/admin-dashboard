@@ -8,6 +8,9 @@ import {
   ListItemIcon,
   ListItemText,
   Menu,
+  Popover,
+  Box,
+  Button,
 } from "@mui/material";
 import {
   Pencil,
@@ -16,7 +19,8 @@ import {
   CheckCircle,
   ArrowLeftCircle,
   MoreVertical,
-  Download
+  Download,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
@@ -36,6 +40,9 @@ const AllPlans = () => {
 
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const [exportAnchorEl, setExportAnchorEl] = useState(null);
+const [exportScope, setExportScope] = useState("project"); // "project" | "organization"
+const [exportStatus, setExportStatus] = useState("completed"); // "completed" | "all"
 
   const normalizeName = (str) =>
     str
@@ -241,8 +248,20 @@ const AllPlans = () => {
     }
   };
 
-  const exportPlansToExcel = () => {
-    const dataToExport = plans.map((plan, index) => ({
+   const exportPlansToExcel = () => {
+    const filteredPlans = plans.filter((plan) => {
+      if (exportStatus === "completed") return plan.is_completed;
+      if (exportStatus === "dpr_submitted") return plan.is_dpr_generated;
+      if (exportStatus === "dpr_approved") return plan.is_dpr_approved;
+      return true; // "all"
+    });
+
+    if (filteredPlans.length === 0) {
+      toast.info("No plans match the selected option.");
+      return;
+    }
+
+    const dataToExport = filteredPlans.map((plan, index) => ({
       "S. No": index + 1,
       "Plan Name": plan.plan || "-",
       State: getStateName(plan.state_soi),
@@ -284,6 +303,17 @@ const AllPlans = () => {
     saveAs(blob, `Plans_${projectName || "Project"}.xlsx`);
   };
 
+  const handleExportPlans = () => {
+  console.log("EXPORT PLANS", {
+    projectId,
+    organization: plans[0]?.organization_name,
+    scope: exportScope,
+    status: exportStatus,
+  });
+  exportPlansToExcel();
+  setExportAnchorEl(null);
+};
+
   if (loading)
     return (
       <div className="flex justify-center p-6">
@@ -305,18 +335,19 @@ const AllPlans = () => {
           Plans for Project {projectName}
         </h1>
         <Tooltip title="Export Excel">
-  <button
-    onClick={exportPlansToExcel}
-    className="ml-3 flex items-center gap-2 px-3 py-2
-               border border-green-400 text-green-700
-               bg-white
-               rounded-lg shadow-sm
-               hover:bg-green-50 hover:border-green-600
-               transition"
-  >
-    <Download size={18} />
-    <span className="text-sm font-medium">Export</span>
-  </button>
+        <button
+        onClick={(e) => setExportAnchorEl(e.currentTarget)}
+        className="ml-3 flex items-center gap-2 px-3 py-2
+                  border border-green-400 text-green-700
+                  bg-white
+                  rounded-lg shadow-sm
+                  hover:bg-green-50 hover:border-green-600
+                  transition"
+      >
+        <Download size={18} />
+        <span className="text-sm font-medium">Export</span>
+        <ChevronDown size={16} />
+      </button>
 </Tooltip>
       </div>
 
@@ -453,6 +484,96 @@ const AllPlans = () => {
           )}
         </div>
       </div>
+      <Popover
+  open={Boolean(exportAnchorEl)}
+  anchorEl={exportAnchorEl}
+  onClose={() => setExportAnchorEl(null)}
+  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+  transformOrigin={{ vertical: "top", horizontal: "right" }}
+>
+  <Box sx={{ p: 2, width: 300 }}>
+    <p className="text-xs text-gray-500 mb-2">Export for</p>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportScope === "project" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportScope === "project"}
+        onChange={() => setExportScope("project")}
+      />
+      <span>
+        This project only{" "}
+        <span className="text-gray-500">({projectName})</span>
+      </span>
+    </label>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg ${exportScope === "organization" ? "bg-purple-50" : ""} ${plans[0]?.organization_name ? "cursor-pointer" : "opacity-50"}`}>
+      <input
+        type="radio"
+        disabled={!plans[0]?.organization_name}
+        checked={exportScope === "organization"}
+        onChange={() => setExportScope("organization")}
+      />
+      <span>
+        Entire organization{" "}
+        <span className="text-gray-500">({plans[0]?.organization_name})</span>
+      </span>
+    </label>
+
+    <hr className="my-3" />
+
+    <p className="text-xs text-gray-500 mb-2">Plans to include</p>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "completed" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "completed"}
+        onChange={() => setExportStatus("completed")}
+      />
+      <span>Completed plans only</span>
+    </label>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "all" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "all"}
+        onChange={() => setExportStatus("all")}
+      />
+      <span>All plans</span>
+    </label>
+
+        <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "dpr_submitted" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "dpr_submitted"}
+        onChange={() => setExportStatus("dpr_submitted")}
+      />
+      <span>DPR submitted plans</span>
+    </label>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "dpr_approved" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "dpr_approved"}
+        onChange={() => setExportStatus("dpr_approved")}
+      />
+      <span>DPR approved plans</span>
+    </label>
+
+    <Button
+      fullWidth
+      variant="contained"
+      startIcon={<Download size={18} />}
+      onClick={handleExportPlans}
+      sx={{
+        mt: 2,
+        backgroundColor: "#9333ea",
+        "&:hover": { backgroundColor: "#7e22ce" },
+      }}
+    >
+      Download
+    </Button>
+  </Box>
+</Popover>
     </div>
   );
 };
