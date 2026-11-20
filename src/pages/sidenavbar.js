@@ -290,11 +290,11 @@ if (isIndividual) {
         label: "Layer Json Map",
         href: "/generateLayerJsonMap",
       },
-      {
-        icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
-        label: "Layer Status",
-        href: "/layerStatus",
-      },
+      // {
+      //   icon: <FontAwesomeIcon icon={faListCheck} size="lg" />,
+      //   label: "Layer Status",
+      //   href: "/layerStatus",
+      // },
       {
         icon: <FontAwesomeIcon icon={faLayerGroup} size="lg" />,
         label: "Generate Layers",
