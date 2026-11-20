@@ -510,6 +510,7 @@ const [selectedSettingsProject, setSelectedSettingsProject] = useState(null);
     formData.append("is_closest_wp", true);
     formData.append("is_lulc_required", true);
     formData.append("is_processing_required", true);
+    formData.append("reupload", "true");
    
   
     try {
