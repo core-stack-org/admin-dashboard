@@ -16,6 +16,9 @@ const RegistrationForm = () => {
   const [selectedPermission, setSelectedPermission] = useState(null);
 
   const [showPasswordRules, setShowPasswordRules] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -40,6 +43,12 @@ const RegistrationForm = () => {
   ];
 
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const timerId = setTimeout(() => setResendTimer((prev) => prev - 1), 1000);
+    return () => clearTimeout(timerId);
+  }, [resendTimer]);
 
   const loadOrganization = async () => {
 
@@ -115,12 +124,12 @@ const RegistrationForm = () => {
     if (!formData.last_name) newErrors.last_name = "Last name is required";
     if (!formData.username) newErrors.username = "User name is required";
     if (!formData.email) {
-        newErrors.email = "Email is required";
-      } else if (
-        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
-      ) {
-        newErrors.email = "Invalid email format";
-      }
+      newErrors.email = "Email is required";
+    } else if (
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+    ) {
+      newErrors.email = "Invalid email format";
+    }
     // Remove contact number as mandatory
     if (formData.contact_number) {
       if (!/^\d{10}$/.test(formData.contact_number)) {
@@ -155,6 +164,14 @@ const RegistrationForm = () => {
       newErrors.education = "Education is required";
     }
 
+    if (!otpSent) {
+  newErrors.email = newErrors.email || "Please verify your email with OTP";
+} else if (!otp) {
+  newErrors.otp = "Please enter the OTP";
+} else if (otp.length !== 6) {
+  newErrors.otp = "OTP must be 6 digits";
+}
+
 
     return newErrors;
   };
@@ -178,6 +195,7 @@ const RegistrationForm = () => {
       registrationData.append("gender", formData.gender);
       registrationData.append("age", formData.age);
       registrationData.append("education_qualification", formData.education);
+      registrationData.append("otp", otp);
 
       // optional
       if (formData.organization) {
@@ -220,6 +238,9 @@ const RegistrationForm = () => {
           setSelectedOption(null);
           setSelectedPermission([]);
           setErrors({});
+          setOtpSent(false);
+setOtp("");
+setResendTimer(0);
         } else {
           const errorData = await response.json(); // Parse the JSON response
           const errorMessages = Object.values(errorData).flat().join(", ");
@@ -237,12 +258,52 @@ const RegistrationForm = () => {
     navigate("/login");
   };
 
+
+  const handleSendOtp = async () => {
+    if (!formData.email) {
+      setErrors((prev) => ({ ...prev, email: "Email is required" }));
+      return;
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)) {
+      setErrors((prev) => ({ ...prev, email: "Invalid email format" }));
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.REACT_APP_BASEURL}/api/v1/auth/register/send_otp/`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "420",
+          },
+          body: JSON.stringify({ email: formData.email }),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("OTP sent to your email");
+        setOtpSent(true);
+        setResendTimer(30);
+      } else {
+        const errorData = await response.json();
+        const errorMessages = Object.values(errorData).flat().join(", ");
+        toast.error(errorMessages || "Failed to send OTP. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast.error("An error occurred. Please try again later.");
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <ToastContainer position="top-right" autoClose={3000} />
 
-<div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-3xl shadow-2xl">
-          <div className="md:w-1/4 bg-slate-800 text-white p-6 flex flex-col justify-between gap-10 rounded-t-3xl md:rounded-tr-none md:rounded-l-3xl">
+      <div className="flex flex-col md:flex-row w-full max-w-5xl bg-white rounded-3xl shadow-2xl">
+        <div className="md:w-1/4 bg-slate-800 text-white p-6 flex flex-col justify-between gap-10 rounded-t-3xl md:rounded-tr-none md:rounded-l-3xl">
           <img
             src={logo}
             alt="NRM Logo"
@@ -334,8 +395,8 @@ const RegistrationForm = () => {
 
             {/* Email */}
             <div>
-              <label className="flex flex-col gap-1">
-               <span className="text-xs font-semibold text-gray-600">
+              <label className="relative flex flex-col gap-1">
+                <span className="text-xs font-semibold text-gray-600">
                   Email <span className="text-red-500">*</span>
                 </span>
                 <input
@@ -344,15 +405,57 @@ const RegistrationForm = () => {
                   value={formData.email}
                   onChange={handleChange}
                   autoComplete="off"
-                  className="w-full h-10 border-0 border-b-2 border-gray-300 bg-transparent px-0.5 text-[15px] text-gray-900 placeholder-gray-500 rounded-none focus:outline-none focus:ring-0 focus:border-blue-600"
+                  className="w-full h-10 border-0 border-b-2 border-gray-300 bg-transparent pl-0.5 pr-28 text-[15px] text-gray-900 placeholder-gray-500 rounded-none focus:outline-none focus:ring-0 focus:border-blue-600"
                   placeholder="name@example.com"
                 />
+                <button
+                  type="button"
+                  onClick={handleSendOtp}
+                  disabled={resendTimer > 0}
+                  className="absolute right-0 bottom-2 text-sm font-medium text-blue-600 hover:text-blue-700 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  {otpSent
+                    ? resendTimer > 0
+                      ? `Resend in ${resendTimer}s`
+                      : "Resend OTP"
+                    : "Send OTP"}
+                </button>
+
               </label>
               {errors.email && (
                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
               )}
             </div>
 
+{otpSent && (
+  <div>
+    <label className="flex flex-col gap-1">
+      <span className="text-xs font-semibold text-gray-600">
+        Enter OTP <span className="text-red-500">*</span>
+      </span>
+      <input
+        name="otp"
+        type="text"
+        inputMode="numeric"
+        maxLength={6}
+        value={otp}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (/^\d{0,6}$/.test(value)) {
+            setOtp(value);
+            setErrors((prev) => ({ ...prev, otp: "" }));
+          }
+        }}
+        autoComplete="off"
+        className="w-full h-10 border-0 border-b-2 border-gray-300 bg-transparent px-0.5 text-[15px] text-gray-900 placeholder-gray-500 rounded-none focus:outline-none focus:ring-0 focus:border-blue-600"
+        placeholder="Enter 6-digit OTP"
+      />
+    </label>
+    {errors.otp && (
+      <p className="text-red-500 text-sm mt-1">{errors.otp}</p>
+    )}
+  </div>
+)}
             {/* Contact number */}
             <div>
               <label className="flex flex-col gap-1">
