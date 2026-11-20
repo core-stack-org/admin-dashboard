@@ -476,19 +476,25 @@ const handleExportPlans = async () => {
 
     const data = await response.json();
 
-      const plansToExport =
-      exportStatus === "completed"
-        ? data.filter((plan) => plan.is_completed === true)
-        : data;
+     const plansToExport = data.filter((plan) => {
+  if (exportStatus === "completed") return plan.is_completed;
+  if (exportStatus === "dpr_submitted") return plan.is_dpr_generated;
+  if (exportStatus === "dpr_approved") return plan.is_dpr_approved;
 
-      if (plansToExport.length === 0) {
-      setExportMessage(
-        exportStatus === "completed"
-          ? "No completed plans found to export."
-          : "No plans found to export."
-      );
-      return;
-    }
+  return true; // all plans
+});
+
+    if (plansToExport.length === 0) {
+  const messages = {
+    completed: "No completed plans found to export.",
+    dpr_submitted: "No DPR submitted plans found to export.",
+    dpr_approved: "No DPR approved plans found to export.",
+    all: "No plans found to export.",
+  };
+
+  setExportMessage(messages[exportStatus]);
+  return;
+}
 
     const rows = plansToExport.map((plan, index) => ({
       "S. No": index + 1,
@@ -1162,7 +1168,7 @@ const handleExportPlans = async () => {
       </span>
     </label>
 
-    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportScope === "organization" ? "bg-purple-50" : ""}`}>
+    {/* <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportScope === "organization" ? "bg-purple-50" : ""}`}>
       <input
         type="radio"
         checked={exportScope === "organization"}
@@ -1172,11 +1178,20 @@ const handleExportPlans = async () => {
         Entire organization{" "}
         <span className="text-gray-500">({selectedProjectObj?.organization_name})</span>
       </span>
-    </label>
+    </label> */}
 
     <hr className="my-3" />
 
     <p className="text-xs text-gray-500 mb-2">Plans to include</p>
+
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "all" ? "bg-purple-50" : ""}`}>
+      <input
+        type="radio"
+        checked={exportStatus === "all"}
+        onChange={() => setExportStatus("all")}
+      />
+      <span>All plans</span>
+    </label>
 
     <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "completed" ? "bg-purple-50" : ""}`}>
       <input
@@ -1187,14 +1202,29 @@ const handleExportPlans = async () => {
       <span>Completed plans only</span>
     </label>
 
-    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${exportStatus === "all" ? "bg-purple-50" : ""}`}>
-      <input
-        type="radio"
-        checked={exportStatus === "all"}
-        onChange={() => setExportStatus("all")}
-      />
-      <span>All plans</span>
-    </label>
+    <label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${
+  exportStatus === "dpr_submitted" ? "bg-purple-50" : ""
+}`}>
+  <input
+    type="radio"
+    checked={exportStatus === "dpr_submitted"}
+    onChange={() => setExportStatus("dpr_submitted")}
+  />
+  <span>DPR submitted plans</span>
+</label>
+
+<label className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer ${
+  exportStatus === "dpr_approved" ? "bg-purple-50" : ""
+}`}>
+  <input
+    type="radio"
+    checked={exportStatus === "dpr_approved"}
+    onChange={() => setExportStatus("dpr_approved")}
+  />
+  <span>DPR approved plans</span>
+</label>
+
+
 
     <Button
       fullWidth
