@@ -90,13 +90,12 @@ const RegistrationForm = () => {
     if (!formData.first_name) newErrors.first_name = "First name is required";
     if (!formData.last_name) newErrors.last_name = "Last name is required";
     if (!formData.username) newErrors.username = "User name is required";
-    // Remove email validation as mandatory
-    if (formData.email) {
-      if (
-        !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
-      ) {
-        newErrors.email = "Invalid email format";
-      }
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(formData.email)
+    ) {
+      newErrors.email = "Invalid email format";
     }
     // Remove contact number as mandatory
     if (formData.contact_number) {
@@ -285,7 +284,7 @@ const RegistrationForm = () => {
             )}
           </div>
 
-          <div>
+          <div className="relative w-full">
             <input
               name="email"
               type="email"
@@ -295,6 +294,9 @@ const RegistrationForm = () => {
               autoComplete="off"
               placeholder="Enter valid email"
             />
+            <span className="absolute right-3/4 top-1/2 -translate-y-1/2 text-red-500 pointer-events-none">
+              *
+            </span>
             {errors.email && (
               <p className="text-red-500 text-sm">{errors.email}</p>
             )}
